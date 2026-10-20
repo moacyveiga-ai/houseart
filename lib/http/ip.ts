@@ -2,7 +2,7 @@
 //  HTTP — o IP de quem chamou, para os limitadores por IP (PURO)
 // ────────────────────────────────────────────────────────────────────────────
 //  Uma leitura só para toda superfície pública da casa (HouseCredito, rede de
-//  corretores, páginas públicas por token). A regra que importa:
+//  membros, páginas públicas por token). A regra que importa:
 //
 //    `x-vercel-forwarded-for` → o ÚLTIMO valor de `x-forwarded-for` →
 //    `x-real-ip` → `'sem-ip'`   (revisão da Fase 3, 2026-09-21: `x-real-ip`

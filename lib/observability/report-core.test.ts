@@ -5,7 +5,7 @@ describe('relatório de erro de servidor', () => {
   it('a rota vai pelo PADRÃO: token no caminho nunca sai', () => {
     expect(routeOf('/assinar/[token]', '/assinar/AbCdEf123456789xyz')).toBe('/assinar/[token]')
     expect(routeOf(null, '/redefinir-senha/AbCdEfGhIjKlMnOpQr?x=1')).toBe('/redefinir-senha/:id')
-    expect(routeOf(null, '/imoveis/123/editar')).toBe('/imoveis/:id/editar')
+    expect(routeOf(null, '/artworks/123/edit')).toBe('/artworks/:id/edit')
     expect(routeOf(null, null)).toBeNull()
   })
 

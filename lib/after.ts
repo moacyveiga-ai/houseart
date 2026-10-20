@@ -5,7 +5,7 @@
 //  (2026-10-01): o relatório achou ~20 `void avisar…()` e dezenas de
 //  `.catch(() => {})` soltos aqui também. O nome é o do houserent de propósito
 //  — o mesmo helper nos dois repositórios, e os `afterResponse` locais que
-//  já existiam (lib/rede/_comum-server.ts, lib/corretor/signup-server.ts)
+//  já existiam (na base de origem)
 //  tinham este nome. O contexto de escopo (lib/escopo/contexto.ts) sobrevive
 //  ao `after()`: a consulta adiada continua recortada.
 //

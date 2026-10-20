@@ -7,7 +7,7 @@
 
 /**
  * As árvores que são SEMPRE claras (portal, área do cliente, landing do
- * corretor, convite de instalação e as telas de entrada — login, recuperar e
+ * as telas de entrada — login, recuperar e
  * redefinir senha: quem não está logado não tem tema escolhido, e o claro é o
  * padrão; depois de entrar vale o tema salvo, 2026-10-06) — a lista única que `rotaSempreClara`
  * (lib/theme.ts), o script anti-flash do root layout e o teste de

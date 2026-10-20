@@ -1,5 +1,5 @@
 // Data scope — PURE CORE (no prisma, no cookies, testable). Ported from the
-// Housebroker (lib/escopo/core.ts; spec docs/ESCOPO-CORRETOR-SPEC.md, ADR-010).
+// Housebroker (lib/escopo/core.ts, ADR-010).
 //
 // Four levels; what differs is WHAT is seen, not WHERE one enters:
 //

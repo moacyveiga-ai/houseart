@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+
+
+
+</helmet>
+<div style="background:var(--ha-paper-50);color:var(--ha-ink-700);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);min-height:100vh">
+
+<sc-if value="{{ telaLogin }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="Login" style="min-height:100vh;display:flex;flex-wrap:wrap">
+    <div style="flex:1 1 480px;min-height:360px;background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;flex-direction:column;padding:var(--ha-space-10)">
+      <div style="display:flex;align-items:center;gap:var(--ha-space-2)"><div style="position:relative;width:16px;height:20px;border:1.5px solid currentColor"><div style="position:absolute;right:-2px;top:-2px;width:7px;height:7px;background:var(--ha-ink-900)"></div></div><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);line-height:1">HouseArt</span></div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-10) 0">
+        <div style="width:min(62%,360px);aspect-ratio:2296/2869;border:var(--ha-border-w) solid var(--ha-ink-700)"><img src="{{ img.mSup }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);flex-wrap:wrap">
+        <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1)">A escritura da obra de arte</div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-300)">Joana Teixeira · <i>Construção para um dia claro</i>, 2025</div>
+      </div>
+    </div>
+    <div style="flex:1 1 420px;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-10) var(--ha-space-6)">
+      <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:var(--ha-space-5)">
+        <div><h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Entrar</h1><p style="margin:var(--ha-space-2) 0 0;color:var(--ha-ink-500)">Use a mesma conta da família House.</p></div>
+        <button sc-camel-on-click="{{ entrar }}" style="display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer" style-hover="background:var(--ha-ink-700)"><span style="font-family:'Material Symbols Rounded';font-size:20px">mail</span>Entrar com e-mail</button>
+        <div style="display:flex;align-items:center;gap:var(--ha-space-3);font-size:var(--ha-text-caption);color:var(--ha-ink-500)"><span style="flex:1;height:1px;background:var(--ha-paper-200)"></span>ou<span style="flex:1;height:1px;background:var(--ha-paper-200)"></span></div>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">E-mail ou celular<input value="joana@ateliejt.com.br" style="font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Senha<input type="password" value="••••••••••" style="font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+        <button sc-camel-on-click="{{ entrar }}" style="font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Entrar</button>
+        <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-body-sm)"><a href="#" style="color:var(--ha-ink-900)">Esqueci a senha</a><a href="#" sc-camel-on-click="{{ entrar }}" style="color:var(--ha-ink-900);font-weight:600">Criar conta</a></div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ telaPerfil }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="Escolha de perfil" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:var(--ha-space-16) var(--ha-space-6)">
+    <div style="width:100%;max-width:960px;display:flex;flex-direction:column;gap:var(--ha-space-8)">
+      <div><div style="font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">Conta verificada · Joana Teixeira</div><h1 style="margin:var(--ha-space-2) 0 0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-display);line-height:var(--ha-lh-display);color:var(--ha-ink-900)">Como você vai usar a HouseArt?</h1><p style="margin:var(--ha-space-2) 0 0;color:var(--ha-ink-500)">Você pode ter mais de um perfil e trocar quando quiser no menu do avatar.</p></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--ha-space-4)">
+        <sc-for list="{{ perfis }}" as="p" hint-placeholder-count="6">
+          <button sc-camel-on-click="{{ p.go }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:var(--ha-space-3);text-align:left;padding:var(--ha-space-6);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-50);cursor:pointer;transition:box-shadow var(--ha-dur-fast),border-color var(--ha-dur-fast)" style-hover="border-color:var(--ha-ink-900);box-shadow:var(--ha-shadow-sm)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">
+            <span style="font-family:'Material Symbols Rounded';font-size:28px;color:var(--ha-ink-900)">{{ p.icon }}</span>
+            <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);line-height:var(--ha-lh-h3);color:var(--ha-ink-900)">{{ p.nome }}</span>
+            <span style="font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm);color:var(--ha-ink-500)">{{ p.desc }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ logado }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <div style="background:var(--ha-ink-900);color:var(--ha-paper-200);font-size:var(--ha-text-caption);font-variant-numeric:tabular-nums;padding:var(--ha-space-1) var(--ha-space-6);display:flex;gap:var(--ha-space-6);justify-content:flex-end;flex-wrap:wrap">
+    <span>Índice HouseArt <b style="color:var(--ha-paper-50);font-weight:600">112,4</b> <span style="color:var(--ha-ink-300)">+0,8%</span></span><span>Dólar <b style="color:var(--ha-paper-50);font-weight:600">R$ 5,42</b></span><span>Euro <b style="color:var(--ha-paper-50);font-weight:600">R$ 6,11</b></span>
+  </div>
+  <header style="height:64px;display:flex;align-items:center;gap:var(--ha-space-6);padding:0 var(--ha-space-6);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-50);position:sticky;top:0;z-index:20">
+    <div style="width:192px;flex:none;display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900)"><div style="position:relative;width:16px;height:20px;border:1.5px solid currentColor"><div style="position:absolute;right:-2px;top:-2px;width:7px;height:7px;background:var(--ha-paper-50)"></div></div><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);line-height:1">HouseArt</span></div>
+    <div style="flex:0 1 420px;min-width:0;display:flex;align-items:center;gap:var(--ha-space-2);padding:var(--ha-space-2) var(--ha-space-3);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-sm);color:var(--ha-ink-500);font-size:var(--ha-text-body-sm);white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Rounded';font-size:20px">search</span>Buscar obras, artistas, galerias ou IDs</div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:var(--ha-space-4);flex:none">
+      <span style="position:relative;font-family:'Material Symbols Rounded';font-size:24px;color:var(--ha-ink-900)">notifications<span style="position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:var(--ha-sand-500)"></span></span>
+      <button sc-camel-on-click="{{ trocarPerfil }}" style="display:flex;align-items:center;gap:var(--ha-space-2);border:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-50);border-radius:var(--ha-radius-full);padding:var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-1);cursor:pointer" style-hover="border-color:var(--ha-ink-900)">
+        <span style="width:28px;height:28px;border-radius:50%;background:var(--ha-paper-200);display:flex;align-items:center;justify-content:center;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">{{ usuario.ini }}</span>
+        <span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);white-space:nowrap">{{ usuario.perfil }}</span>
+        <span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-500)">swap_horiz</span>
+      </button>
+    </div>
+  </header>
+  <div style="flex:1;display:flex;min-height:0">
+    <aside style="width:240px;flex:none;border-right:var(--ha-border-w) solid var(--ha-paper-200);padding:var(--ha-space-4) var(--ha-space-3);display:flex;flex-direction:column;gap:var(--ha-space-1);position:sticky;top:64px;align-self:flex-start;height:calc(100vh - 88px);overflow-y:auto">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+        <button sc-camel-on-click="{{ n.go }}" style="display:flex;align-items:center;gap:var(--ha-space-3);width:100%;text-align:left;padding:var(--ha-space-2) var(--ha-space-3);border:0;border-radius:var(--ha-radius-md);background:{{ n.bg }};color:{{ n.fg }};font-size:var(--ha-text-body-sm);font-weight:{{ n.peso }};cursor:pointer;transition:background var(--ha-dur-fast)" style-hover="background:var(--ha-paper-100)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500)">
+          <span style="font-family:'Material Symbols Rounded';font-size:20px">{{ n.icon }}</span><span style="flex:1">{{ n.nome }}</span>
+          <sc-if value="{{ n.badge }}" hint-placeholder-val="{{ false }}"><span style="font-size:var(--ha-text-caption);font-weight:600;min-width:20px;text-align:center;padding:0 var(--ha-space-1);border-radius:var(--ha-radius-full);background:var(--ha-sand-100);color:var(--ha-ink-900)">{{ n.badge }}</span></sc-if>
+        </button>
+      </sc-for>
+      <div style="margin-top:auto;padding:var(--ha-space-3);font-size:var(--ha-text-caption);color:var(--ha-ink-500);display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <a href="HouseArt Web Galeria.dc.html" style="color:var(--ha-ink-500)">Sistema da galeria (novo)</a>
+        <a href="HouseArt Web Colecionador.dc.html" style="color:var(--ha-ink-500)">Sistema do colecionador (novo)</a>
+        <a href="HouseArt App Artista.dc.html" style="color:var(--ha-ink-500)">App do artista</a>
+        <a href="HouseArt Site.dc.html" style="color:var(--ha-ink-500)">Site HouseArt</a>
+        <a href="HouseArt Design System.dc.html" style="color:var(--ha-ink-500)">Design system</a>
+        <button sc-camel-on-click="{{ sair }}" style="border:0;background:transparent;padding:0;text-align:left;color:var(--ha-ink-500);cursor:pointer;font-size:var(--ha-text-caption)">Sair</button>
+      </div>
+    </aside>
+    <main style="flex:1;min-width:0;padding:var(--ha-space-8) var(--ha-space-8) var(--ha-space-16)">
+    <div style="max-width:var(--ha-max);margin:0 auto">
+
+      <sc-if value="{{ t.inicio }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Dashboard" style="display:flex;flex-direction:column;gap:var(--ha-space-8)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);flex-wrap:wrap">
+            <div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Segunda, 19 de outubro</div><h1 style="margin:var(--ha-space-1) 0 0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">{{ dash.saudacao }}</h1></div>
+            <button sc-camel-on-click="{{ irNova }}" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px"><span style="font-family:'Material Symbols Rounded';font-size:20px">add</span>Nova obra</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--ha-space-4)">
+            <sc-for list="{{ dash.kpis }}" as="k" hint-placeholder-count="4">
+              <div style="padding:var(--ha-space-5);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-1)">
+                <span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ k.rotulo }}</span>
+                <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ k.valor }}</span>
+                <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ k.nota }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8)">
+            <div style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Próximas ações</h2>
+              <div style="border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+                <sc-for list="{{ dash.acoes }}" as="a" hint-placeholder-count="4">
+                  <button sc-camel-on-click="{{ a.go }}" style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:var(--ha-space-3);align-items:center;width:100%;text-align:left;padding:var(--ha-space-3) var(--ha-space-4);border:0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);background:transparent;cursor:pointer" style-hover="background:var(--ha-paper-100)">
+                    <span style="width:36px;height:36px;border-radius:50%;background:{{ a.bg }};display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px;color:{{ a.fg }}">{{ a.icon }}</span>
+                    <span style="min-width:0"><span style="display:block;font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ a.titulo }}</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ a.sub }}</span></span>
+                    <span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--ha-ink-500)">chevron_right</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Vendas em 2026</h2><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ dash.vendasTotal }}</span></div>
+              <div style="border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);padding:var(--ha-space-5);display:flex;align-items:flex-end;gap:var(--ha-space-2);height:248px">
+                <sc-for list="{{ dash.barras }}" as="b" hint-placeholder-count="10">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-2);height:100%;justify-content:flex-end">
+                    <span style="font-size:10px;color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ b.v }}</span>
+                    <div style="width:100%;max-width:28px;height:{{ b.h }};background:{{ b.cor }}"></div>
+                    <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ b.m }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-4)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Obras recentes</h2><button sc-camel-on-click="{{ irObras }}" style="border:0;background:transparent;font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);cursor:pointer">Ver todas</button></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--ha-space-6)">
+              <sc-for list="{{ recentes }}" as="o" hint-placeholder-count="4">
+                <a href="HouseArt Obra.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-2);text-decoration:none;color:inherit">
+                  <div style="background:var(--ha-wall);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-6)"><img src="{{ o.src }}" alt="{{ o.titulo }}" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></div>
+                  <div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-900)">{{ o.titulo }}, {{ o.ano }}</div>
+                  <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ o.st.bg }};color:{{ o.st.fg }};font-size:var(--ha-text-caption);font-weight:600">{{ o.st.nome }}</span>
+                </a>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.obras }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Minhas obras" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);flex-wrap:wrap">
+            <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">{{ obrasTitulo }}</h1>
+            <button sc-camel-on-click="{{ irNova }}" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)"><span style="font-family:'Material Symbols Rounded';font-size:20px">add</span>Nova obra</button>
+          </div>
+          <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap">
+            <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="5">
+              <button sc-camel-on-click="{{ f.go }}" style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid {{ f.borda }};background:{{ f.bg }};color:{{ f.fg }};font-size:var(--ha-text-body-sm);cursor:pointer">{{ f.nome }} <span style="opacity:.7;font-variant-numeric:tabular-nums">{{ f.n }}</span></button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ temSel }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:var(--ha-space-4);padding:var(--ha-space-3) var(--ha-space-4);background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-md);flex-wrap:wrap">
+              <span style="font-size:var(--ha-text-body-sm);font-weight:600">{{ selTxt }}</span>
+              <button sc-camel-on-click="{{ irCert }}" style="margin-left:auto;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-50);background:transparent;color:var(--ha-paper-50);cursor:pointer">Solicitar etiquetas</button>
+              <button sc-camel-on-click="{{ listarSel }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-paper-50);color:var(--ha-ink-900);cursor:pointer">Listar no marketplace</button>
+              <button sc-camel-on-click="{{ limparSel }}" aria-label="Limpar seleção" style="border:0;background:transparent;color:var(--ha-paper-50);cursor:pointer;font-family:'Material Symbols Rounded';font-size:20px">close</button>
+            </div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--ha-space-8)">
+            <sc-for list="{{ obrasVis }}" as="o" hint-placeholder-count="8">
+              <div style="position:relative;display:flex;flex-direction:column;gap:var(--ha-space-2)">
+                <button sc-camel-on-click="{{ o.toggle }}" aria-label="Selecionar obra" style="position:absolute;top:var(--ha-space-3);left:var(--ha-space-3);z-index:2;width:24px;height:24px;border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-900);background:{{ o.chkBg }};color:var(--ha-paper-50);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-family:'Material Symbols Rounded';font-size:18px">{{ o.chk }}</button>
+                <a href="HouseArt Obra.dc.html" style="background:var(--ha-wall);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8);outline:{{ o.outline }};outline-offset:-2px"><img src="{{ o.src }}" alt="{{ o.titulo }}" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></a>
+                <div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-900)">{{ o.titulo }}, {{ o.ano }}</div>
+                <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ o.tecnica }} · {{ o.dim }}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--ha-space-2)">
+                  <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ o.st.bg }};color:{{ o.st.fg }};font-size:var(--ha-text-caption);font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:14px">{{ o.st.icon }}</span>{{ o.st.nome }}</span>
+                  <span style="font-size:var(--ha-text-body-sm);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ha-ink-900)">{{ o.preco }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.nova }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Cadastro de obra" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);flex-wrap:wrap">
+            <div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Nova obra</div><h1 style="margin:var(--ha-space-1) 0 0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Maré de março</h1></div>
+            <span style="display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-caption);color:var(--ha-ink-500)"><span style="font-family:'Material Symbols Rounded';font-size:16px;color:var(--ha-verified-500)">cloud_done</span>Salvo automaticamente</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-10);align-items:flex-start">
+            <div style="flex:0 0 220px;display:flex;flex-direction:column">
+              <sc-for list="{{ passos }}" as="p" hint-placeholder-count="6">
+                <button sc-camel-on-click="{{ p.go }}" style="display:grid;grid-template-columns:28px minmax(0,1fr);gap:var(--ha-space-3);align-items:center;padding:var(--ha-space-2) 0;border:0;background:transparent;text-align:left;cursor:pointer">
+                  <span style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--ha-text-caption);font-weight:600;background:{{ p.bg }};color:{{ p.fg }};border:var(--ha-border-w) solid {{ p.borda }}">{{ p.marca }}</span>
+                  <span style="font-size:var(--ha-text-body-sm);font-weight:{{ p.peso }};color:{{ p.cor }}">{{ p.nome }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-6)">
+              <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-ink-900)">{{ passoNome }}</h2>
+
+              <sc-if value="{{ p0 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--ha-space-4)">
+                  <sc-for list="{{ campos }}" as="c" hint-placeholder-count="9">
+                    <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);grid-column:{{ c.col }}">{{ c.rotulo }}<input value="{{ c.valor }}" placeholder="{{ c.ph }}" style="font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ p1 }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ dupOn }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:var(--ha-space-3);padding:var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-pending-100);align-items:flex-start">
+                  <span style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--ha-pending-500)">image_search</span>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:var(--ha-space-2)">
+                    <div style="font-weight:600;color:var(--ha-ink-900)">Encontramos uma obra parecida</div>
+                    <div style="font-size:var(--ha-text-body-sm);display:flex;gap:var(--ha-space-3);align-items:center"><img src="{{ img.mAbs }}" alt="" style="width:48px;height:48px;object-fit:cover"><span><i style="font-family:var(--ha-font-display)">Estudo em vermelho</i>, 2025 · HA-2025-2P8D-4LXA · da sua conta</span></div>
+                    <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap"><button sc-camel-on-click="{{ fecharDup }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer">São obras diferentes</button><button style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer">É a mesma obra</button></div>
+                  </div>
+                </div></sc-if>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--ha-space-4)">
+                  <sc-for list="{{ midias }}" as="m" hint-placeholder-count="6">
+                    <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+                      <div style="aspect-ratio:1/1;background:{{ m.bg }};border:var(--ha-border-w) {{ m.traco }} var(--ha-ink-300);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--ha-ink-500)">
+                        <sc-if value="{{ m.tem }}" hint-placeholder-val="{{ false }}"><img src="{{ m.src }}" alt="" style="width:100%;height:100%;object-fit:cover;transform:{{ m.tf }};transform-origin:{{ m.or }}"></sc-if>
+                        <sc-if value="{{ m.vazio }}" hint-placeholder-val="{{ true }}"><span style="display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-caption)"><span style="font-family:'Material Symbols Rounded';font-size:24px">add_a_photo</span>Enviar</span></sc-if>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;font-size:var(--ha-text-caption)"><span style="font-weight:600;color:var(--ha-ink-900)">{{ m.nome }}</span><span style="color:{{ m.qCor }}">{{ m.q }}</span></div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">No celular, o app guia a captura: frontal com cartão de cor, 4 macros em regiões fixas e verso.</div>
+              </sc-if>
+
+              <sc-if value="{{ p2 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap;font-size:var(--ha-text-body-sm)"><span style="color:var(--ha-ink-500);margin-right:var(--ha-space-2)">Estado geral</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);background:var(--ha-ink-900);color:var(--ha-paper-50)">Excelente</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Bom</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Regular</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Precisa de restauro</span></div>
+                <div style="border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+                  <sc-for list="{{ regioes }}" as="r" hint-placeholder-count="5">
+                    <div style="display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+                      <div style="width:64px;height:64px;overflow:hidden;background:var(--ha-wall)"><img src="{{ img.hSvan }}" alt="" style="width:100%;height:100%;object-fit:cover;transform:scale(2.6);transform-origin:{{ r.or }}"></div>
+                      <div><div style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ r.nome }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ r.nota }}</div></div>
+                      <span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ r.bg }};color:{{ r.fg }}">{{ r.estado }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Responsável: Joana Teixeira · 19/10/2026</div>
+              </sc-if>
+
+              <sc-if value="{{ p3 }}" hint-placeholder-val="{{ false }}">
+                <div style="border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+                  <sc-for list="{{ historico }}" as="h" hint-placeholder-count="3">
+                    <div style="display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)">
+                      <span style="font-weight:600;color:var(--ha-ink-900)">{{ h.tipo }}</span><span>{{ h.desc }}</span><span style="color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ h.data }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <button style="align-self:flex-start;display:flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:18px">add</span>Adicionar exposição, publicação ou prêmio</button>
+              </sc-if>
+
+              <sc-if value="{{ p4 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+                  <span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Modalidade</span>
+                  <sc-for list="{{ modalidades }}" as="m" hint-placeholder-count="3">
+                    <button sc-camel-on-click="{{ m.go }}" style="display:grid;grid-template-columns:20px minmax(0,1fr);gap:var(--ha-space-3);align-items:start;text-align:left;padding:var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid {{ m.borda }};background:var(--ha-paper-50);cursor:pointer">
+                      <span style="width:18px;height:18px;margin-top:2px;border-radius:50%;border:{{ m.radio }}"></span>
+                      <span><span style="display:block;font-weight:600;color:var(--ha-ink-900);font-size:var(--ha-text-body-sm)">{{ m.nome }}</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ m.desc }}</span></span>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8);align-items:flex-end">
+                  <label style="flex:0 1 240px;display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Preço<input value="R$ 21.000" style="font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none;font-variant-numeric:tabular-nums" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+                  <div style="flex:1 1 280px;display:flex;flex-direction:column;gap:var(--ha-space-2)">
+                    <div style="position:relative;height:28px"><div style="position:absolute;left:0;right:0;top:12px;height:4px;background:var(--ha-paper-200)"></div><div style="position:absolute;left:20%;right:25%;top:12px;height:4px;background:var(--ha-ink-900)"></div><div style="position:absolute;left:46%;top:4px;width:4px;height:20px;background:var(--ha-sand-500)"></div></div>
+                    <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums"><span>R$ 17 mil</span><span style="color:var(--ha-ink-900);font-weight:600">R$ 21 mil sugerido</span><span>R$ 26 mil</span></div>
+                    <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Estimativa de referência com base em 14 vendas comparáveis. Não é laudo.</span>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ p5 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8)">
+                  <div style="flex:0 0 220px;background:var(--ha-wall);padding:var(--ha-space-8);display:flex;align-items:center;justify-content:center"><img src="{{ img.hSvan }}" alt="" style="max-width:100%;box-shadow:var(--ha-shadow-wall)"></div>
+                  <div style="flex:1 1 300px;display:grid;grid-template-columns:auto minmax(0,1fr);font-size:var(--ha-text-body-sm);align-content:start">
+                    <sc-for list="{{ revisao }}" as="r" hint-placeholder-count="7">
+                      <span style="padding:var(--ha-space-2) var(--ha-space-6) var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);color:var(--ha-ink-500)">{{ r.k }}</span><span style="padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);color:var(--ha-ink-900)">{{ r.v }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:flex;justify-content:flex-end;gap:var(--ha-space-3);padding-top:var(--ha-space-6);border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+                <button sc-camel-on-click="{{ voltarPasso }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-paper-100)">Voltar</button>
+                <button sc-camel-on-click="{{ avancarPasso }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">{{ avancarTxt }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.cert }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Certificação" style="display:flex;flex-direction:column;gap:var(--ha-space-8)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Certificação</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-6);align-items:center;padding:var(--ha-space-6);background:var(--ha-paper-100);border-radius:var(--ha-radius-md)">
+            <span style="font-family:'Material Symbols Rounded';font-size:36px;color:var(--ha-ink-900)">sell</span>
+            <div style="flex:1 1 260px"><div style="font-weight:600;color:var(--ha-ink-900)">Kit de etiquetas de autenticação</div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Chegam pelo correio em até 5 dias úteis, em envelope lacrado. Você vincula cada uma pelo app.</div></div>
+            <div style="display:flex;align-items:center;border:var(--ha-border-w) solid var(--ha-ink-300);border-radius:var(--ha-radius-sm);background:var(--ha-paper-50)">
+              <button sc-camel-on-click="{{ menosTag }}" aria-label="Menos" style="border:0;background:transparent;padding:var(--ha-space-2) var(--ha-space-3);cursor:pointer;font-family:'Material Symbols Rounded';font-size:18px">remove</button>
+              <span style="min-width:32px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums">{{ qtdTag }}</span>
+              <button sc-camel-on-click="{{ maisTag }}" aria-label="Mais" style="border:0;background:transparent;padding:var(--ha-space-2) var(--ha-space-3);cursor:pointer;font-family:'Material Symbols Rounded';font-size:18px">add</button>
+            </div>
+            <button sc-camel-on-click="{{ pedirTags }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer" style-hover="background:var(--ha-ink-700)">{{ pedirTxt }}</button>
+          </div>
+          <div style="overflow-x:auto;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+            <div style="min-width:820px">
+              <div style="display:grid;grid-template-columns:minmax(220px,2fr) minmax(280px,2fr) 140px 160px;gap:var(--ha-space-4);padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-500);text-transform:uppercase;letter-spacing:.08em"><span>Obra</span><span>Etiqueta pedida · recebida · vinculada · assinada · emitida</span><span>Status</span><span></span></div>
+              <sc-for list="{{ certs }}" as="c" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:minmax(220px,2fr) minmax(280px,2fr) 140px 160px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+                  <div style="display:flex;gap:var(--ha-space-3);align-items:center;min-width:0"><div style="width:48px;height:48px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-1)"><img src="{{ c.src }}" alt="" style="max-width:100%;max-height:100%"></div><div style="min-width:0"><div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.titulo }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ c.id }}</div></div></div>
+                  <div style="display:flex;align-items:center">
+                    <sc-for list="{{ c.etapas }}" as="e" hint-placeholder-count="5">
+                      <span style="flex:1;height:2px;background:{{ e.linha }}"></span><span style="width:14px;height:14px;flex:none;border-radius:50%;background:{{ e.bg }};border:2px solid {{ e.borda }}"></span>
+                    </sc-for>
+                  </div>
+                  <span style="justify-self:start;display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ c.st.bg }};color:{{ c.st.fg }};font-size:var(--ha-text-caption);font-weight:600">{{ c.st.nome }}</span>
+                  <button sc-camel-on-click="{{ c.go }}" style="justify-self:end;font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-2) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid {{ c.acBorda }};background:{{ c.acBg }};color:{{ c.acFg }};cursor:pointer;white-space:nowrap">{{ c.acao }}</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.vendas }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Vendas e ofertas" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">{{ vendasTitulo }}</h1>
+          <div style="display:flex;gap:var(--ha-space-6);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm);font-weight:600">
+            <button sc-camel-on-click="{{ abaOfertas }}" style="padding:var(--ha-space-3) 0;border:0;background:transparent;cursor:pointer;color:{{ abaOfFg }};box-shadow:{{ abaOfSh }}">Ofertas recebidas · 3</button>
+            <button sc-camel-on-click="{{ abaVendas }}" style="padding:var(--ha-space-3) 0;border:0;background:transparent;cursor:pointer;color:{{ abaVeFg }};box-shadow:{{ abaVeSh }}">Em andamento · 1</button>
+          </div>
+          <sc-if value="{{ abaOf }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <sc-for list="{{ ofertas }}" as="o" hint-placeholder-count="3">
+                <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-5);align-items:center;padding:var(--ha-space-4);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+                  <div style="width:72px;height:72px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-2)"><img src="{{ o.src }}" alt="" style="max-width:100%;max-height:100%"></div>
+                  <div style="flex:1 1 220px;min-width:0"><div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-900)">{{ o.titulo }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ o.quem }} · expira em {{ o.expira }}</div></div>
+                  <div style="flex:0 0 180px;font-variant-numeric:tabular-nums"><div style="font-weight:600;color:var(--ha-ink-900);font-size:var(--ha-text-body-lg)">{{ o.valor }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">pedido {{ o.preco }} · {{ o.dif }}</div></div>
+                  <sc-if value="{{ o.aberta }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;gap:var(--ha-space-2)">
+                      <button sc-camel-on-click="{{ o.recusar }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-3);border:0;background:transparent;color:var(--ha-ink-900);cursor:pointer" style-hover="text-decoration:underline">Recusar</button>
+                      <button style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-paper-100)">Contrapropor</button>
+                      <button sc-camel-on-click="{{ o.aceitar }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer" style-hover="background:var(--ha-ink-700)">Aceitar</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ o.fechada }}" hint-placeholder-val="{{ false }}"><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ o.resBg }};color:{{ o.resFg }}">{{ o.res }}</span></sc-if>
+                </div>
+              </sc-for>
+              <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Negociador automático: ligado · aceita ofertas a partir de 92% do preço pedido.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ abaVe }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8);align-items:flex-start">
+              <div style="flex:2 1 460px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-5)">
+                <div style="display:flex;gap:var(--ha-space-4);align-items:center"><div style="width:72px;height:72px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-2)"><img src="{{ img.mSup }}" alt="" style="max-width:100%;max-height:100%"></div><div><div style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Construção para um dia claro</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Venda a preço fixo · R$ 38.000 · comprador verificado, São Paulo/SP</div></div></div>
+                <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="display:flex;justify-content:space-between;font-size:var(--ha-text-body-sm)"><span style="font-weight:600;color:var(--ha-ink-900)">Retirada e transporte</span><span style="font-variant-numeric:tabular-nums">{{ tlPct }}</span></div><div style="height:6px;background:var(--ha-paper-200);border-radius:var(--ha-radius-full);overflow:hidden"><div style="height:100%;width:{{ tlPct }};background:var(--ha-ink-900)"></div></div></div>
+                <div>
+                  <sc-for list="{{ timeline }}" as="e" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:var(--ha-space-3)">
+                      <div style="display:flex;flex-direction:column;align-items:center"><span style="width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;background:{{ e.bg }};color:{{ e.fg }};border:var(--ha-border-w) solid {{ e.borda }}">{{ e.icon }}</span><span style="flex:1;width:1px;background:{{ e.linha }};min-height:16px"></span></div>
+                      <div style="padding-bottom:var(--ha-space-5)"><div style="font-weight:600;font-size:var(--ha-text-body-sm);color:{{ e.cor }}">{{ e.nome }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ e.desc }}</div></div>
+                      <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums;padding-top:var(--ha-space-1)">{{ e.data }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-4);padding:var(--ha-space-5);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+                <div style="font-weight:600;color:var(--ha-ink-900)">Repartição dos valores</div>
+                <div style="display:flex;height:10px;border-radius:var(--ha-radius-sm);overflow:hidden"><span style="width:47.4%;background:var(--ha-ink-900)"></span><span style="width:40.5%;background:var(--ha-ink-500)"></span><span style="width:12.1%;background:var(--ha-sand-500)"></span></div>
+                <div style="display:flex;flex-direction:column;font-size:var(--ha-text-body-sm);font-variant-numeric:tabular-nums">
+                  <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span>Artista</span><span>R$ 18.012</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span>Galeria Ladeira</span><span>R$ 15.428</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span>HouseArt · 12%</span><span>R$ 4.560</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;font-weight:600;color:var(--ha-ink-900)"><span>Em garantia</span><span>R$ 38.000</span></div>
+                </div>
+                <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Transporte Alves Tegam · rastreio AT-88213-BA · seguro de trânsito Chubb</div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+
+      <sc-if value="{{ t.sequencia }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Direito de sequência" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Direito de sequência</h1>
+          <p style="margin:0;max-width:720px;color:var(--ha-ink-500)">A cada revenda registrada na HouseArt, 5% da valorização é retido e repassado ao artista automaticamente (Lei 9.610/98, art. 38).</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--ha-space-4)"><sc-for list="{{ seqKpis }}" as="k" hint-placeholder-count="3"><div style="padding:var(--ha-space-5);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-1)"><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ k.rotulo }}</span><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ k.valor }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ k.nota }}</span></div></sc-for></div>
+          <div style="overflow-x:auto;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)"><div style="min-width:760px">
+            <div style="display:grid;grid-template-columns:90px minmax(200px,2fr) 120px 120px 120px 120px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-500);text-transform:uppercase;letter-spacing:.08em"><span>Data</span><span>Obra</span><span>Revenda</span><span>Valorização</span><span>Repasse 5%</span><span>Status</span></div>
+            <sc-for list="{{ seq }}" as="r" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:90px minmax(200px,2fr) 120px 120px 120px 120px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="font-variant-numeric:tabular-nums;color:var(--ha-ink-500)">{{ r.data }}</span><span style="display:flex;gap:var(--ha-space-3);align-items:center"><div style="width:40px;height:40px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-1)"><img src="{{ r.src }}" alt="" style="max-width:100%;max-height:100%"></div><i style="font-family:var(--ha-font-display);color:var(--ha-ink-900)">{{ r.titulo }}</i></span><span style="font-variant-numeric:tabular-nums">{{ r.venda }}</span><span style="font-variant-numeric:tabular-nums">{{ r.valoriz }}</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ha-ink-900)">{{ r.repasse }}</span><span style="justify-self:start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ r.bg }};color:{{ r.fg }}">{{ r.st }}</span></div>
+            </sc-for>
+          </div></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.cobranca }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Cobrança" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Cobrança</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-6)">
+            <div style="flex:1 1 320px;padding:var(--ha-space-6);background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <span style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ha-ink-300)">Seu plano</span>
+              <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1)">{{ plano.nome }}</span>
+              <span style="font-size:var(--ha-text-body-sm);color:var(--ha-paper-200)">{{ plano.desc }}</span>
+              <span style="font-size:var(--ha-text-h3);font-variant-numeric:tabular-nums">{{ plano.preco }}<span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-300)"> /mês</span></span>
+              <button style="align-self:flex-start;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-50);background:transparent;color:var(--ha-paper-50);cursor:pointer">Mudar de plano</button>
+            </div>
+            <div style="flex:1 1 320px;padding:var(--ha-space-6);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <span style="font-weight:600;color:var(--ha-ink-900)">Uso em outubro</span>
+              <sc-for list="{{ uso }}" as="u" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:var(--ha-space-1)"><div style="display:flex;justify-content:space-between;font-size:var(--ha-text-body-sm)"><span>{{ u.nome }}</span><span style="font-variant-numeric:tabular-nums">{{ u.txt }}</span></div><div style="height:6px;background:var(--ha-paper-200);border-radius:var(--ha-radius-full);overflow:hidden"><div style="height:100%;width:{{ u.pct }};background:var(--ha-ink-900)"></div></div></div>
+              </sc-for>
+            </div>
+          </div>
+          <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Faturas e notas fiscais</h2>
+          <div style="overflow-x:auto;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)"><div style="min-width:680px">
+            <div style="display:grid;grid-template-columns:110px minmax(220px,2fr) 120px 110px 100px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-500);text-transform:uppercase;letter-spacing:.08em"><span>Data</span><span>Descrição</span><span>Valor</span><span>Status</span><span></span></div>
+            <sc-for list="{{ faturas }}" as="f" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:110px minmax(220px,2fr) 120px 110px 100px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="font-variant-numeric:tabular-nums;color:var(--ha-ink-500)">{{ f.data }}</span><span style="color:var(--ha-ink-900)">{{ f.desc }}</span><span style="font-variant-numeric:tabular-nums">{{ f.valor }}</span><span style="justify-self:start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ f.bg }};color:{{ f.fg }}">{{ f.st }}</span><a href="#" style="justify-self:end;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">NF-e</a></div>
+            </sc-for>
+          </div></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.crm }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="CRM de colecionadores" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Colecionadores</h1>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:var(--ha-space-4);overflow-x:auto;padding-bottom:var(--ha-space-2)">
+            <sc-for list="{{ kanban }}" as="col" hint-placeholder-count="4">
+              <div style="background:var(--ha-paper-100);border-radius:var(--ha-radius-md);padding:var(--ha-space-3);display:flex;flex-direction:column;gap:var(--ha-space-3);min-height:420px">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0 var(--ha-space-1)"><span style="font-weight:600;color:var(--ha-ink-900);font-size:var(--ha-text-body-sm)">{{ col.nome }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ col.n }}</span></div>
+                <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="2">
+                  <div style="background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);padding:var(--ha-space-3);display:flex;flex-direction:column;gap:var(--ha-space-2)">
+                    <div style="display:flex;gap:var(--ha-space-2);align-items:center"><span style="width:28px;height:28px;flex:none;border-radius:50%;background:var(--ha-paper-200);display:flex;align-items:center;justify-content:center;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">{{ c.ini }}</span><span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ c.nome }}</span></div>
+                    <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ c.interesse }}</div>
+                    <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-caption)"><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ha-ink-900)">{{ c.valor }}</span><span style="color:var(--ha-ink-500)">{{ c.quando }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.carteira }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Carteira de escrituras" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);flex-wrap:wrap">
+            <div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Marcelo Bastos</div><h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Carteira de escrituras</h1></div>
+            <div style="text-align:right"><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Valor registrado · 4 obras</div><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);color:var(--ha-ink-900);font-variant-numeric:tabular-nums">R$ 162.800</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8);align-items:flex-start">
+            <div style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <sc-for list="{{ carteira }}" as="w" hint-placeholder-count="4">
+                <button sc-camel-on-click="{{ w.go }}" style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--ha-space-4);text-align:left;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid {{ w.borda }};background:var(--ha-paper-50);cursor:pointer" style-hover="box-shadow:var(--ha-shadow-sm)">
+                  <span style="height:96px;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-3)"><img src="{{ w.src }}" alt="" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></span>
+                  <span style="display:flex;flex-direction:column;gap:var(--ha-space-1);min-width:0">
+                    <span style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-body-lg);color:var(--ha-ink-900)">{{ w.titulo }}</span>
+                    <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ w.artista }} · adquirida em {{ w.data }}</span>
+                    <span style="font-size:var(--ha-text-body-sm);font-variant-numeric:tabular-nums;color:var(--ha-ink-900);font-weight:600">{{ w.valor }}</span>
+                    <span style="align-self:flex-start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ w.stBg }};color:{{ w.stFg }}">{{ w.st }}</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="flex:1.3 1 420px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-5)">
+              <div style="background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-paper-200);box-shadow:var(--ha-shadow-sm);padding:var(--ha-space-8);display:flex;flex-direction:column;gap:var(--ha-space-4)">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--ha-space-4)"><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-ink-900)">HouseArt</span><span style="text-align:right;font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ha-ink-900)">{{ wSel.id }}</span></div>
+                <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-ink-900)">Escritura da obra</div>
+                <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--ha-space-5);padding:var(--ha-space-4) 0;border-top:var(--ha-border-w) solid var(--ha-paper-200);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+                  <div style="background:var(--ha-wall);padding:var(--ha-space-3);display:flex;align-items:center;justify-content:center"><img src="{{ wSel.src }}" alt="" style="max-width:100%;max-height:120px"></div>
+                  <div style="display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--ha-space-4);row-gap:var(--ha-space-1);font-size:var(--ha-text-body-sm)">
+                    <span style="color:var(--ha-ink-500)">Obra</span><i style="font-family:var(--ha-font-display);color:var(--ha-ink-900)">{{ wSel.titulo }}</i>
+                    <span style="color:var(--ha-ink-500)">Artista</span><span>{{ wSel.artista }}</span>
+                    <span style="color:var(--ha-ink-500)">Titular</span><span>Marcelo Bastos · CPF ***.482.***-07</span>
+                    <span style="color:var(--ha-ink-500)">Desde</span><span style="font-variant-numeric:tabular-nums">{{ wSel.data }}</span>
+                    <span style="color:var(--ha-ink-500)">Apólice</span><span>{{ wSel.apolice }}</span>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4)"><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Carimbo do tempo ICP-Brasil · {{ wSel.data }}</span><div style="width:56px;height:56px;flex:none;background:repeating-conic-gradient(var(--ha-ink-900) 0 25%,var(--ha-paper-50) 0 50%) 0 0/8px 8px;border:3px solid var(--ha-ink-900)"></div></div>
+              </div>
+              <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap">
+                <button sc-camel-on-click="{{ irVenderObra }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer">Vender</button>
+                <button sc-camel-on-click="{{ irTransferir }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer">Transferir</button>
+                <button sc-camel-on-click="{{ segurarObra }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer">Segurar</button>
+                <button sc-camel-on-click="{{ avaliarObra }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer">Pedir laudo</button>
+                <button style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer">Registrar restauro</button>
+                <a href="HouseArt Verificacao.dc.html" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer;text-decoration:none">Compartilhar certificado</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.compras }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Compras" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Compras</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8);align-items:flex-start">
+            <div style="flex:2 1 460px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-5)">
+              <div style="display:flex;gap:var(--ha-space-4);align-items:center"><div style="width:72px;height:72px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-1)"><img src="{{ img.mSup }}" alt="" style="max-width:100%;max-height:100%"></div><div><div style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Construção para um dia claro</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Joana Teixeira · Galeria Ladeira · R$ 38.000 + R$ 1.110 frete e seguro</div></div></div>
+              <div>
+                <sc-for list="{{ timelineC }}" as="e" hint-placeholder-count="6">
+                  <div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:var(--ha-space-3)">
+                    <div style="display:flex;flex-direction:column;align-items:center"><span style="width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;background:{{ e.bg }};color:{{ e.fg }};border:var(--ha-border-w) solid {{ e.borda }}">{{ e.icon }}</span><span style="flex:1;width:1px;background:{{ e.linha }};min-height:16px"></span></div>
+                    <div style="padding-bottom:var(--ha-space-5)"><div style="font-weight:600;font-size:var(--ha-text-body-sm);color:{{ e.cor }}">{{ e.nome }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ e.desc }}</div></div>
+                    <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums;padding-top:var(--ha-space-1)">{{ e.data }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:1 1 300px;min-width:0;padding:var(--ha-space-8) var(--ha-space-6);background:var(--ha-paper-100);border-radius:var(--ha-radius-lg);display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-4);text-align:center">
+              <div style="width:112px;height:112px;border-radius:50%;border:4px solid {{ recebCor }};display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:44px;color:{{ recebCor }}">{{ recebIcon }}</span></div>
+              <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-ink-900)">{{ recebTitulo }}</div>
+              <div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ recebTexto }}</div>
+              <sc-if value="{{ recebPend }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ confirmarReceb }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer">Confirmar recebimento</button></sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.transferir }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Transferência fora da plataforma" style="display:flex;flex-direction:column;gap:var(--ha-space-6);max-width:760px">
+          <div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Vendeu fora da HouseArt? Registre a nova titularidade.</div><h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Transferir obra</h1></div>
+          <div style="display:flex;gap:var(--ha-space-2)"><sc-for list="{{ trPassos }}" as="p" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="height:4px;background:{{ p.cor }};border-radius:var(--ha-radius-full)"></div><span style="font-size:var(--ha-text-caption);font-weight:{{ p.peso }};color:{{ p.fg }}">{{ p.nome }}</span></div></sc-for></div>
+          <div style="display:flex;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3);background:var(--ha-paper-100);border-radius:var(--ha-radius-md)"><div style="width:56px;height:56px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-1)"><img src="{{ img.k8 }}" alt="" style="max-width:100%;max-height:100%"></div><div><i style="font-family:var(--ha-font-display);color:var(--ha-ink-900)">Partitura para Itapuã</i>, 2023<div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Rafael Moura · HA-2025-9W1C-3RTE</div></div></div>
+          <sc-if value="{{ tr0 }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--ha-space-4)">
+              <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">CPF do comprador<input value="318.904.***-**" style="font-weight:400;padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none;font-variant-numeric:tabular-nums" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+              <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">E-mail ou celular<input value="luiza.moreno@gmail.com" style="font-weight:400;padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+            </div>
+            <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">O comprador recebe um convite para confirmar a identidade (CPF e biometria) antes de assinar.</div>
+          </sc-if>
+          <sc-if value="{{ tr1 }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);max-width:280px">Valor da venda<input value="R$ 52.000" style="font-weight:400;padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none;font-variant-numeric:tabular-nums"></label>
+            <div sc-camel-on-click="{{ toggleSelado }}" style="display:flex;align-items:center;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-4);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);cursor:pointer"><span><span style="display:block;font-weight:600;color:var(--ha-ink-900);font-size:var(--ha-text-body-sm)">Preço selado</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">O valor fica registrado e assinado, mas não aparece na página pública.</span></span><span style="width:40px;height:22px;flex:none;border-radius:var(--ha-radius-full);background:{{ seladoBg }};position:relative"><span style="position:absolute;top:3px;left:{{ seladoX }};width:16px;height:16px;border-radius:50%;background:var(--ha-paper-50);transition:left var(--ha-dur-fast)"></span></span></div>
+            <div style="font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-4);background:var(--ha-paper-100);border-radius:var(--ha-radius-md)">Direito de sequência: <b style="font-weight:600;color:var(--ha-ink-900)">R$ 275</b> (5% da valorização de R$ 5.500) será repassado a Rafael Moura.</div>
+          </sc-if>
+          <sc-if value="{{ tr2 }}" hint-placeholder-val="{{ false }}">
+            <div style="border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span><b style="font-weight:600;color:var(--ha-ink-900)">Você</b> · vendedor</span><span style="justify-self:start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-verified-100);color:var(--ha-verified-500)">Assinado 19/10 14:20</span></div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span><b style="font-weight:600;color:var(--ha-ink-900)">Luiza Moreno</b> · compradora</span><span style="justify-self:start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-pending-100);color:var(--ha-ink-900)">Aguardando assinatura</span></div>
+            </div>
+            <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Termo de transferência assinado digitalmente, com carimbo do tempo ICP-Brasil.</div>
+          </sc-if>
+          <sc-if value="{{ tr3 }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:var(--ha-space-8);background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-lg);display:flex;gap:var(--ha-space-6);align-items:center;flex-wrap:wrap">
+              {{ anelTr }}
+              <div style="flex:1 1 240px"><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3)">Falta o toque da compradora</div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-300)">Com a obra em mãos, Luiza encosta o celular na etiqueta do verso. A leitura prova a posse e a escritura passa para o nome dela.</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) 0;border-top:var(--ha-border-w) solid var(--ha-paper-200)"><span>Taxa de transferência</span><span style="font-weight:600;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">R$ 199</span></div>
+          </sc-if>
+          <div style="display:flex;justify-content:flex-end;gap:var(--ha-space-3);padding-top:var(--ha-space-4);border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+            <button sc-camel-on-click="{{ trVoltar }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer">Voltar</button>
+            <button sc-camel-on-click="{{ trAvancar }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer">{{ trAvTxt }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.market }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Marketplace" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Marketplace</h1>
+          <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap;font-size:var(--ha-text-body-sm)"><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);background:var(--ha-ink-900);color:var(--ha-paper-50)">Só autenticadas</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Pintura</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Até R$ 50 mil</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Primário</span><span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Bahia</span></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--ha-space-8)">
+            <sc-for list="{{ marketObras }}" as="o" hint-placeholder-count="6">
+              <a href="HouseArt Obra.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-2);text-decoration:none;color:inherit">
+                <div style="background:var(--ha-wall);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)" style-hover="background:var(--ha-paper-200)"><img src="{{ o.src }}" alt="{{ o.titulo }}" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></div>
+                <div style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ o.artista }}</div>
+                <div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-700)">{{ o.titulo }}, {{ o.ano }}</div>
+                <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-body-sm)"><span style="font-weight:600;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ o.preco }}</span><span style="font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-verified-500)">Autenticada</span></div>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.laudos }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Laudo de opinião de valor" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Fila de laudos</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-8);align-items:flex-start">
+            <div style="flex:1 1 300px;min-width:0;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+              <sc-for list="{{ laudos }}" as="l" hint-placeholder-count="4">
+                <button sc-camel-on-click="{{ l.go }}" style="display:flex;gap:var(--ha-space-3);align-items:center;width:100%;text-align:left;padding:var(--ha-space-3) var(--ha-space-4);border:0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);background:{{ l.bg }};cursor:pointer"><div style="width:48px;height:48px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-1)"><img src="{{ l.src }}" alt="" style="max-width:100%;max-height:100%"></div><span style="flex:1;min-width:0"><span style="display:block;font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-900)">{{ l.titulo }}</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ l.quem }} · prazo {{ l.prazo }}</span></span></button>
+              </sc-for>
+            </div>
+            <div style="flex:2 1 480px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-5)">
+              <div style="display:flex;gap:var(--ha-space-5);align-items:flex-start;flex-wrap:wrap"><div style="width:160px;height:160px;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-4)"><img src="{{ laudoSel.src }}" alt="" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></div><div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:var(--ha-space-1)"><span style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ha-ink-500)">Dossiê da obra</span><span style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-ink-900)">{{ laudoSel.titulo }}</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ laudoSel.ficha }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Proveniência: 3 eventos · condition report excelente · etiqueta íntegra</span></div></div>
+              <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Comparáveis sugeridos</h2>
+              <div style="border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+                <sc-for list="{{ comparaveis }}" as="c" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:minmax(0,2fr) 90px 110px 90px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="color:var(--ha-ink-900)">{{ c.obra }}</span><span style="color:var(--ha-ink-500)">{{ c.dim }}</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ha-ink-900)">{{ c.valor }}</span><span style="color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ c.data }}</span></div>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ha-space-4)">
+                <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Mínimo<input value="R$ 40.000" style="font-weight:400;padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none;font-variant-numeric:tabular-nums"></label>
+                <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Sugerido<input value="R$ 48.000" style="font-weight:400;padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-900);background:var(--ha-paper-50);outline:none;font-variant-numeric:tabular-nums"></label>
+                <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Máximo<input value="R$ 55.000" style="font-weight:400;padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none;font-variant-numeric:tabular-nums"></label>
+              </div>
+              <div style="position:relative;height:28px"><div style="position:absolute;left:0;right:0;top:12px;height:4px;background:var(--ha-paper-200)"></div><div style="position:absolute;left:22%;right:20%;top:12px;height:4px;background:var(--ha-ink-900)"></div><div style="position:absolute;left:50%;top:4px;width:4px;height:20px;background:var(--ha-sand-500)"></div></div>
+              <div style="display:flex;justify-content:flex-end;gap:var(--ha-space-3);align-items:center;flex-wrap:wrap"><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);margin-right:auto">Laudo assinado · PDF com QR para a página pública</span><button sc-camel-on-click="{{ emitirLaudo }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer">Assinar e emitir laudo</button></div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.admin }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Admin · Obras e certificados" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Obras e certificados</h1>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--ha-space-4)"><sc-for list="{{ admKpis }}" as="k" hint-placeholder-count="3"><div style="padding:var(--ha-space-5);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-1)"><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ k.rotulo }}</span><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ k.valor }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ k.nota }}</span></div></sc-for></div>
+          <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Fila de revisão</h2>
+          <div style="overflow-x:auto;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)"><div style="min-width:860px">
+            <div style="display:grid;grid-template-columns:130px minmax(220px,2fr) minmax(200px,2fr) 110px 200px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-500);text-transform:uppercase;letter-spacing:.08em"><span>Tipo</span><span>Obra</span><span>Motivo</span><span>Aberto</span><span></span></div>
+            <sc-for list="{{ fila }}" as="f" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:130px minmax(220px,2fr) minmax(200px,2fr) 110px 200px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="justify-self:start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ f.bg }};color:{{ f.fg }}">{{ f.tipo }}</span><span style="display:flex;gap:var(--ha-space-3);align-items:center"><div style="width:40px;height:40px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-1)"><img src="{{ f.src }}" alt="" style="max-width:100%;max-height:100%"></div><span><i style="font-family:var(--ha-font-display);color:var(--ha-ink-900)">{{ f.titulo }}</i><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ f.quem }}</span></span></span><span style="color:var(--ha-ink-700)">{{ f.motivo }}</span><span style="color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ f.quando }}</span><span style="justify-self:end;display:flex;gap:var(--ha-space-2)"><sc-if value="{{ f.aberto }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ f.rejeitar }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer;padding:var(--ha-space-1) var(--ha-space-3);font-size:var(--ha-text-caption)">Rejeitar</button><button sc-camel-on-click="{{ f.aprovar }}" style="font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer;padding:var(--ha-space-1) var(--ha-space-3);font-size:var(--ha-text-caption)">Aprovar</button></sc-if><sc-if value="{{ f.resolvido }}" hint-placeholder-val="{{ false }}"><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ f.res }}</span></sc-if></span></div>
+            </sc-for>
+          </div></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ t.tags }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Admin · Etiquetas" style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);flex-wrap:wrap"><h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Etiquetas</h1><div style="display:flex;align-items:center;gap:var(--ha-space-2);padding:var(--ha-space-2) var(--ha-space-3);border:var(--ha-border-w) solid var(--ha-ink-300);border-radius:var(--ha-radius-sm);color:var(--ha-ink-500);font-size:var(--ha-text-body-sm);min-width:260px"><span style="font-family:'Material Symbols Rounded';font-size:20px">search</span>UID da etiqueta ou ID da obra</div></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--ha-space-4)"><sc-for list="{{ tagKpis }}" as="k" hint-placeholder-count="3"><div style="padding:var(--ha-space-5);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-1)"><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ k.rotulo }}</span><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ k.valor }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ k.nota }}</span></div></sc-for></div>
+          <div style="overflow-x:auto;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)"><div style="min-width:760px">
+            <div style="display:grid;grid-template-columns:110px 100px minmax(200px,2fr) 160px 130px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-500);text-transform:uppercase;letter-spacing:.08em"><span>Lote</span><span>Qtd.</span><span>Destino</span><span>Vinculadas</span><span>Status</span></div>
+            <sc-for list="{{ lotes }}" as="l" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:110px 100px minmax(200px,2fr) 160px 130px;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ha-ink-900)">{{ l.lote }}</span><span style="font-variant-numeric:tabular-nums">{{ l.qtd }}</span><span>{{ l.destino }}</span><span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="flex:1;height:6px;background:var(--ha-paper-200);border-radius:var(--ha-radius-full);overflow:hidden"><span style="display:block;height:100%;width:{{ l.pct }};background:var(--ha-ink-900)"></span></span><span style="font-variant-numeric:tabular-nums;font-size:var(--ha-text-caption)">{{ l.vinc }}</span></span><span style="justify-self:start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:{{ l.bg }};color:{{ l.fg }}">{{ l.st }}</span></div>
+            </sc-for>
+          </div></div>
+          <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Etiquetas com chip NXP e criptografia por obra. Uma etiqueta removida invalida a leitura e abre alerta automático.</div>
+        </div>
+      </sc-if>
+
+
+    </div>
+    </main>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ assinando }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:60;background:rgba(17,17,17,.55);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-6)">
+    <div style="width:100%;max-width:520px;background:var(--ha-paper-50);border-radius:var(--ha-radius-lg);box-shadow:var(--ha-shadow-lg);padding:var(--ha-space-8);display:flex;flex-direction:column;gap:var(--ha-space-5)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ha-ink-500)">HouseSign</div><h2 style="margin:var(--ha-space-1) 0 0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-ink-900)">Assinar certificado</h2></div><button sc-camel-on-click="{{ fecharAssinar }}" aria-label="Fechar" style="border:0;background:transparent;cursor:pointer;font-family:'Material Symbols Rounded';font-size:24px">close</button></div>
+      <div style="display:grid;grid-template-columns:80px minmax(0,1fr);gap:var(--ha-space-4);padding:var(--ha-space-4);background:var(--ha-paper-100)"><div style="background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-2)"><img src="{{ assin.src }}" alt="" style="max-width:100%;max-height:72px"></div><div style="font-size:var(--ha-text-body-sm)"><div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-ink-900)">{{ assin.titulo }}</div><div style="color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ assin.id }}</div><div style="color:var(--ha-ink-500)">Titular inicial: Joana Teixeira</div></div></div>
+      <p style="margin:0;font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm)">Ao assinar, você declara ser a autora desta obra. O certificado recebe carimbo do tempo ICP-Brasil e não pode ser alterado; mudanças futuras viram novos eventos na cadeia de titularidade.</p>
+      <button sc-camel-on-click="{{ confirmarAssinar }}" style="display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)">{{ spinAssin }}{{ assinTxt }}</button>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;left:50%;bottom:var(--ha-space-8);transform:translateX(-50%);z-index:70;background:var(--ha-ink-900);color:var(--ha-paper-50);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);box-shadow:var(--ha-shadow-lg);font-size:var(--ha-text-body-sm);display:flex;align-items:center;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-sand-500)">check_circle</span>{{ toast }}</div>
+</sc-if>
+</div>
+</x-dc>
+
+
+
+</body></html>

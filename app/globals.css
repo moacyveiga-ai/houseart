@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Base: the page is paper, the text is ink. Colours only through --ha-* tokens
+   (ratchets: lib/ha-tokens.test.ts, lib/tailwind-paleta.test.ts). */
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--ha-bg); color: var(--ha-fg-body); font-family: var(--ha-font-ui); font-size: var(--ha-text-body); line-height: var(--ha-lh-body); -webkit-font-smoothing: antialiased; }
+  a { color: var(--ha-info-500); }
+  a:hover { color: var(--ha-fg); }
+  input, select, textarea, button { font: inherit; }
+  h1, h2, h3 { font-weight: 400; }
+}

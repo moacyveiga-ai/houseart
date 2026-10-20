@@ -1,0 +1,80 @@
+// HouseArt — the ONE Prisma schema, Postgres in every environment.
+// Conventions (HOUSEART_BUILD.md §A.2): Int ids; String + allowlist in code
+// (no enum/Json/String[]); money as BigInt cents (`*Cents`); bps as Int; PII
+// only as *Enc/*Hash/*Mask; tenantId derived by Postgres trigger (ha_tenant_*).
+// Every schema change comes WITH an additive, reexecutable migration in
+// prisma/migrations. NEVER `db push`: partial unique indexes and triggers live
+// only in the migrations.
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// The tenant: PERSON (artist, advisor, collector with a plan) or GALLERY.
+model Tenant {
+  id        Int      @id @default(autoincrement())
+  kind      String // PERSON | GALLERY
+  name      String
+  document  String?  @unique // digits only (CPF/CNPJ)
+  slug      String   @unique
+  status    String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+
+  @@index([status])
+}
+
+/// Login. `profile` is the legacy-style allowlist (lib/auth/profiles.ts);
+/// `UserProfile` (Phase 1) holds the product profiles the person can switch to.
+model User {
+  id                   Int       @id @default(autoincrement())
+  email                String    @unique
+  cpf                  String?   @unique
+  name                 String
+  passwordHash         String?
+  profile              String // admin | manager | operator | finance | member | appraiser | collector
+  active               Boolean   @default(true)
+  memberId             Int?      @unique
+  tenantId             Int?
+  tenant               Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantRole           String? // ADMIN | MEMBER
+  authProviderId       String?   @unique
+  recoverySessionId    String?
+  recoverySessionUntil DateTime?
+  collectorVerifiedAt  DateTime?
+  deletionRequestedAt  DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  sessions             Session[]
+
+  @@index([tenantId])
+  @@index([profile, active])
+}
+
+/// Panel session (cookie `houseart_session`). `token` stores `h1:` + sha256.
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Job lease (lib/job-lease): one run at a time per job name.
+model JobLease {
+  name        String   @id
+  /// the run that owns the lock (uuid); only it releases
+  runId       String
+  /// the lock expires on its own here (a run that died without releasing)
+  lockedUntil DateTime
+  updatedAt   DateTime @updatedAt
+}

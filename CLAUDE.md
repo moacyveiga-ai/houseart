@@ -108,6 +108,22 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-21 — Handoff Fases 1 e 7 feitas: design system em código e o site público no ar.**
+  `/design-system` (galeria pública dos componentes, seção a seção como o protótipo; `components/ds/`
+  ganhou Field, Toggle, ArtworkFrame, StatusBadge, ArtworkId, ArtworkCard, ProvenanceChain,
+  CertificateSheet, PriceBox, SplitSummary, ValuationGauge, TagReader, WalletItem, IndexTicker; Button
+  com os sete estados). Site público em `/e` (`app/e/layout.tsx` = PublicHeader/PublicFooter do desenho;
+  `/` sem sessão vai para `/e`): Home, `/e/how-it-works`, `/e/marketplace` (filtros na URL,
+  `lib/marketplace/filter-core.ts`), `/e/artists`, `/e/artwork/[publicId]` (cotação de frete em
+  `lib/shipping/quote-core.ts`, mock determinístico), `/e/artist/[slug]`, `/e/gallery/[slug]`,
+  `/e/galleries`, `/verify` (busca) e `/verify/[publicId]` (três estados, leitura da etiqueta), mais
+  `robots.txt` e `sitemap.xml`. Conteúdo público no banco (migration `20261021500000_phase7_public_content`:
+  ArtistProfile/ArtistEntry/Publication/GalleryPublicProfile/GalleryItem/NewsArticle/AgendaEvent) —
+  **sem tela de edição ainda** (entra por SQL; `scripts/seed-public-demo.ts` semeia um exemplo LOCAL).
+  Catraca `handoff-screens` com 65 telas pendentes (apps mobile, Web Colecionador/Galeria, Entrar/Cadastro
+  novos). Divergências por página no relatório de cada lote em `docs/HANDOFF-2026-10-21.md` §5.
+  **Próximas:** Fase 2 (celular + código, login social), Fase 4 (oferta em 5 etapas, checkout, carteira),
+  Fase 3 (captura guiada), Fase 6 (galeria), Fase 5 (mensagens, comunidade, push).
 - **2026-10-21 — Handoff de design completo recebido; Fase 0 dele feita.** Pacote em
   `houseart-design/handoff/` (site, home, marketplace, obra, oferta, artista, galeria(s), verificar,
   entrar/cadastro, apps Colecionador/Galeria/Artista, Web Colecionador/Galeria, DS, pitch). Entraram:

@@ -3,6 +3,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { heldArtworks } from '@/lib/ownership/server'
 import { ArtworkError } from '@/lib/artworks/server'
+import { placeOrder } from '@/lib/orders/server'
 
 export interface WalletItem { artworkId: number; publicId: string | null; title: string; artist: string; acquiredAt: string; priceLabel: string; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; cover: string | null; version: number }
 
@@ -26,5 +27,8 @@ export async function insureArtwork(userId: number, artworkId: number) {
   const held = await prisma.certificateVersion.findFirst({ where: { holderUserId: userId, status: 'ACTIVE', certificate: { artworkId } } })
   if (!held) throw new ArtworkError('NOT_HOLDER', 'Você não é o titular desta obra.', 404)
   const a = await prisma.artwork.findUniqueOrThrow({ where: { id: artworkId }, select: { listPriceCents: true } })
+  // the annual premium is a mock quote (1 % of the registered value); the real insurer is a J item
+  const premium = (a.listPriceCents ?? 0n) / 100n
+  if (premium > 0n) await placeOrder({ serviceCode: 'COLLECTION_INSURANCE', payerKind: 'REQUESTER', userId, artworkId, amountCents: premium, description: 'Seguro de acervo · Chubb · 12 meses' })
   return prisma.insurancePolicy.create({ data: { artworkId, kind: 'COLLECTION', insurer: 'Chubb', policyNumber: `${Date.now().toString().slice(-5)}-${artworkId}`, validFrom: new Date(), validUntil: new Date(Date.now() + 365 * 86_400_000), coverageCents: a.listPriceCents ?? 0n } })
 }

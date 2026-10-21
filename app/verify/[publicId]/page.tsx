@@ -7,6 +7,9 @@ import { publicCertificate } from '@/lib/certificates/server'
 import { recordPublicRead, ipHashOf } from '@/lib/physical-markers/server'
 import { headers } from 'next/headers'
 import { rawIpFromHeaders } from '@/lib/http/ip'
+import { isAppraisalCode } from '@/lib/appraisal/domain'
+import { publicAppraisal } from '@/lib/appraisal/server'
+import { formatBRL } from '@/lib/artworks/domain'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +20,7 @@ const STATUS: Record<string, { label: string; tone: 'verified' | 'pending' | 'al
 
 export default async function VerifyPage({ params, searchParams }: { params: Promise<{ publicId: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const publicId = (await params).publicId.toUpperCase()
+  if (isAppraisalCode(publicId)) return <AppraisalVerify code={publicId} />
   if (!isPublicId(publicId)) notFound()
   const sp = await searchParams
   const c = await publicCertificate(publicId)
@@ -54,6 +58,34 @@ export default async function VerifyPage({ params, searchParams }: { params: Pro
         {c.events.map((e) => <li key={e.seq} className="ha-list__row" style={{ gridTemplateColumns: '40px 1fr auto' }}><span className="ha-muted">#{e.seq}</span><span>{e.label}</span><span className="ha-muted ha-sm">{new Date(e.at).toLocaleDateString('pt-BR')}</span></li>)}
       </ul>
       <p className="ha-muted ha-sm">Esta página não mostra valores nem documentos. Para contestar a titularidade, use a API pública de contestação ou escreva para a equipe HouseArt.</p>
+    </main>
+  )
+}
+
+async function AppraisalVerify({ code }: { code: string }) {
+  const a = await publicAppraisal(code)
+  if (!a) notFound()
+  return (
+    <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
+      <HouseArtLogo size={24} />
+      <p className="ha-eyebrow">Verificação pública · laudo de opinião de valor</p>
+      <h1 className="ha-h1">{a.code}</h1>
+      <div className="ha-row"><Badge tone={a.status === 'ISSUED' ? 'verified' : 'neutral'}>{a.status === 'ISSUED' ? 'Laudo vigente' : 'Laudo substituído'}</Badge></div>
+      <section className="ha-deed">
+        <div className="ha-kv">
+          <span>Obra</span><span>{a.artwork.title}{a.artwork.year ? `, ${a.artwork.year}` : ''}</span>
+          <span>Artista</span><span>{a.artwork.artist}</span>
+          <span>Técnica</span><span>{a.artwork.technique ?? '—'}</span>
+          <span>Dimensões</span><span>{a.artwork.dimensions}</span>
+          <span>Finalidade</span><span>{a.purpose}</span>
+          <span>Faixa</span><span className="ha-num">{formatBRL(BigInt(a.minCents))} — <b>{formatBRL(BigInt(a.suggestedCents))}</b> — {formatBRL(BigInt(a.maxCents))}</span>
+          <span>Avaliador</span><span>{a.appraiser}</span>
+          <span>Emitido em</span><span>{new Date(a.issuedAt).toLocaleDateString('pt-BR')}</span>
+          <span>Hash do conteúdo</span><span className="ha-sm" style={{ wordBreak: 'break-all' }}>{a.contentHash}</span>
+          {a.artwork.publicId ? <><span>Certificado</span><span><a className="ha-link" href={`/verify/${a.artwork.publicId}`}>{a.artwork.publicId}</a></span></> : null}
+        </div>
+      </section>
+      <p className="ha-muted ha-sm">Opinião de valor para a finalidade declarada. Não substitui laudo pericial nem avaliação judicial.</p>
     </main>
   )
 }

@@ -16,16 +16,17 @@ datasource db {
 
 /// The tenant: PERSON (artist, advisor, collector with a plan) or GALLERY.
 model Tenant {
-  id        Int      @id @default(autoincrement())
-  kind      String // PERSON | GALLERY
-  name      String
-  document  String?  @unique // digits only (CPF/CNPJ)
-  slug      String   @unique
-  status    String   @default("ACTIVE") // ACTIVE | SUSPENDED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users     User[]
-  members   Member[]
+  id             Int                @id @default(autoincrement())
+  kind           String // PERSON | GALLERY
+  name           String
+  document       String?            @unique // digits only (CPF/CNPJ)
+  slug           String             @unique
+  status         String             @default("ACTIVE") // ACTIVE | SUSPENDED
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  users          User[]
+  members        Member[]
+  subscriptions  PlanSubscription[]
   galleryProfile GalleryProfile?
 
   @@index([status])
@@ -34,25 +35,25 @@ model Tenant {
 /// Login. `profile` is the legacy-style allowlist (lib/auth/profiles.ts);
 /// `UserProfile` (Phase 1) holds the product profiles the person can switch to.
 model User {
-  id                   Int       @id @default(autoincrement())
-  email                String    @unique
-  cpf                  String?   @unique
+  id                   Int           @id @default(autoincrement())
+  email                String        @unique
+  cpf                  String?       @unique
   name                 String
   passwordHash         String?
   profile              String // admin | manager | operator | finance | member | appraiser | collector
-  active               Boolean   @default(true)
-  memberId             Int?      @unique
+  active               Boolean       @default(true)
+  memberId             Int?          @unique
   tenantId             Int?
-  tenant               Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenant               Tenant?       @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   tenantRole           String? // ADMIN | MEMBER
-  authProviderId       String?   @unique
+  authProviderId       String?       @unique
   recoverySessionId    String?
   recoverySessionUntil DateTime?
   collectorVerifiedAt  DateTime?
   deletionRequestedAt  DateTime?
   lastLoginAt          DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   sessions             Session[]
   profiles             UserProfile[]
   member               Member?
@@ -76,17 +77,17 @@ model UserProfile {
 
 /// Panel session (cookie `houseart_session`). `token` stores `h1:` + sha256.
 model Session {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
+  id                Int       @id @default(autoincrement())
+  token             String    @unique
+  userId            Int
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt         DateTime
   /// the product profile active in this session (lib/profiles)
   activeProfileKind String?
-  ip        String?
-  userAgent String?
-  lastUsedAt DateTime?
-  createdAt DateTime @default(now())
+  ip                String?
+  userAgent         String?
+  lastUsedAt        DateTime?
+  createdAt         DateTime  @default(now())
 
   @@index([userId])
   @@index([expiresAt])
@@ -166,19 +167,20 @@ model Member {
 
 /// The artist of an artwork — with an account (memberId) or represented by a gallery (tenantId).
 model Artist {
-  id         Int       @id @default(autoincrement())
-  memberId   Int?      @unique
-  member     Member?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
-  tenantId   Int?
-  name       String
-  slug       String    @unique
-  birthYear  Int?
-  deathYear  Int?
-  heirsJson  String    @default("[]")
-  verifiedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  artworks   Artwork[]
+  id          Int                   @id @default(autoincrement())
+  memberId    Int?                  @unique
+  member      Member?               @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  tenantId    Int?
+  name        String
+  slug        String                @unique
+  birthYear   Int?
+  deathYear   Int?
+  heirsJson   String                @default("[]")
+  verifiedAt  DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  artworks    Artwork[]
+  comparables AppraisalComparable[]
 
   @@index([tenantId])
 }
@@ -200,12 +202,12 @@ model GalleryProfile {
 
 /// The artwork (technical sheet). HOT model; tenantId derived by trigger ha_tenant_from_member_id.
 model Artwork {
-  id                Int       @id @default(autoincrement())
+  id                Int                      @id @default(autoincrement())
   tenantId          Int?
   memberId          Int
-  member            Member    @relation(fields: [memberId], references: [id])
+  member            Member                   @relation(fields: [memberId], references: [id])
   artistId          Int
-  artist            Artist    @relation(fields: [artistId], references: [id])
+  artist            Artist                   @relation(fields: [artistId], references: [id])
   title             String
   year              Int?
   technique         String?
@@ -216,23 +218,23 @@ model Artwork {
   edition           String?
   signatureLocation String?
   series            String?
-  category          String    @default("PAINTING") // PAINTING | SCULPTURE | WORK_ON_PAPER | PHOTOGRAPHY | DIGITAL | OTHER
+  category          String                   @default("PAINTING") // PAINTING | SCULPTURE | WORK_ON_PAPER | PHOTOGRAPHY | DIGITAL | OTHER
   conditionGrade    String? // EXCELLENT | GOOD | FAIR | NEEDS_RESTORATION
   conditionBy       String?
   conditionAt       DateTime?
-  status            String    @default("DRAFT") // ARTWORK_STATUSES
+  status            String                   @default("DRAFT") // ARTWORK_STATUSES
   market            String? // PRIMARY | SECONDARY
   saleMode          String? // FIXED | FIXED_WITH_OFFERS | ON_REQUEST
   listPriceCents    BigInt?
-  priceSealed       Boolean   @default(false)
-  publicId          String?   @unique
-  seal              String    @default("NONE") // NONE | YELLOW | GREEN
+  priceSealed       Boolean                  @default(false)
+  publicId          String?                  @unique
+  seal              String                   @default("NONE") // NONE | YELLOW | GREEN
   sealIssuedAt      DateTime?
   coverMediaId      Int?
-  wizardStep        Int       @default(0)
+  wizardStep        Int                      @default(0)
   submittedAt       DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
   media             ArtworkMedia[]
   conditionRegions  ArtworkConditionRegion[]
   historyItems      ArtworkHistoryItem[]
@@ -247,6 +249,7 @@ model Artwork {
   transfers         OwnershipTransfer[]
   royalties         RoyaltyPayment[]
   insurancePolicies InsurancePolicy[]
+  appraisalRequests AppraisalRequest[]
 
   @@index([tenantId, status])
   @@index([memberId, status])
@@ -327,22 +330,22 @@ model DuplicateCheck {
 
 /// Certificate-deed of an artwork (Phase 2 fills versions/events). HOT model.
 model Certificate {
-  id               Int       @id @default(autoincrement())
-  artworkId        Int       @unique
-  artwork          Artwork   @relation(fields: [artworkId], references: [id])
-  publicId         String?   @unique
-  currentVersionId Int?
-  status           String    @default("DRAFT") // DRAFT | ACTIVE | CONTESTED | REVOKED
-  stage            Int       @default(0) // 0..5
-  signedAt         DateTime?
-  signedByUserId   Int?
-  signatureJson    String? // JWS of the issuer + evidence of the member's signature (ip, ua, time)
+  id                Int                  @id @default(autoincrement())
+  artworkId         Int                  @unique
+  artwork           Artwork              @relation(fields: [artworkId], references: [id])
+  publicId          String?              @unique
+  currentVersionId  Int?
+  status            String               @default("DRAFT") // DRAFT | ACTIVE | CONTESTED | REVOKED
+  stage             Int                  @default(0) // 0..5
+  signedAt          DateTime?
+  signedByUserId    Int?
+  signatureJson     String? // JWS of the issuer + evidence of the member's signature (ip, ua, time)
   timestampTokenRef String? // ACT ICP-Brasil (mock in the MVP)
-  issuedAt         DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  versions         CertificateVersion[]
-  events           CertificateEvent[]
+  issuedAt          DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  versions          CertificateVersion[]
+  events            CertificateEvent[]
 }
 
 model CertificateVersion {
@@ -396,28 +399,28 @@ model DailyAnchor {
 
 /// Batches of NFC markers imported from the vendor (Admin · Etiquetas).
 model MarkerBatch {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique // 2026-10
+  id          Int              @id @default(autoincrement())
+  code        String           @unique // 2026-10
   quantity    Int
   destination String
   tenantId    Int?
-  status      String   @default("NEW") // NEW | IN_USE | EXHAUSTED
-  createdAt   DateTime @default(now())
+  status      String           @default("NEW") // NEW | IN_USE | EXHAUSTED
+  createdAt   DateTime         @default(now())
   markers     PhysicalMarker[]
 }
 
 model PhysicalMarker {
-  id             Int         @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   batchId        Int
-  batch          MarkerBatch @relation(fields: [batchId], references: [id])
-  uid            String      @unique // 7 bytes hex
+  batch          MarkerBatch  @relation(fields: [batchId], references: [id])
+  uid            String       @unique // 7 bytes hex
   keyRef         String // reference of the diversified key; never the key
-  status         String      @default("STOCK") // STOCK | SHIPPED | LINKED | REMOVED | REVOKED
-  artworkId      Int?        @unique
+  status         String       @default("STOCK") // STOCK | SHIPPED | LINKED | REMOVED | REVOKED
+  artworkId      Int?         @unique
   orderId        Int?
   linkedAt       DateTime?
   linkedByUserId Int?
-  readCounter    Int         @default(0)
+  readCounter    Int          @default(0)
   lastReadAt     DateTime?
   reads          MarkerRead[]
 
@@ -442,16 +445,16 @@ model MarkerRead {
 
 /// A member's kit order ("Pedir etiquetas · R$ 150"). `orderId` → Order (Phase 5), no FK.
 model MarkerOrder {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   tenantId       Int
   memberId       Int
   quantity       Int
-  unitPriceCents BigInt   @default(1500)
-  status         String   @default("REQUESTED") // REQUESTED | SHIPPED | DELIVERED
+  unitPriceCents BigInt    @default(1500)
+  status         String    @default("REQUESTED") // REQUESTED | SHIPPED | DELIVERED
   orderId        Int?
   shippedAt      DateTime?
   deliveredAt    DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([memberId, status])
   @@index([status])
@@ -486,23 +489,23 @@ model JobLease {
 
 /// Sale mandate of a listed artwork. `reservePriceCents` (the floor) NEVER leaves the backend. HOT model.
 model Mandate {
-  id                 Int      @id @default(autoincrement())
-  artworkId          Int
-  artwork            Artwork  @relation(fields: [artworkId], references: [id])
-  memberId           Int
-  tenantId           Int?
-  listPriceCents     BigInt
-  reservePriceCents  BigInt
-  fixedPrice         Boolean  @default(false)
-  autoNegotiatorOn   Boolean  @default(false)
-  autoAcceptMinBps   Int      @default(9200)
-  acceptsTrade       Boolean  @default(false)
-  shippingIncluded   Boolean  @default(false)
-  status             String   @default("ACTIVE") // ACTIVE | SUPERSEDED | CLOSED
-  version            Int      @default(1)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  offers             Offer[]
+  id                Int      @id @default(autoincrement())
+  artworkId         Int
+  artwork           Artwork  @relation(fields: [artworkId], references: [id])
+  memberId          Int
+  tenantId          Int?
+  listPriceCents    BigInt
+  reservePriceCents BigInt
+  fixedPrice        Boolean  @default(false)
+  autoNegotiatorOn  Boolean  @default(false)
+  autoAcceptMinBps  Int      @default(9200)
+  acceptsTrade      Boolean  @default(false)
+  shippingIncluded  Boolean  @default(false)
+  status            String   @default("ACTIVE") // ACTIVE | SUPERSEDED | CLOSED
+  version           Int      @default(1)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  offers            Offer[]
 
   @@index([artworkId, status])
   @@index([memberId])
@@ -510,40 +513,40 @@ model Mandate {
 
 /// A proposal from a collector on an artwork. HOT model; tenantId from the seller member by trigger.
 model Offer {
-  id                   Int       @id @default(autoincrement())
-  code                 String    @unique // OFR-AAAA-NNNNNN
-  artworkId            Int
-  artwork              Artwork   @relation(fields: [artworkId], references: [id])
-  mandateId            Int?
-  mandate              Mandate?  @relation(fields: [mandateId], references: [id])
-  sellerMemberId       Int
-  memberId             Int // = sellerMemberId (the trigger reads memberId)
-  tenantId             Int?
-  buyerUserId          Int?
-  buyerName            String
-  buyerEmail           String
-  buyerDocumentHash    String?
-  buyerDocumentEnc     String?
-  buyerDocumentMask    String?
-  buyerKind            String    @default("COLLECTOR") // COLLECTOR | ADVISOR_FOR_CLIENT
-  buyerCity            String?
-  offeredCents         BigInt
-  acceptedCents        BigInt?
-  status               String    @default("AWAITING_OTP") // OFFER_STATUSES
-  expiresAt            DateTime
-  otpHash              String?
-  otpAttempts          Int       @default(0)
-  otpExpiresAt         DateTime?
-  retractionTokenHash  String?
-  retractionIssuedAt   DateTime?
-  origin               String    @default("MARKETPLACE") // MARKETPLACE | LINK | PANEL
-  message              String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  rounds               OfferRound[]
-  events               OfferEvent[]
-  opportunities        Opportunity[]
-  deal                 Deal?
+  id                  Int           @id @default(autoincrement())
+  code                String        @unique // OFR-AAAA-NNNNNN
+  artworkId           Int
+  artwork             Artwork       @relation(fields: [artworkId], references: [id])
+  mandateId           Int?
+  mandate             Mandate?      @relation(fields: [mandateId], references: [id])
+  sellerMemberId      Int
+  memberId            Int // = sellerMemberId (the trigger reads memberId)
+  tenantId            Int?
+  buyerUserId         Int?
+  buyerName           String
+  buyerEmail          String
+  buyerDocumentHash   String?
+  buyerDocumentEnc    String?
+  buyerDocumentMask   String?
+  buyerKind           String        @default("COLLECTOR") // COLLECTOR | ADVISOR_FOR_CLIENT
+  buyerCity           String?
+  offeredCents        BigInt
+  acceptedCents       BigInt?
+  status              String        @default("AWAITING_OTP") // OFFER_STATUSES
+  expiresAt           DateTime
+  otpHash             String?
+  otpAttempts         Int           @default(0)
+  otpExpiresAt        DateTime?
+  retractionTokenHash String?
+  retractionIssuedAt  DateTime?
+  origin              String        @default("MARKETPLACE") // MARKETPLACE | LINK | PANEL
+  message             String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  rounds              OfferRound[]
+  events              OfferEvent[]
+  opportunities       Opportunity[]
+  deal                Deal?
 
   @@index([artworkId, status])
   @@index([memberId, status])
@@ -602,22 +605,22 @@ model Contact {
 
 /// Opportunity on the Kanban (Interessados · Em conversa · Proposta · Fechado). HOT model.
 model Opportunity {
-  id          Int      @id @default(autoincrement())
-  contactId   Int
-  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  memberId    Int // responsible (the trigger reads memberId)
-  tenantId    Int?
-  artworkId   Int?
-  artwork     Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
-  offerId     Int?
-  offer       Offer?   @relation(fields: [offerId], references: [id], onDelete: SetNull)
-  stage       String   @default("INTERESTED") // INTERESTED | IN_CONVERSATION | OFFER | CLOSED
-  outcome     String? // WON | LOST
-  interest    String?
-  valueCents  BigInt?
+  id             Int      @id @default(autoincrement())
+  contactId      Int
+  contact        Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  memberId       Int // responsible (the trigger reads memberId)
+  tenantId       Int?
+  artworkId      Int?
+  artwork        Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
+  offerId        Int?
+  offer          Offer?   @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  stage          String   @default("INTERESTED") // INTERESTED | IN_CONVERSATION | OFFER | CLOSED
+  outcome        String? // WON | LOST
+  interest       String?
+  valueCents     BigInt?
   lastActivityAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([memberId, stage])
   @@index([tenantId, stage])
@@ -640,21 +643,21 @@ model Notification {
 
 /// The sale after the accepted offer: 6 phases + COMPLETED. HOT model; tenantId from the seller member.
 model Deal {
-  id                   Int       @id @default(autoincrement())
-  code                 String    @unique // DL-AAAA-NNNNNN
+  id                   Int                @id @default(autoincrement())
+  code                 String             @unique // DL-AAAA-NNNNNN
   artworkId            Int
-  artwork              Artwork   @relation(fields: [artworkId], references: [id])
-  offerId              Int       @unique
-  offer                Offer     @relation(fields: [offerId], references: [id])
+  artwork              Artwork            @relation(fields: [artworkId], references: [id])
+  offerId              Int                @unique
+  offer                Offer              @relation(fields: [offerId], references: [id])
   sellerMemberId       Int
   memberId             Int // = sellerMemberId (trigger)
   tenantId             Int?
   buyerUserId          Int
-  market               String    @default("PRIMARY") // PRIMARY | SECONDARY
+  market               String             @default("PRIMARY") // PRIMARY | SECONDARY
   amountCents          BigInt
-  shippingCents        BigInt    @default(0)
-  insuranceCents       BigInt    @default(0)
-  phase                String    @default("OFFER_ACCEPTED") // DEAL_PHASES
+  shippingCents        BigInt             @default(0)
+  insuranceCents       BigInt             @default(0)
+  phase                String             @default("OFFER_ACCEPTED") // DEAL_PHASES
   exceptionStatus      String? // CANCELLED | DISPUTE
   escrowPaymentRef     String?
   escrowPaidAt         DateTime?
@@ -668,8 +671,8 @@ model Deal {
   deliveredAt          DateTime?
   deliveryMarkerReadId Int?
   completedAt          DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   phaseEvents          DealPhaseEvent[]
   splits               DealSplit[]
   transfer             OwnershipTransfer?
@@ -695,13 +698,13 @@ model DealPhaseEvent {
 
 /// Split of the deal amount ("Repartição dos valores"). Sum = amountCents.
 model DealSplit {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   dealId      Int
-  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  deal        Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
   party       String // ARTIST | GALLERY | PLATFORM | ADVISOR | ARTIST_ROYALTY | SHIPPING | INSURANCE
   bps         Int
   amountCents BigInt
-  status      String   @default("HELD") // HELD | RELEASED | PAID
+  status      String  @default("HELD") // HELD | RELEASED | PAID
   payoutRef   String?
 
   @@index([dealId])
@@ -709,37 +712,37 @@ model DealSplit {
 
 /// Change of holder: on-platform (dealId) or off-platform (fee R$ 199).
 model OwnershipTransfer {
-  id               Int       @id @default(autoincrement())
-  certificateId    Int
-  artworkId        Int
-  artwork          Artwork   @relation(fields: [artworkId], references: [id])
-  dealId           Int?      @unique
-  deal             Deal?     @relation(fields: [dealId], references: [id])
-  fromUserId       Int
-  toUserId         Int?
-  toName           String
-  toEmail          String
-  toDocumentHash   String?
-  toDocumentEnc    String?
-  toDocumentMask   String?
-  priceCents       BigInt?
-  priceSealed      Boolean   @default(false)
-  sealedPriceHash  String?
-  royaltyCents     BigInt    @default(0)
-  feeCents         BigInt    @default(0)
-  status           String    @default("DRAFT") // DRAFT | INVITED | KYC_PENDING | SELLER_SIGNED | BUYER_SIGNED | SIGNED | FEE_PAID | AWAITING_TAP | COMPLETED | CANCELLED
-  inviteTokenHash  String?   @unique
-  inviteIssuedAt   DateTime?
-  kycStatus        String? // PENDING | APPROVED | REJECTED
-  sellerSignedAt   DateTime?
-  buyerSignedAt    DateTime?
-  feePaidAt        DateTime?
-  feePaymentRef    String?
-  tapMarkerReadId  Int?
-  completedAt      DateTime?
-  newVersionId     Int?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              Int       @id @default(autoincrement())
+  certificateId   Int
+  artworkId       Int
+  artwork         Artwork   @relation(fields: [artworkId], references: [id])
+  dealId          Int?      @unique
+  deal            Deal?     @relation(fields: [dealId], references: [id])
+  fromUserId      Int
+  toUserId        Int?
+  toName          String
+  toEmail         String
+  toDocumentHash  String?
+  toDocumentEnc   String?
+  toDocumentMask  String?
+  priceCents      BigInt?
+  priceSealed     Boolean   @default(false)
+  sealedPriceHash String?
+  royaltyCents    BigInt    @default(0)
+  feeCents        BigInt    @default(0)
+  status          String    @default("DRAFT") // DRAFT | INVITED | KYC_PENDING | SELLER_SIGNED | BUYER_SIGNED | SIGNED | FEE_PAID | AWAITING_TAP | COMPLETED | CANCELLED
+  inviteTokenHash String?   @unique
+  inviteIssuedAt  DateTime?
+  kycStatus       String? // PENDING | APPROVED | REJECTED
+  sellerSignedAt  DateTime?
+  buyerSignedAt   DateTime?
+  feePaidAt       DateTime?
+  feePaymentRef   String?
+  tapMarkerReadId Int?
+  completedAt     DateTime?
+  newVersionId    Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([fromUserId, status])
   @@index([toUserId, status])
@@ -748,21 +751,21 @@ model OwnershipTransfer {
 
 /// Resale royalty: 5 % of the appreciation, withheld in the split and paid to the artist.
 model RoyaltyPayment {
-  id                 Int       @id @default(autoincrement())
-  artworkId          Int
-  artwork            Artwork   @relation(fields: [artworkId], references: [id])
-  artistId           Int
-  transferId         Int?
-  dealId             Int?      @unique
-  deal               Deal?     @relation(fields: [dealId], references: [id])
-  saleCents          BigInt
-  previousSaleCents  BigInt
-  appreciationCents  BigInt
-  royaltyCents       BigInt
-  status             String    @default("PENDING") // PENDING | HELD | PAID
-  paidAt             DateTime?
-  receiptRef         String?
-  createdAt          DateTime  @default(now())
+  id                Int       @id @default(autoincrement())
+  artworkId         Int
+  artwork           Artwork   @relation(fields: [artworkId], references: [id])
+  artistId          Int
+  transferId        Int?
+  dealId            Int?      @unique
+  deal              Deal?     @relation(fields: [dealId], references: [id])
+  saleCents         BigInt
+  previousSaleCents BigInt
+  appreciationCents BigInt
+  royaltyCents      BigInt
+  status            String    @default("PENDING") // PENDING | HELD | PAID
+  paidAt            DateTime?
+  receiptRef        String?
+  createdAt         DateTime  @default(now())
 
   @@index([artistId, status])
 }
@@ -796,4 +799,173 @@ model InsurancePolicy {
   createdAt     DateTime @default(now())
 
   @@index([artworkId, status])
+}
+
+// ── Phase 5: plans, orders, invoices and appraisals ──────────────────────────
+
+/// Plan catalog (seeded by the migration; prices editable by staff).
+model Plan {
+  id            Int                @id @default(autoincrement())
+  code          String             @unique // ARTIST_FREE | ARTIST_STUDIO | GALLERY | GALLERY_PRO | ADVISOR
+  name          String
+  description   String
+  audience      String // ARTIST | GALLERY | ADVISOR
+  priceCents    BigInt
+  active        Boolean            @default(true)
+  features      PlanFeature[]
+  subscriptions PlanSubscription[]
+}
+
+/// A limit of the plan (`limit` null = unlimited).
+model PlanFeature {
+  id     Int    @id @default(autoincrement())
+  planId Int
+  plan   Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  key    String // ARTWORKS | TAGS_INCLUDED | APPRAISALS_INCLUDED | CERTIFICATIONS_MONTH | VIEWING_ROOMS | SEATS
+  limit  Int?
+
+  @@unique([planId, key])
+}
+
+/// One live subscription per tenant (partial unique index `PlanSubscription_tenant_active_key`, migration only).
+model PlanSubscription {
+  id                   Int       @id @default(autoincrement())
+  tenantId             Int
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  planId               Int
+  plan                 Plan      @relation(fields: [planId], references: [id])
+  status               String    @default("ACTIVE") // ACTIVE | CANCELLED | PAST_DUE
+  startedAt            DateTime  @default(now())
+  endedAt              DateTime?
+  currentPeriodEnd     DateTime?
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([tenantId, status])
+}
+
+/// Service catalog (SERVICE_CODES of lib/orders/domain.ts; seeded by the migration).
+model ServiceCatalog {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String?
+  priceCents  BigInt
+  unit        String  @default("UNIT") // UNIT | WEEK | QUOTE
+  active      Boolean @default(true)
+}
+
+/// An order of a catalog service (ORD-AAAA-NNNNNN), paid by Stripe (mock in dev).
+model Order {
+  id                 Int       @id @default(autoincrement())
+  code               String    @unique
+  tenantId           Int?
+  memberId           Int?
+  userId             Int? // the payer when a person (collector)
+  payerKind          String // BUYER | SELLER | ARTIST | GALLERY | REQUESTER | OTHER
+  serviceCode        String
+  description        String
+  quantity           Int       @default(1)
+  amountCents        BigInt
+  status             String    @default("OPEN") // OPEN | PAID | CANCELLED
+  provider           String    @default("STRIPE")
+  paymentRef         String?
+  paidAt             DateTime?
+  artworkId          Int?
+  dealId             Int?
+  appraisalRequestId Int?
+  transferId         Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  invoice            Invoice?
+
+  @@index([tenantId, status])
+  @@index([userId])
+}
+
+/// A line of "Faturas e notas fiscais": plan charge, paid order or commission held in the split.
+model Invoice {
+  id                Int      @id @default(autoincrement())
+  tenantId          Int?
+  userId            Int?
+  kind              String // PLAN | ORDER | COMMISSION
+  date              DateTime @default(now())
+  description       String
+  amountCents       BigInt
+  status            String // PAID | HELD_IN_SPLIT | OPEN | CANCELLED
+  fiscalDocumentRef String?
+  orderId           Int?     @unique
+  order             Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  dealId            Int?
+  subscriptionId    Int?
+  createdAt         DateTime @default(now())
+
+  @@index([tenantId, date])
+  @@index([userId, date])
+}
+
+/// The appraisal queue: who asked, for what, until when.
+model AppraisalRequest {
+  id                  Int        @id @default(autoincrement())
+  artworkId           Int
+  artwork             Artwork    @relation(fields: [artworkId], references: [id])
+  tenantId            Int?
+  memberId            Int?
+  requestedByUserId   Int
+  requesterLabel      String // Colecionador | Galeria | Artista | Seguradora | Consultor
+  purpose             String // SALE | INSURANCE | INVENTORY | ESTATE | COLLATERAL
+  dueOn               DateTime
+  assignedAppraiserId Int?
+  status              String     @default("QUEUED") // QUEUED | IN_PROGRESS | ISSUED | CANCELLED
+  orderId             Int?       @unique
+  appraisal           Appraisal?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([status, dueOn])
+  @@index([artworkId])
+}
+
+/// The signed valuation report (immutable once ISSUED; a new one supersedes).
+model Appraisal {
+  id               Int              @id @default(autoincrement())
+  requestId        Int              @unique
+  request          AppraisalRequest @relation(fields: [requestId], references: [id])
+  artworkId        Int
+  appraiserUserId  Int
+  version          Int              @default(1)
+  minCents         BigInt
+  suggestedCents   BigInt
+  maxCents         BigInt
+  methodology      String
+  comparablesJson  String           @default("[]")
+  contentHash      String
+  signatureJson    String?
+  verificationCode String           @unique // HA-L-AAAA-XXXX
+  pdfRef           String?
+  pdfHash          String?
+  signedAt         DateTime?
+  issuedAt         DateTime?
+  status           String           @default("DRAFT") // DRAFT | ISSUED | SUPERSEDED
+  createdAt        DateTime         @default(now())
+
+  @@index([artworkId])
+}
+
+/// A comparable sale of the artist (auction catalogs typed by hand, or platform sales mirrored here).
+model AppraisalComparable {
+  id          Int      @id @default(autoincrement())
+  artistId    Int
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  appraisalId Int?
+  label       String
+  dimensions  String?
+  technique   String?
+  priceCents  BigInt
+  soldOn      DateTime
+  source      String // AUCTION | GALLERY | HOUSEART
+  createdAt   DateTime @default(now())
+
+  @@index([artistId, soldOn])
 }

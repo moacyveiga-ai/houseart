@@ -10,6 +10,12 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
   const [sel, setSel] = useState(0)
   const [toast, setToast] = useState('')
   const w = items[sel]
+  async function requestAppraisal() {
+    if (!w) return
+    const res = await fetch('/api/appraisals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ artworkId: w.artworkId, purpose: 'INSURANCE', requesterLabel: 'Colecionador' }) })
+    const data = await res.json().catch(() => ({})) as { error?: string; orderCode?: string | null }
+    setToast(res.ok ? `Laudo pedido · avaliador credenciado em até 5 dias${data.orderCode ? ` · pedido ${data.orderCode}` : ''}` : data.error ?? 'Não foi possível pedir o laudo.')
+  }
   async function insure() {
     if (!w) return
     const res = await fetch(`/api/wallet/${w.artworkId}/insure`, { method: 'POST' })
@@ -54,7 +60,7 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setToast('Revenda pela carteira: em breve (mercado secundário, comissão 8% + 4%).')}>Vender</button>
             {transferOn ? <Link href={`/transfer?artworkId=${w.artworkId}`} className="ha-btn ha-btn--outline ha-btn--sm">Transferir</Link> : null}
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={w.insured} onClick={insure}>Segurar</button>
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setToast('Laudo: avaliador credenciado em até 5 dias (módulo de laudos).')}>Pedir laudo</button>
+            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={requestAppraisal}>Pedir laudo</button>
             <a className="ha-btn ha-btn--outline ha-btn--sm" href={`/verify/${w.publicId}`} target="_blank" rel="noreferrer">Compartilhar certificado</a>
           </div>
         </section>

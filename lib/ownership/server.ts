@@ -18,6 +18,7 @@ import { recordEvent } from '@/lib/certificate-events/server'
 import { contentHashOf, sha256Hex } from '@/lib/certificates/core'
 import { publicBaseUrl } from '@/lib/public-url'
 import { mockMasterKey, verifySun } from '@/lib/physical-markers/sun-core'
+import { placeOrder } from '@/lib/orders/server'
 
 export const TRANSFER_FEE_CENTS = 19900n
 const sha = (v: string) => createHash('sha256').update(v).digest('hex')
@@ -127,7 +128,8 @@ async function afterSignature(id: number) {
 export async function payTransferFee(userId: number, id: number, paymentRef: string | null = null) {
   const t = await transferOf(userId, id)
   if (t.status !== 'SIGNED') throw new ArtworkError('NOT_SIGNED', 'As duas assinaturas vêm antes da taxa.', 409)
-  const ref = paymentRef ?? (process.env.STRIPE_ENV === 'live' ? null : `mock_fee_${id}_${Date.now()}`)
+  const order = await placeOrder({ serviceCode: 'OFFPLATFORM_TRANSFER', payerKind: 'SELLER', userId, artworkId: t.artworkId, transferId: id })
+  const ref = order?.paymentRef ?? paymentRef ?? (process.env.STRIPE_ENV === 'live' ? null : `mock_fee_${id}_${Date.now()}`)
   if (!ref) throw new ArtworkError('PAYMENT_REQUIRED', 'Pagamento real ainda não disponível.', 503)
   const r = await prisma.ownershipTransfer.updateMany({ where: { id, status: 'SIGNED' }, data: { status: 'AWAITING_TAP', feePaidAt: new Date(), feePaymentRef: ref } })
   if (r.count === 0) throw new ArtworkError('CHANGED', 'A transferência acabou de mudar.', 409)

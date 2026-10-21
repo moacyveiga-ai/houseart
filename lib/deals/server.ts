@@ -54,6 +54,8 @@ export async function createDealFromOffer(offerId: number): Promise<{ id: number
       } })
       await tx.offer.updateMany({ where: { id: o.id, status: 'ACCEPTED' }, data: { status: 'IN_DEAL' } })
       await tx.artwork.updateMany({ where: { id: o.artworkId }, data: { status: 'IN_DEAL' } })
+      const buyerFee = lines.find((l) => l.party === 'PLATFORM')
+      if (buyerFee) await tx.invoice.create({ data: { userId: buyer.id, kind: 'COMMISSION', description: `Compra ${d.code} · ${o.artwork.title}`, amountCents: amount, status: 'HELD_IN_SPLIT', dealId: d.id } })
       if (royaltyCents > 0n) await tx.royaltyPayment.create({ data: { artworkId: o.artworkId, artistId: o.artwork.artistId, dealId: d.id, saleCents: amount, previousSaleCents: previous, appreciationCents: amount - previous, royaltyCents, status: 'HELD' } })
       return d
     })
@@ -194,6 +196,7 @@ async function completeTransfer(dealId: number) {
       await tx.certificate.update({ where: { id: cert.id }, data: { currentVersionId: v.id } })
       await tx.ownershipTransfer.create({ data: { certificateId: cert.id, artworkId: d.artworkId, dealId: d.id, fromUserId: prev.holderUserId ?? 0, toUserId: buyer.id, toName: d.offer.buyerName, toEmail: d.offer.buyerEmail, toDocumentHash: d.offer.buyerDocumentHash, toDocumentMask: d.offer.buyerDocumentMask, priceCents: d.amountCents, royaltyCents: d.royalty?.royaltyCents ?? 0n, status: 'COMPLETED', completedAt: new Date(), newVersionId: v.id } })
       await tx.dealSplit.updateMany({ where: { dealId: d.id }, data: { status: 'RELEASED' } })
+      await tx.invoice.updateMany({ where: { dealId: d.id, status: 'HELD_IN_SPLIT' }, data: { status: 'PAID' } })
       await tx.deal.update({ where: { id: d.id }, data: { phase: 'COMPLETED', completedAt: new Date() } })
       await tx.dealPhaseEvent.create({ data: { dealId: d.id, phase: 'COMPLETED', title: 'Escritura emitida', description: 'Novo titular registrado e valores liberados', actorKind: 'SYSTEM' } })
       await tx.offer.updateMany({ where: { id: d.offerId }, data: { status: 'CONVERTED' } })

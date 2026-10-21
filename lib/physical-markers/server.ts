@@ -3,6 +3,7 @@
 import 'server-only'
 import { randomBytes } from 'node:crypto'
 import { prisma } from '@/lib/prisma'
+import { placeOrder } from '@/lib/orders/server'
 import { canView, memberFilter, memberOfScope, tenantOfScope, type Scope } from '@/lib/scope/core'
 import { totalScope } from '@/lib/scope/context'
 import { audit } from '@/lib/audit'
@@ -95,6 +96,7 @@ export async function requestMarkers(scope: Scope, quantity: number) {
   if (!memberId || !tenantId) throw new ArtworkError('NO_MEMBER', 'Só membros pedem etiquetas.', 403)
   if (!Number.isInteger(quantity) || quantity < MARKER_KIT_MIN || quantity > MARKER_KIT_MAX) throw new ArtworkError('BAD_QUANTITY', 'Quantidade inválida.', 400)
   const order = await prisma.markerOrder.create({ data: { tenantId, memberId, quantity, unitPriceCents: MARKER_UNIT_PRICE_CENTS } })
+  await placeOrder({ serviceCode: 'TAG_KIT', payerKind: 'ARTIST', quantity, tenantId, memberId, description: `Kit de etiquetas NFC × ${quantity}` })
   void audit.create({ entity: 'marker_order', entityId: order.id, after: { quantity, memberId } })
   return order
 }

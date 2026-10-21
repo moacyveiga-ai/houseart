@@ -30,8 +30,17 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
   const [save, setSave] = useState<SaveState>('saved')
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState(false)
+  const [estimate, setEstimate] = useState<{ minLabel: string; suggestedLabel: string; maxLabel: string; line: string } | null>(null)
   const timer = useRef<number | null>(null)
   const locked = a.status !== 'DRAFT'
+
+  // the reference range of step 5 comes from registered comparables (lib/appraisal); without them, no range
+  useEffect(() => {
+    if (step !== 4) return
+    let alive = true
+    void fetch(`/api/artworks/${a.id}/estimate`).then((r) => (r.ok ? r.json() : null)).then((d: { estimate: { minLabel: string; suggestedLabel: string; maxLabel: string; line: string } | null } | null) => { if (alive && d) setEstimate(d.estimate) }).catch(() => {})
+    return () => { alive = false }
+  }, [step, a.id])
 
   const patch = useCallback(async (body: Record<string, unknown>) => {
     setSave('saving')
@@ -233,7 +242,13 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
                     onBlur={() => savePrice(a.saleMode, a.listPriceCents)} />
                 </label>
               ) : null}
-              <p className="ha-muted ha-sm">A estimativa de referência aparece quando houver vendas comparáveis registradas. Não é laudo.</p>
+              {estimate ? (
+                <div className="ha-stack" style={{ gap: 'var(--ha-space-1)' }}>
+                  <div className="ha-row ha-row--between ha-num"><span>{estimate.minLabel}</span><b>{estimate.suggestedLabel} sugerido</b><span>{estimate.maxLabel}</span></div>
+                  <div className="ha-progress" aria-hidden><span style={{ width: '50%' }} /></div>
+                  <p className="ha-muted ha-sm">{estimate.line}</p>
+                </div>
+              ) : <p className="ha-muted ha-sm">A estimativa de referência aparece quando houver vendas comparáveis registradas. Não é laudo.</p>}
             </fieldset>
           ) : null}
 

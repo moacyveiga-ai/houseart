@@ -13,6 +13,11 @@ export interface OpenedPrivateFile { body: ReadableStream<Uint8Array>; contentTy
 type Loader = (id: number, scope: Scope) => Promise<string | null>
 
 const LOADERS: Partial<Record<PrivateFileKind, Loader>> = {
+  'appraisal-pdf': async (id, scope) => {
+    const a = await prisma.appraisal.findUnique({ where: { id }, select: { pdfRef: true, request: { select: { artwork: { select: { memberId: true, tenantId: true } } } } } })
+    if (!a) return null
+    return canView(scope, a.request.artwork) ? a.pdfRef : null
+  },
   'artwork-master': async (id, scope) => {
     const m = await prisma.artworkMedia.findUnique({ where: { id }, select: { masterRef: true, artwork: { select: { memberId: true, tenantId: true } } } })
     if (!m) return null

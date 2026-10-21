@@ -5,7 +5,8 @@ import { HouseArtLogo } from './HouseArtLogo'
 import { NAV, PROFILE_LABELS, type ProfileKind } from '@/lib/profiles/nav'
 
 export interface ShellUser { initials: string; profile: ProfileKind; name?: string }
-export interface TickerItem { label: string; value: string; delta?: string }
+import { IndexTicker, type TickerItem } from '@/components/ds/IndexTicker'
+export type { TickerItem }
 
 /**
  * The shell of the design: ticker (indices) → topbar 64px (logo 192px, search,
@@ -23,16 +24,7 @@ export function AppShell({ user, activeKey, badges = {}, ticker = [], children }
   const nav = NAV[user.profile]
   return (
     <div className="ha-shell">
-      {ticker.length > 0 ? (
-        <div className="ha-ticker" aria-label="Índices do mercado">
-          {ticker.map((t) => (
-            <span key={t.label}>
-              {t.label} <b>{t.value}</b>
-              {t.delta ? <span className="ha-ticker__delta">{t.delta}</span> : null}
-            </span>
-          ))}
-        </div>
-      ) : null}
+      <IndexTicker items={ticker} />
       <header className="ha-topbar">
         <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="full_vert" height={48} /></Link>
         <form className="ha-topbar__search" role="search" action="/search">

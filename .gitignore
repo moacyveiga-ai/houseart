@@ -74,3 +74,4 @@ nohup.out
 # native dev postgres cluster
 /.pgdata
 /.pgdata.log
+.claude-shots/

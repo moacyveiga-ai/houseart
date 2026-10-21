@@ -58,7 +58,7 @@ export function LoginForm({ next }: { next: string | null }) {
 
   return (
     <form className="ha-stack" onSubmit={mode === 'password' ? submitPassword : startCode}>
-      <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setMode(mode === 'password' ? 'code' : 'password')}>
+      <button type="button" className="ha-btn ha-btn--ink ha-btn--md" onClick={() => setMode(mode === 'password' ? 'code' : 'password')}>
         <Icon name="mail" size={18} />{mode === 'password' ? 'Entrar com e-mail' : 'Entrar com senha'}
       </button>
       <div className="ha-divider"><span>ou</span></div>
@@ -68,8 +68,8 @@ export function LoginForm({ next }: { next: string | null }) {
       ) : null}
       {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
       <button className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} type="submit">{mode === 'password' ? 'Entrar' : 'Receber código'}</button>
-      <div className="ha-row">
-        <a className="ha-link" href="/recover-password">Esqueci a senha</a>
+      <div className="ha-row ha-login__links">
+        <a className="ha-link ha-link--quiet" href="/recover-password">Esqueci a senha</a>
         <a className="ha-link" href="/signup">Criar conta</a>
       </div>
     </form>

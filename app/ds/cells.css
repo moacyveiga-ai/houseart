@@ -40,6 +40,7 @@
 .ha-btn[disabled] { opacity: .5; cursor: default; }
 .ha-btn--disabled { color: var(--ha-ink-300); border-color: var(--ha-paper-200); background: transparent; cursor: default; }
 .ha-link { background: transparent; border: 0; padding: 0; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); cursor: pointer; }
+.ha-link--quiet { font-weight: 400; }
 .ha-iconbtn { border: 0; background: transparent; cursor: pointer; padding: 0; color: var(--ha-fg); display: inline-flex; }
 
 /* ── fields ─────────────────────────────────────────────────────────────── */
@@ -87,6 +88,8 @@
 .ha-wall--40 img { box-shadow: none; }
 .ha-grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--ha-space-8); }
 .ha-stack { display: flex; flex-direction: column; }
+.ha-stack--3 { gap: var(--ha-space-3); }
+.ha-login__card .ha-stack--3 { gap: var(--ha-space-3); }
 .ha-row { display: flex; align-items: center; }
 .ha-page { display: flex; flex-direction: column; gap: var(--ha-space-6); }
 .ha-page--loose { gap: var(--ha-space-8); }
@@ -196,7 +199,16 @@
 .ha-radio-card--on .ha-radio-card__dot { border: 6px solid var(--ha-ink-900); }
 .ha-login { min-height: 100vh; display: flex; flex-wrap: wrap; }
 .ha-login__art { flex: 1 1 480px; min-height: 360px; background: var(--ha-ink-900); color: var(--ha-paper-50); display: flex; flex-direction: column; padding: var(--ha-space-10); }
+.ha-login__stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--ha-space-10) 0; }
+.ha-login__frame { width: min(62%, 360px); aspect-ratio: 2296 / 2869; border: var(--ha-border-w) solid var(--ha-ink-700); background: linear-gradient(160deg, var(--ha-ink-700), var(--ha-ink-900) 70%); }
+.ha-login__foot { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--ha-space-4); flex-wrap: wrap; }
+.ha-login__claim { font-family: var(--ha-font-display); font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); }
 .ha-login__form { flex: 1 1 420px; display: flex; align-items: center; justify-content: center; padding: var(--ha-space-10) var(--ha-space-6); }
+.ha-login__card { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: var(--ha-space-5); }
+.ha-login__card .ha-stack { gap: var(--ha-space-5); }
+.ha-login__lead { margin: var(--ha-space-2) 0 0; color: var(--ha-fg-muted); }
+.ha-login__links { justify-content: space-between; }
+@media (max-width: 720px) { .ha-login__art { min-height: 0; padding: var(--ha-space-6); } .ha-login__stage { display: none; } .ha-login__claim { font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); } }
 .ha-profile-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ha-space-3); text-align: left; padding: var(--ha-space-6); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); cursor: pointer; transition: box-shadow var(--ha-dur-fast), border-color var(--ha-dur-fast); text-decoration: none; color: inherit; }
 .ha-profile-card:hover { border-color: var(--ha-ink-900); box-shadow: var(--ha-shadow-sm); }
 .ha-profile-card:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
@@ -254,8 +266,7 @@
 .ha-card__body { padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); display: flex; flex-direction: column; gap: var(--ha-space-2); }
 a.ha-card { color: inherit; text-decoration: none; }
 .ha-wall img { width: 100%; height: 100%; object-fit: cover; }
-.ha-login__caption { position: absolute; left: var(--ha-space-8); bottom: var(--ha-space-8); color: var(--ha-paper-50); }
-.ha-login__caption .ha-eyebrow, .ha-login__caption .ha-title { color: inherit; }
+.ha-login__caption { font-size: var(--ha-text-caption); color: var(--ha-ink-300); }
 .ha-kanban__col .ha-select { margin-top: var(--ha-space-2); font-size: var(--ha-text-caption); padding: var(--ha-space-1) var(--ha-space-2); }
 .ha-tabs .ha-chip__n { margin-left: var(--ha-space-1); }
 .ha-callout--ok { background: var(--ha-verified-100); }

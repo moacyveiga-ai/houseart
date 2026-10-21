@@ -41,7 +41,7 @@ export function SignupForm() {
   }
   return (
     <form className="ha-stack" onSubmit={start}>
-      <div className="ha-grid-cards ha-grid-cards--2">
+      <div className="ha-stack ha-stack--3">
         {PROFILE_CARDS.filter((c) => (SELF_SIGNUP as readonly string[]).includes(c.kind)).map((c) => (
           <label key={c.kind} className={`ha-radio-card${form.profileKind === c.kind ? ' ha-radio-card--on' : ''}`}>
             <input type="radio" name="profileKind" value={c.kind} checked={form.profileKind === c.kind} onChange={() => setForm({ ...form, profileKind: c.kind as (typeof SELF_SIGNUP)[number] })} className="ha-sr" />

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { requirePanelPage } from '../../../_session'
 import { getArtwork } from '@/lib/artworks/server'
 import { ArtworkWizard, type WizardArtwork } from '@/components/artworks/ArtworkWizard'
+import { ListForSaleDialog } from '@/components/artworks/ListForSaleDialog'
 
 export const metadata = { title: 'Cadastro de obra — HouseArt' }
 
@@ -21,5 +22,11 @@ export default async function EditArtworkPage({ params }: { params: Promise<{ id
     duplicates: a.duplicateChecks.map((d) => ({ id: d.id, similarityBps: d.similarityBps, candidate: { title: d.candidate.title, year: d.candidate.year, publicId: d.candidate.publicId, mine: d.candidate.memberId === user.memberId } })),
     artistName: a.artist.name,
   }
-  return <ArtworkWizard initial={initial} userName={user.name} />
+  const saleable = a.status === 'AUTHENTICATED' || a.status === 'LISTED'
+  return (
+    <>
+      {saleable ? <div className="ha-page" style={{ paddingBottom: 0 }}><div className="ha-row ha-row--end"><ListForSaleDialog artworkId={a.id} title={a.title} defaultPrice={a.listPriceCents ? String(Number(a.listPriceCents) / 100) : ''} listed={a.status === 'LISTED'} /></div></div> : null}
+      <ArtworkWizard initial={initial} userName={user.name} />
+    </>
+  )
 }

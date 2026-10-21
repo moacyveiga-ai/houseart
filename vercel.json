@@ -2,5 +2,14 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install --legacy-peer-deps",
   "ignoreCommand": "bash -c '[ \"$VERCEL_ENV\" != \"production\" ]'",
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/certificate-anchor",
+      "schedule": "20 3 * * *"
+    },
+    {
+      "path": "/api/cron/offers-expire",
+      "schedule": "15 * * * *"
+    }
+  ]
 }

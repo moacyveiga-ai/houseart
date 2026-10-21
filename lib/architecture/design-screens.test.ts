@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { SCREEN_MAP } from './screen-map'
 import { ROOT } from './source-graph'
 
-const PENDING_BASELINE = 9
+const PENDING_BASELINE = 6
 
 describe('design screens ratchet', () => {
   const html = readFileSync(join(ROOT, 'houseart-design/screens.html'), 'utf8')

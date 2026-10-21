@@ -240,6 +240,9 @@ model Artwork {
   duplicateChecks   DuplicateCheck[]         @relation("DuplicateCheckArtwork")
   duplicateOf       DuplicateCheck[]         @relation("DuplicateCheckCandidate")
   certificate       Certificate?
+  mandates          Mandate[]
+  offers            Offer[]
+  opportunities     Opportunity[]
 
   @@index([tenantId, status])
   @@index([memberId, status])
@@ -475,4 +478,157 @@ model JobLease {
   /// the lock expires on its own here (a run that died without releasing)
   lockedUntil DateTime
   updatedAt   DateTime @updatedAt
+}
+
+/// Sale mandate of a listed artwork. `reservePriceCents` (the floor) NEVER leaves the backend. HOT model.
+model Mandate {
+  id                 Int      @id @default(autoincrement())
+  artworkId          Int
+  artwork            Artwork  @relation(fields: [artworkId], references: [id])
+  memberId           Int
+  tenantId           Int?
+  listPriceCents     BigInt
+  reservePriceCents  BigInt
+  fixedPrice         Boolean  @default(false)
+  autoNegotiatorOn   Boolean  @default(false)
+  autoAcceptMinBps   Int      @default(9200)
+  acceptsTrade       Boolean  @default(false)
+  shippingIncluded   Boolean  @default(false)
+  status             String   @default("ACTIVE") // ACTIVE | SUPERSEDED | CLOSED
+  version            Int      @default(1)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  offers             Offer[]
+
+  @@index([artworkId, status])
+  @@index([memberId])
+}
+
+/// A proposal from a collector on an artwork. HOT model; tenantId from the seller member by trigger.
+model Offer {
+  id                   Int       @id @default(autoincrement())
+  code                 String    @unique // OFR-AAAA-NNNNNN
+  artworkId            Int
+  artwork              Artwork   @relation(fields: [artworkId], references: [id])
+  mandateId            Int?
+  mandate              Mandate?  @relation(fields: [mandateId], references: [id])
+  sellerMemberId       Int
+  memberId             Int // = sellerMemberId (the trigger reads memberId)
+  tenantId             Int?
+  buyerUserId          Int?
+  buyerName            String
+  buyerEmail           String
+  buyerDocumentHash    String?
+  buyerDocumentEnc     String?
+  buyerDocumentMask    String?
+  buyerKind            String    @default("COLLECTOR") // COLLECTOR | ADVISOR_FOR_CLIENT
+  buyerCity            String?
+  offeredCents         BigInt
+  acceptedCents        BigInt?
+  status               String    @default("AWAITING_OTP") // OFFER_STATUSES
+  expiresAt            DateTime
+  otpHash              String?
+  otpAttempts          Int       @default(0)
+  otpExpiresAt         DateTime?
+  retractionTokenHash  String?
+  retractionIssuedAt   DateTime?
+  origin               String    @default("MARKETPLACE") // MARKETPLACE | LINK | PANEL
+  message              String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  rounds               OfferRound[]
+  events               OfferEvent[]
+  opportunities        Opportunity[]
+
+  @@index([artworkId, status])
+  @@index([memberId, status])
+  @@index([tenantId, status])
+  @@index([buyerEmail])
+  @@index([status, expiresAt])
+}
+
+model OfferRound {
+  id          Int      @id @default(autoincrement())
+  offerId     Int
+  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  number      Int
+  author      String // BUYER | SELLER | NEGOTIATOR
+  amountCents BigInt
+  message     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([offerId, number])
+}
+
+model OfferEvent {
+  id          Int      @id @default(autoincrement())
+  offerId     Int
+  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  kind        String // CREATED | CONFIRMED | ACCEPTED | REFUSED | COUNTERED | BUYER_REPLIED | NEGOTIATOR_ACCEPTED | EXPIRED | RETRACTED
+  actorKind   String // BUYER | SELLER | NEGOTIATOR | STAFF | SYSTEM
+  actorUserId Int?
+  payloadJson String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([offerId, createdAt])
+}
+
+/// CRM contact of a member/gallery (collector). HOT model; tenantId from the owner member by trigger.
+model Contact {
+  id                   Int           @id @default(autoincrement())
+  memberId             Int // owner (the trigger reads memberId)
+  tenantId             Int?
+  name                 String
+  email                String?
+  phone                String?
+  documentHash         String?
+  city                 String?
+  origin               String        @default("MANUAL") // MANUAL | MARKETPLACE | OFFER | INSTAGRAM | REFERRAL
+  collectorProfileJson String        @default("{}")
+  notes                String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  opportunities        Opportunity[]
+
+  @@unique([tenantId, email])
+  @@index([memberId])
+  @@index([tenantId, documentHash])
+}
+
+/// Opportunity on the Kanban (Interessados · Em conversa · Proposta · Fechado). HOT model.
+model Opportunity {
+  id          Int      @id @default(autoincrement())
+  contactId   Int
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  memberId    Int // responsible (the trigger reads memberId)
+  tenantId    Int?
+  artworkId   Int?
+  artwork     Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
+  offerId     Int?
+  offer       Offer?   @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  stage       String   @default("INTERESTED") // INTERESTED | IN_CONVERSATION | OFFER | CLOSED
+  outcome     String? // WON | LOST
+  interest    String?
+  valueCents  BigInt?
+  lastActivityAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([memberId, stage])
+  @@index([tenantId, stage])
+  @@index([contactId])
+}
+
+/// In-app notification (bell). Audience by `userId`.
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  kind      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
 }

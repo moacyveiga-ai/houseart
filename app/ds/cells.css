@@ -256,3 +256,5 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-wall img { width: 100%; height: 100%; object-fit: cover; }
 .ha-login__caption { position: absolute; left: var(--ha-space-8); bottom: var(--ha-space-8); color: var(--ha-paper-50); }
 .ha-login__caption .ha-eyebrow, .ha-login__caption .ha-title { color: inherit; }
+.ha-kanban__col .ha-select { margin-top: var(--ha-space-2); font-size: var(--ha-text-caption); padding: var(--ha-space-1) var(--ha-space-2); }
+.ha-tabs .ha-chip__n { margin-left: var(--ha-space-1); }

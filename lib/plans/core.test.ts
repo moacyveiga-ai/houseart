@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { artworkRegistrationGate, monthKey, monthRange, priceLabel, usageBars } from './core'
+import { artworkRegistrationGate, comparePublicPlans, monthKey, monthRange, planCtaLabel, planFeatureLines, priceLabel, usageBars } from './core'
 import { appraisalCode, isAppraisalCode } from '@/lib/appraisal/domain'
 
 describe('plans core', () => {
@@ -29,5 +29,16 @@ describe('plans core', () => {
     expect(c).toMatch(/^HA-L-2026-[A-Z2-9]{4}$/)
     expect(isAppraisalCode(c)).toBe(true)
     expect(isAppraisalCode('HA-2026-ABCD-EFGH')).toBe(false)
+  })
+
+  it('public price cards: lines from the limits, prototype order and CTA', () => {
+    expect(planFeatureLines({ ARTWORKS: 10, TAGS_INCLUDED: 0, APPRAISALS_INCLUDED: 0 })).toEqual(['Até 10 obras cadastradas'])
+    expect(planFeatureLines({ ARTWORKS: 60, TAGS_INCLUDED: 10, APPRAISALS_INCLUDED: 1 })).toEqual(['Até 60 obras cadastradas', '10 etiquetas incluídas por ano', '1 laudo incluído'])
+    expect(planFeatureLines({ ARTWORKS: null, CERTIFICATIONS_MONTH: 15, VIEWING_ROOMS: 3, SEATS: 1 })).toEqual(['Obras ilimitadas', '15 certificações por mês', '3 viewing rooms', '1 usuário'])
+    expect(planFeatureLines({})).toEqual([])
+    const order = [{ audience: 'ADVISOR', priceCents: 14900n }, { audience: 'GALLERY', priceCents: 89900n }, { audience: 'ARTIST', priceCents: 4900n }, { audience: 'GALLERY', priceCents: 34900n }, { audience: 'ARTIST', priceCents: 0n }] as const
+    expect([...order].sort(comparePublicPlans).map((p) => p.priceCents)).toEqual([0n, 4900n, 34900n, 89900n, 14900n])
+    expect(planCtaLabel('Artista', 0n)).toBe('Começar grátis')
+    expect(planCtaLabel('Ateliê', 4900n)).toBe('Assinar Ateliê')
   })
 })

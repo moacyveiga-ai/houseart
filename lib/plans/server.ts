@@ -7,8 +7,9 @@ import { flagOn } from '@/lib/flags'
 import { audit } from '@/lib/audit'
 import { ArtworkError } from '@/lib/artworks/server'
 import { memberOfScope, tenantOfScope, type Scope } from '@/lib/scope/core'
+import { totalScope } from '@/lib/scope/context'
 import { chargeNow } from '@/lib/stripe/door'
-import { artworkRegistrationGate, monthRange, usageBars, type UsageBar } from './core'
+import { artworkRegistrationGate, comparePublicPlans, monthRange, planFeatureLines, usageBars, type UsageBar } from './core'
 import { audienceOfMemberKind, defaultPlanFor, isPlanCode, type PlanAudience, type PlanCode, type UsageKey } from './domain'
 
 export interface PlanView { code: PlanCode; name: string; description: string; priceCents: bigint; audience: PlanAudience; limits: Partial<Record<UsageKey, number | null>>; subscriptionId: number | null }
@@ -91,4 +92,17 @@ export async function changePlan(scope: Scope, code: string, actor: { userId: nu
   })
   void audit.event({ entity: 'plan_subscription', entityId: sub.id, action: 'change', userId: actor.userId, after: { code } })
   return { subscriptionId: sub.id, code }
+}
+
+// ── the public site ("Como funciona" › Preços): every active plan, no session ──
+export interface PublicPlan { code: PlanCode; name: string; audience: PlanAudience; priceCents: bigint; description: string; features: string[]; highlighted: boolean }
+
+/** The price cards of the public site. Runs in totalScope (public, no session). */
+export async function listPublicPlans(): Promise<PublicPlan[]> {
+  return totalScope('public:plans', async () => {
+    const rows = await prisma.plan.findMany({ where: { active: true }, include: { features: true } })
+    return rows
+      .map((p) => ({ code: p.code as PlanCode, name: p.name, audience: p.audience as PlanAudience, priceCents: p.priceCents, description: p.description, features: planFeatureLines(limitsOf(p.features)), highlighted: p.code === 'ARTIST_STUDIO' }))
+      .sort(comparePublicPlans)
+  })
 }

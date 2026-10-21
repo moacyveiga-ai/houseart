@@ -34,7 +34,7 @@ export function AppShell({ user, activeKey, badges = {}, ticker = [], children }
         </div>
       ) : null}
       <header className="ha-topbar">
-        <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo /></Link>
+        <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="full_vert" height={48} /></Link>
         <form className="ha-topbar__search" role="search" action="/search">
           <Icon name="search" size={20} />
           <input name="q" className="ha-topbar__input" placeholder="Buscar obras, artistas, galerias ou IDs" aria-label="Buscar" />

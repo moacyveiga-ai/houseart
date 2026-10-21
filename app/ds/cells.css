@@ -232,8 +232,11 @@
 .ha-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* ── additions for the React primitives (Fase 0) ─────────────────────────── */
-.ha-logo { display: inline-flex; align-items: center; gap: var(--ha-space-2); color: inherit; }
-.ha-logo__word { font-family: var(--ha-font-display); font-size: 20px; letter-spacing: -.01em; }
+.ha-logo { display: inline-flex; align-items: center; line-height: 0; }
+.ha-logo img { height: auto; }
+.ha-logo__dark { display: none; }
+[data-ha-theme="dark"] .ha-logo__light { display: none; }
+[data-ha-theme="dark"] .ha-logo__dark { display: inline; }
 .ha-topbar__input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; color: var(--ha-fg); outline: none; }
 .ha-topbar__input::placeholder { color: var(--ha-fg-muted); }
 .ha-timeline { list-style: none; margin: 0; padding: 0; }

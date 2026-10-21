@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#FBFAF7;-webkit-font-smoothing:antialiased}a{color:var(--ha-info-500)}a:hover{color:var(--ha-ink-900)}*{box-sizing:border-box}</style>
+</helmet>
+<div data-ha-theme="{{ tema }}" style="background:var(--ha-bg);color:var(--ha-fg-body);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);min-height:100vh">
+
+<header style="border-bottom:var(--ha-border-w) solid var(--ha-border);position:sticky;top:0;z-index:5;background:var(--ha-bg)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-4) var(--ha-space-6);display:flex;align-items:center;gap:var(--ha-space-6);flex-wrap:wrap">
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:28px;width:auto;display:block;flex:none"><span style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600">Design System · v0.1</span></div>
+    <nav style="display:flex;gap:var(--ha-space-5);flex-wrap:wrap;font-size:var(--ha-text-body-sm);margin-left:auto">
+      <a href="#principios" style="color:var(--ha-fg-body);text-decoration:none">Princípios</a>
+      <a href="#marca" style="color:var(--ha-fg-body);text-decoration:none">Marca</a>
+      <a href="#cores" style="color:var(--ha-fg-body);text-decoration:none">Cores</a>
+      <a href="#tipo" style="color:var(--ha-fg-body);text-decoration:none">Tipografia</a>
+      <a href="#base" style="color:var(--ha-fg-body);text-decoration:none">Espaço e forma</a>
+      <a href="#herdados" style="color:var(--ha-fg-body);text-decoration:none">Herdados</a>
+      <a href="#novos" style="color:var(--ha-fg-body);text-decoration:none">Componentes HouseArt</a>
+    </nav>
+  </div>
+</header>
+
+<main style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6) var(--ha-space-24)">
+
+  <section style="padding:var(--ha-space-24) 0 var(--ha-space-16);display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--ha-space-12);align-items:end">
+    <div>
+      <div style="font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;color:var(--ha-fg-muted);font-weight:600">Família House</div>
+      <h1 style="margin:var(--ha-space-4) 0 0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-hero);line-height:var(--ha-lh-hero);color:var(--ha-fg);letter-spacing:-0.01em;text-wrap:balance">A interface recua para a obra aparecer.</h1>
+    </div>
+    <p style="margin:0;font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg);max-width:520px;text-wrap:pretty">Tokens <code style="font-size:var(--ha-text-body-sm)">--ha-*</code>, escala de 4 px, Atomic Design e estados completos. Estrutura herdada da Housebroker; identidade de galeria. Todas as telas HouseArt usam apenas as peças desta página.</p>
+  </section>
+
+  <section id="principios" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-8);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Princípios</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--ha-space-8)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-fg)">Permanência</div><p style="margin:0;color:var(--ha-fg-muted)">O certificado é um documento que dura décadas. Nada de modismo visual.</p></div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-fg)">Silêncio</div><p style="margin:0;color:var(--ha-fg-muted)">Fundos neutros, molduras finas, imagem grande, pouca interface em volta.</p></div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-fg)">Precisão</div><p style="margin:0;color:var(--ha-fg-muted)">Números, datas, IDs e status sempre tabulares, legíveis e verificáveis.</p></div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-fg)">Continuidade</div><p style="margin:0;color:var(--ha-fg-muted)">Mesma top bar, sidebar e lógica das plataformas House; identidade própria.</p></div>
+    </div>
+  </section>
+
+  <section id="marca" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-8);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Marca</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--ha-space-6);margin-bottom:var(--ha-space-12)">
+      <div style="background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-paper-200);padding:var(--ha-space-16) var(--ha-space-8);display:flex;align-items:center;justify-content:center;min-height:240px"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="width:100%;max-width:320px;display:block"></div>
+      <div style="background:var(--ha-ink-900);padding:var(--ha-space-16) var(--ha-space-8);display:flex;align-items:center;justify-content:center;min-height:240px"><img src="houseart/marca/marca_houseart_full_horiz_negativo.png" alt="houseArt" style="width:100%;max-width:320px;display:block"></div>
+      <div style="border:var(--ha-border-w) solid var(--ha-border);padding:var(--ha-space-8);display:flex;flex-direction:column;gap:var(--ha-space-3);font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm)">
+        <div style="font-weight:600;color:var(--ha-fg)">Regras</div>
+        <div>Grafia no texto corrido: HouseArt. Na marca: houseArt, com “Art” em destaque.</div>
+        <div>Símbolo: losango de quatro módulos, um por linguagem (pintura, escultura, fotografia, literatura).</div>
+        <div>Colorida sobre claro, negativo sobre ink-900, mono quando só houver uma cor. Nunca sobre foto de obra.</div>
+        <div>Área de proteção: a altura de um módulo do símbolo em volta da marca. Largura mínima da horizontal: 120 px.</div>
+        <div>Top bar: horizontal simples ou completa, 28–32 px de altura, mesma posição das plataformas House.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-4)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">Aplicação por tela</h3></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));column-gap:var(--ha-space-8);margin-bottom:var(--ha-space-12);font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm)">
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Top bar pública, apps, sistemas web</span><span style="color:var(--ha-fg-muted)">Completa horiz. colorida · 30 / 26 px</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Home sobre foto, Entrar, Cadastro, Verificar</span><span style="color:var(--ha-fg-muted)">Completa horiz. negativo</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Rodapés</span><span style="color:var(--ha-fg-muted)">Completa vertical negativo · 64 px</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Splash dos apps</span><span style="color:var(--ha-fg-muted)">Completa 45° vertical colorida · fundo paper</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Cartão da carteira</span><span style="color:var(--ha-fg-muted)">Logotipo horiz. negativo · 14 px</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Certificado</span><span style="color:var(--ha-fg-muted)">Completa horiz. colorida · 28 px</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Ícone e favicon</span><span style="color:var(--ha-fg-muted);display:flex;align-items:center;gap:var(--ha-space-2)"><img src="houseart/marca/simbolo_color.png" alt="" style="height:20px;display:block">Símbolo colorido</span></div>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Linguagens</span><span style="color:var(--ha-fg-muted)">Filtros, capas da Home, selo da obra, posts</span></div>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-6)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">Versões</h3><span style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">colorida · mono · negativo</span></div>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);margin-bottom:var(--ha-space-12)">
+      <sc-for list="{{ marcas }}" as="m" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:160px repeat(3,minmax(0,1fr));gap:var(--ha-space-4);align-items:stretch">
+          <div style="display:flex;flex-direction:column;justify-content:center;gap:2px"><div style="font-weight:600;color:var(--ha-fg);font-size:var(--ha-text-body-sm)">{{ m.nome }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">{{ m.uso }}</div></div>
+          <div style="background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-paper-200);padding:var(--ha-space-6);display:flex;align-items:center;justify-content:center;height:180px"><img src="{{ m.color }}" alt="" style="max-width:100%;max-height:100%;display:block"></div>
+          <div style="background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-paper-200);padding:var(--ha-space-6);display:flex;align-items:center;justify-content:center;height:180px"><img src="{{ m.mono }}" alt="" style="max-width:100%;max-height:100%;display:block"></div>
+          <div style="background:var(--ha-ink-900);padding:var(--ha-space-6);display:flex;align-items:center;justify-content:center;height:180px"><img src="{{ m.neg }}" alt="" style="max-width:100%;max-height:100%;display:block"></div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-2)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">Linguagens</h3><span style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">submarcas por categoria</span></div>
+    <p style="margin:0 0 var(--ha-space-6);color:var(--ha-fg-muted);max-width:720px">Cada módulo do símbolo vira a marca de uma linguagem. Use em filtros, capas de categoria, curadoria e comunidade, nunca junto com o símbolo completo.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--ha-space-6);margin-bottom:var(--ha-space-12)">
+      <sc-for list="{{ linguagens }}" as="l" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;border:var(--ha-border-w) solid var(--ha-border)">
+          <div style="background:var(--ha-paper-50);padding:var(--ha-space-8);display:flex;align-items:center;justify-content:center;height:200px"><img src="{{ l.color }}" alt="{{ l.nome }}" style="max-width:100%;max-height:100%;display:block"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;border-top:var(--ha-border-w) solid var(--ha-border)">
+            <div style="background:var(--ha-paper-50);padding:var(--ha-space-4);display:flex;align-items:center;justify-content:center;height:100px;border-right:var(--ha-border-w) solid var(--ha-border)"><img src="{{ l.mono }}" alt="" style="max-width:100%;max-height:100%;display:block"></div>
+            <div style="background:var(--ha-ink-900);padding:var(--ha-space-4);display:flex;align-items:center;justify-content:center;height:100px"><img src="{{ l.neg }}" alt="" style="max-width:100%;max-height:100%;display:block"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--ha-space-3);padding:var(--ha-space-3);border-top:var(--ha-border-w) solid var(--ha-border)">
+            <span style="width:24px;height:24px;flex:none;background:{{ l.hex }}"></span>
+            <div style="display:flex;flex-direction:column"><span style="font-weight:600;color:var(--ha-fg);font-size:var(--ha-text-body-sm)">{{ l.nome }}</span><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">{{ l.token }} · {{ l.hex }}</code></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--ha-space-3);font-size:var(--ha-text-caption);color:var(--ha-fg-muted)"><span style="width:24px;height:24px;background:#484848"></span><code>--ha-brand-grafite · #484848</code> · logotipo “house” e textos da marca</div>
+  </section>
+
+  <section id="cores" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-2);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Cores</h2>
+    <p style="margin:0 0 var(--ha-space-8);color:var(--ha-fg-muted);max-width:720px">Um único acento por tela (sand). Status só com os três tokens de status. Texto sobre paper em ink-700 ou ink-900.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--ha-space-4)">
+      <sc-for list="{{ cores }}" as="c" hint-placeholder-count="14">
+        <div style="display:flex;flex-direction:column;border:var(--ha-border-w) solid var(--ha-border);background:var(--ha-bg)">
+          <div style="height:88px;background:{{ c.v }};border-bottom:var(--ha-border-w) solid var(--ha-border)"></div>
+          <div style="padding:var(--ha-space-3);display:flex;flex-direction:column;gap:2px">
+            <code style="font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-fg)">{{ c.t }}</code>
+            <span style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted);font-variant-numeric:tabular-nums">{{ c.hex }}</span>
+            <span style="font-size:var(--ha-text-caption);color:var(--ha-fg-body)">{{ c.uso }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="tipo" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-8);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Tipografia</h2>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">display · 48/56</code><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-display);line-height:var(--ha-lh-display);color:var(--ha-fg)">A escritura da obra de arte</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">h1 · 36/44</code><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Construção para um dia claro</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">h2 · 28/36</code><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-fg)">Cadeia de titularidade</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">h3 · 22/30</code><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);line-height:var(--ha-lh-h3);color:var(--ha-fg)">Joana Teixeira</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">body-lg · 18/28</code><div style="font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg)">Sua obra recebe um certificado que muda de titular a cada venda.</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">body · 16/24</code><div>Óleo sobre linho, 100 × 80 cm. Assinada no verso.</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">body-sm · 14/20</code><div style="font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm)">Certificada em 12 de março de 2026</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">label · 14/20 · 600</code><div style="font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm);font-weight:600">Confirmar recebimento</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">caption · 12/16</code><div style="font-size:var(--ha-text-caption);line-height:var(--ha-lh-caption);color:var(--ha-fg-muted)">Colecionador particular, Salvador/BA</div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--ha-space-6);align-items:baseline;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><code style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">id · caption 600 · tabular</code><div style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ha-fg)">HA-2026-7K3F-9Q2M · R$ 38.000,00 · 12/03/2026</div></div>
+    </div>
+  </section>
+
+  <section id="base" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-8);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Espaço, raio, sombra, movimento</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--ha-space-12)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <div style="font-weight:600;color:var(--ha-fg);margin-bottom:var(--ha-space-2)">Escala de 4 px</div>
+        <sc-for list="{{ espacos }}" as="e" hint-placeholder-count="10">
+          <div style="display:grid;grid-template-columns:120px 48px minmax(0,1fr);gap:var(--ha-space-3);align-items:center;font-size:var(--ha-text-caption)"><code style="color:var(--ha-fg-muted)">{{ e.t }}</code><span style="font-variant-numeric:tabular-nums">{{ e.px }}</span><div style="height:12px;width:{{ e.px }};background:var(--ha-ink-700)"></div></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-8)">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <div style="font-weight:600;color:var(--ha-fg)">Raio</div>
+          <div style="display:flex;gap:var(--ha-space-4);flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);align-items:center;font-size:var(--ha-text-caption)"><div style="width:72px;height:72px;border:var(--ha-border-w) solid var(--ha-ink-900);border-radius:var(--ha-radius-0)"></div>0 · obras</div>
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);align-items:center;font-size:var(--ha-text-caption)"><div style="width:72px;height:72px;border:var(--ha-border-w) solid var(--ha-ink-900);border-radius:var(--ha-radius-sm)"></div>sm 4 · inputs</div>
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);align-items:center;font-size:var(--ha-text-caption)"><div style="width:72px;height:72px;border:var(--ha-border-w) solid var(--ha-ink-900);border-radius:var(--ha-radius-md)"></div>md 8 · cards</div>
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);align-items:center;font-size:var(--ha-text-caption)"><div style="width:72px;height:72px;border:var(--ha-border-w) solid var(--ha-ink-900);border-radius:var(--ha-radius-lg)"></div>lg 16 · modais</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <div style="font-weight:600;color:var(--ha-fg)">Sombra (nunca em repouso)</div>
+          <div style="display:flex;gap:var(--ha-space-6);flex-wrap:wrap;font-size:var(--ha-text-caption)">
+            <div style="width:120px;height:72px;background:var(--ha-paper-50);border-radius:var(--ha-radius-md);box-shadow:var(--ha-shadow-sm);display:flex;align-items:flex-end;padding:var(--ha-space-2)">shadow-sm · hover</div>
+            <div style="width:120px;height:72px;background:var(--ha-paper-50);border-radius:var(--ha-radius-md);box-shadow:var(--ha-shadow-lg);display:flex;align-items:flex-end;padding:var(--ha-space-2)">shadow-lg · modal</div>
+            <div style="width:120px;height:72px;background:var(--ha-paper-50);box-shadow:var(--ha-shadow-wall);display:flex;align-items:flex-end;padding:var(--ha-space-2)">shadow-wall · obra</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm)">
+          <div style="font-weight:600;color:var(--ha-fg)">Movimento</div>
+          <div><code>--ha-dur-fast</code> 160 ms · hover e foco</div>
+          <div><code>--ha-dur-panel</code> 240 ms · painéis e folhas</div>
+          <div><code>--ha-dur-tap</code> 600 ms · leitura da etiqueta (anel sand que fecha em verified)</div>
+          <div>Grid 12 col · gutter 24 · máx. 1280 · tablet 8 · mobile 4 com margem 16</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="herdados" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-2);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Herdados da Housebroker</h2>
+    <p style="margin:0 0 var(--ha-space-8);color:var(--ha-fg-muted);max-width:720px">Mesmos componentes, revestidos com tokens <code>--ha-*</code>. Um botão primário (color · sand) por tela; foco sempre com anel sand de 2 px.</p>
+
+    <div style="font-weight:600;color:var(--ha-fg);margin-bottom:var(--ha-space-4)">Button · Átomo <span style="font-weight:400;color:var(--ha-fg-muted)">— passe o mouse nas linhas “interativo”</span></div>
+    <div style="overflow-x:auto;border:var(--ha-border-w) solid var(--ha-border)">
+      <div style="display:grid;grid-template-columns:120px repeat(7,minmax(130px,1fr));min-width:1060px;font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)"></div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">interativo</div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">default</div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">hover</div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">active</div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">focus</div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">disabled</div>
+        <div style="padding:var(--ha-space-3);border-bottom:var(--ha-border-w) solid var(--ha-border)">loading</div>
+
+        <div style="padding:var(--ha-space-3);display:flex;align-items:center;color:var(--ha-fg);font-weight:600">color</div>
+        <div style="padding:var(--ha-space-3)"><button style="font:inherit;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer;transition:background var(--ha-dur-fast) var(--ha-ease)" style-hover="background:var(--ha-sand-600)" style-active="transform:translateY(1px)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Comprar</button></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900)">Comprar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-sand-600);color:var(--ha-ink-900)">Comprar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-sand-600);color:var(--ha-ink-900);transform:translateY(1px)">Comprar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Comprar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-paper-200);color:var(--ha-ink-300)">Comprar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900)">{{ spin }}Processando</span></div>
+
+        <div style="padding:var(--ha-space-3);display:flex;align-items:center;color:var(--ha-fg);font-weight:600">fill</div>
+        <div style="padding:var(--ha-space-3)"><button style="font:inherit;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:0;background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer;transition:background var(--ha-dur-fast) var(--ha-ease)" style-hover="background:var(--ha-ink-700)" style-active="transform:translateY(1px)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Salvar ficha</button></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50)">Salvar ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-ink-700);color:var(--ha-paper-50)">Salvar ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-ink-700);color:var(--ha-paper-50);transform:translateY(1px)">Salvar ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50);outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Salvar ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-paper-200);color:var(--ha-ink-300)">Salvar ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50)">{{ spinLight }}Salvando</span></div>
+
+        <div style="padding:var(--ha-space-3);display:flex;align-items:center;color:var(--ha-fg);font-weight:600">bord</div>
+        <div style="padding:var(--ha-space-3)"><button style="font:inherit;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);cursor:pointer;transition:background var(--ha-dur-fast) var(--ha-ease)" style-hover="background:var(--ha-paper-100)" style-active="transform:translateY(1px)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Voltar</button></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-ink-900)">Voltar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:var(--ha-paper-100);color:var(--ha-ink-900)">Voltar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:var(--ha-paper-200);color:var(--ha-ink-900);transform:translateY(1px)">Voltar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-ink-900);outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Voltar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-300);color:var(--ha-ink-300)">Voltar</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-ink-900)">{{ spin }}Carregando</span></div>
+
+        <div style="padding:var(--ha-space-3);display:flex;align-items:center;color:var(--ha-fg);font-weight:600">empty</div>
+        <div style="padding:var(--ha-space-3)"><button style="font:inherit;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-2);border-radius:var(--ha-radius-md);border:0;background:transparent;color:var(--ha-ink-900);cursor:pointer;text-underline-offset:4px" style-hover="text-decoration:underline" style-active="color:var(--ha-ink-500)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Ver ficha</button></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2);color:var(--ha-ink-900)">Ver ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2);color:var(--ha-ink-900);text-decoration:underline;text-underline-offset:4px">Ver ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2);color:var(--ha-ink-500);text-decoration:underline;text-underline-offset:4px">Ver ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2);color:var(--ha-ink-900);border-radius:var(--ha-radius-md);outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Ver ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2);color:var(--ha-ink-300)">Ver ficha</span></div>
+        <div style="padding:var(--ha-space-3)"><span style="display:inline-flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2);color:var(--ha-ink-900)">{{ spin }}Abrindo</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:var(--ha-space-4);align-items:center;flex-wrap:wrap;margin:var(--ha-space-4) 0 var(--ha-space-12);font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">
+      Tamanhos:
+      <span style="display:inline-flex;font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50)">sm · 32</span>
+      <span style="display:inline-flex;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50)">md · 40</span>
+      <span style="display:inline-flex;font-size:var(--ha-text-body);font-weight:600;padding:var(--ha-space-3) var(--ha-space-6);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50)">lg · 48</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--ha-space-8)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-4)">
+        <div style="font-weight:600;color:var(--ha-fg)">Input · Átomo</div>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-fg)">Título da obra
+          <input value="Construção para um dia claro" style="font:inherit;font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none;transition:border-color var(--ha-dur-fast)" style-hover="border-color:var(--ha-ink-500)" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-fg)">ID da obra
+          <input placeholder="HA-0000-0000-0000" style="font:inherit;font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none;font-variant-numeric:tabular-nums;letter-spacing:.04em" style-focus="border-color:var(--ha-ink-900);box-shadow:0 0 0 var(--ha-focus-w) var(--ha-sand-500)"></label>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-fg)">Dimensões (cm)
+          <input value="100 x 80 x" style="font:inherit;font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-alert-500);background:var(--ha-paper-50);color:var(--ha-ink-900);outline:none">
+          <span style="font-weight:400;font-size:var(--ha-text-caption);color:var(--ha-alert-500)">Informe altura × largura × profundidade.</span></label>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-300)">Tiragem
+          <input disabled="" value="Obra única" style="font:inherit;font-weight:400;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-100);color:var(--ha-ink-300)"></label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-4)">
+        <div style="font-weight:600;color:var(--ha-fg)">Tabs · Toggle · Chip</div>
+        <div style="display:flex;gap:var(--ha-space-6);border-bottom:var(--ha-border-w) solid var(--ha-border);font-size:var(--ha-text-body-sm);font-weight:600">
+          <span style="padding:var(--ha-space-3) 0;color:var(--ha-fg);box-shadow:inset 0 -2px 0 var(--ha-ink-900)">Ficha</span>
+          <span style="padding:var(--ha-space-3) 0;color:var(--ha-fg-muted)">Proveniência</span>
+          <span style="padding:var(--ha-space-3) 0;color:var(--ha-fg-muted)">Certificado</span>
+          <span style="padding:var(--ha-space-3) 0;color:var(--ha-fg-muted)">Laudos</span>
+        </div>
+        <div onClick="{{ toggleSeguro }}" style="display:flex;align-items:center;justify-content:space-between;gap:var(--ha-space-4);cursor:pointer;font-size:var(--ha-text-body-sm)">
+          <span>Seguro de trânsito</span>
+          <span style="width:44px;height:24px;border-radius:var(--ha-radius-full);background:{{ tgBg }};position:relative;transition:background var(--ha-dur-fast)"><span style="position:absolute;top:3px;left:{{ tgX }};width:18px;height:18px;border-radius:50%;background:var(--ha-paper-50);transition:left var(--ha-dur-fast) var(--ha-ease)"></span></span>
+        </div>
+        <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap;font-size:var(--ha-text-body-sm)">
+          <span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);background:var(--ha-ink-900);color:var(--ha-paper-50)">Pintura</span>
+          <span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Escultura</span>
+          <span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Fotografia</span>
+          <span style="padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-full);border:var(--ha-border-w) solid var(--ha-ink-300)">Até R$ 50 mil</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-4)">
+        <div style="font-weight:600;color:var(--ha-fg)">index-ticker · Molécula</div>
+        <div style="display:flex;gap:var(--ha-space-6);padding:var(--ha-space-2) var(--ha-space-4);background:var(--ha-ink-900);color:var(--ha-paper-200);font-size:var(--ha-text-caption);font-variant-numeric:tabular-nums;flex-wrap:wrap">
+          <span>Índice HouseArt <b style="color:var(--ha-paper-50);font-weight:600">112,4</b> <span style="color:var(--ha-ink-300)">+0,8%</span></span>
+          <span>Dólar <b style="color:var(--ha-paper-50);font-weight:600">R$ 5,42</b></span>
+          <span>Euro <b style="color:var(--ha-paper-50);font-weight:600">R$ 6,11</b></span>
+        </div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Substitui IPCA/INCC do cabeçalho Housebroker. Valores ilustrativos.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="novos" style="padding:var(--ha-space-12) 0;border-top:var(--ha-border-w) solid var(--ha-border)">
+    <h2 style="margin:0 0 var(--ha-space-2);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-fg)">Componentes HouseArt</h2>
+    <p style="margin:0 0 var(--ha-space-12);color:var(--ha-fg-muted);max-width:720px">O núcleo novo: a obra, sua identidade e sua escritura.</p>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-6)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">artwork-frame</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Átomo</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--ha-space-8);margin-bottom:var(--ha-space-16)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+        <div style="background:var(--ha-wall);padding:var(--ha-space-12);display:flex;justify-content:center"><div style="width:180px;aspect-ratio:4/5;background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-ink-900);padding:var(--ha-passepartout)"><img src="{{ img.mSup }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Moldura + passe-partout 12 · sem sombra</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+        <div style="background:var(--ha-wall);padding:var(--ha-space-12);display:flex;justify-content:center"><div style="width:180px;aspect-ratio:4/5;box-shadow:var(--ha-shadow-wall)"><img src="{{ img.mSup }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Tela sem moldura · sombra de parede</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+        <div style="background:var(--ha-ink-900);padding:var(--ha-space-12);display:flex;justify-content:center"><div style="width:180px;aspect-ratio:4/5;border:var(--ha-border-w) solid var(--ha-ink-500)"><img src="{{ img.mSup }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Escuro · viewing room</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--ha-space-12);margin-bottom:var(--ha-space-16)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">status-badge</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Átomo</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-verified-100);color:var(--ha-verified-500);font-size:var(--ha-text-caption);font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;font-variation-settings:'FILL' 1">verified</span>Autenticada</span>
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-pending-100);color:var(--ha-ink-900);font-size:var(--ha-text-caption);font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;color:var(--ha-pending-500)">schedule</span>Em certificação</span>
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-alert-100);color:var(--ha-alert-500);font-size:var(--ha-text-caption);font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px">report</span>Contestada</span>
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-alert-500);color:var(--ha-paper-50);font-size:var(--ha-text-caption);font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px">gpp_bad</span>Roubada</span>
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-paper-200);color:var(--ha-ink-700);font-size:var(--ha-text-caption);font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px">swap_horiz</span>Transferida</span>
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-ink-900);font-size:var(--ha-text-caption);font-weight:600">À venda</span>
+          <span style="display:inline-flex;align-items:center;gap:var(--ha-space-1);padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-sm);background:var(--ha-ink-900);color:var(--ha-paper-50);font-size:var(--ha-text-caption);font-weight:600">Vendida</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">artwork-id</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Átomo</span></div>
+        <div style="display:inline-flex;align-items:center;gap:var(--ha-space-3);padding:var(--ha-space-2) var(--ha-space-2) var(--ha-space-2) var(--ha-space-3);border:var(--ha-border-w) solid var(--ha-border);border-radius:var(--ha-radius-sm);align-self:flex-start">
+          <div style="width:32px;height:32px;background:repeating-conic-gradient(var(--ha-ink-900) 0 25%,var(--ha-paper-50) 0 50%) 0 0/8px 8px;border:2px solid var(--ha-ink-900)"></div>
+          <span style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ha-fg)">HA-2026-7K3F-9Q2M</span>
+          <button onClick="{{ copiar }}" aria-label="Copiar ID" style="font:inherit;display:inline-flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-caption);font-weight:600;border:0;background:transparent;color:var(--ha-fg);padding:var(--ha-space-1) var(--ha-space-2);border-radius:var(--ha-radius-sm);cursor:pointer" style-hover="background:var(--ha-paper-100)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500)"><span style="font-family:'Material Symbols Rounded';font-size:16px">{{ copiaIcon }}</span>{{ copiaTxt }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-6)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">artwork-card</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Molécula</span><span style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">grid · lista</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--ha-space-8);margin-bottom:var(--ha-space-8)">
+      <sc-for list="{{ obras }}" as="o" hint-placeholder-count="4">
+        <a href="HouseArt Obra.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-3);text-decoration:none;color:inherit;border-radius:var(--ha-radius-md);transition:box-shadow var(--ha-dur-fast)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:4px">
+          <div style="background:var(--ha-wall);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)"><img src="{{ o.src }}" alt="{{ o.titulo }}" style="max-width:100%;max-height:100%;display:block;box-shadow:var(--ha-shadow-wall)"></div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-fg)">{{ o.artista }}</div>
+            <div style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-body);color:var(--ha-fg-body)">{{ o.titulo }}, {{ o.ano }}</div>
+            <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">{{ o.tecnica }} · {{ o.dim }}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--ha-space-2)"><span style="font-size:var(--ha-text-body-sm);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ha-fg)">{{ o.preco }}</span><span style="display:inline-flex;align-items:center;gap:2px;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-verified-500)"><span style="font-family:'Material Symbols Rounded';font-size:16px;font-variation-settings:'FILL' 1">verified</span>Autenticada</span></div>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;border-top:var(--ha-border-w) solid var(--ha-border);margin-bottom:var(--ha-space-16)">
+      <sc-for list="{{ obrasLista }}" as="o" hint-placeholder-count="2">
+        <div style="display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)">
+          <div style="width:72px;height:72px;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-2)"><img src="{{ o.src }}" alt="" style="max-width:100%;max-height:100%"></div>
+          <div style="min-width:0"><div style="font-family:var(--ha-font-display);font-style:italic;color:var(--ha-fg)">{{ o.titulo }}, {{ o.ano }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">{{ o.artista }} · {{ o.tecnica }} · {{ o.dim }}</div></div>
+          <span style="font-size:var(--ha-text-body-sm);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ha-fg)">{{ o.preco }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--ha-space-12);margin-bottom:var(--ha-space-16)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">provenance-chain</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Molécula</span></div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ prov }}" as="p" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:var(--ha-space-3)">
+              <div style="display:flex;flex-direction:column;align-items:center"><span style="width:32px;height:32px;border-radius:50%;border:var(--ha-border-w) solid var(--ha-ink-300);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-fg);background:var(--ha-bg)">{{ p.icon }}</span><span style="flex:1;width:1px;background:var(--ha-ink-300);min-height:16px"></span></div>
+              <div style="padding-bottom:var(--ha-space-5)"><div style="font-weight:600;color:var(--ha-fg);font-size:var(--ha-text-body-sm)">{{ p.ev }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">{{ p.parte }}</div></div>
+              <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted);font-variant-numeric:tabular-nums;padding-top:var(--ha-space-1)">{{ p.data }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">certificate-sheet</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Organismo</span></div>
+        <div style="background:var(--ha-paper-50);color:var(--ha-ink-700);border:var(--ha-border-w) solid var(--ha-paper-200);box-shadow:var(--ha-shadow-sm);padding:var(--ha-space-8);display:flex;flex-direction:column;gap:var(--ha-space-5)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--ha-space-4)">
+            <div style="display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900)"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:26px;width:auto;display:block;flex:none"></div>
+            <div style="text-align:right"><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Certificado nº</div><div style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ha-ink-900)">HA-2026-7K3F-9Q2M</div></div>
+          </div>
+          <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-ink-900)">Certificado de autenticidade e titularidade</div>
+          <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--ha-space-4);padding:var(--ha-space-4) 0;border-top:var(--ha-border-w) solid var(--ha-paper-200);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+            <div style="background:var(--ha-wall);padding:var(--ha-space-2);display:flex;align-items:center;justify-content:center"><img src="{{ img.mSup }}" alt="" style="max-width:100%;max-height:96px"></div>
+            <div style="display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--ha-space-4);row-gap:var(--ha-space-1);font-size:var(--ha-text-caption);line-height:var(--ha-lh-caption)">
+              <span style="color:var(--ha-ink-500)">Obra</span><span style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-body-sm);color:var(--ha-ink-900)">Construção para um dia claro</span>
+              <span style="color:var(--ha-ink-500)">Artista</span><span>Joana Teixeira</span>
+              <span style="color:var(--ha-ink-500)">Técnica</span><span>Óleo sobre linho · 100 × 80 cm · 2025</span>
+              <span style="color:var(--ha-ink-500)">Titular</span><span>Colecionador particular, Salvador/BA</span>
+              <span style="color:var(--ha-ink-500)">Etiqueta</span><span>Vinculada em 12/03/2026</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4)">
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-caption);color:var(--ha-ink-500)">
+              <span><b style="color:var(--ha-ink-900);font-weight:600">Assinado</b> digitalmente pela artista</span>
+              <span>Carimbo do tempo ICP-Brasil · 12/03/2026 14:32</span>
+              <span>2 titulares desde a emissão</span>
+            </div>
+            <div style="width:64px;height:64px;flex:none;background:repeating-conic-gradient(var(--ha-ink-900) 0 25%,var(--ha-paper-50) 0 50%) 0 0/10px 10px;border:3px solid var(--ha-ink-900)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--ha-space-12);margin-bottom:var(--ha-space-16)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">price-box</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Molécula</span></div>
+        <div style="border:var(--ha-border-w) solid var(--ha-border);border-radius:var(--ha-radius-md);padding:var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-4)">
+          <div><div style="font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);font-weight:500;color:var(--ha-fg);font-variant-numeric:tabular-nums">R$ 38.000</div><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">ou 10× de R$ 3.800 sem juros</div></div>
+          <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) 0;border-top:var(--ha-border-w) solid var(--ha-border);border-bottom:var(--ha-border-w) solid var(--ha-border)"><span>Frete e seguro para 40140-110</span><span style="font-weight:600;font-variant-numeric:tabular-nums;color:var(--ha-fg)">R$ 1.240</span></div>
+          <button style="font:inherit;font-size:var(--ha-text-body);font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Comprar a preço fixo</button>
+          <button style="font:inherit;font-size:var(--ha-text-body);font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-fg);cursor:pointer" style-hover="background:var(--ha-paper-100)">Fazer oferta</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">split-summary</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Molécula</span></div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <div style="display:flex;height:12px;border-radius:var(--ha-radius-sm);overflow:hidden">
+            <span style="width:47.4%;background:var(--ha-ink-900)"></span><span style="width:40.5%;background:var(--ha-ink-500)"></span><span style="width:12.1%;background:var(--ha-sand-500)"></span>
+          </div>
+          <div style="display:flex;flex-direction:column;font-size:var(--ha-text-body-sm);font-variant-numeric:tabular-nums">
+            <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="width:8px;height:8px;background:var(--ha-ink-900)"></span>Artista</span><span>R$ 18.012</span></div>
+            <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="width:8px;height:8px;background:var(--ha-ink-500)"></span>Galeria Ladeira</span><span>R$ 15.428</span></div>
+            <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;border-bottom:var(--ha-border-w) solid var(--ha-border)"><span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="width:8px;height:8px;background:var(--ha-sand-500)"></span>HouseArt · 12%</span><span>R$ 4.560</span></div>
+            <div style="display:flex;justify-content:space-between;padding:var(--ha-space-2) 0;font-weight:600;color:var(--ha-fg)"><span>Total da obra</span><span>R$ 38.000</span></div>
+          </div>
+          <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Visível só ao vendedor. Frete e seguro são repassados à parte.</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;align-items:baseline;gap:var(--ha-space-3)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">valuation-gauge</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Molécula</span></div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <div style="position:relative;height:40px">
+            <div style="position:absolute;left:0;right:0;top:18px;height:4px;background:var(--ha-paper-200)"></div>
+            <div style="position:absolute;left:18%;right:22%;top:18px;height:4px;background:var(--ha-ink-900)"></div>
+            <div style="position:absolute;left:52%;top:8px;width:4px;height:24px;margin-left:-2px;background:var(--ha-sand-500)"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);font-variant-numeric:tabular-nums">
+            <div><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Mínimo</div><div style="font-weight:600;color:var(--ha-fg)">R$ 32 mil</div></div>
+            <div style="text-align:center"><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Sugerido</div><div style="font-weight:600;color:var(--ha-fg)">R$ 38 mil</div></div>
+            <div style="text-align:right"><div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Máximo</div><div style="font-weight:600;color:var(--ha-fg)">R$ 45 mil</div></div>
+          </div>
+          <span style="align-self:flex-start;font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300)">Estimativa de referência</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-6)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">tag-reader · tap-confirm</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Organismo · mobile</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--ha-space-6);margin-bottom:var(--ha-space-16)">
+      <div style="background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-lg);padding:var(--ha-space-8) var(--ha-space-6);display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-5);text-align:center">
+        {{ anelLendo }}
+        <div><div style="font-weight:600">Encoste o celular no verso da obra</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-300);margin-top:var(--ha-space-1)">Lendo a etiqueta de autenticação…</div></div>
+      </div>
+      <div style="background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-lg);padding:var(--ha-space-8) var(--ha-space-6);display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-5);text-align:center">
+        <div style="width:112px;height:112px;border-radius:50%;border:4px solid var(--ha-verified-500);display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:48px;color:var(--ha-verified-500)">check</span></div>
+        <div><div style="font-weight:600">Etiqueta válida</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-300);margin-top:var(--ha-space-1)">HA-2026-7K3F-9Q2M</div></div>
+      </div>
+      <div style="background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-lg);padding:var(--ha-space-8) var(--ha-space-6);display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-5);text-align:center">
+        <div style="width:112px;height:112px;border-radius:50%;border:4px solid var(--ha-alert-500);display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:48px;color:var(--ha-alert-500)">link_off</span></div>
+        <div><div style="font-weight:600">Etiqueta removida</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-300);margin-top:var(--ha-space-1)">A etiqueta foi descolada da obra. Fale com o suporte.</div></div>
+      </div>
+      <div style="background:var(--ha-paper-100);border-radius:var(--ha-radius-lg);padding:var(--ha-space-8) var(--ha-space-6);display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-5);text-align:center;color:var(--ha-ink-700)">
+        <div style="width:112px;height:112px;border-radius:50%;border:4px solid var(--ha-paper-200);display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:44px;color:var(--ha-ink-900)">contactless</span></div>
+        <div style="font-weight:600;color:var(--ha-ink-900)">Recebeu a obra?</div>
+        <button style="font:inherit;font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:0;background:var(--ha-sand-500);color:var(--ha-ink-900);cursor:pointer" style-hover="background:var(--ha-sand-600)">Confirmar recebimento</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:var(--ha-space-3);margin-bottom:var(--ha-space-6)"><h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-fg)">ownership-wallet-item</h3><span style="font-size:var(--ha-text-caption);font-weight:600;padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:var(--ha-sand-100);color:var(--ha-ink-900)">Molécula</span></div>
+    <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--ha-space-5);border:var(--ha-border-w) solid var(--ha-border);border-radius:var(--ha-radius-md);padding:var(--ha-space-4);max-width:640px">
+      <div style="background:var(--ha-wall);padding:var(--ha-space-3);display:flex;align-items:center;justify-content:center"><img src="{{ img.k8 }}" alt="" style="max-width:100%;box-shadow:var(--ha-shadow-wall)"></div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);min-width:0">
+        <div style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-h3);line-height:var(--ha-lh-h3);color:var(--ha-fg)">Partitura para Itapuã, 2023</div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-fg-muted)">Rafael Moura · adquirida em 04/08/2025 · valor registrado <b style="font-weight:600;color:var(--ha-fg)">R$ 46.500</b></div>
+        <div style="display:flex;gap:var(--ha-space-2);flex-wrap:wrap;margin-top:var(--ha-space-2)">
+          <span style="font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-fg)">Vender</span>
+          <span style="font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-300);color:var(--ha-fg)">Transferir</span>
+          <span style="font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-300);color:var(--ha-fg)">Segurar</span>
+          <span style="font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-1) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-300);color:var(--ha-fg)">Avaliar</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:var(--ha-space-12) 0 0;border-top:var(--ha-border-w) solid var(--ha-border);display:flex;gap:var(--ha-space-6);flex-wrap:wrap;align-items:center">
+    <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-fg)">Telas montadas com este sistema</div>
+    <a href="HouseArt Verificacao.dc.html" style="font-weight:600;font-size:var(--ha-text-body-sm)">Página pública de verificação →</a>
+    <a href="HouseArt Obra.dc.html" style="font-weight:600;font-size:var(--ha-text-body-sm)">Página da obra →</a>
+    <a href="HouseArt Site.dc.html" style="font-weight:600;font-size:var(--ha-text-body-sm)">Site institucional →</a>
+    <a href="HouseArt Web App.dc.html" style="font-weight:600;font-size:var(--ha-text-body-sm)">Web app logado →</a>
+    <a href="HouseArt App Artista.dc.html" style="font-weight:600;font-size:var(--ha-text-body-sm)">App mobile →</a>
+  </section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;claro&quot;,&quot;escuro&quot;],&quot;default&quot;:&quot;claro&quot;,&quot;tsType&quot;:&quot;'claro'|'escuro'&quot;}}">
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const IMG = {
+  mSup: FP + 'Suprematist_Composition_-_Kazimir_Malevich.jpg?width=900',
+  k8: FP + 'Wassily_Kandinsky_Composition_VIII.jpg?width=900',
+  mAir: FP + 'Suprematist_Composition_-_Airplane_Flying_(Malevich,_1915).jpg?width=900',
+  mAbs: FP + 'Suprematism_-_Abstract_Composition_(Malevich,_1915).jpg?width=900',
+  hAlt: FP + 'Hilma_af_Klint_-_1907_-_Altarpiece_-_No_1_-_Group_X_-_Altarpieces.jpg?width=900',
+  hSvan: FP + 'Hilma_af_Klint,_1915,_Svanen,_No._17.jpg?width=900',
+};
+class Component extends DCLogic {
+  state = { seguro: true, copiado: false };
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const s = this.state;
+    const spinner = (c) => React.createElement('span', { style: { width: 14, height: 14, borderRadius: '50%', border: '2px solid ' + c, borderTopColor: 'transparent', display: 'inline-block', animation: 'ha-spin 700ms linear infinite' } });
+    return {
+      tema: this.props.tema === 'escuro' ? 'dark' : 'light',
+      img: IMG,
+      marcas: [
+        ['full_horiz', 'Completa horizontal', 'Principal · top bar, site'], ['full_vert', 'Completa vertical', 'Capa, splash, redes'],
+        ['full_45_horiz', 'Completa 45° horizontal', 'Peças editoriais'], ['full_45_vert', 'Completa 45° vertical', 'Cartazes, convites'],
+        ['simples_horiz', 'Logotipo horizontal', 'Espaços estreitos, rodapé'], ['simples_vert', 'Logotipo vertical', 'Assinatura, documentos'],
+      ].map(([k, nome, uso]) => ({ nome, uso, color: `houseart/marca/marca_houseart_${k}_color.png`, mono: `houseart/marca/marca_houseart_${k}_mono.png`, neg: `houseart/marca/marca_houseart_${k}_negativo.png` })),
+      linguagens: [
+        ['pintura', 'Pintura', '#F0A050'], ['escultura', 'Escultura', '#F07860'], ['fotografia', 'Fotografia', '#D84870'], ['literatura', 'Literatura', '#B04898'],
+      ].map(([k, nome, hex]) => ({ nome, hex, token: '--ha-brand-' + k, color: `houseart/marca/logo_${k}_color.png`, mono: `houseart/marca/logo_${k}_mono.png`, neg: `houseart/marca/logo_${k}_negativo.png` })),
+      cores: [
+        ['--ha-paper-50', '#FBFAF7', 'Fundo principal claro'], ['--ha-paper-100', '#F6F3EE', 'Seções e cards'], ['--ha-paper-200', '#ECE7DF', 'Divisores, bordas'],
+        ['--ha-ink-900', '#111111', 'Fundo escuro, títulos'], ['--ha-ink-700', '#2B2B2B', 'Texto corrido'], ['--ha-ink-500', '#6B6760', 'Secundário, legendas'], ['--ha-ink-300', '#B5B0A6', 'Placeholder, desabilitado'],
+        ['--ha-sand-500', '#D9A441', 'Acento: primário, foco'], ['--ha-sand-600', '#B9872F', 'Hover do acento'], ['--ha-sand-100', '#F5E7C8', 'Badge e realce'],
+        ['--ha-verified-500', '#2E7D5B', 'Autenticada, concluída'], ['--ha-pending-500', '#C77A1E', 'Em análise, aguardando'], ['--ha-alert-500', '#B23A2F', 'Contestada, roubada, erro'], ['--ha-info-500', '#3A5F8A', 'Links, informação'],
+      ].map(([t, hex, uso]) => ({ t, hex, uso, v: 'var(' + t + ')' })),
+      espacos: [1, 2, 3, 4, 6, 8, 10, 12, 14, 16].map((n) => ({ t: '--ha-space-' + n, px: n * 4 + 'px' })),
+      spin: spinner('var(--ha-ink-900)'), spinLight: spinner('var(--ha-paper-50)'),
+      tgBg: s.seguro ? 'var(--ha-ink-900)' : 'var(--ha-ink-300)', tgX: s.seguro ? '23px' : '3px',
+      toggleSeguro: () => this.setState({ seguro: !s.seguro }),
+      copiaIcon: s.copiado ? 'check' : 'content_copy', copiaTxt: s.copiado ? 'Copiado' : 'Copiar',
+      copiar: () => { try { navigator.clipboard.writeText('HA-2026-7K3F-9Q2M'); } catch (e) {} this.setState({ copiado: true }); clearTimeout(this.t); this.t = setTimeout(() => this.setState({ copiado: false }), 1600); },
+      obras: [
+        { src: IMG.mSup, artista: 'Joana Teixeira', titulo: 'Construção para um dia claro', ano: 2025, tecnica: 'Óleo sobre linho', dim: '100 × 80 cm', preco: 'R$ 38.000' },
+        { src: IMG.hSvan, artista: 'Clara Bittencourt', titulo: 'Duas luas', ano: 2024, tecnica: 'Têmpera sobre tela', dim: '90 × 90 cm', preco: 'R$ 24.500' },
+        { src: IMG.mAir, artista: 'Joana Teixeira', titulo: 'Voo baixo', ano: 2024, tecnica: 'Óleo sobre linho', dim: '120 × 100 cm', preco: 'Sob consulta' },
+        { src: IMG.hAlt, artista: 'Tomás Rezende', titulo: 'Retábulo do Rio Vermelho', ano: 2023, tecnica: 'Acrílica e folha de ouro', dim: '140 × 105 cm', preco: 'R$ 46.000' },
+      ],
+      obrasLista: [
+        { src: IMG.mAbs, artista: 'Joana Teixeira', titulo: 'Estudo em vermelho', ano: 2025, tecnica: 'Óleo sobre papel', dim: '50 × 50 cm', preco: 'R$ 9.800' },
+        { src: IMG.k8, artista: 'Rafael Moura', titulo: 'Partitura para Itapuã', ano: 2023, tecnica: 'Óleo sobre tela', dim: '140 × 200 cm', preco: 'Vendida' },
+      ],
+      prov: [
+        { icon: 'brush', ev: 'Obra criada', parte: 'Ateliê da artista, Salvador/BA', data: '2025' },
+        { icon: 'verified', ev: 'Certificada', parte: 'Assinada pela artista · etiqueta vinculada', data: '12/03/2026' },
+        { icon: 'museum', ev: 'Exposta', parte: 'Galeria Ladeira, “Dia claro”', data: '04/2026' },
+        { icon: 'swap_horiz', ev: 'Transferida', parte: 'Colecionador particular, Salvador/BA', data: '22/05/2026' },
+      ],
+      anelLendo: React.createElement('div', { style: { position: 'relative', width: 112, height: 112 } },
+        React.createElement('span', { style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--ha-sand-500)', animation: 'ha-pulse 1200ms ease-out infinite' } }),
+        React.createElement('span', { style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--ha-sand-500)', animation: 'ha-pulse 1200ms ease-out 600ms infinite' } }),
+        React.createElement('span', { style: { position: 'absolute', inset: 24, borderRadius: '50%', background: 'var(--ha-sand-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Material Symbols Rounded', fontSize: 32, color: 'var(--ha-ink-900)' } }, 'contactless')),
+    };
+  }
+}
+</script>
+</body>
+</html>

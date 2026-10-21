@@ -17,7 +17,7 @@ export default async function PublicArtworkPage({ params }: { params: Promise<{ 
   if (!a) notFound()
   return (
     <main className="ha-page ha-page--loose" style={{ maxWidth: 1080, margin: '0 auto' }}>
-      <div className="ha-row"><HouseArtLogo size={24} /><Link href={`/verify/${publicId}`} className="ha-link">Verificar certificado</Link></div>
+      <div className="ha-row"><HouseArtLogo height={30} /><Link href={`/verify/${publicId}`} className="ha-link">Verificar certificado</Link></div>
       <div className="ha-split">
         <section className="ha-stack">
           {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}

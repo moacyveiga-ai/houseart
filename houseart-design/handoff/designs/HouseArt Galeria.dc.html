@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#FBFAF7;-webkit-font-smoothing:antialiased}a{color:var(--ha-ink-900)}a:hover{color:var(--ha-ink-700)}*{box-sizing:border-box}html{scroll-behavior:smooth}button{font:inherit}.leaflet-container{font-family:inherit}</style>
+</helmet>
+<div style="background:var(--ha-paper-50);color:var(--ha-ink-700);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);min-height:100vh">
+
+<header style="border-bottom:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-50);position:sticky;top:0;z-index:1000">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6);height:64px;display:flex;align-items:center;gap:var(--ha-space-8);min-width:0">
+    <a href="HouseArt Home.dc.html" style="flex:none;display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900);text-decoration:none"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"></a>
+    <nav style="display:flex;gap:var(--ha-space-5);font-size:var(--ha-text-body-sm);font-weight:500;white-space:nowrap;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none;height:100%;align-items:stretch">
+      <a href="HouseArt Marketplace.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Marketplace</a>
+      <a href="HouseArt Artista.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Artistas</a>
+      <a href="HouseArt Galerias.dc.html" style="color:var(--ha-ink-900);text-decoration:none;display:flex;align-items:center;box-shadow:inset 0 -2px 0 var(--ha-ink-900)" style-hover="color:var(--ha-ink-900)">Galerias</a>
+      <a href="HouseArt Home.dc.html#agenda" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Agenda</a>
+      <a href="HouseArt Site.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Como funciona</a>
+      <a href="HouseArt Verificar.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Verificar uma obra</a>
+    </nav>
+    <div style="margin-left:auto;display:flex;align-items:center;flex:none"><span style="width:32px;height:32px;border-radius:50%;background:var(--ha-paper-200);display:flex;align-items:center;justify-content:center;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">MB</span></div>
+  </div>
+</header>
+
+<section data-screen-label="Galeria · Capa" style="position:relative">
+  <div style="height:min(46vw,440px);min-height:260px;background:var(--ha-ink-700)">
+    <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ g.capaId }}" placeholder="Foto da fachada ou do espaço expositivo" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+  </div>
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6)">
+    <div style="position:relative;margin-top:-72px;display:flex;flex-wrap:wrap;gap:var(--ha-space-6);align-items:flex-end;justify-content:space-between;padding:var(--ha-space-6);background:var(--ha-paper-50);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+      <div style="display:flex;gap:var(--ha-space-5);align-items:center;min-width:0">
+        <span style="width:96px;height:96px;flex:none;background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;align-items:center;justify-content:center;font-family:var(--ha-font-display);font-size:48px">{{ g.inicial }}</span>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-1);min-width:0">
+          <span style="display:flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-verified-500)"><span style="font-family:'Material Symbols Rounded';font-size:16px;font-variation-settings:'FILL' 1">verified</span>Galeria verificada HouseArt</span>
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1;color:var(--ha-ink-900)">{{ g.nome }}</h1>
+          <span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ g.cidade }} · fundada em {{ g.desde }}</span>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-1);margin-top:var(--ha-space-1)">
+            <sc-for list="{{ g.tags }}" as="t" hint-placeholder-count="2"><span style="font-size:11px;padding:2px var(--ha-space-2);border-radius:999px;background:var(--ha-paper-100, #F3F1EC);color:var(--ha-ink-700)">{{ t.t }}</span></sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);align-items:flex-end">
+        <div style="display:flex;gap:var(--ha-space-8)">
+          <div style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:var(--ha-text-h3);font-weight:500;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ g.nObras }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">obras à venda</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:var(--ha-text-h3);font-weight:500;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ g.nArtistas }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">artistas</span></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+          <button onClick="{{ seguir }}" style="cursor:pointer;display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:{{ seguirBg }};color:{{ seguirFg }}"><span style="font-family:'Material Symbols Rounded';font-size:18px">{{ seguirIcon }}</span>{{ seguirTxt }}</button>
+          <a href="#local" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-200);color:var(--ha-ink-900);text-decoration:none" style-hover="border-color:var(--ha-ink-900)"><span style="font-family:'Material Symbols Rounded';font-size:18px">event</span>Agendar visita</a>
+          <a href="#equipe" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-200);color:var(--ha-ink-900);text-decoration:none" style-hover="border-color:var(--ha-ink-900)"><span style="font-family:'Material Symbols Rounded';font-size:18px">chat</span>Falar com a galeria</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav style="position:sticky;top:64px;z-index:999;background:var(--ha-paper-50);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);margin-top:var(--ha-space-8)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6);display:flex;gap:var(--ha-space-8);overflow-x:auto;scrollbar-width:none;white-space:nowrap;font-size:var(--ha-text-body-sm);font-weight:500">
+    <sc-for list="{{ ancoras }}" as="n" hint-placeholder-count="8">
+      <a href="{{ n.href }}" style="padding:var(--ha-space-4) 0;color:var(--ha-ink-500);text-decoration:none" style-hover="color:var(--ha-ink-900)">{{ n.nome }}</a>
+    </sc-for>
+  </div>
+</nav>
+
+<section id="sobre" data-screen-label="Galeria · História" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:var(--ha-space-12);scroll-margin-top:120px">
+  <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+    <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">História da galeria</h2>
+    <sc-for list="{{ g.historia }}" as="p" hint-placeholder-count="3">
+      <p style="margin:0;font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg);text-wrap:pretty">{{ p.t }}</p>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:var(--ha-space-4)">
+    <span style="font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">Marcos</span>
+    <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column">
+      <sc-for list="{{ g.marcos }}" as="t" hint-placeholder-count="5">
+        <li style="display:grid;grid-template-columns:64px 16px minmax(0,1fr);gap:var(--ha-space-3)">
+          <span style="font-weight:600;color:var(--ha-ink-900);font-variant-numeric:tabular-nums;padding-bottom:var(--ha-space-5)">{{ t.ano }}</span>
+          <span style="position:relative;display:flex;justify-content:center"><span style="position:absolute;top:8px;bottom:-8px;width:1px;background:{{ t.linha }}"></span><span style="position:relative;margin-top:7px;width:9px;height:9px;border-radius:50%;background:var(--ha-ink-900)"></span></span>
+          <span style="font-size:var(--ha-text-body-sm);padding-bottom:var(--ha-space-5);text-wrap:pretty">{{ t.ev }}</span>
+        </li>
+      </sc-for>
+    </ol>
+  </div>
+</section>
+
+<section id="obras" data-screen-label="Galeria · Obras à venda" style="background:var(--ha-paper-100, #F3F1EC);scroll-margin-top:120px">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-8)">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Obras à venda</h2>
+        <span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Vendidas pela própria galeria, todas certificadas.</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+        <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="4">
+          <button onClick="{{ f.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);padding:var(--ha-space-2) var(--ha-space-4);border-radius:999px;border:var(--ha-border-w) solid {{ f.bd }};background:{{ f.bg }};color:{{ f.fg }}">{{ f.nome }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:var(--ha-space-8) var(--ha-space-6)">
+      <sc-for list="{{ obras }}" as="o" hint-placeholder-count="6">
+        <a href="HouseArt Obra.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-3);text-decoration:none;color:inherit">
+          <div style="position:relative;background:var(--ha-wall);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)">
+            <img src="{{ o.src }}" alt="{{ o.titulo }}" style="max-width:100%;max-height:100%;box-shadow:0 6px 18px rgba(20,18,15,.18)">
+            <span style="position:absolute;top:var(--ha-space-3);left:var(--ha-space-3);display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px var(--ha-space-2);border-radius:999px;background:var(--ha-paper-50);color:var(--ha-ink-900)"><span style="font-family:'Material Symbols Rounded';font-size:14px">verified</span>Certificada</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ o.artista }}</span>
+            <span style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-body-lg);color:var(--ha-ink-900)">{{ o.titulo }}, {{ o.ano }}</span>
+            <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ o.tecnica }} · {{ o.dim }}</span>
+            <span style="display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-caption);color:var(--ha-ink-700)"><span style="font-family:'Material Symbols Rounded';font-size:14px">storefront</span>{{ g.nome }} · <b style="font-weight:600">Galeria</b></span>
+            <span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);margin-top:var(--ha-space-1)">{{ o.preco }}</span>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="artistas" data-screen-label="Galeria · Artistas" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6) var(--ha-space-10);display:flex;flex-direction:column;gap:var(--ha-space-8);scroll-margin-top:120px">
+  <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Artistas representados</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--ha-space-6)">
+    <sc-for list="{{ artistas }}" as="a" hint-placeholder-count="6">
+      <a href="HouseArt Artista.dc.html" style="display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-3);text-align:center;text-decoration:none;color:inherit">
+        <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:var(--ha-paper-200)">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ a.fotoId }}" shape="circle" placeholder="Foto" style="width:100%;height:100%" hint-size="120px,120px"></x-import>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:var(--ha-ink-900)">{{ a.nome }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ a.meta }}</span></div>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<sc-if value="{{ tour }}" hint-placeholder-val="{{ true }}">
+<section id="tour" data-screen-label="Galeria · Tour virtual" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-6);scroll-margin-top:120px">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4)">
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+      <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Tour virtual</h2>
+      <span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Percorra o espaço em 360° e clique nas obras para ver detalhes.</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+      <sc-for list="{{ salas }}" as="s" hint-placeholder-count="3">
+        <button onClick="{{ s.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);padding:var(--ha-space-2) var(--ha-space-4);border-radius:999px;border:var(--ha-border-w) solid {{ s.bd }};background:{{ s.bg }};color:{{ s.fg }}">{{ s.nome }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="position:relative;aspect-ratio:21/9;min-height:280px;background:var(--ha-ink-900);border-radius:var(--ha-radius-md);overflow:hidden">
+    <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ salaId }}" placeholder="Imagem 360° da sala ou link do tour (Matterport, Kuula)" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+    <div style="position:absolute;left:var(--ha-space-5);bottom:var(--ha-space-5);display:flex;align-items:center;gap:var(--ha-space-3);pointer-events:none">
+      <span style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) var(--ha-space-5);border-radius:999px;background:var(--ha-paper-50);color:var(--ha-ink-900);box-shadow:0 6px 18px rgba(0,0,0,.25)"><span style="font-family:'Material Symbols Rounded';font-size:20px">360</span>Iniciar tour · {{ salaNome }}</span>
+    </div>
+  </div>
+</section>
+</sc-if>
+
+<section id="midia" data-screen-label="Galeria · Fotos e vídeos" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6) var(--ha-space-20);display:flex;flex-direction:column;gap:var(--ha-space-6);scroll-margin-top:120px">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4)">
+    <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Fotos e vídeos</h2>
+    <div style="display:flex;gap:var(--ha-space-6);font-size:var(--ha-text-body-sm);font-weight:600">
+      <sc-for list="{{ midiaAbas }}" as="t" hint-placeholder-count="2">
+        <button onClick="{{ t.go }}" style="cursor:pointer;padding:var(--ha-space-2) 0;border:none;background:none;color:{{ t.fg }};box-shadow:{{ t.sh }}">{{ t.nome }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <sc-if value="{{ verFotos }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:200px;gap:var(--ha-space-2)">
+      <sc-for list="{{ fotos }}" as="f" hint-placeholder-count="6">
+        <div style="grid-column:span {{ f.c }};grid-row:span {{ f.r }};background:var(--ha-paper-200)">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ f.id }}" placeholder="{{ f.ph }}" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ verVideos }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--ha-space-6)">
+      <sc-for list="{{ videos }}" as="v" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <div style="position:relative;aspect-ratio:16/9;background:var(--ha-ink-900)">
+            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ v.id }}" placeholder="Miniatura do vídeo" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+            <span style="position:absolute;inset:0;margin:auto;width:56px;height:56px;border-radius:50%;background:var(--ha-paper-50);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:32px;color:var(--ha-ink-900);pointer-events:none;font-variation-settings:'FILL' 1">play_arrow</span>
+            <span style="position:absolute;right:var(--ha-space-2);bottom:var(--ha-space-2);font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.7);color:#fff;font-variant-numeric:tabular-nums;pointer-events:none">{{ v.dur }}</span>
+          </div>
+          <span style="font-weight:600;color:var(--ha-ink-900)">{{ v.titulo }}</span>
+          <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ v.meta }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</section>
+
+<section id="ebooks" data-screen-label="Galeria · E-books" style="background:var(--ha-ink-900);color:var(--ha-paper-50);scroll-margin-top:120px">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-8)">
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+      <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1)">E-books e catálogos</h2>
+      <span style="font-size:var(--ha-text-body-sm);color:var(--ha-paper-200)">Publicações das exposições e textos curatoriais da galeria.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:var(--ha-space-8) var(--ha-space-6)">
+      <sc-for list="{{ livros }}" as="b" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <div style="aspect-ratio:3/4;background:var(--ha-ink-700);box-shadow:0 10px 24px rgba(0,0,0,.35)">
+            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ b.capaId }}" placeholder="Capa" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+          </div>
+          <span style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ha-sand-500)">{{ b.tipo }}</span>
+          <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-body-lg);line-height:1.3">{{ b.titulo }}</span>
+          <span style="font-size:var(--ha-text-caption);color:var(--ha-paper-200)">{{ b.meta }}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--ha-space-2);margin-top:var(--ha-space-1)">
+            <span style="font-weight:600;font-variant-numeric:tabular-nums">{{ b.preco }}</span>
+            <button style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-50);background:transparent;color:var(--ha-paper-50)"><span style="font-family:'Material Symbols Rounded';font-size:18px">{{ b.icon }}</span>{{ b.acao }}</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="equipe" data-screen-label="Galeria · Responsáveis" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6) var(--ha-space-10);display:flex;flex-direction:column;gap:var(--ha-space-8);scroll-margin-top:120px">
+  <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Responsáveis</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:var(--ha-space-6)">
+    <sc-for list="{{ equipe }}" as="p" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);overflow:hidden;background:#fff">
+        <div style="aspect-ratio:4/3;background:var(--ha-paper-200)">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ p.fotoId }}" placeholder="Foto do responsável" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3);padding:var(--ha-space-5)">
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:var(--ha-text-body-lg);color:var(--ha-ink-900)">{{ p.nome }}</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ p.cargo }}</span></div>
+          <span style="font-size:var(--ha-text-body-sm);text-wrap:pretty">{{ p.bio }}</span>
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-1);padding-top:var(--ha-space-3);border-top:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)">
+            <span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-500)">mail</span>{{ p.email }}</span>
+            <span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-500)">call</span>{{ p.tel }}</span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="local" data-screen-label="Galeria · Localização" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6) var(--ha-space-20);display:flex;flex-direction:column;gap:var(--ha-space-8);scroll-margin-top:120px">
+  <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Localização</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:0;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);overflow:hidden;background:#fff">
+    <div style="grid-column:span 2;min-height:420px;position:relative;background:var(--ha-paper-200)">
+      <div ref="{{ mapRef }}" style="position:absolute;inset:0"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-6);padding:var(--ha-space-8)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-1)">
+        <span style="font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">Endereço</span>
+        <span style="font-weight:600;color:var(--ha-ink-900)">{{ g.endereco }}</span>
+        <span style="font-size:var(--ha-text-body-sm)">{{ g.bairro }} · {{ g.cidade }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <span style="font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">Horário</span>
+        <sc-for list="{{ horarios }}" as="h" hint-placeholder-count="3">
+          <div style="display:flex;justify-content:space-between;gap:var(--ha-space-4);font-size:var(--ha-text-body-sm)"><span>{{ h.d }}</span><span style="font-weight:600;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ h.h }}</span></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm)">
+        <span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-500)">accessible</span>Acesso para cadeirantes</span>
+        <span style="display:flex;align-items:center;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-500)">local_parking</span>Estacionamento conveniado</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2);margin-top:auto">
+        <a href="{{ gmaps }}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50);text-decoration:none"><span style="font-family:'Material Symbols Rounded';font-size:18px">directions</span>Como chegar</a>
+        <a href="{{ waze }}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-ink-900);text-decoration:none">Abrir no Waze</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="background:var(--ha-ink-900);color:var(--ha-paper-200)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6);display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--ha-space-4);font-size:var(--ha-text-body-sm)">
+    <img src="houseart/marca/marca_houseart_full_vert_negativo.png" alt="houseArt" style="height:64px;width:auto;display:block;flex:none">
+    <a href="HouseArt Galerias.dc.html" style="color:var(--ha-paper-50);font-weight:600">Ver todas as galerias</a>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tourVirtual&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Conteúdo cadastrado&quot;}}">
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const I = ['Suprematist_Composition_-_Kazimir_Malevich.jpg', 'Suprematist_Composition_-_Airplane_Flying_(Malevich,_1915).jpg', 'Suprematism_-_Abstract_Composition_(Malevich,_1915).jpg', 'Wassily_Kandinsky_Composition_VIII.jpg', 'Hilma_af_Klint,_1915,_Svanen,_No._17.jpg', 'Hilma_af_Klint_-_1907_-_Altarpiece_-_No_1_-_Group_X_-_Altarpieces.jpg'].map((f) => FP + f + '?width=600');
+const G = [
+  ['ladeira', 'Galeria Ladeira', 'Salvador', 'BA', 2009, 'Rua Direita de Santo Antônio, 214', 'Santo Antônio Além do Carmo', -12.9668, -38.5048, ['Contemporânea', 'Pintura'], 64, 12],
+  ['mares', 'Galeria Marés', 'Recife', 'PE', 1998, 'Rua do Bom Jesus, 183', 'Bairro do Recife', -8.0631, -34.8711, ['Moderna', 'Contemporânea'], 41, 9],
+  ['tamarindo', 'Casa Tamarindo', 'São Paulo', 'SP', 2015, 'Rua Harmonia, 560', 'Vila Madalena', -23.5535, -46.6910, ['Fotografia', 'Obras em papel'], 87, 18],
+  ['atlantica', 'Galeria Atlântica', 'Rio de Janeiro', 'RJ', 1987, 'Rua Garcia d’Ávila, 120', 'Ipanema', -22.9838, -43.2096, ['Moderna', 'Espólios'], 23, 7],
+  ['barrovivo', 'Ateliê Barro Vivo', 'Belo Horizonte', 'MG', 2012, 'Rua Antônio de Albuquerque, 271', 'Savassi', -19.9386, -43.9347, ['Escultura', 'Arte popular'], 52, 15],
+  ['sertao', 'Galeria Sertão', 'Fortaleza', 'CE', 2018, 'Rua Dragão do Mar, 81', 'Praia de Iracema', -3.7219, -38.5208, ['Contemporânea', 'Arte popular'], 33, 11],
+  ['paralelo', 'Galeria Paralelo', 'Porto Alegre', 'RS', 2004, 'Rua Padre Chagas, 300', 'Moinhos de Vento', -30.0262, -51.2030, ['Moderna', 'Pintura'], 29, 8],
+  ['luznorte', 'Luz Norte', 'Belém', 'PA', 2020, 'Rua Siqueira Mendes, 44', 'Cidade Velha', -1.4560, -48.5040, ['Fotografia', 'Contemporânea'], 46, 10],
+  ['quadra', 'Galeria Quadra', 'Brasília', 'DF', 2011, 'CLS 308, Bloco B, Loja 12', 'Asa Sul', -15.8160, -47.9000, ['Obras em papel', 'Contemporânea'], 71, 14],
+];
+const ART = [['Joana Teixeira', 'Pintura · Salvador'], ['Caio Amaral', 'Escultura · Cachoeira'], ['Lia Santana', 'Fotografia · Salvador'], ['Rui Benevides', 'Gravura · Feira de Santana'], ['Marta Okoye', 'Pintura · Ilhéus'], ['Davi Nunes', 'Instalação · Salvador']];
+const OBRAS = [['Joana Teixeira', 'Construção nº 7', 2025, 'Óleo sobre linho', '100 × 80 cm', 'R$ 38.000'], ['Joana Teixeira', 'Voo baixo', 2024, 'Óleo sobre linho', '120 × 100 cm', 'R$ 44.000'], ['Caio Amaral', 'Pedra do rio', 2023, 'Acrílica sobre tela', '80 × 80 cm', 'R$ 16.500'], ['Marta Okoye', 'Maré cheia', 2025, 'Óleo sobre tela', '140 × 110 cm', 'R$ 29.000'], ['Lia Santana', 'Duas luas', 2024, 'Têmpera sobre tela', '90 × 90 cm', 'R$ 24.500'], ['Rui Benevides', 'Retábulo menor', 2022, 'Acrílica e folha de ouro', '60 × 45 cm', 'R$ 12.800']];
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    let i = 0; try { const q = new URLSearchParams(location.search).get('g'); const n = G.findIndex((g) => g[0] === q || String(G.indexOf(g)) === q); if (n >= 0) i = n; } catch (e) {}
+    this.state = { gi: i, filtro: 'Todos', midia: 'fotos', sala: 0, seguindo: false };
+    this.mapRef = React.createRef();
+  }
+  componentDidMount() {
+    const tryInit = () => { if (window.L && this.mapRef.current) this.initMap(); else this.t = setTimeout(tryInit, 150); };
+    tryInit();
+  }
+  componentWillUnmount() { clearTimeout(this.t); if (this.ro) this.ro.disconnect(); if (this.onLoad) window.removeEventListener('load', this.onLoad); if (this.map) this.map.remove(); this.map = null; }
+  initMap() {
+    const L = window.L; const g = G[this.state.gi];
+    this.map = L.map(this.mapRef.current, { center: [g[7], g[8]], zoom: 16, scrollWheelZoom: false, zoomControl: true, attributionControl: true });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap · © CARTO' }).addTo(this.map);
+    const pin = L.divIcon({ className: '', iconSize: [44, 56], iconAnchor: [22, 56], html: '<div style="position:relative;width:44px;height:56px"><div style="position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#14120F;box-shadow:0 6px 14px rgba(0,0,0,.35)"></div><div style="position:absolute;left:12px;top:10px;width:20px;height:24px;display:flex;align-items:center;justify-content:center;color:#FBFAF7;font-family:Fraunces,serif;font-size:18px">' + g[1].replace(/^(Galeria|Casa|Ateliê) /, '')[0] + '</div></div>' });
+    L.marker([g[7], g[8]], { icon: pin }).addTo(this.map).bindPopup('<b>' + g[1] + '</b><br>' + g[5]);
+    const c = [g[7], g[8]];
+    const fix = () => { if (this.map) { this.map.invalidateSize(); this.map.setView(c, 16, { animate: false }); } };
+    this.ro = new ResizeObserver(fix); this.ro.observe(this.mapRef.current);
+    this.onLoad = fix; window.addEventListener('load', fix);
+    [300, 1000, 2500].forEach((ms) => setTimeout(fix, ms));
+  }
+  renderVals() {
+    const s = this.state; const r = G[s.gi]; const slug = r[0]; const ink = 'var(--ha-ink-900)', paper = 'var(--ha-paper-50)';
+    const [, nome, cidade, uf, desde, endereco, bairro, lat, lng, tags, nObras, nArtistas] = r;
+    const tour = this.props.tourVirtual ?? true;
+    const salas = ['Sala principal', 'Mezanino', 'Jardim de esculturas'];
+    const artistasNomes = ['Todos', ...Array.from(new Set(OBRAS.map((o) => o[0])))];
+    return {
+      g: {
+        nome, desde, endereco, bairro, cidade: cidade + '/' + uf, nObras, nArtistas, inicial: nome.replace(/^(Galeria|Casa|Ateliê) /, '')[0], capaId: slug + '-capa',
+        tags: tags.map((t) => ({ t })),
+        historia: [nome + ' nasceu em ' + desde + ' num sobrado de ' + bairro + ', fundada por duas amigas que queriam mostrar artistas da cidade fora do circuito das capitais do Sudeste.', 'Ao longo dos anos, o programa cresceu para incluir residências, publicações e uma presença constante em feiras como SP-Arte e ArtRio, sem perder o foco em artistas locais em início e meio de carreira.', 'Desde 2026 a galeria certifica todo o seu inventário na HouseArt, garantindo procedência e direito de sequência para os artistas que representa.'].map((t) => ({ t })),
+        marcos: [[String(desde), 'Abertura em ' + bairro], [String(desde + 4), 'Primeira participação na SP-Arte'], [String(desde + 8), 'Programa de residências para artistas'], ['2024', 'Reforma e ampliação do espaço expositivo'], ['2026', 'Inventário completo certificado na HouseArt']].map(([ano, ev], i, a) => ({ ano, ev, linha: i === a.length - 1 ? 'transparent' : 'var(--ha-paper-200)' })),
+      },
+      ancoras: [['#sobre', 'História'], ['#obras', 'Obras à venda'], ['#artistas', 'Artistas'], ...(tour ? [['#tour', 'Tour virtual']] : []), ['#midia', 'Fotos e vídeos'], ['#ebooks', 'E-books'], ['#equipe', 'Responsáveis'], ['#local', 'Localização']].map(([href, n]) => ({ href, nome: n })),
+      seguir: () => this.setState({ seguindo: !s.seguindo }),
+      seguirBg: s.seguindo ? 'transparent' : ink, seguirFg: s.seguindo ? ink : paper, seguirIcon: s.seguindo ? 'check' : 'add', seguirTxt: s.seguindo ? 'Seguindo' : 'Seguir galeria',
+      filtros: artistasNomes.map((n) => { const on = n === s.filtro; return { nome: n, bg: on ? ink : 'transparent', fg: on ? paper : 'var(--ha-ink-700)', bd: on ? ink : 'var(--ha-paper-200)', go: () => this.setState({ filtro: n }) }; }),
+      obras: OBRAS.map((o, i) => ({ o, i })).filter(({ o }) => s.filtro === 'Todos' || o[0] === s.filtro).map(({ o: [artista, titulo, ano, tecnica, dim, preco], i }) => ({ artista, titulo, ano, tecnica, dim, preco, src: I[i % 6] })),
+      artistas: ART.map(([n, meta], i) => ({ nome: n, meta, fotoId: slug + '-artista-' + i })),
+      tour,
+      salas: salas.map((n, i) => { const on = i === s.sala; return { nome: n, bg: on ? ink : 'transparent', fg: on ? paper : 'var(--ha-ink-700)', bd: on ? ink : 'var(--ha-paper-200)', go: () => this.setState({ sala: i }) }; }),
+      salaId: slug + '-tour-' + s.sala, salaNome: salas[s.sala],
+      midiaAbas: [['fotos', 'Fotos (6)'], ['videos', 'Vídeos (3)']].map(([id, n]) => ({ nome: n, fg: s.midia === id ? ink : 'var(--ha-ink-500)', sh: s.midia === id ? 'inset 0 -2px 0 ' + ink : 'none', go: () => this.setState({ midia: id }) })),
+      verFotos: s.midia === 'fotos', verVideos: s.midia === 'videos',
+      fotos: [[2, 2, 'Vista da exposição atual'], [1, 1, 'Fachada'], [1, 1, 'Detalhe de montagem'], [1, 1, 'Abertura'], [1, 1, 'Reserva técnica'], [2, 1, 'Sala principal']].map(([c, r2, ph], i) => ({ c, r: r2, ph, id: slug + '-foto-' + i })),
+      videos: [['Visita guiada: “Dia claro”', 'Exposição atual', '12:40'], ['Conversa com Joana Teixeira', 'Ateliê da artista', '08:15'], ['Montagem em 60 segundos', 'Bastidores', '01:00']].map(([titulo, meta, dur], i) => ({ titulo, meta, dur, id: slug + '-video-' + i })),
+      livros: [['Catálogo', 'Dia claro', 'Joana Teixeira · 48 páginas', 'Grátis', 'download', 'Baixar'], ['E-book', nome + ': ' + (2026 - desde) + ' anos', 'Histórico e acervo · 132 páginas', 'R$ 49', 'shopping_bag', 'Comprar'], ['Texto curatorial', 'Pintar a cidade', 'Ensaio · 18 páginas', 'Grátis', 'menu_book', 'Ler'], ['Catálogo', 'Coletiva de verão 2025', '6 artistas · 64 páginas', 'Grátis', 'download', 'Baixar']].map(([tipo, titulo, meta, preco, icon, acao], i) => ({ tipo, titulo, meta, preco, icon, acao, capaId: slug + '-livro-' + i })),
+      equipe: [['Helena Brito', 'Fundadora e diretora', 'Curadora com 20 anos de atuação em arte contemporânea no Nordeste.', 'helena@', '+55 71 3241-0101'], ['Ricardo Sá', 'Diretor comercial', 'Atende colecionadores e consultores, vendas e consignações.', 'ricardo@', '+55 71 3241-0102'], ['Ana Lúcia Rocha', 'Curadora', 'Responsável pelo programa de exposições e publicações.', 'analucia@', '+55 71 3241-0103']].map(([n, cargo, bio, em, tel], i) => ({ nome: n, cargo, bio, email: em + slug + '.art.br', tel, fotoId: slug + '-equipe-' + i })),
+      horarios: [['Terça a sexta', '10h às 19h'], ['Sábado', '10h às 16h'], ['Domingo e segunda', 'Fechado']].map(([d, h]) => ({ d, h })),
+      mapRef: this.mapRef,
+      gmaps: 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng,
+      waze: 'https://waze.com/ul?ll=' + lat + ',' + lng + '&navigate=yes',
+    };
+  }
+}
+</script>
+</body>
+</html>

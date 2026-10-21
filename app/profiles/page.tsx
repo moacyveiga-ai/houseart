@@ -15,7 +15,7 @@ export default async function ProfilesPage({ searchParams }: { searchParams: Pro
   return (
     <main className="ha-page ha-page--loose">
       <div className="ha-stack" style={{ maxWidth: 960, margin: '0 auto' }}>
-        <HouseArtLogo size={24} />
+        <HouseArtLogo height={30} />
         <p className="ha-eyebrow">Conta verificada · {user.name}</p>
         <h1 className="ha-h1">Como você vai usar a HouseArt?</h1>
         <p className="ha-muted">Você pode ter mais de um perfil e trocar quando quiser no menu do avatar.</p>

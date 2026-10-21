@@ -8,7 +8,7 @@ export function AuthShell({ title, lead, children }: { title: string; lead: stri
   return (
     <main className="ha-login">
       <section className="ha-login__art" aria-hidden="true">
-        <HouseArtLogo size={22} />
+        <HouseArtLogo version="full_horiz" tone="negativo" height={48} />
         <div className="ha-login__stage"><div className="ha-login__frame" /></div>
         <div className="ha-login__foot">
           <div className="ha-login__claim">A escritura da obra de arte</div>

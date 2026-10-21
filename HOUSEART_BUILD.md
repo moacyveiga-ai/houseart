@@ -689,10 +689,10 @@ Fora destas fases (esperam as telas ausentes — J.1): site público `/e`, pági
 ## J. Perguntas em aberto (só o que bloqueia) e decisões registradas
 
 ### Bloqueiam
-1. **Telas ausentes do pacote**: o bundle enviado tem só `HouseArt Web App` (17 telas). Ele linka `HouseArt Obra`, `HouseArt Verificacao`, `HouseArt Site`, `HouseArt Web Galeria`, `HouseArt Web Colecionador`, `HouseArt App Artista` e `HouseArt Design System`. Sem eles, a página pública da obra, a verificação, o site e os apps nascem mínimos no mesmo DS (E.4, E.9). **Enviar os 7 arquivos .dc.html.**
+1. ~~Telas ausentes do pacote~~ **RESOLVIDO 2026-10-21**: handoff completo em `houseart-design/handoff/` (ver `docs/HANDOFF-2026-10-21.md`). Histórico: o bundle enviado tem só `HouseArt Web App` (17 telas). Ele linka `HouseArt Obra`, `HouseArt Verificacao`, `HouseArt Site`, `HouseArt Web Galeria`, `HouseArt Web Colecionador`, `HouseArt App Artista` e `HouseArt Design System`. Sem eles, a página pública da obra, a verificação, o site e os apps nascem mínimos no mesmo DS (E.4, E.9). **Enviar os 7 arquivos .dc.html.**
 2. ~~Repositório GitHub~~ **RESOLVIDO 2026-10-21**: `moacyveiga-ai/houseart` (a conta pessoal criou na 1.ª tentativa apesar do 403 devolvido; a org Housemap segue sem permissão de admin). `main` enviada, projeto Vercel conectado, produção em https://houseart-housemapp.vercel.app. Migrar para `Housemap/houseart` = religar o projeto Vercel.
 3. ~~Projeto Supabase~~ **RESOLVIDO 2026-10-21**: o projeto `houseart` existia (ref `zqxkwaivqqlkocbmdvch`, us-east-2 — o conector criou apesar do timeout). Schema aplicado pelo conector em blocos (o `apply_migration` e blocos com `$$` dão timeout — usar `$fn$` e `EXECUTE PROCEDURE`), `_prisma_migrations` registrada, papel `houseart_app`, admin semeado.
-3b. **Blob stores da Vercel**: `houseart-public` e `houseart-private` deram 403 pelo conector. **Criar no dashboard** e ligar `BLOB_READ_WRITE_TOKEN`/`BLOB_PRIVATE_READ_WRITE_TOKEN` no projeto.
+3b. ~~Blob stores da Vercel~~ **RESOLVIDO 2026-10-21** (upload conferido em produção; nomes das envs a limpar — `docs/PRODUCAO-PENDENCIAS.md` §2).
 
 ### Decididas (reversíveis, registradas aqui)
 4. Vercel: time `housemapp` (o mesmo do Housebroker), projeto `houseart` (`prj_LquuKlmalxrqh1f1sQ7j2QyvKEoI`, Node 22, nextjs, funções `gru1`, SSO desligado), `main` = produção, **no ar desde 2026-10-21**. Pooler do Supabase é `aws-0-us-east-2` (o `aws-1` responde "tenant/user not found"); o host direto `db.<ref>.supabase.co` só resolve IPv6 e a Vercel não alcança.
@@ -704,7 +704,7 @@ Fora destas fases (esperam as telas ausentes — J.1): site público `/e`, pági
 10. Assinatura qualificada ICP-Brasil: fora do MVP; assinatura avançada (OTP + trilha + carimbo do tempo mock/ACT quando configurada). `TIMESTAMP_AUTHORITY_URL` vazio = carimbo simulado marcado como tal no certificado.
 11. Índice HouseArt no ticker: índice próprio (`lib/art-price-index`), "—" sem vendas.
 12. Mapa (Mapbox): não há mapa nas 17 telas → `mapbox-gl` fora.
-13. Agenda e Comunidade: não há telas → fora do MVP (`FLAG_COMMUNITY` não existe; `lib/schedule` não é portado).
+13. ~~Agenda e Comunidade: não há telas → fora do MVP~~ **REVISTA 2026-10-21**: o handoff trouxe comunidade (feed, notícias, agenda, enquete, eventos) — Fase 5 do handoff.
 14. Adapter Neon: fora; só `@prisma/adapter-pg`.
 15. Fotos de registro: upload direto ao Blob privado por token (sem passar pela função), limite 50 MB por arquivo; derivada pública ≤ 2048 px gerada no servidor (`sharp`); sem canvas no cliente para o master.
 16. KYC, frete, seguro, carimbo do tempo, ancoragem, e-mail de verificação SUN: provedores `mock` no MVP com interface pronta.

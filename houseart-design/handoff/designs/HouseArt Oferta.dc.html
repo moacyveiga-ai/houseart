@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#FBFAF7;-webkit-font-smoothing:antialiased}a{color:var(--ha-ink-900)}a:hover{color:var(--ha-ink-700)}*{box-sizing:border-box}button,input,textarea{font:inherit}input[type=range]{accent-color:#14120F}</style>
+</helmet>
+<div style="background:var(--ha-paper-50);color:var(--ha-ink-700);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);min-height:100vh">
+
+<header style="border-bottom:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-50);position:sticky;top:0;z-index:20">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6);height:64px;display:flex;align-items:center;gap:var(--ha-space-6)">
+    <a href="HouseArt Obra.dc.html" style="display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);text-decoration:none"><span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_back</span>Voltar à obra</a>
+    <a href="HouseArt Home.dc.html" style="margin:0 auto;display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900);text-decoration:none"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"></a>
+    <span style="display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-caption);color:var(--ha-ink-500)"><span style="font-family:'Material Symbols Rounded';font-size:16px">lock</span>Ambiente seguro</span>
+  </div>
+</header>
+
+<div data-screen-label="Oferta" style="max-width:1120px;margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6) var(--ha-space-20);display:flex;flex-wrap:wrap-reverse;gap:var(--ha-space-12);align-items:flex-end">
+
+  <main style="flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:var(--ha-space-8)">
+    <sc-if value="{{ mostraPassos }}" hint-placeholder-val="{{ true }}">
+      <ol style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--ha-space-2)">
+        <sc-for list="{{ passos }}" as="p" hint-placeholder-count="4">
+          <li style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+            <span style="height:3px;border-radius:2px;background:{{ p.barra }}"></span>
+            <span style="display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-caption);font-weight:600;color:{{ p.cor }}"><span style="font-family:'Material Symbols Rounded';font-size:16px">{{ p.icon }}</span>{{ p.nome }}</span>
+          </li>
+        </sc-for>
+      </ol>
+    </sc-if>
+
+    <sc-if value="{{ e1 }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-8)">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1;color:var(--ha-ink-900)">Quanto você quer oferecer?</h1>
+          <span style="color:var(--ha-ink-500)">A galeria responde em até 48 horas. Você só é cobrado se a oferta for aceita.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);padding:var(--ha-space-6);border:var(--ha-border-w) solid var(--ha-ink-900);border-radius:var(--ha-radius-md);background:#fff">
+          <label style="display:flex;align-items:baseline;gap:var(--ha-space-2);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);padding-bottom:var(--ha-space-3)">
+            <span style="font-size:var(--ha-text-h2);font-weight:500;color:var(--ha-ink-500)">R$</span>
+            <input value="{{ valorTxt }}" onChange="{{ digitarValor }}" inputmode="numeric" aria-label="Valor da oferta" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:var(--ha-font-display);font-size:clamp(40px,6vw,64px);line-height:1.1;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">
+          </label>
+          <input type="range" min="{{ min }}" max="{{ preco }}" step="500" value="{{ valor }}" onChange="{{ deslizar }}" aria-label="Ajustar valor">
+          <div style="display:flex;justify-content:space-between;font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums"><span>{{ minTxt }}</span><span>Preço pedido {{ precoTxt }}</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+            <sc-for list="{{ atalhos }}" as="a" hint-placeholder-count="4">
+              <button onClick="{{ a.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:999px;border:var(--ha-border-w) solid {{ a.bd }};background:{{ a.bg }};color:{{ a.fg }}">{{ a.nome }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:var(--ha-space-3);align-items:flex-start;padding:var(--ha-space-4);border-radius:var(--ha-radius-sm);background:{{ chance.bg }}">
+            <span style="font-family:'Material Symbols Rounded';font-size:22px;color:{{ chance.fg }}">{{ chance.icon }}</span>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:var(--ha-ink-900)">{{ chance.titulo }}</span><span style="font-size:var(--ha-text-body-sm)">{{ chance.texto }}</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <span style="font-weight:600;color:var(--ha-ink-900)">Validade da oferta</span>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ha-space-2)">
+            <sc-for list="{{ validades }}" as="v" hint-placeholder-count="3">
+              <button onClick="{{ v.go }}" style="cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:var(--ha-space-3) var(--ha-space-4);border-radius:var(--ha-radius-md);border:1.5px solid {{ v.bd }};background:#fff;text-align:left"><span style="font-weight:600;color:var(--ha-ink-900)">{{ v.nome }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ v.sub }}</span></button>
+            </sc-for>
+          </div>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+          <span style="font-weight:600;color:var(--ha-ink-900)">Mensagem para a galeria <span style="font-weight:400;color:var(--ha-ink-500)">(opcional)</span></span>
+          <textarea value="{{ msg }}" onChange="{{ digitarMsg }}" rows="3" placeholder="Conte por que essa obra é importante para você ou combine detalhes da entrega." style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;resize:vertical;outline:none" style-focus="border-color:var(--ha-ink-900)"></textarea>
+        </label>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ e2 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1;color:var(--ha-ink-900)">Confirme sua identidade</h1>
+          <span style="color:var(--ha-ink-500)">Ofertas só são enviadas por compradores verificados. Isso protege você, a galeria e o artista.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);background:#fff">
+          <sc-for list="{{ verifs }}" as="v" hint-placeholder-count="3">
+            <div style="display:flex;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-5);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+              <span style="width:40px;height:40px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ v.bg }};color:{{ v.fg }};font-family:'Material Symbols Rounded';font-size:22px">{{ v.icon }}</span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600;color:var(--ha-ink-900)">{{ v.nome }}</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ v.sub }}</span></div>
+              <button onClick="{{ v.go }}" style="cursor:pointer;flex:none;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid {{ v.btnBd }};background:{{ v.btnBg }};color:{{ v.btnFg }}">{{ v.acao }}</button>
+            </div>
+          </sc-for>
+        </div>
+        <span style="display:flex;gap:var(--ha-space-2);font-size:var(--ha-text-caption);color:var(--ha-ink-500)"><span style="font-family:'Material Symbols Rounded';font-size:16px">shield_person</span>Seus dados ficam protegidos conforme a LGPD. A galeria vê apenas seu nome e cidade.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ e3 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1;color:var(--ha-ink-900)">Garantia da oferta</h1>
+          <span style="color:var(--ha-ink-500)">Reservamos o valor sem cobrar. Se a galeria recusar ou a oferta expirar, a reserva é desfeita na hora.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <sc-for list="{{ metodos }}" as="m" hint-placeholder-count="3">
+            <button onClick="{{ m.go }}" style="cursor:pointer;display:flex;gap:var(--ha-space-4);align-items:center;padding:var(--ha-space-5);border-radius:var(--ha-radius-md);border:1.5px solid {{ m.bd }};background:#fff;text-align:left">
+              <span style="width:20px;height:20px;flex:none;border-radius:50%;border:1.5px solid {{ m.bd }};display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:{{ m.dot }}"></span></span>
+              <span style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--ha-ink-900)">{{ m.icon }}</span>
+              <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:var(--ha-ink-900)">{{ m.nome }}</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ m.sub }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:var(--ha-space-3);padding:var(--ha-space-4);border-radius:var(--ha-radius-sm);background:var(--ha-paper-100, #F3F1EC);font-size:var(--ha-text-body-sm)"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--ha-ink-900)">lock</span>Se aceita, o pagamento fica em garantia e só é liberado à galeria depois que você confirmar o recebimento pela etiqueta da obra.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ e4 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-6)">
+        <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1;color:var(--ha-ink-900)">Revise e envie</h1>
+        <dl style="margin:0;display:flex;flex-direction:column;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);background:#fff">
+          <sc-for list="{{ revisao }}" as="r" hint-placeholder-count="5">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--ha-space-4);padding:var(--ha-space-4) var(--ha-space-5);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+              <dt style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ r.k }}</dt>
+              <dd style="margin:0;display:flex;align-items:center;gap:var(--ha-space-3);font-weight:600;color:var(--ha-ink-900);text-align:right">{{ r.v }}<button onClick="{{ r.go }}" style="cursor:pointer;border:none;background:none;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-500);text-decoration:underline">Editar</button></dd>
+            </div>
+          </sc-for>
+        </dl>
+        <label style="display:flex;gap:var(--ha-space-3);align-items:flex-start;font-size:var(--ha-text-body-sm);line-height:1.5"><input type="checkbox" checked="{{ aceite }}" onChange="{{ marcarAceite }}" style="margin-top:3px;accent-color:#14120F;width:18px;height:18px">Entendo que esta oferta é vinculante: se a galeria aceitar dentro da validade, a compra é concluída automaticamente com o método de garantia escolhido.</label>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ e5 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-8)">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+          <span style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ status.bg }};color:{{ status.fg }};font-family:'Material Symbols Rounded';font-size:30px;font-variation-settings:'FILL' 1">{{ status.icon }}</span>
+          <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1;color:var(--ha-ink-900)">{{ status.titulo }}</h1>
+          <span style="font-size:var(--ha-text-body-lg);text-wrap:pretty">{{ status.texto }}</span>
+        </div>
+
+        <sc-if value="{{ ehContra }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);padding:var(--ha-space-6);border:var(--ha-border-w) solid var(--ha-ink-900);border-radius:var(--ha-radius-md);background:#fff">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-4);flex-wrap:wrap"><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Contraproposta da Galeria Ladeira</span><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ contraTxt }}</span></div>
+            <span style="font-size:var(--ha-text-body-sm);font-style:italic;padding-left:var(--ha-space-4);border-left:2px solid var(--ha-paper-200)">“Podemos chegar a esse valor com frete incluso para Salvador. A artista ficou feliz com o interesse.”</span>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+              <button onClick="{{ aceitarContra }}" style="cursor:pointer;flex:1 1 160px;font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:none;background:var(--ha-sand-500);color:var(--ha-ink-900)">Aceitar {{ contraTxt }}</button>
+              <button onClick="{{ novaOferta }}" style="cursor:pointer;flex:1 1 160px;font-weight:600;padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900)">Fazer nova oferta</button>
+              <button onClick="{{ recusarContra }}" style="cursor:pointer;font-weight:600;padding:var(--ha-space-3) var(--ha-space-4);border-radius:var(--ha-radius-md);border:none;background:none;color:var(--ha-ink-500);text-decoration:underline">Recusar</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column">
+          <sc-for list="{{ linha }}" as="l" hint-placeholder-count="4">
+            <li style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:var(--ha-space-4)">
+              <span style="position:relative;display:flex;justify-content:center"><span style="position:absolute;top:20px;bottom:0;width:2px;background:{{ l.linha }}"></span><span style="position:relative;width:20px;height:20px;border-radius:50%;background:{{ l.bg }};border:2px solid {{ l.bd }};display:flex;align-items:center;justify-content:center;color:var(--ha-paper-50);font-family:'Material Symbols Rounded';font-size:14px">{{ l.check }}</span></span>
+              <div style="display:flex;flex-direction:column;gap:2px;padding-bottom:var(--ha-space-6)"><span style="font-weight:600;color:{{ l.cor }}">{{ l.nome }}</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">{{ l.sub }}</span></div>
+              <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ l.hora }}</span>
+            </li>
+          </sc-for>
+        </ol>
+
+        <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+          <sc-for list="{{ acoesFinais }}" as="a" hint-placeholder-count="2">
+            <a href="{{ a.href }}" onClick="{{ a.go }}" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;padding:var(--ha-space-3) var(--ha-space-6);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:{{ a.bg }};color:{{ a.fg }};text-decoration:none">{{ a.nome }}</a>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);padding:var(--ha-space-4);border:var(--ha-border-w) dashed var(--ha-paper-200);border-radius:var(--ha-radius-md)">
+          <span style="font-size:var(--ha-text-caption);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">Protótipo · simular resposta da galeria</span>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+            <sc-for list="{{ simular }}" as="s" hint-placeholder-count="4">
+              <button onClick="{{ s.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);padding:var(--ha-space-1) var(--ha-space-3);border-radius:999px;border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;color:var(--ha-ink-900)">{{ s.nome }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mostraPassos }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--ha-space-3);padding-top:var(--ha-space-6);border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+        <button onClick="{{ voltar }}" style="cursor:pointer;visibility:{{ voltarVis }};font-weight:600;padding:var(--ha-space-3) var(--ha-space-4);border:none;background:none;color:var(--ha-ink-900);display:flex;align-items:center;gap:var(--ha-space-1)"><span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_back</span>Voltar</button>
+        <button onClick="{{ avancar }}" disabled="{{ bloqueado }}" style="cursor:pointer;font-weight:600;padding:var(--ha-space-4) var(--ha-space-8);border-radius:var(--ha-radius-md);border:none;background:{{ avancarBg }};color:{{ avancarFg }};display:flex;align-items:center;gap:var(--ha-space-2)">{{ avancarTxt }}<span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_forward</span></button>
+      </div>
+    </sc-if>
+  </main>
+
+  <aside style="flex:1 1 300px;max-width:420px;position:sticky;top:88px;display:flex;flex-direction:column;gap:var(--ha-space-5);padding:var(--ha-space-6);border-radius:var(--ha-radius-md);background:var(--ha-paper-100, #F3F1EC)">
+    <div style="display:flex;gap:var(--ha-space-4)">
+      <div style="width:96px;height:96px;flex:none;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-2)"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Suprematist_Composition_-_Kazimir_Malevich.jpg?width=300" alt="" style="max-width:100%;max-height:100%"></div>
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Joana Teixeira</span>
+        <span style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-body-lg);color:var(--ha-ink-900)">Construção nº 7, 2025</span>
+        <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Óleo sobre linho · 100 × 80 cm</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-verified-500)"><span style="font-family:'Material Symbols Rounded';font-size:14px;font-variation-settings:'FILL' 1">verified</span>Certificada · HA-2026-7K3F</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);padding:var(--ha-space-3) 0;border-top:var(--ha-border-w) solid var(--ha-paper-200);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span style="font-family:'Material Symbols Rounded';font-size:18px">storefront</span>Vendido por <b style="font-weight:600;color:var(--ha-ink-900)">Galeria Ladeira</b> · Galeria</div>
+    <dl style="margin:0;display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm)">
+      <sc-for list="{{ resumo }}" as="r" hint-placeholder-count="4">
+        <div style="display:flex;justify-content:space-between;gap:var(--ha-space-3)"><dt style="color:{{ r.cor }}">{{ r.k }}</dt><dd style="margin:0;font-variant-numeric:tabular-nums;color:{{ r.cor }};text-decoration:{{ r.risco }}">{{ r.v }}</dd></div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;gap:var(--ha-space-3);padding-top:var(--ha-space-3);border-top:var(--ha-border-w) solid var(--ha-paper-200);font-weight:600;font-size:var(--ha-text-body);color:var(--ha-ink-900)"><dt>Total se aceita</dt><dd style="margin:0;font-variant-numeric:tabular-nums">{{ totalTxt }}</dd></div>
+    </dl>
+    <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Frete especializado e seguro calculados para Salvador/BA. 4% do valor vai para a artista como direito de sequência em revendas futuras.</span>
+  </aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;etapaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Valor&quot;,&quot;Identidade&quot;,&quot;Garantia&quot;,&quot;Revisão&quot;,&quot;Enviada&quot;],&quot;default&quot;:&quot;Valor&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const PRECO = 38000, FRETE = 680, SEGURO = 420;
+const fmt = (n) => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+const PASSOS = [['Valor', 'payments'], ['Identidade', 'badge'], ['Garantia', 'lock'], ['Revisão', 'fact_check']];
+const ETAPAS = { 'Valor': 1, 'Identidade': 2, 'Garantia': 3, 'Revisão': 4, 'Enviada': 5 };
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    let qe = null, gov = false; try { const q = new URLSearchParams(location.search); qe = q.get('etapa'); gov = q.get('gov') === 'ok'; } catch (x) {}
+    const e = ETAPAS[qe] || ETAPAS[p.etapaInicial] || 1;
+    this.state = { etapa: e, valor: 34000, validade: 48, msg: '', ver: gov || e > 2 ? [true, true, true] : [true, false, false], metodo: 'cartao', aceite: e >= 4, resposta: 'analise' };
+  }
+  setValor(v) { this.setState({ valor: Math.max(PRECO * 0.5, Math.min(PRECO, Math.round(v / 100) * 100)) }); }
+  renderVals() {
+    const s = this.state; const ink = 'var(--ha-ink-900)', paper = 'var(--ha-paper-50)';
+    const pct = s.valor / PRECO;
+    const chance = pct >= 0.9 ? { icon: 'trending_up', bg: 'var(--ha-verified-100)', fg: 'var(--ha-verified-500)', titulo: 'Boa chance de ser aceita', texto: 'Ofertas a partir de 90% do preço pedido costumam ser aceitas por esta galeria.' }
+      : pct >= 0.8 ? { icon: 'balance', bg: 'var(--ha-paper-100, #F3F1EC)', fg: ink, titulo: 'Chance moderada', texto: 'A galeria pode aceitar ou responder com uma contraproposta.' }
+      : { icon: 'trending_down', bg: 'var(--ha-alert-100)', fg: 'var(--ha-alert-500)', titulo: 'Abaixo do que esta galeria costuma aceitar', texto: 'Ofertas abaixo de 80% raramente são aceitas. Considere subir o valor ou deixar uma mensagem.' };
+    const verOk = s.ver.every(Boolean);
+    const bloqueado = (s.etapa === 2 && !verOk) || (s.etapa === 4 && !s.aceite);
+    const VER = [['CPF e dados pessoais', 'Mariana Barreto · ***.482.917-**', 'badge'], ['Celular confirmado', 'Código enviado por SMS para (71) 9****-2210', 'smartphone'], ['E-mail confirmado', 'Código de 6 dígitos enviado para o seu e-mail', 'mail']];
+    const metodosArr = [['cartao', 'credit_card', 'Pré-autorização no cartão', 'Visa final 4821 · o valor é reservado, não cobrado'], ['pix', 'pix', 'Pix com devolução automática', 'Devolvido em até 1 minuto se a oferta não for aceita'], ['boleto', 'account_balance', 'Transferência na aceitação', 'Você paga só depois do aceite, em até 24 horas']];
+    const metodoNome = metodosArr.find((m) => m[0] === s.metodo)[2];
+    const valorFinal = s.resposta === 'contra_aceita' ? 35500 : s.valor;
+    const R = {
+      analise: { icon: 'schedule_send', bg: 'var(--ha-paper-100, #F3F1EC)', fg: ink, titulo: 'Oferta enviada', texto: 'A Galeria Ladeira tem até ' + s.validade + ' horas para responder. Avisaremos por e-mail e no app.' },
+      aceita: { icon: 'check_circle', bg: 'var(--ha-verified-100)', fg: 'var(--ha-verified-500)', titulo: 'Oferta aceita!', texto: 'A obra é sua por ' + fmt(s.valor) + '. O pagamento foi para a garantia e a galeria já está preparando o envio.' },
+      contra: { icon: 'swap_horiz', bg: 'var(--ha-sand-100, #F4EBDD)', fg: ink, titulo: 'Você recebeu uma contraproposta', texto: 'A galeria respondeu com um novo valor. Você tem 24 horas para decidir.' },
+      contra_aceita: { icon: 'check_circle', bg: 'var(--ha-verified-100)', fg: 'var(--ha-verified-500)', titulo: 'Negócio fechado', texto: 'Você aceitou a contraproposta de R$ 35.500 com frete incluso.' },
+      recusada: { icon: 'cancel', bg: 'var(--ha-alert-100)', fg: 'var(--ha-alert-500)', titulo: 'Oferta não aceita', texto: 'A reserva no seu cartão já foi desfeita. Você pode fazer uma nova oferta ou comprar ao preço pedido.' },
+      expirada: { icon: 'timer_off', bg: 'var(--ha-paper-100, #F3F1EC)', fg: 'var(--ha-ink-500)', titulo: 'Oferta expirada', texto: 'A galeria não respondeu dentro do prazo. Nenhum valor foi cobrado.' },
+    }[s.resposta];
+    const fechado = s.resposta === 'aceita' || s.resposta === 'contra_aceita';
+    const linhaArr = [['Oferta enviada', fmt(s.valor) + ' · validade ' + s.validade + 'h', 'hoje 14:32', true], ['Galeria analisando', 'Galeria Ladeira foi notificada', s.resposta === 'analise' ? 'agora' : 'hoje 15:10', s.resposta !== 'analise'], ['Resposta', { analise: 'Aguardando', aceita: 'Aceita', contra: 'Contraproposta de R$ 35.500', contra_aceita: 'Contraproposta aceita', recusada: 'Recusada', expirada: 'Expirada' }[s.resposta], s.resposta === 'analise' ? '' : 'hoje 16:02', s.resposta !== 'analise'], ['Pagamento em garantia e envio', fechado ? 'Coleta agendada pela transportadora' : 'Após o aceite', fechado ? 'amanhã' : '', fechado]];
+    const flat = s.resposta === 'contra_aceita';
+    return {
+      mostraPassos: s.etapa <= 4, e1: s.etapa === 1, e2: s.etapa === 2, e3: s.etapa === 3, e4: s.etapa === 4, e5: s.etapa === 5,
+      passos: PASSOS.map(([nome, icon], i) => { const n = i + 1; const feito = n < s.etapa, atual = n === s.etapa; return { nome, icon: feito ? 'check_circle' : icon, barra: feito || atual ? ink : 'var(--ha-paper-200)', cor: atual || feito ? ink : 'var(--ha-ink-500)' }; }),
+      valor: s.valor, valorTxt: s.valor.toLocaleString('pt-BR'), preco: PRECO, min: PRECO * 0.5, minTxt: fmt(PRECO * 0.5), precoTxt: fmt(PRECO),
+      digitarValor: (e) => { const n = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; this.setState({ valor: Math.min(PRECO, n) }); },
+      deslizar: (e) => this.setValor(+e.target.value),
+      atalhos: [[0.95, '−5%'], [0.9, '−10%'], [0.85, '−15%'], [0.8, '−20%']].map(([f, nome]) => { const on = Math.abs(s.valor - Math.round(PRECO * f / 100) * 100) < 1; return { nome: nome + ' · ' + fmt(Math.round(PRECO * f / 100) * 100), bg: on ? ink : 'transparent', fg: on ? paper : ink, bd: on ? ink : 'var(--ha-paper-200)', go: () => this.setValor(PRECO * f) }; }),
+      chance,
+      validades: [[24, '24 horas', 'Resposta rápida'], [48, '48 horas', 'Recomendado'], [72, '72 horas', 'Mais tempo para a galeria']].map(([h, nome, sub]) => ({ nome, sub, bd: s.validade === h ? ink : 'var(--ha-paper-200)', go: () => this.setState({ validade: h }) })),
+      msg: s.msg, digitarMsg: (e) => this.setState({ msg: e.target.value }),
+      verifs: VER.map(([nome, sub, icon], i) => { const ok = s.ver[i]; return { nome, sub, icon: ok ? 'check' : icon, bg: ok ? 'var(--ha-verified-100)' : 'var(--ha-paper-100, #F3F1EC)', fg: ok ? 'var(--ha-verified-500)' : ink, acao: ok ? 'Verificado' : 'Confirmar', btnBg: ok ? 'transparent' : ink, btnFg: ok ? 'var(--ha-verified-500)' : paper, btnBd: ok ? 'transparent' : ink, go: () => { const v = [...s.ver]; v[i] = true; this.setState({ ver: v }); } }; }),
+      metodos: metodosArr.map(([id, icon, nome, sub]) => ({ icon, nome, sub, bd: s.metodo === id ? ink : 'var(--ha-paper-200)', dot: s.metodo === id ? ink : 'transparent', go: () => this.setState({ metodo: id }) })),
+      revisao: [['Valor da oferta', fmt(s.valor), 1], ['Validade', s.validade + ' horas', 1], ['Mensagem', s.msg ? '“' + (s.msg.length > 40 ? s.msg.slice(0, 40) + '…' : s.msg) + '”' : 'Sem mensagem', 1], ['Identidade', 'Verificada', 2], ['Garantia', metodoNome, 3]].map(([k, v, e]) => ({ k, v, go: () => this.setState({ etapa: e }) })),
+      aceite: s.aceite, marcarAceite: (e) => this.setState({ aceite: e.target.checked }),
+      voltar: () => this.setState({ etapa: Math.max(1, s.etapa - 1) }), voltarVis: s.etapa > 1 ? 'visible' : 'hidden',
+      avancar: () => { if (!bloqueado) this.setState({ etapa: s.etapa + 1, resposta: 'analise' }); },
+      bloqueado, avancarBg: bloqueado ? 'var(--ha-paper-200)' : (s.etapa === 4 ? 'var(--ha-sand-500)' : ink), avancarFg: bloqueado ? 'var(--ha-ink-500)' : (s.etapa === 4 ? ink : paper),
+      avancarTxt: s.etapa === 4 ? 'Enviar oferta de ' + fmt(s.valor) : 'Continuar',
+      status: R, ehContra: s.resposta === 'contra', contraTxt: 'R$ 35.500',
+      aceitarContra: () => this.setState({ resposta: 'contra_aceita' }), recusarContra: () => this.setState({ resposta: 'recusada' }), novaOferta: () => this.setState({ etapa: 1 }),
+      linha: linhaArr.map(([nome, sub, hora, ok], i) => ({ nome, sub, hora, check: ok ? 'check' : '', bg: ok ? ink : '#fff', bd: ok ? ink : 'var(--ha-paper-200)', cor: ok ? ink : 'var(--ha-ink-500)', linha: i === linhaArr.length - 1 ? 'transparent' : (ok ? ink : 'var(--ha-paper-200)') })),
+      acoesFinais: (fechado ? [['Acompanhar entrega', 'HouseArt Web App.dc.html', ink, paper], ['Ver outras obras', 'HouseArt Marketplace.dc.html', 'transparent', ink]] : s.resposta === 'analise' ? [['Ver minhas ofertas', 'HouseArt Web App.dc.html', ink, paper], ['Cancelar oferta', null, 'transparent', ink]] : [['Fazer nova oferta', null, ink, paper], ['Comprar por ' + fmt(PRECO), 'HouseArt Obra.dc.html', 'transparent', ink]]).map(([nome, href, bg, fg]) => ({ nome, bg, fg, href: href || '#', go: href ? undefined : (e) => { e.preventDefault(); this.setState(nome === 'Cancelar oferta' ? { resposta: 'expirada' } : { etapa: 1 }); } })),
+      simular: [['analise', 'Em análise'], ['aceita', 'Aceita'], ['contra', 'Contraproposta'], ['recusada', 'Recusada'], ['expirada', 'Expirada']].map(([id, nome]) => ({ nome, go: () => this.setState({ resposta: id }) })),
+      resumo: [['Preço pedido', fmt(PRECO), 'var(--ha-ink-500)', s.etapa <= 4 || !flat ? 'line-through' : 'line-through'], ['Sua oferta', fmt(valorFinal), ink, 'none'], ['Frete especializado', flat ? 'Incluso' : fmt(FRETE), ink, 'none'], ['Seguro de transporte', fmt(SEGURO), ink, 'none'], ['Taxa HouseArt', 'Grátis para compradores', ink, 'none']].map(([k, v, cor, risco]) => ({ k, v, cor, risco })),
+      totalTxt: fmt(valorFinal + (flat ? 0 : FRETE) + SEGURO),
+    };
+  }
+}
+</script>
+</body>
+</html>

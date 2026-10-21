@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#FBFAF7;-webkit-font-smoothing:antialiased}a{color:var(--ha-ink-900)}a:hover{color:var(--ha-ink-700)}*{box-sizing:border-box}button,input{font:inherit}</style>
+</helmet>
+<div style="background:var(--ha-paper-50);color:var(--ha-ink-700);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);min-height:100vh">
+
+<header style="border-bottom:var(--ha-border-w) solid var(--ha-ink-700);background:var(--ha-ink-900);position:sticky;top:0;z-index:20">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6);height:64px;display:flex;align-items:center;gap:var(--ha-space-8);min-width:0">
+    <a href="HouseArt Home.dc.html" style="flex:none;display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-paper-50);text-decoration:none"><img src="houseart/marca/marca_houseart_full_horiz_negativo.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"></a>
+    <nav style="display:flex;gap:var(--ha-space-5);font-size:var(--ha-text-body-sm);font-weight:500;white-space:nowrap;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none;height:100%;align-items:stretch">
+      <a href="HouseArt Marketplace.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Marketplace</a>
+      <a href="HouseArt Artista.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Artistas</a>
+      <a href="HouseArt Galerias.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Galerias</a>
+      <a href="HouseArt Home.dc.html#agenda" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Agenda</a>
+      <a href="HouseArt Site.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Como funciona</a>
+      <a href="HouseArt Verificar.dc.html" style="color:var(--ha-paper-50);text-decoration:none;display:flex;align-items:center;box-shadow:inset 0 -2px 0 var(--ha-sand-500)" style-hover="color:var(--ha-paper-50)">Verificar uma obra</a>
+    </nav>
+  </div>
+</header>
+
+<section data-screen-label="Verificar · Busca" style="background:var(--ha-ink-900);color:var(--ha-paper-50)">
+  <div style="max-width:880px;margin:0 auto;padding:var(--ha-space-16) var(--ha-space-6) var(--ha-space-12);display:flex;flex-direction:column;gap:var(--ha-space-8)">
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-3);text-align:center;align-items:center">
+      <span style="display:flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ha-sand-500)"><span style="font-family:'Material Symbols Rounded';font-size:18px">verified</span>Consulta pública e gratuita</span>
+      <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-display);line-height:var(--ha-lh-display);text-wrap:balance">Verificar uma obra</h1>
+      <p style="margin:0;font-size:var(--ha-text-body-lg);color:var(--ha-paper-200);max-width:560px;text-wrap:pretty">Confira se a obra tem certificado HouseArt, quem é o titular registrado e se há alguma contestação.</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;background:var(--ha-paper-50);color:var(--ha-ink-900);border-radius:var(--ha-radius-md);overflow:hidden">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+        <sc-for list="{{ modos }}" as="m" hint-placeholder-count="2">
+          <button onClick="{{ m.go }}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);padding:var(--ha-space-4);border:none;background:{{ m.bg }};color:{{ m.fg }};font-weight:600;font-size:var(--ha-text-body-sm);box-shadow:{{ m.sh }}"><span style="font-family:'Material Symbols Rounded';font-size:20px">{{ m.icon }}</span>{{ m.nome }}</button>
+        </sc-for>
+      </div>
+
+      <form onSubmit="{{ buscar }}" style="display:flex;flex-direction:column;gap:var(--ha-space-4);padding:var(--ha-space-6)">
+        <sc-if value="{{ porId }}" hint-placeholder-val="{{ true }}">
+          <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">Número do certificado
+            <input value="{{ id }}" onChange="{{ digitarId }}" placeholder="HA-2026-0000-0000" aria-label="Número do certificado" style="padding:var(--ha-space-4);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-size:var(--ha-text-h3);font-weight:500;letter-spacing:.06em;font-variant-numeric:tabular-nums;text-transform:uppercase;outline:none" style-focus="border-color:var(--ha-ink-900)">
+            <span style="font-weight:400;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Impresso no certificado e na etiqueta do verso. Também aceita o número de série da etiqueta.</span>
+          </label>
+        </sc-if>
+        <sc-if value="{{ porNome }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--ha-space-4)">
+            <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">Artista
+              <input value="{{ artista }}" onChange="{{ digitarArtista }}" placeholder="Nome ou nome artístico" style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-weight:400;outline:none" style-focus="border-color:var(--ha-ink-900)">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">Nome da obra
+              <input value="{{ titulo }}" onChange="{{ digitarTitulo }}" placeholder="Título, mesmo que parcial" style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-weight:400;outline:none" style-focus="border-color:var(--ha-ink-900)">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">Ano
+              <input value="{{ ano }}" onChange="{{ digitarAno }}" placeholder="Opcional" inputmode="numeric" style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-weight:400;outline:none" style-focus="border-color:var(--ha-ink-900)">
+            </label>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--ha-space-3)">
+          <span style="display:flex;align-items:center;gap:var(--ha-space-2);font-size:var(--ha-text-caption);color:var(--ha-ink-500)"><span style="font-family:'Material Symbols Rounded';font-size:18px">contactless</span>Tem a obra em mãos? Encoste o celular na etiqueta do verso.</span>
+          <button type="submit" style="cursor:pointer;display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;padding:var(--ha-space-3) var(--ha-space-8);border-radius:var(--ha-radius-md);border:none;background:var(--ha-ink-900);color:var(--ha-paper-50)" style-hover="background:var(--ha-ink-700)"><span style="font-family:'Material Symbols Rounded';font-size:20px">search</span>Verificar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Verificar · Resultados" style="max-width:880px;margin:0 auto;padding:var(--ha-space-12) var(--ha-space-6) var(--ha-space-16);display:flex;flex-direction:column;gap:var(--ha-space-6)">
+  <sc-if value="{{ temBusca }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-4);flex-wrap:wrap">
+      <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);color:var(--ha-ink-900)">{{ tituloRes }}</h2>
+      <button onClick="{{ limpar }}" style="cursor:pointer;border:none;background:none;font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);text-decoration:underline">Nova busca</button>
+    </div>
+    <div style="display:flex;flex-direction:column;border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+      <sc-for list="{{ resultados }}" as="r" hint-placeholder-count="3">
+        <a href="{{ r.href }}" style="display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:var(--ha-space-5);align-items:center;padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);text-decoration:none;color:inherit" style-hover="background:var(--ha-paper-100, #F3F1EC)">
+          <div style="width:88px;height:88px;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-2)"><img src="{{ r.src }}" alt="" style="max-width:100%;max-height:100%"></div>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-body-lg);color:var(--ha-ink-900)">{{ r.titulo }}, {{ r.ano }}</span>
+            <span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ r.artista }}</span>
+            <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ r.id }} · {{ r.tecnica }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--ha-space-2)">
+            <span style="display:flex;align-items:center;gap:4px;font-size:var(--ha-text-caption);font-weight:600;padding:var(--ha-space-1) var(--ha-space-3);border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:16px;font-variation-settings:'FILL' 1">{{ r.icon }}</span>{{ r.status }}</span>
+            <span style="display:flex;align-items:center;gap:2px;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">Ver certificado<span style="font-family:'Material Symbols Rounded';font-size:16px">chevron_right</span></span>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+    <sc-if value="{{ vazio }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;gap:var(--ha-space-4);padding:var(--ha-space-6);border-radius:var(--ha-radius-md);background:var(--ha-paper-100, #F3F1EC)">
+        <span style="font-family:'Material Symbols Rounded';font-size:28px;color:var(--ha-ink-500)">search_off</span>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+          <span style="font-weight:600;color:var(--ha-ink-900)">Nenhuma obra certificada encontrada</span>
+          <span style="font-size:var(--ha-text-body-sm);text-wrap:pretty">Isso não quer dizer que a obra seja falsa, só que ela não tem certificado HouseArt. Confira se o número foi digitado corretamente ou peça ao vendedor o certificado original.</span>
+        </div>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ semBusca }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:var(--ha-space-8)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:28px;color:var(--ha-ink-900)">tag</span><span style="font-weight:600;color:var(--ha-ink-900)">Onde está o número</span><span style="font-size:var(--ha-text-body-sm);text-wrap:pretty">No certificado impresso e na etiqueta colada no verso da obra, no formato HA-ano-0000-0000.</span></div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:28px;color:var(--ha-ink-900)">person_search</span><span style="font-weight:600;color:var(--ha-ink-900)">Sem o número?</span><span style="font-size:var(--ha-text-body-sm);text-wrap:pretty">Busque pelo artista e pelo nome da obra. Compare a imagem e as medidas antes de confiar no resultado.</span></div>
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:28px;color:var(--ha-ink-900)">shield</span><span style="font-weight:600;color:var(--ha-ink-900)">O que você vê</span><span style="font-size:var(--ha-text-body-sm);text-wrap:pretty">Situação do certificado, artista, titular atual (anônimo, se for particular) e alertas de contestação ou roubo.</span></div>
+    </div>
+  </sc-if>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const OBRAS = [
+  ['HA-2026-7K3F-9Q2M', 'Construção nº 7', 'Joana Teixeira', 2025, 'Óleo sobre linho', 'Suprematist_Composition_-_Kazimir_Malevich.jpg', 'autenticada'],
+  ['HA-2025-2B8D-4R1X', 'Voo baixo', 'Joana Teixeira', 2024, 'Óleo sobre linho', 'Suprematist_Composition_-_Airplane_Flying_(Malevich,_1915).jpg', 'autenticada'],
+  ['HA-2026-9P4L-6T3N', 'Estudo em vermelho', 'Joana Teixeira', 2025, 'Óleo sobre papel', 'Suprematism_-_Abstract_Composition_(Malevich,_1915).jpg', 'contestada'],
+  ['HA-2024-5H1C-8V7A', 'Retábulo do Rio Vermelho', 'Tomás Rezende', 1983, 'Acrílica e folha de ouro', 'Hilma_af_Klint_-_1907_-_Altarpiece_-_No_1_-_Group_X_-_Altarpieces.jpg', 'autenticada'],
+  ['HA-2024-3M6K-1W9E', 'Duas luas', 'Tomás Rezende', 1977, 'Acrílica sobre tela', 'Hilma_af_Klint,_1915,_Svanen,_No._17.jpg', 'autenticada'],
+  ['HA-2023-8Z2J-7Q4P', 'Procissão', 'Tomás Rezende', 1969, 'Óleo sobre tela', 'Wassily_Kandinsky_Composition_VIII.jpg', 'roubada'],
+];
+const ST = {
+  autenticada: ['Autenticada', 'verified', 'var(--ha-verified-100)', 'var(--ha-verified-500)'],
+  contestada: ['Contestada', 'report', 'var(--ha-alert-100)', 'var(--ha-alert-500)'],
+  roubada: ['Registrada como roubada', 'gpp_bad', 'var(--ha-alert-100)', 'var(--ha-alert-500)'],
+};
+const norm = (t) => (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+class Component extends DCLogic {
+  state = { modo: 'id', id: 'HA-2026-7K3F-9Q2M', artista: '', titulo: '', ano: '', busca: { modo: 'id', id: 'HA-2026-7K3F-9Q2M' } };
+  renderVals() {
+    const s = this.state; const b = s.busca; const ink = 'var(--ha-ink-900)';
+    let res = [];
+    if (b) {
+      if (b.modo === 'id') { const q = norm(b.id); res = q ? OBRAS.filter((o) => norm(o[0]).includes(q)) : []; }
+      else res = OBRAS.filter((o) => (!b.artista || norm(o[2]).includes(norm(b.artista))) && (!b.titulo || norm(o[1]).includes(norm(b.titulo))) && (!b.ano || String(o[3]) === b.ano.trim()));
+    }
+    return {
+      modos: [['id', 'Número do certificado', 'tag'], ['nome', 'Artista e nome da obra', 'person_search']].map(([id, nome, icon]) => { const on = s.modo === id; return { nome, icon, bg: on ? 'var(--ha-paper-50)' : 'var(--ha-paper-100, #F3F1EC)', fg: on ? ink : 'var(--ha-ink-500)', sh: on ? 'inset 0 -2px 0 ' + ink : 'none', go: () => this.setState({ modo: id }) }; }),
+      porId: s.modo === 'id', porNome: s.modo === 'nome',
+      id: s.id, artista: s.artista, titulo: s.titulo, ano: s.ano,
+      digitarId: (e) => this.setState({ id: e.target.value.toUpperCase() }),
+      digitarArtista: (e) => this.setState({ artista: e.target.value }),
+      digitarTitulo: (e) => this.setState({ titulo: e.target.value }),
+      digitarAno: (e) => this.setState({ ano: e.target.value }),
+      buscar: (e) => { e.preventDefault(); this.setState({ busca: { modo: s.modo, id: s.id, artista: s.artista, titulo: s.titulo, ano: s.ano } }); },
+      limpar: () => this.setState({ busca: null, id: '', artista: '', titulo: '', ano: '' }),
+      temBusca: !!b, semBusca: !b, vazio: !!b && res.length === 0,
+      tituloRes: res.length === 1 ? '1 obra encontrada' : res.length + ' obras encontradas',
+      resultados: res.map(([id, titulo, artista, ano, tecnica, img, st]) => { const [status, icon, bg, fg] = ST[st]; return { id, titulo, artista, ano, tecnica, src: FP + img + '?width=200', status, icon, bg, fg, href: 'HouseArt Verificacao.dc.html?estado=' + st }; }),
+    };
+  }
+}
+</script>
+</body>
+</html>

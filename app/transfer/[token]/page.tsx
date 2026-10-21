@@ -12,7 +12,7 @@ export default async function BuyerTransferPage({ params }: { params: Promise<{ 
   if (!t) notFound()
   return (
     <main className="ha-page ha-page--loose" style={{ maxWidth: 640, margin: '0 auto' }}>
-      <HouseArtLogo size={24} />
+      <HouseArtLogo height={30} />
       <p className="ha-eyebrow">Transferência de titularidade</p>
       <h1 className="ha-h1">{t.artwork.title}{t.artwork.year ? `, ${t.artwork.year}` : ''}</h1>
       <p className="ha-muted">{t.artwork.artist.name} · {t.artwork.publicId}</p>

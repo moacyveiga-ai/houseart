@@ -30,7 +30,7 @@ export default async function VerifyPage({ params, searchParams }: { params: Pro
   const st = STATUS[c.status] ?? STATUS.PENDING
   return (
     <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <HouseArtLogo size={24} />
+      <HouseArtLogo height={30} />
       <p className="ha-eyebrow">Verificação pública</p>
       <h1 className="ha-h1">{c.publicId}</h1>
       <div className="ha-row"><Badge tone={st.tone}>{st.label}</Badge>
@@ -67,7 +67,7 @@ async function AppraisalVerify({ code }: { code: string }) {
   if (!a) notFound()
   return (
     <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <HouseArtLogo size={24} />
+      <HouseArtLogo height={30} />
       <p className="ha-eyebrow">Verificação pública · laudo de opinião de valor</p>
       <h1 className="ha-h1">{a.code}</h1>
       <div className="ha-row"><Badge tone={a.status === 'ISSUED' ? 'verified' : 'neutral'}>{a.status === 'ISSUED' ? 'Laudo vigente' : 'Laudo substituído'}</Badge></div>

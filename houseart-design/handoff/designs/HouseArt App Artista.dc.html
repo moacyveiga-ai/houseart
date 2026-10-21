@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#ECE7DF;-webkit-font-smoothing:antialiased}a{color:var(--ha-info-500)}a:hover{color:var(--ha-ink-900)}*{box-sizing:border-box}button,input{font:inherit}</style>
+</helmet>
+<div style="min-height:100vh;background:var(--ha-paper-200);font-family:var(--ha-font-ui);color:var(--ha-ink-700);display:flex;flex-wrap:wrap;gap:var(--ha-space-12);justify-content:center;align-items:flex-start;padding:var(--ha-space-10) var(--ha-space-6)">
+  <div style="flex:0 1 300px;display:flex;flex-direction:column;gap:var(--ha-space-5);padding-top:var(--ha-space-8)">
+    <div style="display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900)"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);margin-left:var(--ha-space-2)">App · artista e colecionador</span></div>
+    <p style="margin:0;font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm);color:var(--ha-ink-500)">Protótipo navegável. Toque no celular ou pule direto para uma tela:</p>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-1)">
+      <sc-for list="{{ atalhos }}" as="a" hint-placeholder-count="9">
+        <button onClick="{{ a.go }}" style="display:flex;align-items:center;gap:var(--ha-space-3);text-align:left;padding:var(--ha-space-2) var(--ha-space-3);border:0;border-radius:var(--ha-radius-md);background:{{ a.bg }};color:var(--ha-ink-900);font-size:var(--ha-text-body-sm);font-weight:{{ a.peso }};cursor:pointer" style-hover="background:var(--ha-paper-100)"><span style="font-family:'Material Symbols Rounded';font-size:20px">{{ a.icon }}</span>{{ a.nome }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-caption)"><span style="font-weight:600;color:var(--ha-ink-900);letter-spacing:.06em;text-transform:uppercase">Apps</span><a href="HouseArt App Artista.dc.html">Artista →</a><a href="HouseArt App Galeria.dc.html">Galeria →</a><a href="HouseArt App Colecionador.dc.html">Colecionador →</a><span style="margin-top:6px;font-weight:600;color:var(--ha-ink-900);letter-spacing:.06em;text-transform:uppercase">Web</span><a href="HouseArt Web App.dc.html#artista">Artista →</a><a href="HouseArt Web App.dc.html#avaliador">Prestadores de serviço →</a><a href="HouseArt Web App.dc.html#admin">Equipe HouseArt →</a><a href="HouseArt Web Galeria.dc.html">Galeria →</a><a href="HouseArt Web Colecionador.dc.html">Colecionador →</a><a href="HouseArt Marketplace.dc.html">Marketplace público →</a></div>
+  </div>
+
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ escuro }}" hint-size="402px,874px">
+  <div style="height:100%;display:flex;flex-direction:column;background:{{ fundo }};color:{{ cor }};font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body)">
+
+    <sc-if value="{{ s.onb }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;display:flex;flex-direction:column;padding:72px var(--ha-space-6) var(--ha-space-10);background:var(--ha-ink-900);color:var(--ha-paper-50)">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center"><div style="width:72%;aspect-ratio:4/5;border:var(--ha-border-w) solid var(--ha-ink-700);overflow:hidden"><img src="{{ onb.src }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-3);margin-top:var(--ha-space-8)">
+          <div style="display:flex;gap:var(--ha-space-2)"><sc-for list="{{ onb.dots }}" as="d" hint-placeholder-count="3"><span style="height:4px;width:{{ d.w }};border-radius:var(--ha-radius-full);background:{{ d.c }}"></span></sc-for></div>
+          <div style="font-family:var(--ha-font-display);font-size:34px;line-height:40px">{{ onb.titulo }}</div>
+          <div style="font-size:var(--ha-text-body);color:var(--ha-ink-300)">{{ onb.texto }}</div>
+        </div>
+        <button onClick="{{ onbNext }}" style="margin-top:var(--ha-space-8);height:52px;border:0;border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);font-weight:600;cursor:pointer">{{ onb.cta }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ s.login }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;flex-direction:column;gap:var(--ha-space-5);padding:96px var(--ha-space-6) var(--ha-space-10)">
+        <div style="font-family:var(--ha-font-display);font-size:34px;line-height:40px;color:var(--ha-ink-900)">Entrar</div>
+        <div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">A mesma conta da família House.</div>
+        <button onClick="{{ entrar }}" style="height:52px;display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);border:0;border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50);font-weight:600;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:20px">mail</span>Entrar com e-mail</button>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">Celular<input value="(71) 99812-4410" style="height:52px;font-weight:400;font-size:var(--ha-text-body);padding:0 var(--ha-space-4);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none;font-variant-numeric:tabular-nums"></label>
+        <button onClick="{{ entrar }}" style="height:52px;border:0;border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);font-weight:600;cursor:pointer">Receber código por SMS</button>
+        <div style="margin-top:auto;text-align:center;font-size:var(--ha-text-body-sm)"><button onClick="{{ irVerificar }}" style="border:0;background:transparent;color:var(--ha-ink-900);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:var(--ha-space-1)"><span style="font-family:'Material Symbols Rounded';font-size:18px">contactless</span>Verificar uma obra sem login</button></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ s.app }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow-y:auto;padding-top:60px">
+
+        <sc-if value="{{ s.home }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-6);padding:var(--ha-space-4) var(--ha-space-5) var(--ha-space-8)">
+            <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Segunda, 19 de outubro</div><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Olá, Joana</div></div><span style="width:40px;height:40px;border-radius:50%;background:var(--ha-paper-200);display:flex;align-items:center;justify-content:center;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">JT</span></div>
+            <button onClick="{{ irNova }}" style="display:flex;align-items:center;gap:var(--ha-space-4);text-align:left;padding:var(--ha-space-5);border:0;border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50);cursor:pointer">
+              <span style="width:48px;height:48px;flex:none;border-radius:50%;background:var(--ha-sand-500);color:var(--ha-ink-900);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:26px">add_a_photo</span>
+              <span><span style="display:block;font-weight:600">Nova obra</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-300)">Câmera guiada · cerca de 6 minutos</span></span>
+            </button>
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+              <div style="font-weight:600;color:var(--ha-ink-900)">Próximas ações</div>
+              <sc-for list="{{ acoes }}" as="a" hint-placeholder-count="3">
+                <button onClick="{{ a.go }}" style="display:grid;grid-template-columns:40px minmax(0,1fr) 20px;gap:var(--ha-space-3);align-items:center;text-align:left;padding:var(--ha-space-3);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);background:var(--ha-paper-50);cursor:pointer">
+                  <span style="width:40px;height:40px;border-radius:50%;background:var(--ha-paper-100);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px;color:var(--ha-ink-900)">{{ a.icon }}</span>
+                  <span style="min-width:0"><span style="display:block;font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ a.titulo }}</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ a.sub }}</span></span>
+                  <span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--ha-ink-500)">chevron_right</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+              <div style="font-weight:600;color:var(--ha-ink-900)">Suas obras</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--ha-space-4)">
+                <sc-for list="{{ obras }}" as="o" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:var(--ha-space-1)"><div style="aspect-ratio:1/1;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-4)"><img src="{{ o.src }}" alt="" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></div><i style="font-family:var(--ha-font-display);font-size:var(--ha-text-body-sm);color:var(--ha-ink-900)">{{ o.titulo }}</i><span style="font-size:var(--ha-text-caption);font-weight:600;color:{{ o.cor }}">{{ o.st }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ s.nova }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;min-height:100%;background:var(--ha-ink-900);color:var(--ha-paper-50);margin-top:-60px;padding-top:60px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--ha-space-3) var(--ha-space-5)"><button onClick="{{ irHome }}" aria-label="Fechar" style="border:0;background:transparent;color:var(--ha-paper-50);font-family:'Material Symbols Rounded';font-size:26px;cursor:pointer">close</button><span style="font-size:var(--ha-text-body-sm);font-weight:600">{{ cap.contador }}</span><span style="width:26px"></span></div>
+            <div style="position:relative;margin:0 var(--ha-space-5);aspect-ratio:4/5;background:#000;overflow:hidden">
+              <img src="{{ cap.src }}" alt="" style="width:100%;height:100%;object-fit:cover;transform:{{ cap.tf }};transform-origin:{{ cap.or }};transition:transform var(--ha-dur-panel) var(--ha-ease)">
+              <div style="position:absolute;inset:12%;border:2px solid var(--ha-sand-500)"></div>
+              <div style="position:absolute;left:12%;top:12%;width:24px;height:24px;border-left:4px solid var(--ha-paper-50);border-top:4px solid var(--ha-paper-50)"></div>
+              <div style="position:absolute;right:12%;bottom:12%;width:24px;height:24px;border-right:4px solid var(--ha-paper-50);border-bottom:4px solid var(--ha-paper-50)"></div>
+              <sc-if value="{{ cap.cartao }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:var(--ha-space-3);bottom:var(--ha-space-3);display:grid;grid-template-columns:repeat(3,12px);gap:2px;padding:4px;background:var(--ha-paper-50)"><span style="height:12px;background:#B23A2F"></span><span style="height:12px;background:#2E7D5B"></span><span style="height:12px;background:#3A5F8A"></span><span style="height:12px;background:#111"></span><span style="height:12px;background:#6B6760"></span><span style="height:12px;background:#FBFAF7;outline:1px solid #ccc"></span></div></sc-if>
+              <div style="position:absolute;left:var(--ha-space-3);top:var(--ha-space-3);display:flex;align-items:center;gap:var(--ha-space-1);padding:2px var(--ha-space-2);border-radius:var(--ha-radius-sm);background:rgba(17,17,17,.7);font-size:var(--ha-text-caption);font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:var(--ha-verified-500)"></span>Foco e luz bons</div>
+            </div>
+            <div style="padding:var(--ha-space-4) var(--ha-space-5) 0;display:flex;flex-direction:column;gap:var(--ha-space-1)"><div style="font-weight:600">{{ cap.nome }}</div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-300)">{{ cap.dica }}</div></div>
+            <div style="display:flex;gap:var(--ha-space-2);padding:var(--ha-space-4) var(--ha-space-5)"><sc-for list="{{ cap.tiras }}" as="t" hint-placeholder-count="6"><span style="flex:1;height:4px;border-radius:var(--ha-radius-full);background:{{ t.c }}"></span></sc-for></div>
+            <div style="margin-top:auto;display:flex;justify-content:center;padding:var(--ha-space-4) 0 var(--ha-space-10)"><button onClick="{{ disparar }}" aria-label="Fotografar" style="width:76px;height:76px;border-radius:50%;border:4px solid var(--ha-paper-50);background:transparent;padding:5px;cursor:pointer"><span style="display:block;width:100%;height:100%;border-radius:50%;background:var(--ha-paper-50)"></span></button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ s.ficha }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);padding:var(--ha-space-4) var(--ha-space-5) var(--ha-space-8)">
+            <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Ficha rápida</div>
+            <div style="display:flex;gap:var(--ha-space-2);overflow-x:auto"><sc-for list="{{ fotosFeitas }}" as="f" hint-placeholder-count="6"><div style="width:56px;height:56px;flex:none;overflow:hidden;background:var(--ha-wall)"><img src="{{ f.src }}" alt="" style="width:100%;height:100%;object-fit:cover;transform:{{ f.tf }};transform-origin:{{ f.or }}"></div></sc-for></div>
+            <sc-for list="{{ fichaCampos }}" as="c" hint-placeholder-count="4">
+              <label style="display:flex;flex-direction:column;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ c.k }}<input value="{{ c.v }}" style="height:48px;font-weight:400;font-size:var(--ha-text-body);padding:0 var(--ha-space-4);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-ink-300);background:var(--ha-paper-50);outline:none"></label>
+            </sc-for>
+            <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Você completa preço, histórico e condition report depois, no celular ou no computador.</div>
+            <button onClick="{{ enviarObra }}" style="height:52px;border:0;border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);font-weight:600;cursor:pointer">Enviar e vincular etiqueta</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ s.leitor }}" hint-placeholder-val="{{ false }}">
+          <div style="min-height:100%;margin-top:-60px;padding:80px var(--ha-space-6) var(--ha-space-10);background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--ha-space-6)">
+            <div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center"><button onClick="{{ irHome }}" aria-label="Voltar" style="border:0;background:transparent;color:var(--ha-paper-50);font-family:'Material Symbols Rounded';font-size:26px;cursor:pointer">arrow_back</button><span style="font-size:var(--ha-text-body-sm);font-weight:600">{{ leitor.topo }}</span><span style="width:26px"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--ha-space-8)">
+              {{ anel }}
+              <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)"><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2)">{{ leitor.titulo }}</div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-300)">{{ leitor.texto }}</div></div>
+            </div>
+            <sc-if value="{{ leitor.pronto }}" hint-placeholder-val="{{ false }}"><button onClick="{{ leitor.acao }}" style="align-self:stretch;height:52px;border:0;border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);font-weight:600;cursor:pointer">{{ leitor.cta }}</button></sc-if>
+            <sc-if value="{{ leitor.lendo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ leitor.qr }}" style="border:0;background:transparent;color:var(--ha-paper-50);font-size:var(--ha-text-body-sm);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:var(--ha-space-2)"><span style="font-family:'Material Symbols Rounded';font-size:18px">qr_code_scanner</span>Ler o QR do certificado</button></sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ s.carteira }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-5);padding:var(--ha-space-4) var(--ha-space-5) var(--ha-space-8)">
+            <div><div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">4 obras · R$ 162.800 registrados</div><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Carteira</div></div>
+            <sc-if value="{{ chegando }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ irReceber }}" style="display:flex;gap:var(--ha-space-3);align-items:center;text-align:left;padding:var(--ha-space-4);border:0;border-radius:var(--ha-radius-md);background:var(--ha-sand-100);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--ha-ink-900)">local_shipping</span><span style="flex:1"><span style="display:block;font-weight:600;color:var(--ha-ink-900);font-size:var(--ha-text-body-sm)">Construção para um dia claro chega hoje</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-700)">Confirme o recebimento com o toque na etiqueta</span></span><span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--ha-ink-900)">chevron_right</span></button>
+            </sc-if>
+            <sc-for list="{{ carteira }}" as="w" hint-placeholder-count="4">
+              <button onClick="{{ w.go }}" style="display:grid;grid-template-columns:88px minmax(0,1fr);gap:var(--ha-space-4);text-align:left;padding:var(--ha-space-3);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);background:var(--ha-paper-50);cursor:pointer">
+                <span style="height:88px;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-3)"><img src="{{ w.src }}" alt="" style="max-width:100%;max-height:100%;box-shadow:var(--ha-shadow-wall)"></span>
+                <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><i style="font-family:var(--ha-font-display);color:var(--ha-ink-900)">{{ w.titulo }}</i><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ w.artista }}</span><span style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ w.valor }}</span><span style="display:flex;align-items:center;gap:2px;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-verified-500)"><span style="font-family:'Material Symbols Rounded';font-size:14px;font-variation-settings:'FILL' 1">verified</span>Escritura em seu nome</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ s.escritura }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-5);padding:var(--ha-space-2) var(--ha-space-5) var(--ha-space-8)">
+            <button onClick="{{ irCarteira }}" style="align-self:flex-start;border:0;background:transparent;padding:0;display:flex;align-items:center;gap:var(--ha-space-1);color:var(--ha-ink-900);font-weight:600;font-size:var(--ha-text-body-sm);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_back</span>Carteira</button>
+            <div style="background:var(--ha-wall);padding:var(--ha-space-8);display:flex;justify-content:center"><img src="{{ esc.src }}" alt="" style="max-width:80%;max-height:240px;box-shadow:var(--ha-shadow-wall)"></div>
+            <div><div style="font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ esc.artista }}</div><div style="font-family:var(--ha-font-display);font-style:italic;font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);color:var(--ha-ink-900)">{{ esc.titulo }}</div></div>
+            <div style="border-top:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)">
+              <div style="display:flex;justify-content:space-between;padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span style="color:var(--ha-ink-500)">ID</span><span style="font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ha-ink-900)">{{ esc.id }}</span></div>
+              <div style="display:flex;justify-content:space-between;padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span style="color:var(--ha-ink-500)">Titular desde</span><span style="color:var(--ha-ink-900)">{{ esc.data }}</span></div>
+              <div style="display:flex;justify-content:space-between;padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)"><span style="color:var(--ha-ink-500)">Valor registrado</span><span style="color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ esc.valor }}</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--ha-space-2)">
+              <a href="HouseArt Verificacao.dc.html" style="height:48px;display:flex;align-items:center;justify-content:center;gap:var(--ha-space-2);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50);font-weight:600;font-size:var(--ha-text-body-sm);text-decoration:none"><span style="font-family:'Material Symbols Rounded';font-size:18px">ios_share</span>Compartilhar</a>
+              <button style="height:48px;border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);background:transparent;color:var(--ha-ink-900);font-weight:600;font-size:var(--ha-text-body-sm);cursor:pointer">Vender</button>
+              <button style="height:48px;border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-300);background:transparent;color:var(--ha-ink-900);font-weight:600;font-size:var(--ha-text-body-sm);cursor:pointer">Transferir</button>
+              <button style="height:48px;border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-300);background:transparent;color:var(--ha-ink-900);font-weight:600;font-size:var(--ha-text-body-sm);cursor:pointer">Segurar</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ s.avisos }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;padding:var(--ha-space-4) var(--ha-space-5) var(--ha-space-8)">
+            <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900);margin-bottom:var(--ha-space-4)">Avisos</div>
+            <sc-for list="{{ avisos }}" as="n" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:var(--ha-space-3);padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+                <span style="width:40px;height:40px;border-radius:50%;background:{{ n.bg }};display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px;color:{{ n.fg }}">{{ n.icon }}</span>
+                <span style="min-width:0"><span style="display:block;font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-ink-900)">{{ n.titulo }}</span><span style="display:block;font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ n.sub }}</span></span>
+                <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ n.quando }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ tabbar }}" hint-placeholder-val="{{ true }}">
+        <nav style="flex:none;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:var(--ha-space-2) var(--ha-space-2) 30px;background:var(--ha-paper-50);border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.go }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;padding:var(--ha-space-1) 0;min-height:48px;cursor:pointer;color:{{ t.cor }}">
+              <span style="font-family:'Material Symbols Rounded';font-size:24px;font-variation-settings:{{ t.fill }}">{{ t.icon }}</span><span style="font-size:11px;font-weight:{{ t.peso }}">{{ t.nome }}</span>
+            </button>
+          </sc-for>
+        </nav>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:var(--ha-space-5);right:var(--ha-space-5);bottom:110px;z-index:30;background:var(--ha-ink-900);color:var(--ha-paper-50);padding:var(--ha-space-3) var(--ha-space-4);border-radius:var(--ha-radius-md);font-size:var(--ha-text-body-sm);display:flex;gap:var(--ha-space-2);align-items:center;box-shadow:var(--ha-shadow-lg)"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-sand-500)">check_circle</span>{{ toast }}</div>
+    </sc-if>
+  </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const IMG = {
+  mSup: FP + 'Suprematist_Composition_-_Kazimir_Malevich.jpg?width=700',
+  k8: FP + 'Wassily_Kandinsky_Composition_VIII.jpg?width=600',
+  mAir: FP + 'Suprematist_Composition_-_Airplane_Flying_(Malevich,_1915).jpg?width=600',
+  mAbs: FP + 'Suprematism_-_Abstract_Composition_(Malevich,_1915).jpg?width=600',
+  hAlt: FP + 'Hilma_af_Klint_-_1907_-_Altarpiece_-_No_1_-_Group_X_-_Altarpieces.jpg?width=600',
+  hSvan: FP + 'Hilma_af_Klint,_1915,_Svanen,_No._17.jpg?width=700',
+  verso: FP + 'Ann-Sophie_i_M%C3%B6rtfors_1963,_back_of_painting.jpg?width=600',
+};
+const ONB = [
+  [IMG.mSup, 'Certifique', 'Cada obra recebe uma etiqueta no verso e um certificado assinado que dura a vida inteira.'],
+  [IMG.hSvan, 'Venda', 'Pagamento em garantia, frete e seguro no checkout. A escritura muda de nome na entrega.'],
+  [IMG.hAlt, 'Verifique', 'Encoste o celular no verso de qualquer obra HouseArt e veja quem fez, quando e se é autêntica.'],
+];
+const SHOTS = [
+  ['Frontal com cartão de cor', 'Obra inteira no quadro, cartão de cor no canto, luz difusa.', IMG.hSvan, 'scale(.9)', 'center', true],
+  ['Macro 1 · superior esquerda', 'Aproxime até ver a trama da tela.', IMG.hSvan, 'scale(3.2)', '12% 12%', false],
+  ['Macro 2 · superior direita', 'Mesma distância da anterior.', IMG.hSvan, 'scale(3.2)', '88% 12%', false],
+  ['Macro 3 · inferior esquerda', 'Inclua a pincelada mais marcada da região.', IMG.hSvan, 'scale(3.2)', '12% 88%', false],
+  ['Macro 4 · inferior direita', 'Mantenha o celular paralelo à obra.', IMG.hSvan, 'scale(3.2)', '88% 88%', false],
+  ['Verso', 'Chassi inteiro e assinatura visíveis. É aqui que a etiqueta será colada.', IMG.verso, 'scale(1)', 'center', false],
+];
+const WAL = [
+  { src: IMG.k8, titulo: 'Partitura para Itapuã, 2023', artista: 'Rafael Moura', valor: 'R$ 46.500', id: 'HA-2025-9W1C-3RTE', data: '04/08/2025' },
+  { src: IMG.hAlt, titulo: 'Retábulo do Rio Vermelho, 2023', artista: 'Tomás Rezende', valor: 'R$ 46.000', id: 'HA-2025-4HHQ-7NZB', data: '11/01/2026' },
+  { src: IMG.hSvan, titulo: 'Duas luas, 2024', artista: 'Clara Bittencourt', valor: 'R$ 24.500', id: 'HA-2026-1KDF-8PLM', data: '02/03/2026' },
+  { src: IMG.mAbs, titulo: 'Estudo em vermelho, 2025', artista: 'Joana Teixeira', valor: 'Preço selado', id: 'HA-2025-2P8D-4LXA', data: '30/06/2026' },
+];
+class Component extends DCLogic {
+  state = { tela: 'onb', onb: 0, shot: 0, leitor: 'vincular', fase: 'lendo', esc: 0, recebido: false, toast: '' };
+  componentWillUnmount() { (this.tm || []).forEach(clearTimeout); clearTimeout(this.tt); }
+  aviso(t) { clearTimeout(this.tt); this.setState({ toast: t }); this.tt = setTimeout(() => this.setState({ toast: '' }), 2400); }
+  ler(modo) { (this.tm || []).forEach(clearTimeout); this.setState({ tela: 'leitor', leitor: modo, fase: 'lendo' }); this.tm = [setTimeout(() => this.setState({ fase: 'ok' }), 1800)]; }
+  renderVals() {
+    const s = this.state; const ink = 'var(--ha-ink-900)';
+    const e = React.createElement; const ok = s.fase === 'ok' || s.fase === 'fim';
+    const go = (tela, extra) => () => this.setState({ tela, ...(extra || {}) });
+    const anel = e('div', { style: { position: 'relative', width: 160, height: 160 } },
+      !ok && e('span', { style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--ha-sand-500)', animation: 'ha-pulse 1200ms ease-out infinite' } }),
+      !ok && e('span', { style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--ha-sand-500)', animation: 'ha-pulse 1200ms ease-out 600ms infinite' } }),
+      ok && e('svg', { width: 160, height: 160, viewBox: '0 0 104 104', style: { position: 'absolute', inset: 0, transform: 'rotate(-90deg)' } }, e('circle', { cx: 52, cy: 52, r: 48, fill: 'none', stroke: 'var(--ha-verified-500)', strokeWidth: 4, strokeDasharray: 302, style: { animation: 'ha-close 600ms var(--ha-ease) forwards' } })),
+      e('span', { style: { position: 'absolute', inset: 34, borderRadius: '50%', background: ok ? 'var(--ha-verified-500)' : 'var(--ha-sand-500)', transition: 'background 600ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Material Symbols Rounded', fontSize: 44, color: ok ? 'var(--ha-paper-50)' : ink } }, s.fase === 'fim' ? 'contract' : ok ? 'check' : 'contactless'));
+    const LT = {
+      vincular: { topo: 'Vincular etiqueta', lendo: ['Encoste o celular no verso da obra', 'Bem no centro da etiqueta, até vibrar'], ok: ['Etiqueta vinculada', 'Maré de março · HA-2026-D4F2-9QDM'], cta: 'Assinar certificado digitalmente', acao: () => { this.setState({ fase: 'fim' }); } , fim: ['Certificado assinado', 'Carimbo do tempo aplicado. A obra já aparece como autenticada.'], ctaFim: 'Voltar ao início', acaoFim: () => { this.setState({ tela: 'home' }); this.aviso('Maré de março está autenticada'); } },
+      verificar: { topo: 'Verificar obra', lendo: ['Aproxime o celular do verso', 'Funciona com qualquer obra HouseArt'], ok: ['Obra autenticada', 'Construção para um dia claro · Joana Teixeira'], cta: 'Ver certificado público', acao: () => { window.location.href = 'HouseArt Verificacao.dc.html'; } },
+      receber: { topo: 'Confirmar recebimento', lendo: ['Encoste o celular na etiqueta', 'A leitura prova que a obra está com você'], ok: ['Posse confirmada', 'Construção para um dia claro'], cta: 'Emitir escritura em meu nome', acao: () => { this.setState({ fase: 'fim', recebido: true }); }, fim: ['Escritura emitida', 'A obra entrou na sua carteira e o pagamento foi liberado à galeria.'], ctaFim: 'Abrir carteira', acaoFim: () => this.setState({ tela: 'carteira' }) },
+    }[s.leitor];
+    const fase = s.fase === 'lendo' ? LT.lendo : s.fase === 'ok' ? LT.ok : LT.fim;
+    const sh = SHOTS[Math.min(s.shot, 5)];
+    const inApp = !['onb', 'login'].includes(s.tela);
+    const tabAtiva = { home: 'home', ficha: 'home', nova: 'home', carteira: 'carteira', escritura: 'carteira', leitor: 'verificar', avisos: 'avisos' }[s.tela];
+    const W = s.recebido ? [{ src: IMG.mSup, titulo: 'Construção para um dia claro, 2025', artista: 'Joana Teixeira', valor: 'R$ 38.000', id: 'HA-2026-7K3F-9Q2M', data: '19/10/2026' }, ...WAL] : WAL;
+    const fullDark = s.tela === 'onb' || s.tela === 'nova' || s.tela === 'leitor';
+    return {
+      escuro: fullDark, fundo: fullDark ? ink : 'var(--ha-paper-50)', cor: fullDark ? 'var(--ha-paper-50)' : 'var(--ha-ink-700)',
+      s: { onb: s.tela === 'onb', login: s.tela === 'login', app: inApp, home: s.tela === 'home', nova: s.tela === 'nova', ficha: s.tela === 'ficha', leitor: s.tela === 'leitor', carteira: s.tela === 'carteira', escritura: s.tela === 'escritura', avisos: s.tela === 'avisos' },
+      atalhos: [['Onboarding', 'auto_stories', go('onb', { onb: 0 }), 'onb'], ['Login', 'login', go('login'), 'login'], ['Início do artista', 'home', go('home'), 'home'], ['Nova obra · câmera guiada', 'add_a_photo', go('nova', { shot: 0 }), 'nova'], ['Vincular etiqueta', 'contactless', () => this.ler('vincular'), 'leitor-vincular'], ['Verificar obra', 'verified', () => this.ler('verificar'), 'leitor-verificar'], ['Carteira de escrituras', 'account_balance_wallet', go('carteira'), 'carteira'], ['Confirmar recebimento', 'local_shipping', () => this.ler('receber'), 'leitor-receber'], ['Avisos', 'notifications', go('avisos'), 'avisos']].map(([nome, icon, g, k]) => { const at = k === s.tela || k === 'leitor-' + s.leitor && s.tela === 'leitor'; return { nome, icon, go: g, bg: at ? 'var(--ha-paper-50)' : 'transparent', peso: at ? 600 : 400 }; }),
+      onb: { src: ONB[s.onb][0], titulo: ONB[s.onb][1], texto: ONB[s.onb][2], cta: s.onb === 2 ? 'Começar' : 'Continuar', dots: [0, 1, 2].map((i) => ({ w: i === s.onb ? '24px' : '8px', c: i === s.onb ? 'var(--ha-sand-500)' : 'var(--ha-ink-500)' })) },
+      onbNext: () => (s.onb < 2 ? this.setState({ onb: s.onb + 1 }) : this.setState({ tela: 'login' })),
+      entrar: go('home'), irVerificar: () => this.ler('verificar'), irHome: go('home'), irNova: go('nova', { shot: 0 }), irCarteira: go('carteira'),
+      acoes: [['contactless', 'Vincular etiqueta', 'Céu de Ondina · etiqueta já chegou', () => this.ler('vincular')], ['draw', 'Assinar certificado', 'Estudo em vermelho', () => this.ler('vincular')], ['handshake', 'Oferta de R$ 41.000', 'Voo baixo · expira em 2 dias', () => this.aviso('Abra no web app para responder com contraproposta')]].map(([icon, titulo, sub, g]) => ({ icon, titulo, sub, go: g })),
+      obras: [[IMG.mSup, 'Construção para um dia claro', 'À venda', ink], [IMG.mAir, 'Voo baixo', 'À venda', ink], [IMG.mAbs, 'Estudo em vermelho', 'Em certificação', 'var(--ha-pending-500)'], [IMG.hAlt, 'Retábulo do Rio Vermelho', 'Autenticada', 'var(--ha-verified-500)']].map(([src, titulo, st, cor]) => ({ src, titulo, st, cor })),
+      cap: { contador: 'Foto ' + (s.shot + 1) + ' de 6', nome: sh[0], dica: sh[1], src: sh[2], tf: sh[3], or: sh[4], cartao: sh[5], tiras: SHOTS.map((x, i) => ({ c: i < s.shot ? 'var(--ha-paper-50)' : i === s.shot ? 'var(--ha-sand-500)' : 'var(--ha-ink-700)' })) },
+      disparar: () => (s.shot < 5 ? this.setState({ shot: s.shot + 1 }) : this.setState({ tela: 'ficha' })),
+      fotosFeitas: SHOTS.map((x) => ({ src: x[2], tf: x[3], or: x[4] })),
+      fichaCampos: [['Título', 'Maré de março'], ['Ano', '2026'], ['Técnica', 'Têmpera sobre tela'], ['Dimensões (cm)', '90 × 90 × 3,5']].map(([k, v]) => ({ k, v })),
+      enviarObra: () => this.ler('vincular'),
+      anel,
+      leitor: { topo: LT.topo, titulo: fase[0], texto: fase[1], lendo: s.fase === 'lendo', pronto: s.fase !== 'lendo', cta: s.fase === 'fim' ? LT.ctaFim : LT.cta, acao: s.fase === 'fim' ? LT.acaoFim : LT.acao, qr: () => this.setState({ fase: 'ok' }) },
+      chegando: !s.recebido, irReceber: () => this.ler('receber'),
+      carteira: W.map((w, i) => ({ ...w, go: () => this.setState({ tela: 'escritura', esc: i }) })),
+      esc: W[s.esc] || W[0],
+      avisos: [['local_shipping', 'Entrega agendada', 'Construção para um dia claro · hoje, 14h–18h', 'agora', 'var(--ha-sand-100)', ink], ['handshake', 'Oferta recebida', 'R$ 41.000 em Voo baixo', '2 h', 'var(--ha-paper-100)', ink], ['draw', 'Assinatura pendente', 'Certificado de Estudo em vermelho', 'ontem', 'var(--ha-paper-100)', ink], ['contract', 'Escritura emitida', 'Duas luas está em seu nome', '02/03', 'var(--ha-verified-100)', 'var(--ha-verified-500)'], ['autorenew', 'Direito de sequência recebido', 'R$ 210 · revenda de Estudo em vermelho', '02/07', 'var(--ha-verified-100)', 'var(--ha-verified-500)']].map(([icon, titulo, sub, quando, bg, fg]) => ({ icon, titulo, sub, quando, bg, fg })),
+      tabbar: inApp && s.tela !== 'nova' && s.tela !== 'leitor',
+      tabs: [['home', 'Início', 'home', go('home')], ['carteira', 'Carteira', 'account_balance_wallet', go('carteira')], ['verificar', 'Verificar', 'contactless', () => this.ler('verificar')], ['avisos', 'Avisos', 'notifications', go('avisos')]].map(([k, nome, icon, g]) => ({ nome, icon, go: g, cor: tabAtiva === k ? ink : 'var(--ha-ink-500)', peso: tabAtiva === k ? 600 : 500, fill: tabAtiva === k ? "'FILL' 1" : "'FILL' 0" })),
+      toastOn: !!s.toast, toast: s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

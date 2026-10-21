@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#FBFAF7;-webkit-font-smoothing:antialiased}a{color:var(--ha-ink-900)}a:hover{color:var(--ha-ink-700)}*{box-sizing:border-box}input,button,select{font:inherit}</style>
+</helmet>
+
+<div data-screen-label="Cadastro" style="min-height:100vh;display:flex;flex-wrap:wrap;font-family:var(--ha-font-body);color:var(--ha-ink-900);background:var(--ha-paper-50)">
+
+  <aside style="flex:1 1 420px;background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;flex-direction:column;justify-content:space-between;gap:var(--ha-space-10);padding:var(--ha-space-10) var(--ha-space-10) var(--ha-space-12)">
+    <a href="HouseArt Site.dc.html" style="display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-paper-50);text-decoration:none"><img src="houseart/marca/marca_houseart_full_horiz_negativo.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"></a>
+    <div style="background:var(--ha-wall);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-10);max-width:520px;width:100%"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Hilma_af_Klint,_1915,_Svanen,_No._17.jpg?width=800" alt="" style="max-width:100%;max-height:100%;box-shadow:0 12px 30px rgba(0,0,0,.35)"></div>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);max-width:520px">
+      <span style="font-size:var(--ha-text-caption);letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--ha-paper-200)">Plano escolhido</span>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--ha-space-4);padding-bottom:var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-ink-700)">
+        <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2)">{{ plano.nome }}</span>
+        <span style="font-size:var(--ha-text-h3);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ plano.preco }}<span style="font-size:var(--ha-text-body-sm);font-weight:400;color:var(--ha-paper-200)">{{ plano.per }}</span></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+        <sc-for list="{{ trocas }}" as="t" hint-placeholder-count="5">
+          <button onClick="{{ t.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);padding:var(--ha-space-1) var(--ha-space-3);border-radius:999px;border:var(--ha-border-w) solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }}">{{ t.nome }}</button>
+        </sc-for>
+      </div>
+      <span style="font-size:var(--ha-text-body-sm);color:var(--ha-paper-200)">{{ plano.nota }}</span>
+    </div>
+  </aside>
+
+  <main style="flex:1 1 480px;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-12) var(--ha-space-6)">
+    <div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:var(--ha-space-6)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:1.1">Criar sua conta</h1>
+        <p style="margin:0;color:var(--ha-ink-500);font-size:var(--ha-text-body-sm)">Já tem conta? <a href="HouseArt Entrar.dc.html" style="font-weight:600">Entrar</a></p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <sc-for list="{{ sociais }}" as="s" hint-placeholder-count="3">
+          <a href="HouseArt Web App.dc.html" style="display:flex;align-items:center;justify-content:center;gap:var(--ha-space-3);padding:var(--ha-space-3) var(--ha-space-4);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;color:var(--ha-ink-900);text-decoration:none;font-weight:500;font-size:var(--ha-text-body-sm)" style-hover="border-color:var(--ha-ink-900)">
+            <span style="width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;background:{{ s.bg }};color:#fff">{{ s.l }}</span>Continuar com {{ s.nome }}
+          </a>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:var(--ha-space-3);font-size:var(--ha-text-caption);color:var(--ha-ink-500)"><span style="flex:1;height:1px;background:var(--ha-paper-200)"></span>ou com e-mail<span style="flex:1;height:1px;background:var(--ha-paper-200)"></span></div>
+
+      <form onSubmit="{{ enviar }}" style="display:flex;flex-direction:column;gap:var(--ha-space-4)">
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+          <span style="font-size:var(--ha-text-body-sm);font-weight:600">Eu sou</span>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--ha-space-1);padding:var(--ha-space-1);border-radius:var(--ha-radius-md);background:var(--ha-paper-100, #F3F1EC)">
+            <sc-for list="{{ perfis }}" as="p" hint-placeholder-count="4">
+              <button type="button" onClick="{{ p.go }}" style="cursor:pointer;font-size:12px;font-weight:600;padding:var(--ha-space-2) 0;border-radius:var(--ha-radius-sm);border:none;background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.sh }}">{{ p.nome }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">Nome completo<input required placeholder="Como aparece no certificado" style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-weight:400;outline:none" style-focus="border-color:var(--ha-ink-900)"></label>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">E-mail<input required type="email" placeholder="voce@email.com" style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-weight:400;outline:none" style-focus="border-color:var(--ha-ink-900)"></label>
+        <label style="display:flex;flex-direction:column;gap:var(--ha-space-2);font-size:var(--ha-text-body-sm);font-weight:600">Senha<input required type="password" placeholder="Mínimo de 8 caracteres" style="padding:var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;font-weight:400;outline:none" style-focus="border-color:var(--ha-ink-900)"></label>
+        <label style="display:flex;gap:var(--ha-space-2);align-items:flex-start;font-size:var(--ha-text-body-sm);color:var(--ha-ink-500);line-height:1.4"><input required type="checkbox" style="margin-top:2px;accent-color:var(--ha-ink-900)">Aceito os termos de uso e a política de privacidade.</label>
+        <button type="submit" style="cursor:pointer;font-weight:600;padding:var(--ha-space-4);border-radius:var(--ha-radius-md);border:none;background:var(--ha-ink-900);color:var(--ha-paper-50)" style-hover="background:var(--ha-ink-700)">{{ plano.cta }}</button>
+      </form>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const PLANOS = {
+  'gratis': { nome: 'Artista Grátis', curto: 'Grátis', preco: 'R$ 0', per: '', perfil: 0, nota: 'Sem cartão de crédito. Até 10 obras certificadas.', cta: 'Criar conta grátis' },
+  'atelie': { nome: 'Ateliê', curto: 'Ateliê', preco: 'R$ 49', per: '/mês', perfil: 0, nota: '14 dias grátis. Cancele quando quiser.', cta: 'Começar 14 dias grátis' },
+  'galeria': { nome: 'Galeria', curto: 'Galeria', preco: 'R$ 349', per: '/mês', perfil: 1, nota: '14 dias grátis. Cancele quando quiser.', cta: 'Começar 14 dias grátis' },
+  'galeria-pro': { nome: 'Galeria Pro', curto: 'Galeria Pro', preco: 'R$ 899', per: '/mês', perfil: 1, nota: 'Onboarding assistido com a equipe HouseArt.', cta: 'Começar 14 dias grátis' },
+  'consultor': { nome: 'Consultor', curto: 'Consultor', preco: 'R$ 149', per: '/mês', perfil: 3, nota: '14 dias grátis. Cancele quando quiser.', cta: 'Começar 14 dias grátis' },
+};
+const PERFIS = ['Artista', 'Galeria', 'Colecionador', 'Consultor'];
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    let id = 'atelie';
+    try { const q = new URLSearchParams(location.search).get('plano'); if (q && PLANOS[q]) id = q; } catch (e) {}
+    this.state = { plano: id, perfil: PLANOS[id].perfil };
+  }
+  renderVals() {
+    const s = this.state; const p = PLANOS[s.plano];
+    return {
+      plano: p,
+      trocas: Object.keys(PLANOS).map((k) => { const on = k === s.plano; return { nome: PLANOS[k].curto, bg: on ? 'var(--ha-paper-50)' : 'transparent', fg: on ? 'var(--ha-ink-900)' : 'var(--ha-paper-200)', bd: on ? 'var(--ha-paper-50)' : 'var(--ha-ink-700)', go: () => this.setState({ plano: k, perfil: PLANOS[k].perfil }) }; }),
+      perfis: PERFIS.map((nome, i) => { const on = i === s.perfil; return { nome, bg: on ? '#fff' : 'transparent', fg: on ? 'var(--ha-ink-900)' : 'var(--ha-ink-500)', sh: on ? '0 1px 3px rgba(20,18,15,.12)' : 'none', go: () => this.setState({ perfil: i }) }; }),
+      sociais: [{ nome: 'Google', l: 'G', bg: '#4285F4' }, { nome: 'Apple', l: 'A', bg: '#000' }, { nome: 'LinkedIn', l: 'in', bg: '#0A66C2' }],
+      enviar: (ev) => { ev.preventDefault(); location.href = 'HouseArt Web App.dc.html'; },
+    };
+  }
+}
+</script>
+</body>
+</html>

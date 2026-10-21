@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#ECE7DF;-webkit-font-smoothing:antialiased}a{color:var(--ha-info-500)}a:hover{color:var(--ha-ink-900)}*{box-sizing:border-box}</style>
+</helmet>
+<div style="min-height:100vh;background:var(--ha-paper-200);display:flex;justify-content:center;font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);color:var(--ha-ink-700)">
+<div style="position:relative;width:100%;max-width:480px;background:var(--ha-paper-50);min-height:100vh;box-shadow:var(--ha-shadow-lg)">
+
+  <sc-if value="{{ lendo }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:10;background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--ha-space-8);padding:var(--ha-space-8);text-align:center;min-height:100vh">
+      {{ anel }}
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2)">{{ leituraTitulo }}</div>
+        <div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-300)">{{ leituraSub }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:var(--ha-space-4);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+    <div style="display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900)"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"></div>
+    <span style="font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ha-ink-500)">Verificação pública</span>
+  </header>
+
+  <div style="padding:var(--ha-space-5) var(--ha-space-4);background:{{ st.bg }};color:{{ st.fg }};display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--ha-space-3);align-items:start">
+    <span style="font-family:'Material Symbols Rounded';font-size:36px;line-height:1;font-variation-settings:'FILL' 1">{{ st.icon }}</span>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-1)">
+      <div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2);font-weight:600">{{ st.titulo }}</div>
+      <div style="font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm);color:{{ st.sub }}">{{ st.texto }}</div>
+    </div>
+  </div>
+
+  <div style="background:var(--ha-wall);padding:var(--ha-space-10) var(--ha-space-8) var(--ha-space-12);display:flex;justify-content:center">
+    <div style="position:relative;width:78%;aspect-ratio:2296/2869;box-shadow:var(--ha-shadow-wall);background:var(--ha-paper-100)">
+      <img src="{{ obra.src }}" alt="Construção para um dia claro, de Joana Teixeira" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ st.filtro }}">
+    </div>
+  </div>
+
+  <div style="padding:var(--ha-space-6) var(--ha-space-4) 0;display:flex;flex-direction:column;gap:var(--ha-space-1)">
+    <div style="font-size:var(--ha-text-body);font-weight:600;color:var(--ha-ink-900)">Joana Teixeira <span style="font-weight:400;color:var(--ha-ink-500)">(Salvador, 1988)</span></div>
+    <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-style:italic;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900);text-wrap:balance">Construção para um dia claro, <span style="font-style:normal">2025</span></h1>
+    <div style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Óleo sobre linho · 100 × 80 × 4 cm · obra única</div>
+  </div>
+
+  <div style="margin:var(--ha-space-6) var(--ha-space-4) 0;border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--ha-space-3);padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+      <span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">ID da obra</span>
+      <button onClick="{{ copiar }}" aria-label="Copiar ID da obra" style="font:inherit;display:inline-flex;align-items:center;gap:var(--ha-space-2);border:0;background:transparent;padding:var(--ha-space-1) var(--ha-space-2);margin-right:calc(var(--ha-space-2) * -1);border-radius:var(--ha-radius-sm);cursor:pointer;font-size:var(--ha-text-caption);font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ha-ink-900)" style-hover="background:var(--ha-paper-100)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500)">HA-2026-7K3F-9Q2M<span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-500)">{{ copiaIcon }}</span></button>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:var(--ha-space-3);padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="color:var(--ha-ink-500)">Certificada em</span><span style="font-variant-numeric:tabular-nums;color:var(--ha-ink-900)">12 de março de 2026</span></div>
+    <div style="display:flex;justify-content:space-between;gap:var(--ha-space-3);padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="color:var(--ha-ink-500)">Titular atual</span><span style="color:var(--ha-ink-900);text-align:right">Colecionador particular, Salvador/BA</span></div>
+    <div style="display:flex;justify-content:space-between;gap:var(--ha-space-3);padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="color:var(--ha-ink-500)">Etiqueta de autenticação</span><span style="color:var(--ha-ink-900)">{{ st.etiqueta }}</span></div>
+    <div style="display:flex;justify-content:space-between;gap:var(--ha-space-3);padding:var(--ha-space-3) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);font-size:var(--ha-text-body-sm)"><span style="color:var(--ha-ink-500)">Laudo de valor</span><span style="color:var(--ha-ink-900)">Sim · emitido em abril de 2026</span></div>
+  </div>
+
+  <div style="padding:var(--ha-space-8) var(--ha-space-4) 0">
+    <h2 style="margin:0 0 var(--ha-space-5);font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h3);line-height:var(--ha-lh-h3);color:var(--ha-ink-900)">Cadeia de titularidade</h2>
+    <sc-for list="{{ prov }}" as="p" hint-placeholder-count="4">
+      <div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:var(--ha-space-3)">
+        <div style="display:flex;flex-direction:column;align-items:center"><span style="width:32px;height:32px;flex:none;border-radius:50%;border:var(--ha-border-w) solid var(--ha-ink-300);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;color:var(--ha-ink-900);background:var(--ha-paper-50)">{{ p.icon }}</span><span style="flex:1;width:1px;background:{{ p.linha }};min-height:12px"></span></div>
+        <div style="padding-bottom:var(--ha-space-5)"><div style="font-weight:600;color:var(--ha-ink-900);font-size:var(--ha-text-body-sm)">{{ p.ev }}</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ p.parte }}</div></div>
+        <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-500);font-variant-numeric:tabular-nums;padding-top:var(--ha-space-1)">{{ p.data }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ aVenda }}" hint-placeholder-val="{{ true }}">
+    <div style="margin:var(--ha-space-4) var(--ha-space-4) 0;padding:var(--ha-space-5);background:var(--ha-paper-100);border-radius:var(--ha-radius-md);display:flex;flex-direction:column;gap:var(--ha-space-4)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-3)"><span style="font-size:var(--ha-text-body-sm)">À venda na <b style="font-weight:600;color:var(--ha-ink-900)">Galeria Ladeira</b></span><span style="font-weight:600;font-variant-numeric:tabular-nums;color:var(--ha-ink-900)">R$ 38.000</span></div>
+      <a href="HouseArt Obra.dc.html" style="display:flex;justify-content:center;font-weight:600;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);text-decoration:none;transition:background var(--ha-dur-fast)" style-hover="background:var(--ha-sand-600)" style-focus="outline:var(--ha-focus-w) solid var(--ha-sand-500);outline-offset:2px">Solicitar contato com o vendedor</a>
+    </div>
+  </sc-if>
+
+  <div style="padding:var(--ha-space-4) var(--ha-space-4) 0;display:flex;flex-direction:column;gap:var(--ha-space-2)">
+    <sc-if value="{{ alerta }}" hint-placeholder-val="{{ false }}">
+      <a href="#" style="display:flex;justify-content:center;font-weight:600;font-size:var(--ha-text-body);padding:var(--ha-space-3);border-radius:var(--ha-radius-md);background:var(--ha-ink-900);color:var(--ha-paper-50);text-decoration:none" style-hover="background:var(--ha-ink-700)">Falar com o suporte</a>
+    </sc-if>
+    <a href="#" style="display:flex;justify-content:center;align-items:center;gap:var(--ha-space-2);font-weight:600;font-size:var(--ha-text-body-sm);padding:var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-ink-900);color:var(--ha-ink-900);text-decoration:none" style-hover="background:var(--ha-paper-100)"><span style="font-family:'Material Symbols Rounded';font-size:18px">flag</span>Reportar problema</a>
+  </div>
+
+  <footer style="margin-top:var(--ha-space-12);padding:var(--ha-space-8) var(--ha-space-4) var(--ha-space-10);background:var(--ha-ink-900);color:var(--ha-paper-200);display:flex;flex-direction:column;gap:var(--ha-space-4)">
+    <div style="display:flex;align-items:center;gap:var(--ha-space-3)">
+      <div style="width:44px;height:44px;border-radius:50%;border:2px solid var(--ha-sand-500);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;color:var(--ha-sand-500)">contactless</div>
+      <div><div style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);line-height:1.1;color:var(--ha-paper-50)">Selo HouseArt</div><div style="font-size:var(--ha-text-caption);color:var(--ha-ink-300)">by House</div></div>
+    </div>
+    <p style="margin:0;font-size:var(--ha-text-body-sm);line-height:var(--ha-lh-body-sm);text-wrap:pretty">Cada obra tem uma etiqueta de autenticação única no verso; ao aproximar o celular, esta página confirma a etiqueta e mostra o certificado registrado e assinado.</p>
+    <div style="font-size:var(--ha-text-caption);color:var(--ha-ink-300)">Sem login · dados do titular protegidos</div>
+  </footer>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;estado&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;autenticada&quot;,&quot;contestada&quot;,&quot;roubada&quot;],&quot;default&quot;:&quot;autenticada&quot;,&quot;tsType&quot;:&quot;'autenticada'|'contestada'|'roubada'&quot;},&quot;aVenda&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;simularLeitura&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const IMG = 'https://commons.wikimedia.org/wiki/Special:FilePath/Suprematist_Composition_-_Kazimir_Malevich.jpg?width=1000';
+const ESTADOS = {
+  autenticada: { bg: 'var(--ha-verified-100)', fg: 'var(--ha-verified-500)', sub: 'var(--ha-ink-700)', icon: 'verified', titulo: 'Obra autenticada', texto: 'Etiqueta lida agora e conferida com o certificado registrado.', etiqueta: 'Íntegra · vinculada em 12/03/2026', filtro: 'none' },
+  contestada: { bg: 'var(--ha-alert-100)', fg: 'var(--ha-alert-500)', sub: 'var(--ha-ink-700)', icon: 'report', titulo: 'Autenticidade contestada', texto: 'Há uma contestação aberta sobre esta obra desde 02/10/2026. Antes de comprar, fale com o suporte.', etiqueta: 'Íntegra · em revisão', filtro: 'none' },
+  roubada: { bg: 'var(--ha-alert-500)', fg: 'var(--ha-paper-50)', sub: 'var(--ha-paper-50)', icon: 'gpp_bad', titulo: 'Obra registrada como roubada', texto: 'O titular comunicou o furto em 15/09/2026 com boletim de ocorrência. Não compre esta obra e avise o suporte.', etiqueta: 'Bloqueada', filtro: 'grayscale(1)' },
+};
+class Component extends DCLogic {
+  state = { fase: 'pronto', copiado: false };
+  componentDidMount() { if (this.props.simularLeitura ?? true) this.iniciar(); }
+  componentWillUnmount() { this.timers && this.timers.forEach(clearTimeout); }
+  componentDidUpdate(p) { if (p.simularLeitura !== this.props.simularLeitura && this.props.simularLeitura) this.iniciar(); }
+  iniciar() {
+    this.timers && this.timers.forEach(clearTimeout);
+    this.setState({ fase: 'lendo' });
+    this.timers = [setTimeout(() => this.setState({ fase: 'ok' }), 1600), setTimeout(() => this.setState({ fase: 'pronto' }), 2500)];
+  }
+  renderVals() {
+    const s = this.state;
+    let qEst = null; try { qEst = new URLSearchParams(location.search).get('estado'); } catch (e) {}
+    const est = qEst || this.props.estado || 'autenticada';
+    const st = ESTADOS[est] || ESTADOS.autenticada;
+    const ok = s.fase === 'ok';
+    const corFim = est === 'autenticada' ? 'var(--ha-verified-500)' : 'var(--ha-alert-500)';
+    const e = React.createElement;
+    const anel = e('div', { style: { position: 'relative', width: 140, height: 140 } },
+      !ok && e('span', { style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--ha-sand-500)', animation: 'ha-pulse 1200ms ease-out infinite' } }),
+      !ok && e('span', { style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--ha-sand-500)', animation: 'ha-pulse 1200ms ease-out 600ms infinite' } }),
+      ok && e('svg', { width: 140, height: 140, viewBox: '0 0 104 104', style: { position: 'absolute', inset: 0, transform: 'rotate(-90deg)' } },
+        e('circle', { cx: 52, cy: 52, r: 48, fill: 'none', stroke: corFim, strokeWidth: 4, strokeDasharray: 302, style: { animation: 'ha-close 600ms var(--ha-ease) forwards' } })),
+      e('span', { style: { position: 'absolute', inset: 30, borderRadius: '50%', background: ok ? corFim : 'var(--ha-sand-500)', transition: 'background 600ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Material Symbols Rounded', fontSize: 40, color: ok ? 'var(--ha-paper-50)' : 'var(--ha-ink-900)' } }, ok ? (est === 'autenticada' ? 'check' : 'priority_high') : 'contactless'));
+    const prov = [
+      { icon: 'brush', ev: 'Obra criada', parte: 'Ateliê da artista, Salvador/BA', data: '2025' },
+      { icon: 'verified', ev: 'Certificada pela artista', parte: 'Assinatura digital · carimbo do tempo', data: '12/03/2026' },
+      { icon: 'museum', ev: 'Exposta', parte: 'Galeria Ladeira, Salvador/BA', data: '04/2026' },
+      { icon: 'swap_horiz', ev: 'Transferida', parte: 'Colecionador particular, Salvador/BA', data: '22/05/2026' },
+    ];
+    if (est === 'contestada') prov.push({ icon: 'report', ev: 'Contestação aberta', parte: 'Em análise pela HouseArt', data: '02/10/2026' });
+    if (est === 'roubada') prov.push({ icon: 'gpp_bad', ev: 'Furto comunicado', parte: 'Boletim de ocorrência registrado', data: '15/09/2026' });
+    return {
+      lendo: s.fase !== 'pronto', anel,
+      leituraTitulo: ok ? (est === 'autenticada' ? 'Etiqueta válida' : 'Atenção') : 'Lendo a etiqueta',
+      leituraSub: ok ? 'Abrindo o certificado…' : 'Mantenha o celular encostado no verso da obra',
+      st, obra: { src: IMG },
+      prov: prov.map((p, i) => ({ ...p, linha: i === prov.length - 1 ? 'transparent' : 'var(--ha-ink-300)' })),
+      aVenda: est === 'autenticada' && (this.props.aVenda ?? true),
+      alerta: est !== 'autenticada',
+      copiaIcon: s.copiado ? 'check' : 'content_copy',
+      copiar: () => { try { navigator.clipboard.writeText('HA-2026-7K3F-9Q2M'); } catch (x) {} this.setState({ copiado: true }); setTimeout(() => this.setState({ copiado: false }), 1600); },
+    };
+  }
+}
+</script>
+</body>
+</html>

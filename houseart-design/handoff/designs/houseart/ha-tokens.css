@@ -1,0 +1,47 @@
+/* HouseArt Design System — tokens --ha-* (fonte única; telas não usam valores soltos) */
+:root{
+  --ha-paper-50:#FBFAF7;--ha-paper-100:#F6F3EE;--ha-paper-200:#ECE7DF;
+  --ha-ink-900:#111111;--ha-ink-700:#2B2B2B;--ha-ink-500:#6B6760;--ha-ink-300:#B5B0A6;
+  --ha-sand-500:#D9A441;--ha-sand-600:#B9872F;--ha-sand-100:#F5E7C8;
+  --ha-verified-500:#2E7D5B;--ha-pending-500:#C77A1E;--ha-alert-500:#B23A2F;--ha-info-500:#3A5F8A;
+  --ha-brand-pintura:#F0A050;--ha-brand-escultura:#F07860;--ha-brand-fotografia:#D84870;--ha-brand-literatura:#B04898;--ha-brand-grafite:#484848;
+  --ha-verified-100:#E3F0E9;--ha-pending-100:#F7EAD9;--ha-alert-100:#F5E1DE;
+
+  /* semânticos (trocam no escuro) */
+  --ha-bg:var(--ha-paper-50);--ha-surface:var(--ha-paper-100);--ha-border:var(--ha-paper-200);
+  --ha-fg:var(--ha-ink-900);--ha-fg-body:var(--ha-ink-700);--ha-fg-muted:var(--ha-ink-500);--ha-fg-disabled:var(--ha-ink-300);
+  --ha-wall:#EEEAE3;
+
+  --ha-font-display:'Fraunces',Georgia,serif;
+  --ha-font-ui:'Inter',system-ui,sans-serif;
+  --ha-text-display:48px;--ha-lh-display:56px;
+  --ha-text-h1:36px;--ha-lh-h1:44px;
+  --ha-text-h2:28px;--ha-lh-h2:36px;
+  --ha-text-h3:22px;--ha-lh-h3:30px;
+  --ha-text-body-lg:18px;--ha-lh-body-lg:28px;
+  --ha-text-body:16px;--ha-lh-body:24px;
+  --ha-text-body-sm:14px;--ha-lh-body-sm:20px;
+  --ha-text-caption:12px;--ha-lh-caption:16px;
+  --ha-text-hero:72px;--ha-lh-hero:76px;
+
+  --ha-space-1:4px;--ha-space-2:8px;--ha-space-3:12px;--ha-space-4:16px;--ha-space-5:20px;--ha-space-6:24px;
+  --ha-space-7:28px;--ha-space-8:32px;--ha-space-9:36px;--ha-space-10:40px;--ha-space-12:48px;--ha-space-14:56px;--ha-space-16:64px;
+  --ha-space-20:80px;--ha-space-24:96px;
+
+  --ha-radius-0:0;--ha-radius-sm:4px;--ha-radius-md:8px;--ha-radius-lg:16px;--ha-radius-full:999px;
+  --ha-border-w:1px;--ha-focus-w:2px;--ha-passepartout:12px;
+  --ha-shadow-sm:0 2px 8px rgba(17,17,17,.08);
+  --ha-shadow-lg:0 16px 40px rgba(17,17,17,.18);
+  --ha-shadow-wall:0 18px 30px -12px rgba(17,17,17,.35),0 4px 10px rgba(17,17,17,.12);
+  --ha-dur-fast:160ms;--ha-dur-panel:240ms;--ha-dur-tap:600ms;--ha-ease:cubic-bezier(.2,.7,.2,1);
+  --ha-max:1280px;--ha-gutter:24px;
+}
+[data-ha-theme="dark"]{
+  --ha-bg:var(--ha-ink-900);--ha-surface:var(--ha-ink-700);--ha-border:var(--ha-ink-700);
+  --ha-fg:var(--ha-paper-50);--ha-fg-body:var(--ha-paper-200);--ha-fg-muted:var(--ha-ink-300);--ha-fg-disabled:var(--ha-ink-500);
+  --ha-wall:#1A1A1A;
+}
+@keyframes ha-pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+@keyframes ha-close{0%{stroke-dashoffset:302}100%{stroke-dashoffset:0}}
+@keyframes ha-spin{to{transform:rotate(360deg)}}
+@keyframes ha-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}

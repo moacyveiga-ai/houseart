@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#FBFAF7;-webkit-font-smoothing:antialiased}a{color:var(--ha-ink-900)}a:hover{color:var(--ha-ink-700)}*{box-sizing:border-box}button,input,select{font:inherit}</style>
+</helmet>
+<div style="background:var(--ha-paper-50);color:var(--ha-ink-700);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);min-height:100vh">
+
+<header style="border-bottom:var(--ha-border-w) solid var(--ha-paper-200);background:var(--ha-paper-50);position:sticky;top:0;z-index:20">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6);height:64px;display:flex;align-items:center;gap:var(--ha-space-8);min-width:0">
+    <a href="HouseArt Home.dc.html" style="flex:none;display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-900);text-decoration:none"><img src="houseart/marca/marca_houseart_full_horiz_color.png" alt="houseArt" style="height:30px;width:auto;display:block;flex:none"></a>
+    <nav style="display:flex;gap:var(--ha-space-5);font-size:var(--ha-text-body-sm);font-weight:500;white-space:nowrap;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none;height:100%;align-items:stretch">
+      <a href="HouseArt Marketplace.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Marketplace</a>
+      <a href="HouseArt Artista.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Artistas</a>
+      <a href="HouseArt Galerias.dc.html" style="color:var(--ha-ink-900);text-decoration:none;display:flex;align-items:center;box-shadow:inset 0 -2px 0 var(--ha-ink-900)" style-hover="color:var(--ha-ink-900)">Galerias</a>
+      <a href="HouseArt Home.dc.html#agenda" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Agenda</a>
+      <a href="HouseArt Site.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Como funciona</a>
+      <a href="HouseArt Verificar.dc.html" style="color:var(--ha-ink-500);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-ink-900)">Verificar uma obra</a>
+    </nav>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:var(--ha-space-4);flex:1 1 160px;min-width:0;justify-content:flex-end">
+      <span style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--ha-paper-200);display:flex;align-items:center;justify-content:center;font-size:var(--ha-text-caption);font-weight:600;color:var(--ha-ink-900)">MB</span>
+    </div>
+  </div>
+</header>
+
+<section data-screen-label="Galerias · Lista" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-16) var(--ha-space-6) var(--ha-space-8);display:flex;flex-direction:column;gap:var(--ha-space-8)">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-6)">
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-3);max-width:640px">
+      <span style="font-size:var(--ha-text-caption);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">Galerias parceiras</span>
+      <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-display);line-height:var(--ha-lh-display);color:var(--ha-ink-900)">Galerias com obras à venda</h1>
+      <p style="margin:0;font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg);color:var(--ha-ink-500);text-wrap:pretty">Cada galeria é verificada pela HouseArt e certifica as obras em nome dos artistas que representa.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--ha-space-2);padding:var(--ha-space-3) var(--ha-space-4);border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-sm);background:#fff;flex:0 1 320px;min-width:220px">
+      <span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--ha-ink-500)">search</span>
+      <input value="{{ busca }}" onChange="{{ digitar }}" placeholder="Buscar galeria ou cidade" aria-label="Buscar galeria" style="border:none;outline:none;background:transparent;flex:1;min-width:0;color:var(--ha-ink-900)">
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--ha-space-4);padding:var(--ha-space-4) 0;border-top:var(--ha-border-w) solid var(--ha-paper-200);border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+    <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+      <sc-for list="{{ especialidades }}" as="e" hint-placeholder-count="6">
+        <button onClick="{{ e.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);padding:var(--ha-space-2) var(--ha-space-4);border-radius:999px;border:var(--ha-border-w) solid {{ e.bd }};background:{{ e.bg }};color:{{ e.fg }}">{{ e.nome }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--ha-space-4);font-size:var(--ha-text-body-sm)">
+      <label style="display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-ink-500)">Estado
+        <select value="{{ uf }}" onChange="{{ escolherUf }}" style="padding:var(--ha-space-2) var(--ha-space-3);border-radius:var(--ha-radius-sm);border:var(--ha-border-w) solid var(--ha-paper-200);background:#fff;color:var(--ha-ink-900)">
+          <sc-for list="{{ ufs }}" as="u" hint-placeholder-count="5"><option value="{{ u.v }}">{{ u.v }}</option></sc-for>
+        </select>
+      </label>
+      <span style="color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ total }}</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:var(--ha-space-8) var(--ha-space-6)">
+    <sc-for list="{{ galerias }}" as="g" hint-placeholder-count="6">
+      <a href="{{ g.href }}" style="display:flex;flex-direction:column;border:var(--ha-border-w) solid var(--ha-paper-200);border-radius:var(--ha-radius-md);overflow:hidden;background:#fff;text-decoration:none;color:inherit;transition:box-shadow 160ms ease, transform 160ms ease" style-hover="box-shadow:0 12px 28px rgba(20,18,15,.10);transform:translateY(-2px)">
+        <div style="display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:2px;aspect-ratio:16/9;background:var(--ha-paper-200)">
+          <div style="grid-row:span 2;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-5)"><img src="{{ g.capa0 }}" alt="" style="max-width:100%;max-height:100%;box-shadow:0 4px 12px rgba(20,18,15,.18)"></div>
+          <div style="background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-3)"><img src="{{ g.capa1 }}" alt="" style="max-width:100%;max-height:100%"></div>
+          <div style="background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-3)"><img src="{{ g.capa2 }}" alt="" style="max-width:100%;max-height:100%"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--ha-space-4);padding:var(--ha-space-5)">
+          <div style="display:flex;gap:var(--ha-space-3);align-items:center">
+            <span style="width:44px;height:44px;flex:none;background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;align-items:center;justify-content:center;font-family:var(--ha-font-display);font-size:var(--ha-text-h3)">{{ g.inicial }}</span>
+            <div style="display:flex;flex-direction:column;min-width:0">
+              <span style="display:flex;align-items:center;gap:4px;font-weight:600;color:var(--ha-ink-900)">{{ g.nome }}<span style="font-family:'Material Symbols Rounded';font-size:16px;color:var(--ha-verified-500);font-variation-settings:'FILL' 1" title="Galeria verificada">verified</span></span>
+              <span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ g.cidade }} · desde {{ g.desde }}</span>
+            </div>
+          </div>
+          <span style="font-size:var(--ha-text-body-sm);text-wrap:pretty;min-height:40px">{{ g.desc }}</span>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-1)">
+            <sc-for list="{{ g.tags }}" as="t" hint-placeholder-count="2">
+              <span style="font-size:11px;padding:2px var(--ha-space-2);border-radius:999px;background:var(--ha-paper-100, #F3F1EC);color:var(--ha-ink-700)">{{ t.t }}</span>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;padding-top:var(--ha-space-4);border-top:var(--ha-border-w) solid var(--ha-paper-200)">
+            <div style="display:flex;flex-direction:column"><span style="font-size:var(--ha-text-h3);font-weight:500;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ g.obras }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">obras à venda</span></div>
+            <div style="display:flex;flex-direction:column"><span style="font-size:var(--ha-text-h3);font-weight:500;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ g.artistas }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">artistas representados</span></div>
+          </div>
+        </div>
+      </a>
+    </sc-for>
+  </div>
+  <sc-if value="{{ vazio }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:var(--ha-space-16) 0;text-align:center;color:var(--ha-ink-500)">Nenhuma galeria encontrada com esses filtros.</div>
+  </sc-if>
+</section>
+
+<section data-screen-label="Galerias · Quem vende" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-12) var(--ha-space-6) var(--ha-space-20)">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:var(--ha-space-6);padding:var(--ha-space-10);background:var(--ha-ink-900);color:var(--ha-paper-50);border-radius:var(--ha-radius-md)">
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+      <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h2);line-height:var(--ha-lh-h2)">Toda obra mostra quem está vendendo</h2>
+      <p style="margin:0;font-size:var(--ha-text-body-sm);color:var(--ha-paper-200);text-wrap:pretty">No marketplace, cada anúncio identifica o vendedor antes da compra.</p>
+    </div>
+    <div style="display:flex;gap:var(--ha-space-3)"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--ha-sand-500)">storefront</span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Galeria</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-paper-200)">Parceira verificada, com nome, cidade e artistas que representa.</span></div></div>
+    <div style="display:flex;gap:var(--ha-space-3)"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--ha-sand-500)">person</span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Particular</span><span style="font-size:var(--ha-text-body-sm);color:var(--ha-paper-200)">Colecionador com identidade verificada e escritura da obra em seu nome.</span></div></div>
+  </div>
+</section>
+
+<footer style="background:var(--ha-ink-900);color:var(--ha-paper-200)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6);display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--ha-space-4);font-size:var(--ha-text-body-sm)">
+    <img src="houseart/marca/marca_houseart_full_vert_negativo.png" alt="houseArt" style="height:64px;width:auto;display:block;flex:none">
+    <a href="HouseArt Cadastro.dc.html?plano=galeria" style="color:var(--ha-paper-50);font-weight:600">Sua galeria na HouseArt</a>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const I = [
+  FP + 'Suprematist_Composition_-_Kazimir_Malevich.jpg?width=600',
+  FP + 'Wassily_Kandinsky_Composition_VIII.jpg?width=400',
+  FP + 'Suprematist_Composition_-_Airplane_Flying_(Malevich,_1915).jpg?width=400',
+  FP + 'Suprematism_-_Abstract_Composition_(Malevich,_1915).jpg?width=400',
+  FP + 'Hilma_af_Klint_-_1907_-_Altarpiece_-_No_1_-_Group_X_-_Altarpieces.jpg?width=600',
+  FP + 'Hilma_af_Klint,_1915,_Svanen,_No._17.jpg?width=400',
+];
+const G = [
+  ['Galeria Ladeira', 'Salvador', 'BA', 2009, 'Pintura contemporânea baiana, com foco em artistas do Centro Histórico.', ['Contemporânea', 'Pintura'], 64, 12],
+  ['Galeria Marés', 'Recife', 'PE', 1998, 'Arte do Nordeste do modernismo ao presente, com acervo secundário.', ['Moderna', 'Contemporânea'], 41, 9],
+  ['Casa Tamarindo', 'São Paulo', 'SP', 2015, 'Fotografia autoral e obras em papel de artistas emergentes.', ['Fotografia', 'Obras em papel'], 87, 18],
+  ['Galeria Atlântica', 'Rio de Janeiro', 'RJ', 1987, 'Mestres modernos brasileiros e espólios administrados.', ['Moderna', 'Espólios'], 23, 7],
+  ['Ateliê Barro Vivo', 'Belo Horizonte', 'MG', 2012, 'Escultura, cerâmica e arte popular mineira.', ['Escultura', 'Arte popular'], 52, 15],
+  ['Galeria Sertão', 'Fortaleza', 'CE', 2018, 'Jovens artistas do semiárido e pesquisa sobre território.', ['Contemporânea', 'Arte popular'], 33, 11],
+  ['Galeria Paralelo', 'Porto Alegre', 'RS', 2004, 'Abstração geométrica e arte construtiva do Sul.', ['Moderna', 'Pintura'], 29, 8],
+  ['Luz Norte', 'Belém', 'PA', 2020, 'Fotografia e vídeo da Amazônia contemporânea.', ['Fotografia', 'Contemporânea'], 46, 10],
+  ['Galeria Quadra', 'Brasília', 'DF', 2011, 'Gravura, desenho e múltiplos em edição limitada.', ['Obras em papel', 'Contemporânea'], 71, 14],
+];
+const ESP = ['Todas', 'Contemporânea', 'Moderna', 'Pintura', 'Fotografia', 'Escultura', 'Obras em papel', 'Arte popular', 'Espólios'];
+class Component extends DCLogic {
+  state = { esp: 'Todas', uf: 'Todos', busca: '' };
+  renderVals() {
+    const s = this.state; const q = s.busca.trim().toLowerCase();
+    const lista = G.filter(([nome, cidade, uf, , , tags]) => (s.esp === 'Todas' || tags.includes(s.esp)) && (s.uf === 'Todos' || uf === s.uf) && (!q || (nome + ' ' + cidade).toLowerCase().includes(q)));
+    const obras = lista.reduce((n, g) => n + g[6], 0);
+    return {
+      busca: s.busca, digitar: (e) => this.setState({ busca: e.target.value }),
+      uf: s.uf, escolherUf: (e) => this.setState({ uf: e.target.value }),
+      ufs: ['Todos', ...Array.from(new Set(G.map((g) => g[2]))).sort()].map((v) => ({ v })),
+      especialidades: ESP.map((nome) => { const on = nome === s.esp; return { nome, bg: on ? 'var(--ha-ink-900)' : 'transparent', fg: on ? 'var(--ha-paper-50)' : 'var(--ha-ink-700)', bd: on ? 'var(--ha-ink-900)' : 'var(--ha-paper-200)', go: () => this.setState({ esp: nome }) }; }),
+      total: lista.length + (lista.length === 1 ? ' galeria · ' : ' galerias · ') + obras + ' obras',
+      vazio: lista.length === 0,
+      galerias: lista.map(([nome, cidade, uf, desde, desc, tags, nObras, artistas]) => { const i = G.findIndex((g) => g[0] === nome); return { href: 'HouseArt Galeria.dc.html?g=' + i, nome, cidade: cidade + '/' + uf, desde, desc, obras: nObras, artistas, inicial: nome.replace(/^(Galeria|Casa|Ateliê) /, '')[0], tags: tags.map((t) => ({ t })), capa0: I[i % 6], capa1: I[(i + 2) % 6], capa2: I[(i + 3) % 6] }; }),
+    };
+  }
+}
+</script>
+</body>
+</html>

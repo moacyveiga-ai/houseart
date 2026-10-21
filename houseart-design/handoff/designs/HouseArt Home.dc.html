@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" href="houseart/marca/simbolo_color.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block">
+<link rel="stylesheet" href="houseart/ha-tokens.css">
+<style>body{margin:0;background:#14120F;-webkit-font-smoothing:antialiased;overflow-x:hidden}a{color:var(--ha-ink-900)}a:hover{color:var(--ha-ink-700)}*{box-sizing:border-box}html{scroll-behavior:smooth}button{font:inherit}[data-speed],[data-fade]{will-change:translate,opacity}</style>
+</helmet>
+<div ref="{{ rootRef }}" style="background:var(--ha-paper-50);color:var(--ha-ink-700);font-family:var(--ha-font-ui);font-size:var(--ha-text-body);line-height:var(--ha-lh-body);overflow-x:hidden">
+
+<header style="position:fixed;top:0;left:0;right:0;z-index:50;background:{{ navBg }};border-bottom:var(--ha-border-w) solid {{ navBd }};transition:background 240ms ease, border-color 240ms ease;backdrop-filter:blur(10px)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6);height:72px;display:flex;align-items:center;gap:var(--ha-space-8)">
+    <a href="HouseArt Home.dc.html" style="flex:none;display:flex;align-items:center;gap:var(--ha-space-2);color:var(--ha-paper-50);text-decoration:none"><img src="houseart/marca/marca_houseart_full_horiz_negativo.png" alt="houseArt" style="height:48px;width:auto;display:block;flex:none"></a>
+    <nav style="display:flex;gap:var(--ha-space-5);font-size:var(--ha-text-body-sm);font-weight:500;white-space:nowrap;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none;height:100%;align-items:stretch">
+      <a href="HouseArt Marketplace.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Marketplace</a>
+      <a href="HouseArt Artista.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Artistas</a>
+      <a href="HouseArt Galerias.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Galerias</a>
+      <a href="#agenda" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Agenda</a>
+      <a href="HouseArt Site.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Como funciona</a>
+      <a href="HouseArt Verificar.dc.html" style="color:var(--ha-paper-200);text-decoration:none;display:flex;align-items:center" style-hover="color:var(--ha-paper-50)">Verificar uma obra</a>
+    </nav>
+    <a href="HouseArt Entrar.dc.html" style="margin-left:auto;flex:none;font-size:var(--ha-text-body-sm);font-weight:600;color:var(--ha-paper-50);text-decoration:none">Entrar</a>
+    <a href="HouseArt Cadastro.dc.html" style="flex:none;font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-4);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);text-decoration:none">Criar conta</a>
+  </div>
+</header>
+
+<section id="topo" data-screen-label="Home · Abertura" style="position:relative;height:120vh;min-height:720px;overflow:hidden;background:var(--ha-ink-900);color:var(--ha-paper-50)">
+  <div data-speed="0.35" style="position:absolute;inset:-12% 0;z-index:0">
+    <div data-zoom="1" style="position:absolute;inset:0;background-color:var(--ha-ink-900);background-image:url('{{ img.fundo }}');background-size:cover;background-position:center 50%"></div>
+  </div>
+  <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(20,18,15,.55) 0%,rgba(20,18,15,.35) 40%,rgba(20,18,15,.92) 100%),radial-gradient(ellipse at center,rgba(20,18,15,.15) 0%,rgba(20,18,15,.65) 100%)"></div>
+  <div data-speed="0.5" data-out="1" style="position:absolute;inset:72px 0 calc(20vh + 64px);z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 var(--ha-space-6);gap:var(--ha-space-6);pointer-events:none">
+    <span style="font-size:var(--ha-text-caption);letter-spacing:.24em;text-transform:uppercase;font-weight:600;color:var(--ha-sand-500)">Arte brasileira com origem</span>
+    <h1 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:clamp(56px,10vw,152px);line-height:.95;letter-spacing:-.02em;text-wrap:balance;max-width:1100px;text-shadow:0 4px 40px rgba(0,0,0,.45)">Toda obra tem<br><i>uma história.</i></h1>
+    <p style="margin:0;font-size:var(--ha-text-body-lg);color:var(--ha-paper-50);max-width:520px;text-wrap:pretty;text-shadow:0 2px 16px rgba(0,0,0,.6)">A HouseArt registra a de cada uma, do ateliê à parede de quem coleciona.</p>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:var(--ha-space-3);pointer-events:auto;margin-top:var(--ha-space-2)">
+      <a href="HouseArt Site.dc.html" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;padding:var(--ha-space-4) var(--ha-space-8);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);text-decoration:none">Como funciona<span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_forward</span></a>
+      <a href="HouseArt Marketplace.dc.html" style="display:flex;align-items:center;font-weight:600;padding:var(--ha-space-4) var(--ha-space-6);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-50);color:var(--ha-paper-50);text-decoration:none">Explorar obras</a>
+    </div>
+  </div>
+  <span style="position:absolute;left:var(--ha-space-6);bottom:calc(20vh + var(--ha-space-6));z-index:3;font-size:var(--ha-text-caption);color:var(--ha-paper-200)"><i>{{ fundoLegenda }}</i></span>
+</section>
+
+<section id="manifesto" data-screen-label="Home · Manifesto" style="position:relative;min-height:130vh;overflow:hidden;background:var(--ha-paper-50);display:flex;align-items:center">
+  <div data-speed="0.3" style="position:absolute;z-index:0;left:-6%;top:6%;opacity:.9;width:clamp(110px,14vw,220px);aspect-ratio:3/4;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-4);box-shadow:0 20px 40px rgba(20,18,15,.18)"><img src="{{ img.e }}" alt="" style="max-width:100%;max-height:100%"></div>
+  <div data-speed="-0.35" style="position:absolute;z-index:0;right:-6%;bottom:4%;opacity:.9;width:clamp(120px,15vw,240px);aspect-ratio:1/1;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-5);box-shadow:0 20px 40px rgba(20,18,15,.18)"><img src="{{ img.f }}" alt="" style="max-width:100%;max-height:100%"></div>
+  <div style="position:relative;z-index:1;max-width:820px;margin:0 auto;padding:var(--ha-space-24) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-8)">
+    <p data-fade="1" style="margin:0;font-family:var(--ha-font-display);font-size:clamp(32px,4.6vw,64px);line-height:1.12;color:var(--ha-ink-900);text-wrap:balance">O artista certifica.</p>
+    <p data-fade="1" style="margin:0;font-family:var(--ha-font-display);font-size:clamp(32px,4.6vw,64px);line-height:1.12;color:var(--ha-ink-900);text-wrap:balance">A galeria apresenta.</p>
+    <p data-fade="1" style="margin:0;font-family:var(--ha-font-display);font-size:clamp(32px,4.6vw,64px);line-height:1.12;color:var(--ha-ink-900);text-wrap:balance">O colecionador recebe a obra <i>e a escritura.</i></p>
+    <p data-fade="1" style="margin:0;font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg);max-width:560px;text-wrap:pretty">Cada revenda volta a pagar quem criou. Cada dono fica registrado. Nenhuma obra perde o próprio nome.</p>
+  </div>
+</section>
+
+<section data-screen-label="Home · Destaque Marketplace" style="position:relative;overflow:hidden;background:var(--ha-ink-900);color:var(--ha-paper-50)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-24) var(--ha-space-6);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--ha-space-16);align-items:center">
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-6);position:relative;z-index:2">
+      <span style="font-size:var(--ha-text-caption);letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:var(--ha-sand-500)">Em destaque</span>
+      <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:clamp(48px,6vw,96px);line-height:1;letter-spacing:-.01em">O marketplace<br><i>da arte certificada.</i></h2>
+      <p style="margin:0;font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg);color:var(--ha-paper-200);max-width:480px;text-wrap:pretty">Obras de galerias e colecionadores verificados, com procedência, frete e seguro resolvidos na compra.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-3)">
+        <a href="HouseArt Marketplace.dc.html" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;padding:var(--ha-space-4) var(--ha-space-8);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);text-decoration:none">Explorar o marketplace<span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_forward</span></a>
+        <a href="HouseArt Galerias.dc.html" style="display:flex;align-items:center;font-weight:600;padding:var(--ha-space-4) var(--ha-space-6);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-50);color:var(--ha-paper-50);text-decoration:none">Ver galerias</a>
+      </div>
+    </div>
+    <div style="position:relative;height:clamp(420px,52vw,640px)">
+      <a href="HouseArt Marketplace.dc.html" data-speed="-0.15" style="position:absolute;left:0;top:6%;width:58%;aspect-ratio:4/5;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8);box-shadow:0 30px 60px rgba(0,0,0,.5)"><img src="{{ img.a }}" alt="" style="max-width:100%;max-height:100%"></a>
+      <a href="HouseArt Marketplace.dc.html" data-speed="-0.45" style="position:absolute;right:0;top:0;width:44%;aspect-ratio:1/1;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-5);box-shadow:0 30px 60px rgba(0,0,0,.5)"><img src="{{ img.f }}" alt="" style="max-width:100%;max-height:100%"></a>
+      <a href="HouseArt Marketplace.dc.html" data-speed="-0.7" style="position:absolute;right:8%;bottom:0;width:40%;aspect-ratio:3/4;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-5);box-shadow:0 30px 60px rgba(0,0,0,.5)"><img src="{{ img.c }}" alt="" style="max-width:100%;max-height:100%"></a>
+    </div>
+  </div>
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:0 var(--ha-space-6) var(--ha-space-20);display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:var(--ha-space-6)">
+    <sc-for list="{{ destaques }}" as="d" hint-placeholder-count="4">
+      
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Home · Linguagens" style="background:var(--ha-paper-50);color:var(--ha-ink-700)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-10)">
+    <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Explore por linguagem</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:var(--ha-space-6)">
+      <a href="HouseArt Marketplace.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-4);text-decoration:none;color:inherit" style-hover="opacity:.85">
+        <div style="background:var(--ha-paper-100);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)"><img src="houseart/marca/logo_pintura_color.png" alt="Pintura" style="max-width:78%;max-height:100%;display:block"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-3)"><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Pintura</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Ver obras →</span></div>
+      </a>
+      <a href="HouseArt Marketplace.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-4);text-decoration:none;color:inherit" style-hover="opacity:.85">
+        <div style="background:var(--ha-paper-100);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)"><img src="houseart/marca/logo_escultura_color.png" alt="Escultura" style="max-width:78%;max-height:100%;display:block"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-3)"><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Escultura</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Ver obras →</span></div>
+      </a>
+      <a href="HouseArt Marketplace.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-4);text-decoration:none;color:inherit" style-hover="opacity:.85">
+        <div style="background:var(--ha-paper-100);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)"><img src="houseart/marca/logo_fotografia_color.png" alt="Fotografia" style="max-width:78%;max-height:100%;display:block"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-3)"><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Fotografia</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Ver obras →</span></div>
+      </a>
+      <a href="HouseArt Marketplace.dc.html" style="display:flex;flex-direction:column;gap:var(--ha-space-4);text-decoration:none;color:inherit" style-hover="opacity:.85">
+        <div style="background:var(--ha-paper-100);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;padding:var(--ha-space-8)"><img src="houseart/marca/logo_literatura_color.png" alt="Literatura" style="max-width:78%;max-height:100%;display:block"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--ha-space-3)"><span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h3);color:var(--ha-ink-900)">Literatura</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">Ver obras →</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Home · Pilares" style="background:var(--ha-paper-50)">
+  <sc-for list="{{ pilares }}" as="p" hint-placeholder-count="3">
+    <div style="border-bottom:var(--ha-border-w) solid var(--ha-paper-200)">
+      <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);min-height:80vh;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:var(--ha-space-16);align-items:center">
+        <div data-fade="1" style="order:{{ p.ordem }};display:flex;flex-direction:column;gap:var(--ha-space-5);max-width:520px">
+          <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);color:var(--ha-ink-500);font-variant-numeric:tabular-nums">{{ p.n }}</span>
+          <h3 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:clamp(44px,5vw,80px);line-height:1;color:var(--ha-ink-900)">{{ p.titulo }}</h3>
+          <p style="margin:0;font-size:var(--ha-text-body-lg);line-height:var(--ha-lh-body-lg);text-wrap:pretty">{{ p.texto }}</p>
+          <a href="{{ p.href }}" style="display:flex;align-items:center;gap:var(--ha-space-2);font-weight:600;color:var(--ha-ink-900)">{{ p.cta }}<span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_forward</span></a>
+        </div>
+        <div style="position:relative;aspect-ratio:4/5;max-height:72vh;width:100%;overflow:hidden;background:var(--ha-wall)">
+          <div data-speed="0.18" style="position:absolute;inset:-14% 0;display:flex;align-items:center;justify-content:center;padding:18% 14%"><img src="{{ p.src }}" alt="" style="max-width:100%;max-height:100%;box-shadow:0 24px 50px rgba(20,18,15,.25)"></div>
+        </div>
+      </div>
+    </div>
+  </sc-for>
+</section>
+
+<section id="noticias" data-screen-label="Home · Notícias" style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-8);scroll-margin-top:72px">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4);padding-top:var(--ha-space-10);border-top:var(--ha-border-w) solid var(--ha-ink-900)">
+    <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Notícias do mundo da arte</h2>
+    <a href="#" style="font-size:var(--ha-text-body-sm);font-weight:600">Todas as notícias</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:var(--ha-space-10)">
+    <a href="#" style="display:flex;flex-direction:column;gap:var(--ha-space-4);text-decoration:none;color:inherit">
+      <div style="aspect-ratio:16/10;background:var(--ha-paper-200)">
+        <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="mkt-noticia-principal" placeholder="Imagem da matéria principal" style="width:100%;height:100%" hint-size="100%,100%"></x-import>
+      </div>
+      <span style="font-size:var(--ha-text-caption);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">{{ manchete.cat }} · {{ manchete.data }}</span>
+      <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:1.2;color:var(--ha-ink-900);text-wrap:balance">{{ manchete.titulo }}</span>
+      <span style="font-size:var(--ha-text-body);text-wrap:pretty">{{ manchete.resumo }}</span>
+    </a>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ noticias }}" as="n" hint-placeholder-count="4">
+        <a href="#" style="display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:var(--ha-space-4);padding:var(--ha-space-4) 0;border-bottom:var(--ha-border-w) solid var(--ha-paper-200);text-decoration:none;color:inherit">
+          <div style="display:flex;flex-direction:column;gap:var(--ha-space-1)">
+            <span style="font-size:var(--ha-text-caption);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--ha-ink-500)">{{ n.cat }} · {{ n.data }}</span>
+            <span style="font-weight:600;font-size:var(--ha-text-body-lg);line-height:1.3;color:var(--ha-ink-900);text-wrap:pretty">{{ n.titulo }}</span>
+          </div>
+          <div style="width:112px;height:84px;background:var(--ha-paper-200)">
+            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ n.imgId }}" placeholder="Foto" style="width:100%;height:100%" hint-size="112px,84px"></x-import>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="agenda" data-screen-label="Home · Agenda" style="background:var(--ha-paper-100, #F3F1EC);scroll-margin-top:72px">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-20) var(--ha-space-6);display:flex;flex-direction:column;gap:var(--ha-space-8)">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--ha-space-4)">
+      <div style="display:flex;flex-direction:column;gap:var(--ha-space-2)">
+        <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:var(--ha-text-h1);line-height:var(--ha-lh-h1);color:var(--ha-ink-900)">Agenda de arte no Brasil</h2>
+        <span style="font-size:var(--ha-text-body-sm);color:var(--ha-ink-500)">Feiras, exposições, aberturas e leilões.</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-2)">
+        <sc-for list="{{ tiposEv }}" as="t" hint-placeholder-count="5">
+          <button onClick="{{ t.go }}" style="cursor:pointer;font-size:var(--ha-text-body-sm);padding:var(--ha-space-2) var(--ha-space-4);border-radius:999px;border:var(--ha-border-w) solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }}">{{ t.nome }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;gap:var(--ha-space-1);border-bottom:var(--ha-border-w) solid var(--ha-paper-200);overflow-x:auto;scrollbar-width:none">
+      <sc-for list="{{ meses }}" as="m" hint-placeholder-count="4">
+        <button onClick="{{ m.go }}" style="cursor:pointer;padding:var(--ha-space-3) var(--ha-space-5);border:none;background:none;font-weight:600;font-size:var(--ha-text-body-sm);white-space:nowrap;color:{{ m.fg }};box-shadow:{{ m.sh }}">{{ m.nome }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--ha-space-3)">
+      <sc-for list="{{ eventos }}" as="e" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:80px minmax(0,1fr) auto;gap:var(--ha-space-5);align-items:center;padding:var(--ha-space-4) var(--ha-space-5);background:#fff;border-radius:var(--ha-radius-md)">
+          <div style="display:flex;flex-direction:column;align-items:center;padding:var(--ha-space-2) 0;border-right:var(--ha-border-w) solid var(--ha-paper-200)">
+            <span style="font-family:var(--ha-font-display);font-size:var(--ha-text-h2);line-height:1;color:var(--ha-ink-900);font-variant-numeric:tabular-nums">{{ e.dia }}</span>
+            <span style="font-size:var(--ha-text-caption);font-weight:600;text-transform:uppercase;color:var(--ha-ink-500)">{{ e.mes }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--ha-space-2)"><span style="font-size:11px;font-weight:600;padding:2px var(--ha-space-2);border-radius:999px;background:{{ e.tBg }};color:{{ e.tFg }}">{{ e.tipo }}</span><span style="font-size:var(--ha-text-caption);color:var(--ha-ink-500)">{{ e.periodo }}</span></div>
+            <span style="font-weight:600;font-size:var(--ha-text-body-lg);color:var(--ha-ink-900)">{{ e.titulo }}</span>
+            <span style="display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm)"><span style="font-family:'Material Symbols Rounded';font-size:16px;color:var(--ha-ink-500)">location_on</span>{{ e.local }} · {{ e.cidade }}</span>
+          </div>
+          <button style="cursor:pointer;display:flex;align-items:center;gap:var(--ha-space-1);font-size:var(--ha-text-body-sm);font-weight:600;padding:var(--ha-space-2) var(--ha-space-3);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-200);background:transparent;color:var(--ha-ink-900);white-space:nowrap" style-hover="border-color:var(--ha-ink-900)"><span style="font-family:'Material Symbols Rounded';font-size:18px">event</span>Salvar</button>
+        </div>
+      </sc-for>
+      <sc-if value="{{ semEventos }}" hint-placeholder-val="{{ false }}"><div style="padding:var(--ha-space-10);text-align:center;color:var(--ha-ink-500)">Nenhum evento desse tipo neste mês.</div></sc-if>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Home · Chamada final" style="position:relative;min-height:80vh;overflow:hidden;background:var(--ha-ink-900);color:var(--ha-paper-50);display:flex;align-items:center;justify-content:center;text-align:center">
+  <div data-speed="-0.3" style="position:absolute;left:8%;top:12%;width:clamp(120px,14vw,220px);aspect-ratio:1/1;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-4);opacity:.6"><img src="{{ img.b }}" alt="" style="max-width:100%;max-height:100%"></div>
+  <div data-speed="-0.6" style="position:absolute;right:10%;bottom:10%;width:clamp(140px,16vw,260px);aspect-ratio:4/5;background:var(--ha-wall);display:flex;align-items:center;justify-content:center;padding:var(--ha-space-4);opacity:.6"><img src="{{ img.e }}" alt="" style="max-width:100%;max-height:100%"></div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--ha-space-6);padding:var(--ha-space-20) var(--ha-space-6)">
+    <h2 style="margin:0;font-family:var(--ha-font-display);font-weight:400;font-size:clamp(44px,6vw,96px);line-height:1;text-wrap:balance;max-width:900px">Dê nome, data e dono <i>à sua obra.</i></h2>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:var(--ha-space-3)">
+      <a href="HouseArt Cadastro.dc.html" style="font-weight:600;padding:var(--ha-space-4) var(--ha-space-8);border-radius:var(--ha-radius-md);background:var(--ha-sand-500);color:var(--ha-ink-900);text-decoration:none">Criar conta grátis</a>
+      <a href="HouseArt Verificar.dc.html" style="font-weight:600;padding:var(--ha-space-4) var(--ha-space-6);border-radius:var(--ha-radius-md);border:var(--ha-border-w) solid var(--ha-paper-50);color:var(--ha-paper-50);text-decoration:none">Verificar uma obra</a>
+    </div>
+  </div>
+</section>
+
+<footer style="background:var(--ha-ink-900);color:var(--ha-paper-200);border-top:var(--ha-border-w) solid var(--ha-ink-700)">
+  <div style="max-width:var(--ha-max);margin:0 auto;padding:var(--ha-space-10) var(--ha-space-6);display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--ha-space-4);font-size:var(--ha-text-body-sm)">
+    <img src="houseart/marca/marca_houseart_full_vert_negativo.png" alt="houseArt" style="height:64px;width:auto;display:block;flex:none">
+    <div style="display:flex;flex-wrap:wrap;gap:var(--ha-space-6)"><a href="HouseArt Site.dc.html" style="color:var(--ha-paper-200)">Para artistas e galerias</a><a href="HouseArt Site.dc.html#precos" style="color:var(--ha-paper-200)">Preços</a><a href="HouseArt Site.dc.html#sobre" style="color:var(--ha-paper-200)">Sobre</a></div>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;intensidade&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Parallax&quot;}}">
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const IMG = {
+  a: FP + 'Suprematist_Composition_-_Kazimir_Malevich.jpg?width=900',
+  b: FP + 'Wassily_Kandinsky_Composition_VIII.jpg?width=700',
+  c: FP + 'Hilma_af_Klint_-_1907_-_Altarpiece_-_No_1_-_Group_X_-_Altarpieces.jpg?width=800',
+  d: FP + 'Suprematism_-_Abstract_Composition_(Malevich,_1915).jpg?width=500',
+  e: FP + 'Suprematist_Composition_-_Airplane_Flying_(Malevich,_1915).jpg?width=700',
+  f: FP + 'Hilma_af_Klint,_1915,_Svanen,_No._17.jpg?width=800',
+};
+IMG.fundo = FP + 'Gallery_30,_National_Gallery_of_Art.jpg?width=2400';
+const MESES = ['Novembro 2026', 'Dezembro 2026', 'Janeiro 2027', 'Fevereiro 2027'];
+const EVENTOS = [
+  [0, '05', 'nov', 'Abertura', 'Dia claro: Joana Teixeira', 'Galeria Ladeira', 'Salvador/BA', 'Até 20 dez'],
+  [0, '12', 'nov', 'Feira', 'Feira de arte contemporânea do Recife', 'Cais do Sertão', 'Recife/PE', '12 a 15 nov'],
+  [0, '18', 'nov', 'Exposição', 'Modernismos do Nordeste', 'Museu de Arte da Bahia', 'Salvador/BA', 'Até 28 fev'],
+  [0, '26', 'nov', 'Leilão', 'Leilão de arte brasileira moderna', 'Online e Rio de Janeiro', 'Rio de Janeiro/RJ', 'Lances a partir de 19 nov'],
+  [1, '03', 'dez', 'Exposição', 'Fotografia amazônica hoje', 'Luz Norte', 'Belém/PA', 'Até 31 jan'],
+  [1, '09', 'dez', 'Abertura', 'Coletiva de verão', 'Casa Tamarindo', 'São Paulo/SP', 'Até 15 fev'],
+  [1, '14', 'dez', 'Feira', 'Feira de gravura e múltiplos', 'Galeria Quadra', 'Brasília/DF', '14 e 15 dez'],
+  [2, '16', 'jan', 'Exposição', 'Barro e fogo: cerâmica mineira', 'Ateliê Barro Vivo', 'Belo Horizonte/MG', 'Até 30 mar'],
+  [2, '24', 'jan', 'Leilão', 'Leilão beneficente de verão', 'Online', 'Nacional', '24 a 31 jan'],
+  [3, '06', 'fev', 'Abertura', 'Território: Davi Nunes', 'Galeria Sertão', 'Fortaleza/CE', 'Até 10 abr'],
+];
+const TIPO_COR = { Feira: ['var(--ha-ink-900)', 'var(--ha-paper-50)'], Exposição: ['var(--ha-paper-200)', 'var(--ha-ink-900)'], Abertura: ['var(--ha-sand-500)', 'var(--ha-ink-900)'], Leilão: ['var(--ha-verified-100)', 'var(--ha-verified-500)'] };
+class Component extends DCLogic {
+  state = { mes: 0, tipoEv: 'Todos', solido: false };
+  rootRef = React.createRef();
+  componentDidMount() {
+    this.onScroll = () => { if (this.raf) return; this.raf = requestAnimationFrame(() => { this.raf = null; this.update(); }); };
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+    window.addEventListener('resize', this.onScroll);
+    this.update(); this.t = setTimeout(() => this.update(), 400);
+  }
+  componentDidUpdate() { this.update(); }
+  componentWillUnmount() { window.removeEventListener('scroll', this.onScroll); window.removeEventListener('resize', this.onScroll); cancelAnimationFrame(this.raf); clearTimeout(this.t); }
+  update() {
+    const root = this.rootRef.current; if (!root) return;
+    const intensidade = this.props.intensidade ?? 1;
+    const vh = window.innerHeight;
+    root.querySelectorAll('[data-speed]').forEach((el) => {
+      const p = el.parentElement.getBoundingClientRect();
+      if (p.bottom < -vh || p.top > vh * 2) return;
+      const c = p.top + p.height / 2 - vh / 2;
+      el.style.translate = '0 ' + (c * parseFloat(el.dataset.speed) * intensidade).toFixed(1) + 'px';
+    });
+    root.querySelectorAll('[data-zoom]').forEach((el) => {
+      const p = el.closest('section').getBoundingClientRect();
+      const prog = Math.min(1, Math.max(0, -p.top / p.height));
+      el.style.scale = (1.05 + prog * 0.18 * intensidade).toFixed(4);
+    });
+    root.querySelectorAll('[data-out]').forEach((el) => {
+      const p = el.closest('section').getBoundingClientRect();
+      el.style.opacity = Math.max(0, 1 - (-p.top) / (vh * 0.55)).toFixed(3);
+    });
+    root.querySelectorAll('[data-fade]').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const t = Math.min(1, Math.max(0, (vh * 0.9 - r.top) / (vh * 0.45)));
+      el.style.opacity = (0.12 + 0.88 * t).toFixed(3);
+      el.style.translate = '0 ' + ((1 - t) * 40).toFixed(1) + 'px';
+    });
+    const solido = window.scrollY > vh * 0.8;
+    if (solido !== this.state.solido) this.setState({ solido });
+  }
+  renderVals() {
+    const s = this.state; const ink = 'var(--ha-ink-900)';
+    const evs = EVENTOS.filter((e) => e[0] === s.mes && (s.tipoEv === 'Todos' || e[3] === s.tipoEv));
+    return {
+      rootRef: this.rootRef, img: IMG, fundoLegenda: 'Sala de exposição · foto ilustrativa',
+      navBg: s.solido ? 'rgba(20,18,15,.92)' : 'transparent', navBd: s.solido ? 'var(--ha-ink-700)' : 'transparent',
+      destaques: [['Joana Teixeira', 'Construção nº 7', 'Galeria Ladeira', 'R$ 38.000'], ['Tomás Rezende', 'Retábulo do Rio Vermelho', 'Particular', 'R$ 320.000'], ['Lia Santana', 'Maré baixa, Itapuã', 'Casa Tamarindo', 'R$ 7.800'], ['Davi Nunes', 'Arquivo de sal', 'Galeria Sertão', 'R$ 52.000']].map(([artista, titulo, vendedor, preco]) => ({ artista, titulo, vendedor, preco })),
+      pilares: [['01', 'Certifique', 'Etiqueta física com chip, número único e certificado assinado pelo artista ou pela galeria.', IMG.e, 'Como funciona', 'HouseArt Site.dc.html#como'], ['02', 'Compre e venda', 'Pagamento em garantia, frete especializado e seguro na mesma compra, com o vendedor sempre identificado.', IMG.b, 'Ir ao marketplace', 'HouseArt Marketplace.dc.html'], ['03', 'Proteja', 'Escritura, laudo de valor e histórico de donos acessíveis por qualquer pessoa em segundos.', IMG.d, 'Verificar uma obra', 'HouseArt Verificar.dc.html']].map(([n, titulo, texto, src, cta, href], i) => ({ n, titulo, texto, src, cta, href, ordem: i % 2 ? 2 : 0 })),
+      manchete: { cat: 'Mercado', data: '18 out 2026', titulo: 'Vendas de arte brasileira no mercado secundário crescem pelo terceiro ano', resumo: 'Galerias do Nordeste lideram a alta, puxadas por artistas em meio de carreira e pela maior confiança dos colecionadores em obras com procedência registrada.' },
+      noticias: [['Feiras', '17 out 2026', 'Feira paulistana anuncia setor dedicado a galerias de fora do eixo Rio–São Paulo'], ['Museus', '15 out 2026', 'Museu baiano recebe doação de 40 obras de arte popular do Recôncavo'], ['Direito', '12 out 2026', 'Como funciona o direito de sequência na revenda de obras de arte'], ['Artistas', '09 out 2026', 'Fotógrafa de Salvador é finalista de prêmio internacional']].map(([cat, data, titulo], i) => ({ cat, data, titulo, imgId: 'mkt-noticia-' + i })),
+      tiposEv: ['Todos', 'Feira', 'Exposição', 'Abertura', 'Leilão'].map((n) => { const on = n === s.tipoEv; return { nome: n, bg: on ? ink : 'transparent', fg: on ? 'var(--ha-paper-50)' : 'var(--ha-ink-700)', bd: on ? ink : 'var(--ha-paper-200)', go: () => this.setState({ tipoEv: n }) }; }),
+      meses: MESES.map((nome, i) => ({ nome, fg: i === s.mes ? ink : 'var(--ha-ink-500)', sh: i === s.mes ? 'inset 0 -2px 0 ' + ink : 'none', go: () => this.setState({ mes: i }) })),
+      eventos: evs.map(([, dia, mes, tipo, titulo, local, cidade, periodo]) => ({ dia, mes, tipo, titulo, local, cidade, periodo, tBg: TIPO_COR[tipo][0], tFg: TIPO_COR[tipo][1] })),
+      semEventos: evs.length === 0,
+    };
+  }
+}
+</script>
+</body>
+</html>

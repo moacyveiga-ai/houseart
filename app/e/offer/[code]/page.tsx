@@ -16,7 +16,7 @@ export default async function BuyerOfferPage({ params, searchParams }: { params:
   const authorLabel = (a: string) => (a === 'BUYER' ? 'Você' : a === 'NEGOTIATOR' ? 'Negociador do vendedor' : 'Vendedor')
   return (
     <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <HouseArtLogo size={24} />
+      <HouseArtLogo height={30} />
       <p className="ha-eyebrow">Sua proposta</p>
       <h1 className="ha-h1">{o.artworkTitle}</h1>
       <div className="ha-row"><Badge tone={o.status === 'ACCEPTED' ? 'verified' : o.status === 'REFUSED' || o.status === 'EXPIRED' || o.status === 'RETRACTED' ? 'neutral' : 'pending'}>{o.statusLabel}</Badge><span className="ha-muted ha-sm">{o.code} · válida até {new Date(o.expiresAt).toLocaleDateString('pt-BR')}</span></div>

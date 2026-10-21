@@ -11,9 +11,11 @@
 > arquitetura e stack — NÃO é fork: nada volta para lá, nada é sincronizado de lá.
 > Brief de negócio: `docs/HOUSEART-ESTUDO.md`.
 >
-> **Fonte de verdade de UI: `./houseart-design`** (saída do Claude Design — telas, fluxos,
-> estados, textos, tokens e componentes). Não resuma nem reinterprete: referencie por caminho.
-> Onde o design e a Housebroker divergirem, o design vence.
+> **Fonte de verdade de UI: `./houseart-design/handoff/`** (handoff de 2026-10-21: 20 protótipos
+> `.dc.html`, tokens, marca, capturas; `HANDOFF-README.md` tem as regras, `docs/HANDOFF-2026-10-21.md`
+> o diagnóstico e o plano). `houseart-design/screens.html` é o export anterior das 17 telas do Web
+> App, iguais às do handoff. Não resuma nem reinterprete: referencie por caminho. Onde o design e a
+> Housebroker divergirem, o design vence. Telas da Fase 8 do handoff não têm design: pare e peça.
 
 ## Vocabulário (obrigatório em código, UI e docs)
 artista · galeria · consultor · colecionador · obra (`Artwork`) · marcador físico
@@ -106,6 +108,14 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-21 — Handoff de design completo recebido; Fase 0 dele feita.** Pacote em
+  `houseart-design/handoff/` (site, home, marketplace, obra, oferta, artista, galeria(s), verificar,
+  entrar/cadastro, apps Colecionador/Galeria/Artista, Web Colecionador/Galeria, DS, pitch). Entraram:
+  os 5 tokens `--ha-brand-*` (só nas marcas de linguagem), a marca real do cliente (`public/brand/`,
+  `HouseArtLogo` por versão/tom/altura pela tabela §4.5 do handoff, `LanguageMark`, ícone do app =
+  `simbolo_color`), e a catraca `lib/architecture/handoff-screens.ts` (72 telas pendentes; só
+  diminui). Diagnóstico, ordem de fases e o que depende do Moacy: `docs/HANDOFF-2026-10-21.md`.
+  **Cai a decisão 13 do build** (comunidade e agenda agora têm telas). Mobile (Expo) é decisão aberta.
 - **2026-10-21 — Fase 6: HouseArt NO AR.** Produção em
   **https://houseart-housemapp.vercel.app** (deploy `dpl_5XkPYVj8N3jLtYZ37hMB9qZ3MH7a`, commit
   `f48ad20`, build 47 s, migrations no-op). Repositório **`moacyveiga-ai/houseart`** (a org Housemap

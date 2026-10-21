@@ -1,0 +1,91 @@
+// Artwork domain — allowlists and labels (the chips of the design). Pure.
+export const ARTWORK_STATUSES = ['DRAFT', 'IN_CERTIFICATION', 'AUTHENTICATED', 'LISTED', 'IN_DEAL', 'SOLD', 'ARCHIVED', 'STOLEN', 'DISPUTED'] as const
+export type ArtworkStatus = (typeof ARTWORK_STATUSES)[number]
+
+export const ARTWORK_STATUS_LABELS: Record<ArtworkStatus, string> = {
+  DRAFT: 'Rascunho',
+  IN_CERTIFICATION: 'Em certificação',
+  AUTHENTICATED: 'Autenticada',
+  LISTED: 'À venda',
+  IN_DEAL: 'Em negociação',
+  SOLD: 'Vendida',
+  ARCHIVED: 'Arquivada',
+  STOLEN: 'Roubada',
+  DISPUTED: 'Contestada',
+}
+
+export const ARTWORK_STATUS_ICONS: Record<ArtworkStatus, string> = {
+  DRAFT: 'edit_note', IN_CERTIFICATION: 'pending', AUTHENTICATED: 'verified', LISTED: 'storefront', IN_DEAL: 'handshake',
+  SOLD: 'sell', ARCHIVED: 'inventory_2', STOLEN: 'report', DISPUTED: 'gavel',
+}
+
+export const ARTWORK_CATEGORIES = ['PAINTING', 'SCULPTURE', 'WORK_ON_PAPER', 'PHOTOGRAPHY', 'DIGITAL', 'OTHER'] as const
+export const ARTWORK_CATEGORY_LABELS: Record<(typeof ARTWORK_CATEGORIES)[number], string> = {
+  PAINTING: 'Pintura', SCULPTURE: 'Escultura', WORK_ON_PAPER: 'Obra sobre papel', PHOTOGRAPHY: 'Fotografia', DIGITAL: 'Digital', OTHER: 'Outro',
+}
+
+export const CONDITION_GRADES = ['EXCELLENT', 'GOOD', 'FAIR', 'NEEDS_RESTORATION'] as const
+export const CONDITION_GRADE_LABELS: Record<(typeof CONDITION_GRADES)[number], string> = {
+  EXCELLENT: 'Excelente', GOOD: 'Bom', FAIR: 'Regular', NEEDS_RESTORATION: 'Precisa de restauro',
+}
+
+export const CONDITION_REGIONS = ['TOP_LEFT', 'TOP_RIGHT', 'CENTER', 'BOTTOM_LEFT', 'EDGES_FRAME'] as const
+export const CONDITION_REGION_LABELS: Record<(typeof CONDITION_REGIONS)[number], string> = {
+  TOP_LEFT: 'Superior esquerda', TOP_RIGHT: 'Superior direita', CENTER: 'Centro', BOTTOM_LEFT: 'Inferior esquerda', EDGES_FRAME: 'Bordas e chassi',
+}
+export const CONDITION_STATES = ['INTACT', 'ATTENTION', 'DAMAGED'] as const
+export const CONDITION_STATE_LABELS: Record<(typeof CONDITION_STATES)[number], string> = { INTACT: 'Íntegra', ATTENTION: 'Atenção', DAMAGED: 'Danificada' }
+
+export const HISTORY_KINDS = ['EXHIBITION', 'PUBLICATION', 'AWARD', 'RESTORATION', 'LOAN'] as const
+export const HISTORY_KIND_LABELS: Record<(typeof HISTORY_KINDS)[number], string> = {
+  EXHIBITION: 'Exposição', PUBLICATION: 'Publicação', AWARD: 'Prêmio', RESTORATION: 'Restauro', LOAN: 'Empréstimo',
+}
+
+export const SALE_MODES = ['FIXED', 'FIXED_WITH_OFFERS', 'ON_REQUEST'] as const
+export const SALE_MODE_CARDS: { key: (typeof SALE_MODES)[number]; name: string; description: string }[] = [
+  { key: 'FIXED', name: 'Preço fixo', description: 'O comprador paga o valor e a venda segue direto.' },
+  { key: 'FIXED_WITH_OFFERS', name: 'Preço fixo e aceitar ofertas', description: 'Você recebe propostas; o negociador responde pela sua alçada.' },
+  { key: 'ON_REQUEST', name: 'Sob consulta', description: 'O preço não aparece; interessados pedem contato.' },
+]
+
+export const MEDIA_KINDS = ['FRONT_COLOR_CARD', 'BACK', 'MACRO_TL', 'MACRO_TR', 'MACRO_BL', 'MACRO_BR', 'DETAIL', 'OTHER'] as const
+export type MediaKind = (typeof MEDIA_KINDS)[number]
+/** The six fixed slots of the "Mídia" step, in the design order. */
+export const MEDIA_SLOTS: { kind: MediaKind; name: string }[] = [
+  { kind: 'FRONT_COLOR_CARD', name: 'Frontal com cartão de cor' },
+  { kind: 'BACK', name: 'Verso' },
+  { kind: 'MACRO_TL', name: 'Macro 1 · sup. esq.' },
+  { kind: 'MACRO_TR', name: 'Macro 2 · sup. dir.' },
+  { kind: 'MACRO_BL', name: 'Macro 3 · inf. esq.' },
+  { kind: 'MACRO_BR', name: 'Macro 4 · inf. dir.' },
+]
+export const MEDIA_QUALITIES = ['GOOD', 'BLURRY', 'PENDING'] as const
+export const MEDIA_QUALITY_LABELS: Record<(typeof MEDIA_QUALITIES)[number], string> = { GOOD: 'Boa', BLURRY: 'Desfocada', PENDING: 'Pendente' }
+
+export const WIZARD_STEPS = ['Ficha técnica', 'Mídia', 'Condition report', 'Histórico', 'Preço e disponibilidade', 'Revisão'] as const
+
+/** List filters of "Minhas obras" → statuses. */
+export const LIST_FILTERS: { key: string; name: string; statuses: readonly ArtworkStatus[] | null }[] = [
+  { key: 'all', name: 'Todas', statuses: null },
+  { key: 'authenticated', name: 'Autenticadas', statuses: ['AUTHENTICATED'] },
+  { key: 'certifying', name: 'Em certificação', statuses: ['IN_CERTIFICATION'] },
+  { key: 'listed', name: 'À venda', statuses: ['LISTED', 'IN_DEAL'] },
+  { key: 'sold', name: 'Vendidas', statuses: ['SOLD'] },
+  { key: 'drafts', name: 'Rascunhos', statuses: ['DRAFT'] },
+]
+
+export function isArtworkStatus(s: string): s is ArtworkStatus {
+  return (ARTWORK_STATUSES as readonly string[]).includes(s)
+}
+
+export function formatDimensions(a: { heightMm: number | null; widthMm: number | null; depthMm: number | null }): string {
+  const cm = (mm: number | null) => (mm === null ? null : (mm / 10).toLocaleString('pt-BR', { maximumFractionDigits: 1 }))
+  const parts = [cm(a.heightMm), cm(a.widthMm), cm(a.depthMm)].filter((p): p is string => p !== null)
+  return parts.length ? `${parts.join(' × ')} cm` : '—'
+}
+
+export function formatBRL(cents: bigint | number | null | undefined): string {
+  if (cents === null || cents === undefined) return '—'
+  const n = Number(cents) / 100
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+}

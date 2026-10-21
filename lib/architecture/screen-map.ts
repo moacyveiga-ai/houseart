@@ -2,11 +2,11 @@
 // page that implements each one. `null` = not yet built (the ratchet
 // design-screens.test.ts only lets this list SHRINK). Paths are repo-relative.
 export const SCREEN_MAP: Record<string, string | null> = {
-  'Login': null,
-  'Escolha de perfil': null,
-  'Dashboard': 'app/page.tsx',
-  'Minhas obras': null,
-  'Cadastro de obra': null,
+  'Login': 'app/login/page.tsx',
+  'Escolha de perfil': 'app/profiles/page.tsx',
+  'Dashboard': 'app/(panel)/page.tsx',
+  'Minhas obras': 'app/(panel)/artworks/page.tsx',
+  'Cadastro de obra': 'app/(panel)/artworks/[id]/edit/page.tsx',
   'Certificação': null,
   'Vendas e ofertas': null,
   'Direito de sequência': null,

@@ -33,11 +33,18 @@ function withAttributionCookie(req: NextRequest, res: NextResponse): NextRespons
   return res
 }
 
+/** The panel layout reads `x-pathname` to light the active nav item (a layout has no pathname). */
+function next(req: NextRequest): NextResponse {
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-pathname', req.nextUrl.pathname)
+  return NextResponse.next({ request: { headers: requestHeaders } })
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  if (isPublicRoute(pathname)) return withAttributionCookie(req, NextResponse.next())
+  if (isPublicRoute(pathname)) return withAttributionCookie(req, next(req))
   const has = !!req.cookies.get(COOKIE_NAME)?.value
-  if (has) return NextResponse.next()
+  if (has) return next(req)
   return noSession(req)
 }
 

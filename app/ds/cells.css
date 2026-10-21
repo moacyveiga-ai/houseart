@@ -232,3 +232,27 @@
 .ha-sidebar__exit { border: 0; background: transparent; padding: 0; font: inherit; color: var(--ha-fg-muted); cursor: pointer; }
 .ha-sidebar__exit:hover { color: var(--ha-fg); }
 .ha-table__row a, a.ha-table__row { color: inherit; text-decoration: none; }
+
+/* ── Fase 1 additions: wizard, forms, cards ──────────────────────────────── */
+.ha-wizard { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--ha-space-8); align-items: start; }
+@media (max-width: 900px) { .ha-wizard { grid-template-columns: 1fr; } }
+.ha-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ha-space-4); border: 0; padding: 0; margin: 0; }
+.ha-col-span { grid-column: 1 / -1; }
+.ha-row--end { justify-content: flex-end; }
+.ha-callout--warn { background: var(--ha-pending-100); border-color: var(--ha-pending-500); }
+.ha-media-slot__name { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-media-slot__q { font-size: var(--ha-text-caption); }
+.ha-media-slot__q--good { color: var(--ha-verified-500); }
+.ha-media-slot__q--blurry { color: var(--ha-alert-500); }
+.ha-media-slot__q--pending { color: var(--ha-ink-500); }
+.ha-media-slot { flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-3); position: relative; }
+.ha-media-slot img { position: absolute; inset: 0; opacity: .9; }
+.ha-media-slot__name, .ha-media-slot__q, .ha-media-slot .ha-btn { position: relative; z-index: 1; background: var(--ha-bg); padding: 2px 6px; border-radius: var(--ha-radius-sm); }
+.ha-grid-cards--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ha-grid-cards--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 720px) { .ha-grid-cards--2, .ha-grid-cards--3 { grid-template-columns: 1fr; } }
+.ha-card__body { padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); display: flex; flex-direction: column; gap: var(--ha-space-2); }
+a.ha-card { color: inherit; text-decoration: none; }
+.ha-wall img { width: 100%; height: 100%; object-fit: cover; }
+.ha-login__caption { position: absolute; left: var(--ha-space-8); bottom: var(--ha-space-8); color: var(--ha-paper-50); }
+.ha-login__caption .ha-eyebrow, .ha-login__caption .ha-title { color: inherit; }

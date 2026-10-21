@@ -10,7 +10,7 @@ describe('public routes', () => {
   })
 
   it('sends the root to the market, the collector area to its door, the rest to /login with next', () => {
-    expect(unauthenticatedDestination('/', '?ref=x')).toEqual({ pathname: '/e', search: '?ref=x' })
+    expect(unauthenticatedDestination('/', '?ref=x')).toEqual({ pathname: '/login', search: '' })
     expect(unauthenticatedDestination('/collector/wallet', '')).toEqual({ pathname: '/collector/access', search: '?next=%2Fcollector%2Fwallet' })
     expect(unauthenticatedDestination('/artworks', '?f=1')).toEqual({ pathname: '/login', search: '?next=%2Fartworks%3Ff%3D1' })
   })

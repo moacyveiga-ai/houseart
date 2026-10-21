@@ -60,7 +60,7 @@ export default defineConfig({
           exclude,
           globalSetup: ['./test/integration/setup.ts'],
           // Espera o trabalho solto do teste antes do próximo (Lote 7e).
-          setupFiles: ['./test/integration/after-detached.ts'],
+          setupFiles: ['./test/integration/next-headers-mock.ts', './test/integration/after-detached.ts'],
           pool: 'forks',
           fileParallelism: false,
           // O primeiro teste de cada describe faz o `await import(...route)`

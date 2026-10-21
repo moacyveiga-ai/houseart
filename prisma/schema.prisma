@@ -25,6 +25,8 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   users     User[]
+  members   Member[]
+  galleryProfile GalleryProfile?
 
   @@index([status])
 }
@@ -48,12 +50,28 @@ model User {
   recoverySessionUntil DateTime?
   collectorVerifiedAt  DateTime?
   deletionRequestedAt  DateTime?
+  lastLoginAt          DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
   sessions             Session[]
+  profiles             UserProfile[]
+  member               Member?
+  auditLogs            AuditLog[]
 
   @@index([tenantId])
   @@index([profile, active])
+}
+
+/// Product profiles the person can switch to (screen "Escolha de perfil").
+model UserProfile {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // ARTIST | GALLERY | ADVISOR | COLLECTOR | APPRAISER | STAFF
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, kind])
 }
 
 /// Panel session (cookie `houseart_session`). `token` stores `h1:` + sha256.
@@ -63,10 +81,254 @@ model Session {
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
+  /// the product profile active in this session (lib/profiles)
+  activeProfileKind String?
+  ip        String?
+  userAgent String?
+  lastUsedAt DateTime?
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+/// One-time codes by e-mail: SIGNUP (payload of the account to create), LOGIN, SILENT (blind response).
+model AccessCode {
+  id           Int       @id @default(autoincrement())
+  tokenHash    String    @unique
+  purpose      String // SIGNUP | LOGIN | SILENT
+  email        String
+  codeHash     String
+  attempts     Int       @default(0)
+  resends      Int       @default(0)
+  blockedUntil DateTime?
+  payloadEnc   String?
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  entity    String
+  entityId  String
+  action    String
+  before    String?
+  after     String?
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userName  String?
+  ip        String?
+  userAgent String?
+  origin    String   @default("ui") // ui | api | job | webhook | public-link
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model RateLimitBucket {
+  key             String    @id
+  count           Int       @default(0)
+  windowStartedAt DateTime
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@index([updatedAt])
+  @@map("rate_limit_bucket")
+}
+
+/// Commercial profile of a user (artist, gallery staff, advisor). HOT model.
+model Member {
+  id          Int       @id @default(autoincrement())
+  userId      Int?      @unique
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenantId    Int
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  kind        String // ARTIST | GALLERY_STAFF | ADVISOR
+  displayName String
+  slug        String    @unique
+  city        String?
+  uf          String?
+  status      String    @default("ACTIVE") // PENDING | ACTIVE | REFUSED | INACTIVE
+  approvedAt  DateTime?
+  bio         String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  artist      Artist?
+  artworks    Artwork[]
+
+  @@index([tenantId, status])
+}
+
+/// The artist of an artwork — with an account (memberId) or represented by a gallery (tenantId).
+model Artist {
+  id         Int       @id @default(autoincrement())
+  memberId   Int?      @unique
+  member     Member?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  tenantId   Int?
+  name       String
+  slug       String    @unique
+  birthYear  Int?
+  deathYear  Int?
+  heirsJson  String    @default("[]")
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  artworks   Artwork[]
+
+  @@index([tenantId])
+}
+
+model GalleryProfile {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int      @unique
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  legalName   String
+  tradeName   String
+  cnpjEnc     String?
+  cnpjHash    String?
+  cnpjMask    String?
+  addressJson String   @default("{}")
+  websiteUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// The artwork (technical sheet). HOT model; tenantId derived by trigger ha_tenant_from_member_id.
+model Artwork {
+  id                Int       @id @default(autoincrement())
+  tenantId          Int?
+  memberId          Int
+  member            Member    @relation(fields: [memberId], references: [id])
+  artistId          Int
+  artist            Artist    @relation(fields: [artistId], references: [id])
+  title             String
+  year              Int?
+  technique         String?
+  materials         String?
+  heightMm          Int?
+  widthMm           Int?
+  depthMm           Int?
+  edition           String?
+  signatureLocation String?
+  series            String?
+  category          String    @default("PAINTING") // PAINTING | SCULPTURE | WORK_ON_PAPER | PHOTOGRAPHY | DIGITAL | OTHER
+  conditionGrade    String? // EXCELLENT | GOOD | FAIR | NEEDS_RESTORATION
+  conditionBy       String?
+  conditionAt       DateTime?
+  status            String    @default("DRAFT") // ARTWORK_STATUSES
+  market            String? // PRIMARY | SECONDARY
+  saleMode          String? // FIXED | FIXED_WITH_OFFERS | ON_REQUEST
+  listPriceCents    BigInt?
+  priceSealed       Boolean   @default(false)
+  publicId          String?   @unique
+  seal              String    @default("NONE") // NONE | YELLOW | GREEN
+  sealIssuedAt      DateTime?
+  coverMediaId      Int?
+  wizardStep        Int       @default(0)
+  submittedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  media             ArtworkMedia[]
+  conditionRegions  ArtworkConditionRegion[]
+  historyItems      ArtworkHistoryItem[]
+  owners            ArtworkOwner[]
+  duplicateChecks   DuplicateCheck[]         @relation("DuplicateCheckArtwork")
+  duplicateOf       DuplicateCheck[]         @relation("DuplicateCheckCandidate")
+  certificate       Certificate?
+
+  @@index([tenantId, status])
+  @@index([memberId, status])
+  @@index([artistId])
+  @@index([status, createdAt])
+}
+
+/// The 6 fixed media slots of the "Mídia" step (+ DETAIL/OTHER).
+model ArtworkMedia {
+  id        Int      @id @default(autoincrement())
+  artworkId Int
+  artwork   Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  kind      String // FRONT_COLOR_CARD | BACK | MACRO_TL | MACRO_TR | MACRO_BL | MACRO_BR | DETAIL | OTHER
+  masterRef String // private vault (original bytes)
+  publicUrl String? // derivative ≤ 2048px
+  sha256    String
+  pHash     String?
+  width     Int
+  height    Int
+  quality   String? // GOOD | BLURRY | PENDING
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([artworkId, kind])
+}
+
+model ArtworkConditionRegion {
+  id        Int     @id @default(autoincrement())
+  artworkId Int
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  region    String // TOP_LEFT | TOP_RIGHT | CENTER | BOTTOM_LEFT | EDGES_FRAME
+  note      String  @default("")
+  state     String  @default("INTACT") // INTACT | ATTENTION | DAMAGED
+
+  @@unique([artworkId, region])
+}
+
+model ArtworkHistoryItem {
+  id          Int     @id @default(autoincrement())
+  artworkId   Int
+  artwork     Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  kind        String // EXHIBITION | PUBLICATION | AWARD | RESTORATION | LOAN
+  description String
+  occurredOn  String // YYYY-MM
+  sortOrder   Int     @default(0)
+}
+
+/// Owners at registration (shares sum 10000 bps). The certificate holder comes from ownership.
+model ArtworkOwner {
+  id           Int     @id @default(autoincrement())
+  artworkId    Int
+  artwork      Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  partyName    String
+  documentHash String
+  documentEnc  String
+  documentMask String
+  shareBps     Int     @default(10000)
+  userId       Int?
+
+  @@unique([artworkId, documentHash])
+}
+
+model DuplicateCheck {
+  id                 Int       @id @default(autoincrement())
+  artworkId          Int
+  artwork            Artwork   @relation("DuplicateCheckArtwork", fields: [artworkId], references: [id], onDelete: Cascade)
+  candidateArtworkId Int
+  candidate          Artwork   @relation("DuplicateCheckCandidate", fields: [candidateArtworkId], references: [id], onDelete: Cascade)
+  similarityBps      Int
+  method             String    @default("PHASH") // PHASH | EMBEDDING
+  decision           String    @default("PENDING") // PENDING | DIFFERENT | SAME
+  decidedByUserId    Int?
+  decidedAt          DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@index([artworkId, decision])
+}
+
+/// Certificate-deed of an artwork (Phase 2 fills versions/events). HOT model.
+model Certificate {
+  id               Int       @id @default(autoincrement())
+  artworkId        Int       @unique
+  artwork          Artwork   @relation(fields: [artworkId], references: [id])
+  publicId         String?   @unique
+  currentVersionId Int?
+  status           String    @default("DRAFT") // DRAFT | ACTIVE | CONTESTED | REVOKED
+  stage            Int       @default(0) // 0..5
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 /// Job lease (lib/job-lease): one run at a time per job name.

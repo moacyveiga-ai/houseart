@@ -5,7 +5,7 @@
 //  membros, páginas públicas por token). A regra que importa:
 //
 //    `x-vercel-forwarded-for` → o ÚLTIMO valor de `x-forwarded-for` →
-//    `x-real-ip` → `'sem-ip'`   (revisão da Fase 3, 2026-09-21: `x-real-ip`
+//    `x-real-ip` → `'no-ip'`   (revisão da Fase 3, 2026-09-21: `x-real-ip`
 //    saiu da frente porque não há garantia de que o proxy o sobrescreva —
 //    se repassar o do cliente, o atacante escolhe a chave do balde)
 //
@@ -17,13 +17,13 @@
 //  o limitador manda `X-Forwarded-For: 1.2.3.4` e ganha um balde novo por
 //  requisição se lermos o primeiro. O último salto é o que a Vercel
 //  acrescentou, o único que o cliente não controla. Sem cabeçalho nenhum
-//  (dev, roteiro) o balde é único: `'sem-ip'`.
+//  (dev, roteiro) o balde é único: `'no-ip'`.
 //
 //  Até 2026-09-07 esta regra vivia copiada em lib/housecredito/http.ts e em
 //  lib/rede/publico-http.ts (os dois agora reexportam daqui). Desde
 //  2026-10-02 (QA geral) o HouseValor público, o portal da negociação, a
 //  revelação de CPF, a recuperação de senha e os contextos de auditoria
-//  (`contextoRequest`, `contextoSessao`) usam `ipDe` (balde) e `ipBrutoDe`
+//  (`contextoRequest`, `contextoSessao`) usam `ipOf` (balde) e `rawIpOf`
 //  (evidência e Turnstile) — nenhuma leitura do 1.º salto sobrou.
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -31,42 +31,42 @@
 export const MAX_IP = 120
 
 /** "a, b, c" → "c" (o ÚLTIMO valor não vazio); "" / null → null. */
-export function ultimoValor(bruto: string | null): string | null {
+export function lastValue(bruto: string | null): string | null {
   if (!bruto) return null
   const partes = bruto.split(',').map((p) => p.trim()).filter(Boolean)
   return partes.length > 0 ? partes[partes.length - 1] : null
 }
 
 /** IP a partir de um `Headers` — o de `NextRequest.headers` nas rotas, o de `await headers()` nas páginas. */
-export function ipDeCabecalhos(h: Headers): string {
+export function ipFromHeaders(h: Headers): string {
   const bruto =
-    ultimoValor(h.get('x-vercel-forwarded-for')) ??
-    ultimoValor(h.get('x-forwarded-for')) ??
-    ultimoValor(h.get('x-real-ip')) ??
-    'sem-ip'
-  return normalizarIp(bruto).slice(0, MAX_IP)
+    lastValue(h.get('x-vercel-forwarded-for')) ??
+    lastValue(h.get('x-forwarded-for')) ??
+    lastValue(h.get('x-real-ip')) ??
+    'no-ip'
+  return normalizeIp(bruto).slice(0, MAX_IP)
 }
 
 /**
  * O endereço EXATO, sem o /64 — para o `remoteip` do Turnstile (que exige um
  * IP válido) e para evidência de consentimento (artefato probatório). Para
- * chave de balde, use `ipDeCabecalhos`/`ipDe`.
+ * chave de balde, use `ipFromHeaders`/`ipOf`.
  */
-export function ipBrutoDeCabecalhos(h: Headers): string {
+export function rawIpFromHeaders(h: Headers): string {
   const bruto =
-    ultimoValor(h.get('x-vercel-forwarded-for')) ??
-    ultimoValor(h.get('x-forwarded-for')) ??
-    ultimoValor(h.get('x-real-ip')) ??
-    'sem-ip'
+    lastValue(h.get('x-vercel-forwarded-for')) ??
+    lastValue(h.get('x-forwarded-for')) ??
+    lastValue(h.get('x-real-ip')) ??
+    'no-ip'
   return bruto.slice(0, MAX_IP)
 }
 
-export function ipBrutoDe(req: { headers: Headers }): string {
-  return ipBrutoDeCabecalhos(req.headers)
+export function rawIpOf(req: { headers: Headers }): string {
+  return rawIpFromHeaders(req.headers)
 }
 
 /** IPv6 → prefixo /64 (`2001:db8:1:2::/64`); IPv4 e o resto passam como vieram. */
-export function normalizarIp(ip: string): string {
+export function normalizeIp(ip: string): string {
   const semPorta = ip.replace(/^\[(.*)\]:\d+$/, '$1')
   if (!semPorta.includes(':')) return semPorta
   const v4Mapeado = semPorta.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i)
@@ -81,6 +81,6 @@ export function normalizarIp(ip: string): string {
 }
 
 /** IP de quem chamou, a partir de qualquer objeto com `headers` (`NextRequest`, `Request`). */
-export function ipDe(req: { headers: Headers }): string {
-  return ipDeCabecalhos(req.headers)
+export function ipOf(req: { headers: Headers }): string {
+  return ipFromHeaders(req.headers)
 }

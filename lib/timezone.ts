@@ -127,3 +127,9 @@ export function fimDoDia(dia: string): Date | null {
   if (!inicio) return null
   return new Date(new Date(inicio).getTime() + 3_599_999)
 }
+
+/** The instant that starts the calendar year of `now` in the house timezone (UTC−3 fixed). */
+export function startOfYearInTz(now: Date): Date {
+  const year = Number(new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: FUSO_BR }).format(now))
+  return new Date(`${year}-01-01T03:00:00.000Z`)
+}

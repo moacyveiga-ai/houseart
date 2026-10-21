@@ -2,6 +2,7 @@
 // public verification projection, the daily anchor.
 import 'server-only'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@/app/generated/prisma/client'
 import { canView, memberFilter, type Scope } from '@/lib/scope/core'
 import { totalScope } from '@/lib/scope/context'
 import { audit } from '@/lib/audit'
@@ -111,41 +112,126 @@ export async function certificateOfArtwork(scope: Scope, artworkId: number) {
 }
 
 // ── public verification ──────────────────────────────────────────────────
+/** The three states of the public verification page (Verificação): what the
+ *  certificate and the artwork say together. STOLEN wins over a contestation. */
+export type VerificationVerdict = 'authenticated' | 'contested' | 'stolen'
+export function verdictOf(certificateStatus: string, artworkStatus: string): VerificationVerdict {
+  if (artworkStatus === 'STOLEN') return 'stolen'
+  if (certificateStatus === 'CONTESTED' || artworkStatus === 'DISPUTED') return 'contested'
+  return 'authenticated'
+}
+
 export interface PublicCertificate {
   publicId: string
   status: 'ACTIVE' | 'CONTESTED' | 'REVOKED' | 'PENDING'
   artworkStatus: string
-  artwork: { title: string; year: number | null; technique: string | null; dimensions: string; category: string; cover: string | null }
+  verdict: VerificationVerdict
+  artwork: { title: string; year: number | null; technique: string | null; dimensions: string; category: string; edition: string | null; cover: string | null }
   artist: string
+  artistSlug: string
+  /** "(Salvador/BA, 1988)" — only what the public profile holds. */
+  artistMeta: string | null
   holder: string | null
   issuedAt: string | null
   contentHash: string | null
   version: number | null
   chainValid: boolean
+  /** TRANSFERRED events + 1: the holders since the issue. */
+  holders: number
+  /** When the artwork is LISTED with the green seal: the seller and the public price (null when on request). */
+  sale: { seller: string; priceCents: string | null } | null
+  /** Latest issued value opinion for the artwork, month and year only. */
+  appraisalIssuedAt: string | null
+  disputedAt: string | null
+  stolenAt: string | null
   events: { seq: number; kind: string; label: string; at: string }[]
 }
 
 export async function publicCertificate(publicId: string): Promise<PublicCertificate | null> {
   return totalScope('certificates:public', async () => {
-    const a = await prisma.artwork.findUnique({ where: { publicId }, include: { artist: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 }, member: { select: { kind: true, displayName: true } }, certificate: { include: { versions: { where: { status: 'ACTIVE' }, orderBy: { version: 'desc' }, take: 1 }, events: { orderBy: { seq: 'asc' } } } } } })
+    const a = await prisma.artwork.findUnique({ where: { publicId }, include: { artist: { include: { profile: { select: { birthPlace: true } } } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 }, member: { select: { kind: true, displayName: true } }, certificate: { include: { versions: { where: { status: 'ACTIVE' }, orderBy: { version: 'desc' }, take: 1 }, events: { orderBy: { seq: 'asc' } } } } } })
     if (!a) return null
     const c = a.certificate
     const v = c?.versions[0] ?? null
     const status = !c || !c.issuedAt ? 'PENDING' : (c.status as 'ACTIVE' | 'CONTESTED' | 'REVOKED')
     const holderKind = a.member.kind === 'ARTIST' ? 'ARTIST' : a.member.kind === 'GALLERY_STAFF' ? 'GALLERY' : 'COLLECTOR'
+    const events = c?.events ?? []
+    const lastOf = (kind: string) => events.filter((e) => e.kind === kind).at(-1)?.occurredAt.toISOString() ?? null
+    const appraisal = await prisma.appraisal.findFirst({ where: { artworkId: a.id, status: 'ISSUED' }, orderBy: { issuedAt: 'desc' }, select: { issuedAt: true } })
+    const birth = [a.artist.profile?.birthPlace, a.artist.birthYear].filter(Boolean).join(', ')
     return {
       publicId,
       status,
       artworkStatus: a.status,
-      artwork: { title: a.title, year: a.year, technique: a.technique, dimensions: formatDimensions(a), category: a.category, cover: a.media[0]?.publicUrl ?? null },
+      verdict: verdictOf(status, a.status),
+      artwork: { title: a.title, year: a.year, technique: a.technique, dimensions: formatDimensions(a), category: a.category, edition: a.edition, cover: a.media[0]?.publicUrl ?? null },
       artist: a.artist.name,
+      artistSlug: a.artist.slug,
+      artistMeta: birth ? `(${birth})` : null,
       holder: v ? holderLabel({ kind: holderKind, name: v.holderName, since: v.issuedAt }) : null,
       issuedAt: c?.issuedAt?.toISOString() ?? null,
       contentHash: v?.contentHash ?? null,
       version: v?.version ?? null,
       chainValid: c ? chainValid(c.events) : true,
-      events: (c?.events ?? []).map((e) => ({ seq: e.seq, kind: e.kind, label: EVENT_LABELS[e.kind as EventKind] ?? e.kind, at: e.occurredAt.toISOString() })),
+      holders: events.filter((e) => e.kind === 'TRANSFERRED').length + 1,
+      sale: a.status === 'LISTED' && a.seal === 'GREEN' ? { seller: a.member.kind === 'GALLERY_STAFF' ? a.member.displayName : 'Colecionador particular', priceCents: a.saleMode === 'ON_REQUEST' || a.listPriceCents == null ? null : a.listPriceCents.toString() } : null,
+      appraisalIssuedAt: appraisal?.issuedAt?.toISOString() ?? null,
+      disputedAt: lastOf('DISPUTED'),
+      stolenAt: lastOf('STOLEN'),
+      events: events.map((e) => ({ seq: e.seq, kind: e.kind, label: EVENT_LABELS[e.kind as EventKind] ?? e.kind, at: e.occurredAt.toISOString() })),
     }
+  })
+}
+
+// ── public search (Verificar) ────────────────────────────────────────────
+export interface CertificateSearchHit {
+  publicId: string
+  title: string
+  year: number | null
+  artist: string
+  technique: string | null
+  cover: string | null
+  verdict: VerificationVerdict
+}
+
+/** Letters and digits only, no accents, lower case — the same rule on both sides of the comparison. */
+export function normalizeSearch(t: string | null | undefined): string {
+  return (t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+const searchable = (): Prisma.ArtworkWhereInput => ({ certificate: { isNot: null }, OR: [{ seal: 'GREEN' }, { status: { in: ['STOLEN', 'DISPUTED'] } }] })
+
+/** The public search of Verificar: by certificate number (or marker serial), or by artist / title / year.
+ *  Only artworks with a certificate and the green seal — or marked STOLEN/DISPUTED, which the public must see. */
+export async function searchCertificates(q: { id?: string; artist?: string; title?: string; year?: string }, take = 20): Promise<CertificateSearchHit[]> {
+  return totalScope('certificates:search', async () => {
+    const select = ({ publicId: true, title: true, year: true, technique: true, status: true, artist: { select: { name: true } }, certificate: { select: { status: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } }) satisfies Prisma.ArtworkSelect
+    type Row = Prisma.ArtworkGetPayload<{ select: typeof select }>
+    const hit = (r: Row): CertificateSearchHit => ({ publicId: r.publicId!, title: r.title, year: r.year, artist: r.artist.name, technique: r.technique, cover: r.media[0]?.publicUrl ?? null, verdict: verdictOf(r.certificate?.status ?? 'ACTIVE', r.status) })
+    const byId = q.id !== undefined
+    if (byId) {
+      const needle = normalizeSearch(q.id)
+      if (!needle) return []
+      // the serial of the marker (7 bytes hex) also finds the artwork
+      if (/^[0-9a-f]{14}$/.test(needle)) {
+        const m = await prisma.physicalMarker.findUnique({ where: { uid: needle }, select: { artworkId: true } })
+        if (m?.artworkId) {
+          const r = await prisma.artwork.findFirst({ where: { id: m.artworkId, publicId: { not: null }, ...searchable() }, select })
+          return r ? [hit(r)] : []
+        }
+      }
+      const rows = await prisma.artwork.findMany({ where: { publicId: { not: null }, ...searchable() }, select, orderBy: { updatedAt: 'desc' }, take: 2000 })
+      return rows.filter((r) => normalizeSearch(r.publicId).includes(needle)).slice(0, take).map(hit)
+    }
+    const artist = (q.artist ?? '').trim()
+    const title = (q.title ?? '').trim()
+    const year = /^\d{4}$/.test((q.year ?? '').trim()) ? Number((q.year ?? '').trim()) : null
+    if (!artist && !title && year === null) return []
+    const rows = await prisma.artwork.findMany({
+      where: { publicId: { not: null }, ...searchable(), ...(artist ? { artist: { name: { contains: artist, mode: 'insensitive' } } } : {}), ...(title ? { title: { contains: title, mode: 'insensitive' } } : {}), ...(year !== null ? { year } : {}) },
+      select, orderBy: [{ artist: { name: 'asc' } }, { year: 'desc' }], take,
+    })
+    return rows.map(hit)
   })
 }
 

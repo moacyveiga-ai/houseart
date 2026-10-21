@@ -1,11 +1,17 @@
+// /verify/[publicId] — Verificação pública of a certificate (HA-AAAA-XXXX-XXXX) or of a
+// value opinion (HA-L-AAAA-XXXX). Opened by tap (?uid&ctr&cmac[&tt]) the SUN read is
+// recorded first; the page then shows the simulated reading. Outside /e: the shell is here.
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
+import { headers } from 'next/headers'
+import '@/app/ds/public.css'
+import { PublicHeader } from '@/components/public/PublicHeader'
+import { PublicFooter } from '@/components/public/PublicFooter'
+import { Verification } from '@/components/public/Verification'
 import { Badge } from '@/components/ds/Badge'
-import { Icon } from '@/components/ds/Icon'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import { publicCertificate } from '@/lib/certificates/server'
 import { recordPublicRead, ipHashOf } from '@/lib/physical-markers/server'
-import { headers } from 'next/headers'
 import { rawIpFromHeaders } from '@/lib/http/ip'
 import { isAppraisalCode } from '@/lib/appraisal/domain'
 import { publicAppraisal } from '@/lib/appraisal/server'
@@ -13,61 +19,39 @@ import { formatBRL } from '@/lib/artworks/domain'
 
 export const dynamic = 'force-dynamic'
 
-const STATUS: Record<string, { label: string; tone: 'verified' | 'pending' | 'alert' | 'neutral' }> = {
-  ACTIVE: { label: 'Certificado ativo', tone: 'verified' }, PENDING: { label: 'Em certificação', tone: 'pending' },
-  CONTESTED: { label: 'Contestado', tone: 'alert' }, REVOKED: { label: 'Revogado', tone: 'alert' },
+type Params = { params: Promise<{ publicId: string }>; searchParams: Promise<Record<string, string | undefined>> }
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const publicId = (await params).publicId.toUpperCase()
+  return { title: `Verificação ${publicId} — HouseArt` }
 }
 
-export default async function VerifyPage({ params, searchParams }: { params: Promise<{ publicId: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function VerifyPage({ params, searchParams }: Params) {
   const publicId = (await params).publicId.toUpperCase()
-  if (isAppraisalCode(publicId)) return <AppraisalVerify code={publicId} />
+  const body = isAppraisalCode(publicId) ? <AppraisalVerify code={publicId} /> : <CertificateVerify publicId={publicId} sp={await searchParams} />
+  return (
+    <div className="hp">
+      <PublicHeader />
+      <main>{body}</main>
+      <PublicFooter />
+    </div>
+  )
+}
+
+async function CertificateVerify({ publicId, sp }: { publicId: string; sp: Record<string, string | undefined> }) {
   if (!isPublicId(publicId)) notFound()
-  const sp = await searchParams
   const c = await publicCertificate(publicId)
   if (!c) notFound()
   const h = await headers()
   const read = sp.uid ? await recordPublicRead(publicId, { uid: sp.uid, ctr: Number(sp.ctr ?? sp.c ?? -1), cmac: sp.cmac ?? sp.m ?? '', tt: sp.tt === '1' }, ipHashOf(rawIpFromHeaders(h))) : null
-  const st = STATUS[c.status] ?? STATUS.PENDING
-  return (
-    <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <HouseArtLogo height={30} />
-      <p className="ha-eyebrow">Verificação pública</p>
-      <h1 className="ha-h1">{c.publicId}</h1>
-      <div className="ha-row"><Badge tone={st.tone}>{st.label}</Badge>
-        {read ? <Badge tone={read.authenticated ? 'verified' : 'pending'}><Icon name="contactless" size={14} /> {read.authenticated ? 'Leitura autenticada pela etiqueta' : 'Leitura não autenticada'}</Badge> : <Badge tone="neutral">Leitura não autenticada (sem etiqueta)</Badge>}
-        {read?.tamper ? <Badge tone="alert">Etiqueta violada</Badge> : null}
-        {c.artworkStatus === 'STOLEN' ? <Badge tone="alert">Comunicada como roubada</Badge> : null}
-      </div>
-      <section className="ha-deed">
-        <div className="ha-wall ha-wall--sq" style={{ maxWidth: 320 }}>{/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
-        {c.artwork.cover ? <img src={c.artwork.cover} alt={c.artwork.title} /> : null}</div>
-        <div className="ha-kv">
-          <span>Obra</span><span>{c.artwork.title}{c.artwork.year ? `, ${c.artwork.year}` : ''}</span>
-          <span>Artista</span><span>{c.artist}</span>
-          <span>Técnica</span><span>{c.artwork.technique ?? '—'}</span>
-          <span>Dimensões</span><span>{c.artwork.dimensions}</span>
-          <span>Titular</span><span>{c.holder ?? '—'}</span>
-          <span>Emitido em</span><span>{c.issuedAt ? new Date(c.issuedAt).toLocaleDateString('pt-BR') : '—'}</span>
-          <span>Hash da versão {c.version ?? ''}</span><span className="ha-sm" style={{ wordBreak: 'break-all' }}>{c.contentHash ?? '—'}</span>
-          <span>Cadeia</span><span>{c.chainValid ? 'íntegra' : 'INVÁLIDA'}</span>
-        </div>
-      </section>
-      <h2 className="ha-h3">Cadeia de titularidade</h2>
-      <ul className="ha-list">
-        {c.events.length === 0 ? <li className="ha-muted">Nenhum evento registrado.</li> : null}
-        {c.events.map((e) => <li key={e.seq} className="ha-list__row" style={{ gridTemplateColumns: '40px 1fr auto' }}><span className="ha-muted">#{e.seq}</span><span>{e.label}</span><span className="ha-muted ha-sm">{new Date(e.at).toLocaleDateString('pt-BR')}</span></li>)}
-      </ul>
-      <p className="ha-muted ha-sm">Esta página não mostra valores nem documentos. Para contestar a titularidade, use a API pública de contestação ou escreva para a equipe HouseArt.</p>
-    </main>
-  )
+  return <Verification c={c} read={read ? { authenticated: read.authenticated, tamper: read.tamper } : null} />
 }
 
 async function AppraisalVerify({ code }: { code: string }) {
   const a = await publicAppraisal(code)
   if (!a) notFound()
   return (
-    <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <HouseArtLogo height={30} />
+    <div className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto', padding: 'var(--ha-space-12) var(--ha-space-6)' }}>
       <p className="ha-eyebrow">Verificação pública · laudo de opinião de valor</p>
       <h1 className="ha-h1">{a.code}</h1>
       <div className="ha-row"><Badge tone={a.status === 'ISSUED' ? 'verified' : 'neutral'}>{a.status === 'ISSUED' ? 'Laudo vigente' : 'Laudo substituído'}</Badge></div>
@@ -86,6 +70,6 @@ async function AppraisalVerify({ code }: { code: string }) {
         </div>
       </section>
       <p className="ha-muted ha-sm">Opinião de valor para a finalidade declarada. Não substitui laudo pericial nem avaliação judicial.</p>
-    </main>
+    </div>
   )
 }

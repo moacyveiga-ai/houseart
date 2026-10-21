@@ -1,0 +1,49 @@
+'use client'
+// The public top bar of the handoff: sticky ink-900 64px with the negative
+// lockup (44px) on every page; on the Home it is fixed, 72px, transparent over
+// the hero and solid (rgba ink, blur) after 80 % of the viewport is scrolled.
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useSyncExternalStore } from 'react'
+import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
+import { Icon } from '@/components/ds/Icon'
+
+export const PUBLIC_NAV = [
+  { href: '/e/marketplace', label: 'Marketplace' },
+  { href: '/e/artists', label: 'Artistas' },
+  { href: '/e/galleries', label: 'Galerias' },
+  { href: '/e#agenda', label: 'Agenda' },
+  { href: '/e/how-it-works', label: 'Como funciona' },
+  { href: '/verify', label: 'Verificar uma obra' },
+] as const
+
+function subscribeScroll(onChange: () => void) {
+  window.addEventListener('scroll', onChange, { passive: true })
+  window.addEventListener('resize', onChange)
+  return () => { window.removeEventListener('scroll', onChange); window.removeEventListener('resize', onChange) }
+}
+
+export function PublicHeader() {
+  const pathname = usePathname()
+  const home = pathname === '/e'
+  const scrolled = useSyncExternalStore(subscribeScroll, () => window.scrollY > window.innerHeight * 0.8, () => false)
+  const solid = !home || scrolled
+  const active = (href: string) => href !== '/e#agenda' && (pathname === href || pathname.startsWith(href + '/'))
+  return (
+    <header className={`hp-header${home ? ' hp-header--home' : ''}${solid ? ' hp-header--solid' : ''}`}>
+      <div className="hp-header__inner">
+        <Link href="/e" className="hp-header__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone="negativo" height={home ? 48 : 44} /></Link>
+        <nav className="hp-nav" aria-label="Navegação pública">
+          {PUBLIC_NAV.map((n) => <Link key={n.href} href={n.href} className={`hp-nav__link${active(n.href) ? ' hp-nav__link--on' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>{n.label}</Link>)}
+        </nav>
+        <div className="hp-header__right">
+          {home ? (
+            <><Link href="/login" className="hp-header__enter">Entrar</Link><Link href="/signup" className="hp-header__cta">Criar conta</Link></>
+          ) : (
+            <><Link href="/verify" className="hp-header__verify"><Icon name="contactless" size={18} />Verificar</Link><Link href="/login" className="hp-header__login">Entrar</Link></>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}

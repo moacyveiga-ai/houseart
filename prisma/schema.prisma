@@ -28,6 +28,7 @@ model Tenant {
   members        Member[]
   subscriptions  PlanSubscription[]
   galleryProfile GalleryProfile?
+  publicProfile  GalleryPublicProfile?
 
   @@index([status])
 }
@@ -181,6 +182,9 @@ model Artist {
   updatedAt   DateTime              @updatedAt
   artworks    Artwork[]
   comparables AppraisalComparable[]
+  profile     ArtistProfile?
+  entries     ArtistEntry[]
+  publications Publication[]
 
   @@index([tenantId])
 }
@@ -968,4 +972,143 @@ model AppraisalComparable {
   createdAt   DateTime @default(now())
 
   @@index([artistId, soldOn])
+}
+
+// ── Public content (handoff 2026-10-21, Fase 7: Artista, Galeria, Home) ───────
+// What the public pages show beyond the artwork sheet: the artist's profile and
+// curriculum, the gallery's public profile, the house news and the art agenda.
+// All optional — a section with no rows is hidden by the page.
+
+/// The public profile of an artist (the "Artista" page). One per Artist.
+model ArtistProfile {
+  id             Int      @id @default(autoincrement())
+  artistId       Int      @unique
+  artist         Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  fullName       String?
+  birthPlace     String? // "Salvador/BA"
+  deathPlace     String?
+  livesIn        String? // "Salvador/BA"
+  nationality    String?
+  representation String? // gallery or estate that represents the artist
+  estateName     String? // for a deceased artist: the institute / estate
+  languagesJson  String   @default("[]") // ["Pintura", "Óleo sobre linho", …]
+  quote          String?
+  bio            String? // paragraphs separated by blank lines
+  photoUrl       String?
+  photoCredit    String?
+  royaltyBps     Int?     // the resale royalty the artist receives (display only)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// A curriculum entry of an artist: trajectory, exhibitions, awards, education, public collections.
+model ArtistEntry {
+  id       Int     @id @default(autoincrement())
+  artistId Int
+  artist   Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  kind     String // TRAJECTORY | SOLO | GROUP | AWARD | EDUCATION | COLLECTION
+  year     String // "2026", "c. 1985"
+  title    String
+  venue    String?
+  city     String?
+  sortOrder Int    @default(0)
+
+  @@index([artistId, kind, sortOrder])
+}
+
+/// E-books, catalogues and essays about an artist or published by a gallery.
+model Publication {
+  id         Int      @id @default(autoincrement())
+  artistId   Int?
+  artist     Artist?  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tenantId   Int?     // the gallery that publishes
+  kind       String // EBOOK | CATALOGUE | ESSAY | INTERVIEW | RAISONNE
+  title      String
+  meta       String? // "96 páginas · PDF e ePub"
+  priceCents BigInt? // null = free
+  action     String   @default("READ") // BUY | DOWNLOAD | READ
+  url        String?
+  coverUrl   String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([artistId, sortOrder])
+  @@index([tenantId, sortOrder])
+}
+
+/// The public face of a gallery (the "Galeria" page), on top of GalleryProfile (legal data).
+model GalleryPublicProfile {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int      @unique
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  slug        String   @unique
+  name        String
+  city        String?
+  uf          String?
+  foundedYear Int?
+  summary     String? // one line for the Galerias list
+  about       String? // paragraphs separated by blank lines
+  tagsJson    String   @default("[]") // ["Contemporânea", "Pintura"]
+  street      String?
+  district    String?
+  lat         Float?
+  lng         Float?
+  coverUrl    String?
+  websiteUrl  String?
+  instagram   String?
+  email       String?
+  phone       String?
+  hours       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([uf])
+}
+
+/// Milestones, team members, media (photos/videos) and virtual-tour rooms of a gallery.
+model GalleryItem {
+  id        Int     @id @default(autoincrement())
+  tenantId  Int
+  kind      String // MILESTONE | TEAM | PHOTO | VIDEO | ROOM
+  title     String
+  subtitle  String? // role of a team member · year of a milestone · caption
+  url       String? // media URL / room image
+  sortOrder Int     @default(0)
+
+  @@index([tenantId, kind, sortOrder])
+}
+
+/// House news (the Home "Notícias" section). Edited by the staff.
+model NewsArticle {
+  id          Int       @id @default(autoincrement())
+  slug        String    @unique
+  category    String // Mercado | Feiras | Museus | Direito | Artistas | …
+  title       String
+  summary     String?
+  body        String?
+  imageUrl    String?
+  sourceName  String?
+  sourceUrl   String?
+  featured    Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([publishedAt])
+}
+
+/// The art agenda of Brazil (fairs, exhibitions, openings, auctions).
+model AgendaEvent {
+  id        Int      @id @default(autoincrement())
+  kind      String // FAIR | EXHIBITION | OPENING | AUCTION
+  title     String
+  venue     String
+  city      String // "Salvador/BA"
+  startsOn  String // YYYY-MM-DD
+  endsOn    String? // YYYY-MM-DD
+  period    String? // "Até 20 dez"
+  url       String?
+  tenantId  Int?    // the gallery that posted it
+  createdAt DateTime @default(now())
+
+  @@index([startsOn])
 }

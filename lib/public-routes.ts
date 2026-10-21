@@ -62,8 +62,8 @@ export const PUBLIC_HOME = '/e'
  * own code-based door; the rest goes to /login with `next`.
  */
 export function unauthenticatedDestination(pathname: string, search: string): { pathname: string; search: string } {
-  // Until the public site (/e) exists (HOUSEART_BUILD.md §J.1), `/` without a session goes to the login.
-  if (pathname === '/') return { pathname: '/login', search: '' }
+  // `/` without a session is the public Home (handoff Fase 7).
+  if (pathname === '/') return { pathname: PUBLIC_HOME, search: '' }
   const collectorArea = pathname === '/collector' || pathname.startsWith('/collector/')
   const next = new URLSearchParams({ next: pathname + search })
   return { pathname: collectorArea ? '/collector/access' : '/login', search: `?${next}` }

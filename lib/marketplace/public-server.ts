@@ -4,6 +4,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { ARTWORK_CATEGORIES, formatDimensions } from '@/lib/artworks/domain'
+import { sizeKeyOf, type MarketItem } from './filter-core'
 
 export interface MarketplaceFilters { category?: string | null; maxPriceCents?: bigint | null; market?: string | null; uf?: string | null; q?: string | null }
 
@@ -40,5 +41,39 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       media: a.media.filter((m) => m.publicUrl).map((m) => ({ kind: m.kind, url: m.publicUrl! })), fixedPrice, acceptsOffers: a.saleMode !== 'ON_REQUEST',
       history: a.historyItems.map((h) => ({ kind: h.kind, description: h.description, occurredOn: h.occurredOn })),
     }
+  })
+}
+
+// ── the public Marketplace of the handoff: the whole listed set, filtered by filter-core ──
+export async function marketItems(take = 500): Promise<MarketItem[]> {
+  return totalScope('marketplace:items', async () => {
+    const rows = await prisma.artwork.findMany({
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null } },
+      select: { publicId: true, title: true, year: true, category: true, technique: true, heightMm: true, widthMm: true, depthMm: true, listPriceCents: true, saleMode: true, market: true, updatedAt: true, artist: { select: { name: true, slug: true } }, member: { select: { displayName: true, kind: true, uf: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
+      orderBy: { updatedAt: 'desc' }, take,
+    })
+    return rows.map((r) => ({
+      publicId: r.publicId!, artist: r.artist.name, artistSlug: r.artist.slug, title: r.title, year: r.year, category: r.category, technique: r.technique, dimensions: formatDimensions(r), sizeKey: sizeKeyOf(r.heightMm, r.widthMm),
+      priceCents: r.saleMode === 'ON_REQUEST' ? null : r.listPriceCents, saleMode: r.saleMode,
+      seller: r.member.kind === 'GALLERY_STAFF' ? r.member.displayName : 'Colecionador particular', sellerKind: r.member.kind === 'GALLERY_STAFF' ? 'GALLERY' : 'PRIVATE',
+      market: r.market === 'PRIMARY' || r.market === 'SECONDARY' ? r.market : null, uf: r.member.uf, cover: r.media[0]?.publicUrl ?? null, updatedAt: r.updatedAt.getTime(),
+    }))
+  })
+}
+
+/** Artists with listed works, for the Marketplace "Artistas" strip and the Home. */
+export async function marketArtists(take = 6): Promise<{ slug: string; name: string; meta: string; count: number; photoUrl: string | null }[]> {
+  return totalScope('marketplace:artists', async () => {
+    const rows = await prisma.artist.findMany({
+      where: { artworks: { some: { status: 'LISTED', seal: 'GREEN' } } },
+      select: { slug: true, name: true, birthYear: true, deathYear: true, profile: { select: { livesIn: true, languagesJson: true, photoUrl: true } }, _count: { select: { artworks: { where: { status: 'LISTED', seal: 'GREEN' } } } } },
+      orderBy: { artworks: { _count: 'desc' } }, take,
+    })
+    return rows.map((r) => {
+      let lang: string | null = null
+      try { lang = (JSON.parse(r.profile?.languagesJson || '[]') as string[])[0] ?? null } catch { lang = null }
+      const span = r.deathYear ? `${r.birthYear ?? '?'}–${r.deathYear}` : null
+      return { slug: r.slug, name: r.name, meta: [span ?? lang, r.profile?.livesIn].filter(Boolean).join(' · '), count: r._count.artworks, photoUrl: r.profile?.photoUrl ?? null }
+    })
   })
 }

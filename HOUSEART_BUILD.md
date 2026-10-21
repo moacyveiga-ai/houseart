@@ -690,11 +690,12 @@ Fora destas fases (esperam as telas ausentes — J.1): site público `/e`, pági
 
 ### Bloqueiam
 1. **Telas ausentes do pacote**: o bundle enviado tem só `HouseArt Web App` (17 telas). Ele linka `HouseArt Obra`, `HouseArt Verificacao`, `HouseArt Site`, `HouseArt Web Galeria`, `HouseArt Web Colecionador`, `HouseArt App Artista` e `HouseArt Design System`. Sem eles, a página pública da obra, a verificação, o site e os apps nascem mínimos no mesmo DS (E.4, E.9). **Enviar os 7 arquivos .dc.html.**
-2. **Repositório GitHub**: a integração desta sessão não pode criar repositório (403 na org Housemap e na conta pessoal). **Criar `Housemap/houseart` vazio e dar acesso a `moacyveiga-ai` (ou habilitar o repo no app do Claude).**
-3. **Projeto Supabase**: `create_project` pelo conector expira em 60 s sem criar (provável confirmação de custo). **Criar o projeto `houseart` (org Housemap, us-east-1) no dashboard e me passar o ref**, ou autorizar o custo quando o conector pedir.
+2. **Repositório GitHub**: a integração desta sessão não pode criar repositório (403 na org Housemap e na conta pessoal, reconfirmado em 2026-10-21) e o push da ponte temporária (subpasta `houseart/` na branch `claude/hopeful-darwin-tojlvv` do Housebroker) foi negado pelo classificador. **Criar `Housemap/houseart` vazio e dar acesso a `moacyveiga-ai` (ou habilitar o repo no app do Claude)** — depois: push da `main` local, conectar o projeto Vercel `houseart` ao repo (production branch `main`) e o primeiro deploy sai sozinho.
+3. ~~Projeto Supabase~~ **RESOLVIDO 2026-10-21**: o projeto `houseart` existia (ref `zqxkwaivqqlkocbmdvch`, us-east-2 — o conector criou apesar do timeout). Schema aplicado pelo conector em blocos (o `apply_migration` e blocos com `$$` dão timeout — usar `$fn$` e `EXECUTE PROCEDURE`), `_prisma_migrations` registrada, papel `houseart_app`, admin semeado.
+3b. **Blob stores da Vercel**: `houseart-public` e `houseart-private` deram 403 pelo conector. **Criar no dashboard** e ligar `BLOB_READ_WRITE_TOKEN`/`BLOB_PRIVATE_READ_WRITE_TOKEN` no projeto.
 
 ### Decididas (reversíveis, registradas aqui)
-4. Vercel: time `housemapp` (o mesmo do Housebroker), projeto `houseart`, `main` = produção.
+4. Vercel: time `housemapp` (o mesmo do Housebroker), projeto `houseart` **criado em 2026-10-21** (`prj_LquuKlmalxrqh1f1sQ7j2QyvKEoI`, Node 22, nextjs, funções `gru1`, SSO desligado, envs de produção completas: banco pelo pooler `aws-1-us-east-2.pooler.supabase.com` — confirmar no 1.º build —, segredos, flags do MVP, `STRIPE_ENV=mock`+`STRIPE_MOCK_ALLOWED=1`, provedores mock), `main` = produção. Sem deploy até o item 2.
 5. Federação "Entrar com Housemap": fora do MVP; login próprio (e-mail/senha + código). O botão "Entrar com e-mail" da tela = fluxo por código. `lib/auth/supabase/federacao*` porta dormente.
 6. Direito de sequência: retido automaticamente em toda revenda (o design apresenta como automático e cita a lei). `FLAG_RESALE_ROYALTY` nasce ligada em produção.
 7. Certificação do artista: paga (R$ 149 avulsa; kit de etiquetas R$ 15/un como na tela). Subsídio de lançamento = cupom no Stripe, não regra de código.
@@ -708,3 +709,6 @@ Fora destas fases (esperam as telas ausentes — J.1): site público `/e`, pági
 15. Fotos de registro: upload direto ao Blob privado por token (sem passar pela função), limite 50 MB por arquivo; derivada pública ≤ 2048 px gerada no servidor (`sharp`); sem canvas no cliente para o master.
 16. KYC, frete, seguro, carimbo do tempo, ancoragem, e-mail de verificação SUN: provedores `mock` no MVP com interface pronta.
 17. Dev local: Postgres 16 nativo em 5436 (`db:up:native`); CI com `postgres:17-alpine`.
+18. (Fase 5) `PlanUsage` NÃO virou tabela: o uso do mês é contado da base (`usageCounts`) — a verdade é o que existe. `ArtworkPriceEstimate` também não: a estimativa do passo 5 é calculada ao vivo (`lib/appraisal/estimate-core.ts`) sobre `AppraisalComparable` + vendas concluídas do mesmo artista.
+19. (Fase 5) A porta do Stripe mora em `lib/stripe/door.ts` (não em `lib/billing`) para `billing → plans → stripe` não fechar ciclo.
+20. (Fase 4) Comissão do comprador no secundário (8 %) entra como `buyerTotalCents`; o split grava só as partes do vendedor. Fatura `COMMISSION` do comprador nasce `HELD_IN_SPLIT` e vira `PAID` na escritura.

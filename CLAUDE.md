@@ -25,7 +25,7 @@ matrícula, cartório, CRECI) existe neste repo fora de `HOUSEART_BUILD.md` §C/
 ## Stack (fixa — ver HOUSEART_BUILD.md §A)
 Next 16.2.6 (App Router, `middleware.ts` Edge) · React 19.2.4 · TypeScript 5 strict · Prisma 7.8
 (`@prisma/adapter-pg`, cliente gerado em `app/generated/prisma`) · Postgres 17 (Supabase; dev no
-Docker porta **5436**) · Tailwind 4 só utilitários · Vitest 4 (projects `unit`/`integration`) ·
+Docker porta **5436** — ou Postgres 16 nativo em `~/.pgdata`) · Tailwind 4 só utilitários · Vitest 4 (projects `unit`/`integration`) ·
 Playwright 1.62 (`e2e/*.smoke.ts`) · Node **22.x** (`.nvmrc`) · Vercel (`main` = produção) ·
 Stripe + Connect (único trilho de pagamento) · Vercel Blob (público + cofre privado) ·
 `@anthropic-ai/sdk` · web-push · pdf-lib · nodemailer.
@@ -77,14 +77,22 @@ Stripe + Connect (único trilho de pagamento) · Vercel Blob (público + cofre p
   Sem Docker: `npm run db:up:native`.
 - `npm run dev` → **http://localhost:3008** (`PORT=3019` para o launch do Claude Code; 3007 é a
   Housebroker, 3000 a Housemap — não colidir).
-- Login dev: `admin@local.dev` / `admin123`.
-- Testes: `npm test` (unit + integration; integração usa `DATABASE_URL_TEST`, truncado entre
-  testes); `npm run smoke` (Playwright contra 3019).
-- Deploy: push na `main` = produção na Vercel; `build = migrate:deploy:ci && tsc --noEmit && next build`;
-  crons em `vercel.json` com `CRON_SECRET` + `JobLease`.
+- Login dev: `admin@local.dev` / `admin123` (`npm run db:seed`); artista de teste
+  `joana@artista.test` / `senha-forte-1` (cadastro pelo `/signup`).
+- `npm run gate` = `lint` + `typecheck` + `test` + `schema:diff`. Testes: `npm test` (unit +
+  integration; integração usa `DATABASE_URL_TEST`, truncado entre testes; 55 arquivos / 290 testes
+  em 2026-10-21). `npm run smoke` = Playwright das 5 jornadas (`e2e/journeys.smoke.ts`) contra
+  `next start -p 3019` com as flags ligadas — escreve no banco local; `SMOKE_BASE_URL` +
+  `SMOKE_READONLY=1` para um deploy; `PLAYWRIGHT_CHROMIUM_PATH` em sandbox sem `playwright install`.
+- Produção (`next start`) exige `DOCUMENT_HASH_PEPPER`, `DOCUMENT_CIPHER_KEYS`,
+  `CERTIFICATE_SIGNING_SEED` e `CRON_SECRET` (fail-closed); pagamento simulado em produção só com
+  `STRIPE_MOCK_ALLOWED=1`.
+- Deploy: push na `main` = produção na Vercel; `build = migrate:deploy:ci && tsc --noEmit && next build`
+  (migrations só com `VERCEL_ENV=production`, `DIRECT_URL` para o lock); crons em `vercel.json`
+  (`certificate-anchor` 03:20, `offers-expire` a cada hora) com `CRON_SECRET` + `JobLease`.
 
 ## Git
-Remote: `git@github.com:Housemap/houseart.git` (a confirmar). Fluxo: branch curta → `npm run gate`
+Remote: `git@github.com:Housemap/houseart.git` (ainda NÃO existe — pendência 1; até lá o repo é só local). Fluxo: branch curta → `npm run gate`
 verde → revisão adversarial → `git pull --rebase origin main` → `git merge --no-ff` → push.
 `git pull origin main --rebase` antes de editar; nunca `--force` na `main`; commits pequenos em pt-BR.
 
@@ -97,6 +105,61 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
 - Não criar tabela de domínio para enum; não gravar preço em Float/Decimal; não gravar CPF em
   claro; não expor o piso.
 
-## Estado atual
-- 2026-10-20 — Levantamento (`HOUSEART_BUILD.md`) feito sobre a Housebroker; aguardando
-  `./houseart-design` para fechar schema (§B), módulos novos (§E), design system (§G) e fases (§H).
+## Estado atual (o mais recente manda)
+- **2026-10-21 — Fase 6: infraestrutura provisionada, publicação BLOQUEADA no repositório.**
+  Supabase `houseart` (org Housemap, ref `zqxkwaivqqlkocbmdvch`, us-east-2, Postgres 17.11) com o
+  schema das 6 migrations aplicado pelo conector (50 tabelas, 155 índices, 74 FKs, 7 triggers
+  `ha_tenant_*`, planos e catálogo semeados, `_prisma_migrations` registrada com os checksums —
+  `migrate deploy` no build é no-op), papel `houseart_app` (senha só na Vercel) e o admin
+  `moacyveiga@gmail.com` (senha enviada no chat, trocar no primeiro login). Vercel: projeto
+  `houseart` (`prj_LquuKlmalxrqh1f1sQ7j2QyvKEoI`, time `housemapp`, Node 22, framework nextjs,
+  funções em `gru1`, SSO desligado) com TODAS as envs de produção (banco pelo pooler
+  `aws-1-us-east-2.pooler.supabase.com` — host a confirmar no primeiro build —, segredos,
+  flags do MVP ligadas, `STRIPE_ENV=mock` + `STRIPE_MOCK_ALLOWED=1`, provedores `mock`). **Sem
+  deploy:** o repositório `Housemap/houseart` não existe (403 na org e na conta pessoal), a
+  ponte pela branch do Housebroker foi negada e os Blob stores deram 403 (uploads de mídia em
+  produção dependem de `BLOB_READ_WRITE_TOKEN` + `BLOB_PRIVATE_READ_WRITE_TOKEN`). Próximo passo
+  é do Moacy: criar o repo (ou liberar outro caminho) e conectar o projeto Vercel a ele.
+  Smoke Playwright das 5 jornadas verde contra o build local.
+- **2026-10-21 — Fase 5** (`832fd7b`): planos (`lib/plans`), pedidos (`lib/orders`, catálogo
+  seedado), porta do Stripe (`lib/stripe/door.ts`, mock/live), Cobrança (`lib/billing`, plano +
+  barras de uso contadas da base + faturas: plano, pedidos, comissão retida no split), laudo de
+  opinião de valor (`lib/appraisal`: pedido pela carteira → fila → dossiê com comparáveis →
+  emissão assinada JWS + PDF no cofre + código `HA-L-…` verificável em `/verify`), estimativa de
+  referência no passo 5 do cadastro. As 17 telas do design mapeadas (`SCREEN_MAP` sem pendência).
+- **2026-10-21 — Fase 4** (`c6140f8`): Deal em 6 fases a partir do aceite (`lib/deals`), split
+  (`lib/commission/split-core.ts`: 12 % primário, 8 % + 4 % secundário), transferência fora da
+  plataforma (`lib/ownership`: convite, KYC mock, duas assinaturas, taxa R$ 199, toque),
+  direito de sequência 5 % da valorização (`lib/resale-royalty`), carteira do colecionador.
+- **2026-10-21 — Fase 3** (`63a2868`): marketplace, mandato com piso que nunca sai do backend,
+  proposta pública com OTP, negociador automático (contraproposta a 92 %, nunca o piso), CRM
+  Kanban, aviso/e-mail por `notify()`.
+- **2026-10-21 — Fase 2** (`a90be9c`): etiquetas NFC (lotes, kits, SUN NTAG 424 com CMAC),
+  certificado-escritura assinado (Ed25519 JWS) e emitido (PDF, versão por hash encadeado),
+  verificação pública, fila de revisão da equipe, âncora diária (merkle root).
+- **2026-10-21 — Fase 1** (`eccc22c`): auth por e-mail/senha e código, tenant por trigger,
+  perfis, cadastro de obra em 6 passos com mídia (cofre privado + derivada pública) e duplicidade
+  por pHash, dashboard.
+- **2026-10-20 — Fase 0** (`197f6d4`, `09b28fc`): esqueleto, DS `--ha-*`, catracas de arquitetura
+  com baselines vazias, gate verde.
+
+## Pendências (ordem de valor)
+1. **Repositório GitHub `Housemap/houseart`** + conectar o projeto Vercel `houseart` (production
+   branch `main`) — sem isso não há deploy. Alternativas: liberar a ponte temporária pela branch
+   `claude/hopeful-darwin-tojlvv` do Housebroker (subpasta `houseart/`, `rootDirectory`), ou um
+   token da Vercel para `vercel deploy`.
+2. Blob stores na Vercel (`houseart-public` e `houseart-private`, 403 pelo conector): criar no
+   dashboard e ligar `BLOB_READ_WRITE_TOKEN` / `BLOB_PRIVATE_READ_WRITE_TOKEN`.
+3. Confirmar o host do pooler do Supabase no primeiro build (`aws-1-…` vs `aws-0-…`) e trocar a
+   senha do papel `houseart_app` depois (foi gerada nesta sessão).
+4. Stripe real (`STRIPE_ENV=live`, PaymentIntent/Connect/webhook) — hoje tudo é mock; assinatura
+   de plano via Stripe subscription; nota fiscal.
+5. Provedores reais: KYC (Didit), NTAG 424 (master key em HSM, `MARKER_VENDOR=ntag424`),
+   carimbo do tempo ICP-Brasil, âncora (OpenTimestamps), frete/seguro, Art Loss Register.
+6. Telas fora do pacote (§J.1): site público `/e`, página pública completa da obra, web da
+   galeria/colecionador, app do artista (NFC real), design system completo.
+7. Contrato de consignação (`DEFAULT_GALLERY_BPS` é placeholder), "Vender" pela carteira
+   (colecionador como vendedor no secundário), viewing rooms (barra "0 de N"), assinatura por OTP
+   do certificado, re-verificação/expiração do KYC, Supabase Auth (`AUTH_PROVIDER=supabase`).
+8. Nomes em pt-BR herdados nos exports de `lib/timezone.ts`, `lib/dates.ts`, `lib/format.ts` e
+   `lib/after.ts` (portados; renomear junto com feature nenhuma).

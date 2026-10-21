@@ -9,18 +9,22 @@ repositório `moacyveiga-ai/houseart` · Supabase `houseart` (ref `zqxkwaivqqlko
 
 ## Para o Moacy (o conector não tem permissão)
 
-### 1. Conectar o projeto Vercel ao GitHub (push = deploy automático)
-Hoje cada deploy precisa ser disparado à mão. Dashboard → projeto `houseart` → Settings → Git →
-"Connect Git Repository" → GitHub → `moacyveiga-ai/houseart` → Production Branch `main`.
+### 1. Conectar o projeto Vercel ao GitHub — FEITO (2026-10-21)
+Push na `main` dispara o build sozinho.
 
-### 2. Blob stores (fotos de obra e PDFs)
-Dashboard → Storage → Create Database → Blob:
-- `houseart-public`, acesso **Public** → conectar ao projeto `houseart` (Production) → a Vercel
-  cria `BLOB_READ_WRITE_TOKEN` sozinha.
-- `houseart-private`, acesso **Private** → NÃO conectar ao projeto (ele sobrescreveria a env);
-  copiar o token do store (aba Settings/Tokens) e criar a env `BLOB_PRIVATE_READ_WRITE_TOKEN`
-  (Production) em Settings → Environment Variables.
-Depois: Deployments → ⋯ → Redeploy.
+### 2. Blob stores — FEITO com ressalva (2026-10-21)
+Os dois stores existem e o upload foi conferido em produção (obra criada, foto enviada, derivada
+servida em `/api/public/media/...`). O que ficou torto, e vale arrumar com calma:
+- `houseart-private` foi conectado com o prefixo digitado como nome inteiro, então a env se chama
+  `BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN`. O código aceita esse nome. Para limpar:
+  Settings → Environment Variables → criar `BLOB_PRIVATE_READ_WRITE_TOKEN` com o mesmo valor
+  (copiar do store em Storage → houseart-private → Tokens) e apagar a comprida → Redeploy.
+- `houseart-public` está conectado mas sem `BLOB_READ_WRITE_TOKEN` (só `BLOB_STORE_ID`). Em
+  Storage → houseart-public → Connect Project → projeto `houseart`, prefixo em branco → confirmar
+  que nasceu `BLOB_READ_WRITE_TOKEN` → Redeploy. Até lá as fotos públicas são servidas pelo app
+  (funciona, só não usa o CDN do Blob).
+- Conta de teste no banco de produção: `smoke.artista@houseart.test` (usuário 2, obra 1). Apagar
+  quando não precisar mais.
 
 ### 3. E-mail (código de login, OTP de proposta, convites)
 Envs de Production: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`

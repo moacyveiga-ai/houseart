@@ -118,10 +118,13 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   (senha enviada no chat, trocar no primeiro login). **Pooler é `aws-0-us-east-2`** (o `aws-1`
   responde "tenant/user not found" e derrubou o 1.º build); o host direto só tem IPv6, inútil na
   Vercel. Envs: banco pelo pooler (6543 app, 5432 migrations), segredos gerados, flags do MVP
-  ligadas, `STRIPE_ENV=mock` + `STRIPE_MOCK_ALLOWED=1`, provedores `mock`. **Faltam os Blob
-  stores** (`houseart-public`/`houseart-private`, 403 pelo conector): sem
-  `BLOB_READ_WRITE_TOKEN`/`BLOB_PRIVATE_READ_WRITE_TOKEN` o upload de mídia e de PDF falha em
-  produção. Conector Supabase: `apply_migration` e blocos com `$$` dão timeout — `$fn$` e
+  ligadas, `STRIPE_ENV=mock` + `STRIPE_MOCK_ALLOWED=1`, provedores `mock`. **Blob (2026-10-21, depois do Git conectado):** o store privado `houseart-private` está
+  ligado ao projeto, mas a Vercel gerou a env com o nome `BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN`
+  (prefixo digitado com o nome inteiro) e o `houseart-public` ficou sem token — o código aceita o
+  alias (`privateStoreToken`) e, sem store público, guarda as derivadas no store privado sob
+  `public/<key>` e as serve por `/api/public/media/<key>` (cache imutável). **Upload conferido em
+  produção** com a conta de teste `smoke.artista@houseart.test` (login → obra → foto 1600×1200 →
+  derivada servida 200 `image/jpeg`); apagar a conta e a obra 1 quando não precisar mais. Conector Supabase: `apply_migration` e blocos com `$$` dão timeout — `$fn$` e
   `EXECUTE PROCEDURE` passam. Smoke Playwright das 5 jornadas verde contra o build local.
 - **2026-10-21 — Fase 5** (`832fd7b`): planos (`lib/plans`), pedidos (`lib/orders`, catálogo
   seedado), porta do Stripe (`lib/stripe/door.ts`, mock/live), Cobrança (`lib/billing`, plano +
@@ -146,9 +149,10 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   com baselines vazias, gate verde.
 
 ## Pendências (ordem de valor)
-1. Blob stores na Vercel (`houseart-public` e `houseart-private`, 403 pelo conector): criar no
-   dashboard e ligar `BLOB_READ_WRITE_TOKEN` / `BLOB_PRIVATE_READ_WRITE_TOKEN` — até lá fotos de
-   obra e PDFs de certificado/laudo não sobem em produção.
+1. Blob: o alias da env funciona, mas é gambiarra — na Vercel, renomear
+   `BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN` para `BLOB_PRIVATE_READ_WRITE_TOKEN` (ou
+   reconectar o store com o prefixo `BLOB_PRIVATE`) e ligar o `houseart-public` ao projeto para
+   nascer `BLOB_READ_WRITE_TOKEN`; sem ele as derivadas passam pelo app em vez do CDN do Blob.
 2. Trocar a senha do papel `houseart_app` e do admin (as duas foram geradas nesta sessão); domínio
    próprio + `APP_URL` (hoje os links de e-mail saem com a URL da Vercel); mover o repo para
    `Housemap/houseart` quando a org liberar.

@@ -16,6 +16,7 @@ const PUBLIC_EXACT = new Set<string>([
   '/api/version',                // deploy probe
   '/privacy',
   '/robots.txt',
+  '/sitemap.xml',
   '/verify',                     // public certificate verification: the code field (prefix '/verify/' covers the result)
   '/manifest.webmanifest',
   '/design-system',              // the DS gallery (handoff Fase 1): no data, compared with the prototype

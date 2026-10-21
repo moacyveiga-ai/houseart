@@ -92,7 +92,7 @@ Stripe + Connect (único trilho de pagamento) · Vercel Blob (público + cofre p
   (`certificate-anchor` 03:20, `offers-expire` a cada hora) com `CRON_SECRET` + `JobLease`.
 
 ## Git
-Remote: `git@github.com:Housemap/houseart.git` (ainda NÃO existe — pendência 1; até lá o repo é só local). Fluxo: branch curta → `npm run gate`
+Remote: `https://github.com/moacyveiga-ai/houseart` (desde 2026-10-21; `Housemap/houseart` fica para quando a org liberar — migrar é religar o projeto Vercel). Fluxo: branch curta → `npm run gate`
 verde → revisão adversarial → `git pull --rebase origin main` → `git merge --no-ff` → push.
 `git pull origin main --rebase` antes de editar; nunca `--force` na `main`; commits pequenos em pt-BR.
 
@@ -106,21 +106,23 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
-- **2026-10-21 — Fase 6: infraestrutura provisionada, publicação BLOQUEADA no repositório.**
-  Supabase `houseart` (org Housemap, ref `zqxkwaivqqlkocbmdvch`, us-east-2, Postgres 17.11) com o
-  schema das 6 migrations aplicado pelo conector (50 tabelas, 155 índices, 74 FKs, 7 triggers
-  `ha_tenant_*`, planos e catálogo semeados, `_prisma_migrations` registrada com os checksums —
-  `migrate deploy` no build é no-op), papel `houseart_app` (senha só na Vercel) e o admin
-  `moacyveiga@gmail.com` (senha enviada no chat, trocar no primeiro login). Vercel: projeto
-  `houseart` (`prj_LquuKlmalxrqh1f1sQ7j2QyvKEoI`, time `housemapp`, Node 22, framework nextjs,
-  funções em `gru1`, SSO desligado) com TODAS as envs de produção (banco pelo pooler
-  `aws-1-us-east-2.pooler.supabase.com` — host a confirmar no primeiro build —, segredos,
-  flags do MVP ligadas, `STRIPE_ENV=mock` + `STRIPE_MOCK_ALLOWED=1`, provedores `mock`). **Sem
-  deploy:** o repositório `Housemap/houseart` não existe (403 na org e na conta pessoal), a
-  ponte pela branch do Housebroker foi negada e os Blob stores deram 403 (uploads de mídia em
-  produção dependem de `BLOB_READ_WRITE_TOKEN` + `BLOB_PRIVATE_READ_WRITE_TOKEN`). Próximo passo
-  é do Moacy: criar o repo (ou liberar outro caminho) e conectar o projeto Vercel a ele.
-  Smoke Playwright das 5 jornadas verde contra o build local.
+- **2026-10-21 — Fase 6: HouseArt NO AR.** Produção em
+  **https://houseart-housemapp.vercel.app** (deploy `dpl_5XkPYVj8N3jLtYZ37hMB9qZ3MH7a`, commit
+  `f48ad20`, build 47 s, migrations no-op). Repositório **`moacyveiga-ai/houseart`** (a org Housemap
+  segue com 403; a conta pessoal criou apesar do erro da primeira tentativa) conectado ao projeto
+  Vercel `houseart` (`prj_LquuKlmalxrqh1f1sQ7j2QyvKEoI`, time `housemapp`, Node 22, nextjs, funções
+  em `gru1`, SSO desligado): push na `main` = produção. Supabase `houseart` (ref
+  `zqxkwaivqqlkocbmdvch`, us-east-2, Postgres 17.11) com o schema das 6 migrations aplicado pelo
+  conector (50 tabelas, 155 índices, 74 FKs, 7 triggers `ha_tenant_*`, planos e catálogo semeados,
+  `_prisma_migrations` com os checksums), papel `houseart_app` e o admin `moacyveiga@gmail.com`
+  (senha enviada no chat, trocar no primeiro login). **Pooler é `aws-0-us-east-2`** (o `aws-1`
+  responde "tenant/user not found" e derrubou o 1.º build); o host direto só tem IPv6, inútil na
+  Vercel. Envs: banco pelo pooler (6543 app, 5432 migrations), segredos gerados, flags do MVP
+  ligadas, `STRIPE_ENV=mock` + `STRIPE_MOCK_ALLOWED=1`, provedores `mock`. **Faltam os Blob
+  stores** (`houseart-public`/`houseart-private`, 403 pelo conector): sem
+  `BLOB_READ_WRITE_TOKEN`/`BLOB_PRIVATE_READ_WRITE_TOKEN` o upload de mídia e de PDF falha em
+  produção. Conector Supabase: `apply_migration` e blocos com `$$` dão timeout — `$fn$` e
+  `EXECUTE PROCEDURE` passam. Smoke Playwright das 5 jornadas verde contra o build local.
 - **2026-10-21 — Fase 5** (`832fd7b`): planos (`lib/plans`), pedidos (`lib/orders`, catálogo
   seedado), porta do Stripe (`lib/stripe/door.ts`, mock/live), Cobrança (`lib/billing`, plano +
   barras de uso contadas da base + faturas: plano, pedidos, comissão retida no split), laudo de
@@ -144,14 +146,14 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   com baselines vazias, gate verde.
 
 ## Pendências (ordem de valor)
-1. **Repositório GitHub `Housemap/houseart`** + conectar o projeto Vercel `houseart` (production
-   branch `main`) — sem isso não há deploy. Alternativas: liberar a ponte temporária pela branch
-   `claude/hopeful-darwin-tojlvv` do Housebroker (subpasta `houseart/`, `rootDirectory`), ou um
-   token da Vercel para `vercel deploy`.
-2. Blob stores na Vercel (`houseart-public` e `houseart-private`, 403 pelo conector): criar no
-   dashboard e ligar `BLOB_READ_WRITE_TOKEN` / `BLOB_PRIVATE_READ_WRITE_TOKEN`.
-3. Confirmar o host do pooler do Supabase no primeiro build (`aws-1-…` vs `aws-0-…`) e trocar a
-   senha do papel `houseart_app` depois (foi gerada nesta sessão).
+1. Blob stores na Vercel (`houseart-public` e `houseart-private`, 403 pelo conector): criar no
+   dashboard e ligar `BLOB_READ_WRITE_TOKEN` / `BLOB_PRIVATE_READ_WRITE_TOKEN` — até lá fotos de
+   obra e PDFs de certificado/laudo não sobem em produção.
+2. Trocar a senha do papel `houseart_app` e do admin (as duas foram geradas nesta sessão); domínio
+   próprio + `APP_URL` (hoje os links de e-mail saem com a URL da Vercel); mover o repo para
+   `Housemap/houseart` quando a org liberar.
+3. Login por "Entrar com e-mail" (código) exige SMTP (`SMTP_*`) — sem ele só e-mail/senha funciona
+   em produção.
 4. Stripe real (`STRIPE_ENV=live`, PaymentIntent/Connect/webhook) — hoje tudo é mock; assinatura
    de plano via Stripe subscription; nota fiscal.
 5. Provedores reais: KYC (Didit), NTAG 424 (master key em HSM, `MARKER_VENDOR=ntag424`),

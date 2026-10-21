@@ -23,7 +23,14 @@ export function isVaultRef(ref: string | null | undefined): ref is `vault:${stri
   return typeof ref === 'string' && ref.startsWith(VAULT_PREFIX)
 }
 
-const privateToken = (): string | undefined => process.env.BLOB_PRIVATE_READ_WRITE_TOKEN || undefined
+/**
+ * The private store token. `BLOB_PRIVATE_READ_WRITE_TOKEN` is the documented name; the
+ * second is what the Vercel dashboard generates when the store is connected with the
+ * custom prefix `BLOB_PRIVATE_READ_WRITE_TOKEN` (it appends `_READ_WRITE_TOKEN`).
+ */
+export const privateStoreToken = (): string | undefined =>
+  process.env.BLOB_PRIVATE_READ_WRITE_TOKEN || process.env.BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN || undefined
+const privateToken = privateStoreToken
 const onVercel = (): boolean => !!process.env.VERCEL
 const vaultDir = (): string => path.join(process.cwd(), '.vault')
 

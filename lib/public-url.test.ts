@@ -7,8 +7,8 @@ describe('publicBaseUrl', () => {
     expect(publicBaseUrl({ NEXT_PUBLIC_APP_URL: 'https://outra/' })).toBe('https://outra')
   })
   it('sem env explícita cai na URL de produção da Vercel (https)', () => {
-    expect(publicBaseUrl({ VERCEL_PROJECT_PRODUCTION_URL: 'housebroker.vercel.app' })).toBe('https://housebroker.vercel.app')
-    expect(publicBaseUrl({ APP_URL: '  ', VERCEL_PROJECT_PRODUCTION_URL: 'housebroker.vercel.app' })).toBe('https://housebroker.vercel.app')
+    expect(publicBaseUrl({ VERCEL_PROJECT_PRODUCTION_URL: 'houseart.vercel.app' })).toBe('https://houseart.vercel.app')
+    expect(publicBaseUrl({ APP_URL: '  ', VERCEL_PROJECT_PRODUCTION_URL: 'houseart.vercel.app' })).toBe('https://houseart.vercel.app')
   })
   it('sem nada: localhost:3007, nunca vazio', () => {
     expect(publicBaseUrl({})).toBe(PUBLIC_URL_DEV)

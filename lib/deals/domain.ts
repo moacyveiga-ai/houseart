@@ -1,0 +1,35 @@
+// Deal phases — the 6 steps of "Vendas · Em andamento"/"Compras" + COMPLETED. Pure.
+export const DEAL_PHASES = ['OFFER_ACCEPTED', 'ESCROW', 'DOCUMENTS', 'SHIPPING', 'DELIVERY', 'TRANSFER', 'COMPLETED'] as const
+export type DealPhase = (typeof DEAL_PHASES)[number]
+
+export interface PhaseStep { phase: DealPhase; title: string; icon: string; pending: string }
+
+/** The timeline labels of the design; `pending` is the description before the phase is done. */
+export const PHASE_STEPS: readonly PhaseStep[] = [
+  { phase: 'OFFER_ACCEPTED', title: 'Oferta aceita', icon: 'handshake', pending: 'Aguardando o pagamento em garantia' },
+  { phase: 'ESCROW', title: 'Pagamento em garantia', icon: 'lock', pending: 'Valor a ser retido na HouseArt' },
+  { phase: 'DOCUMENTS', title: 'Documentação e assinatura', icon: 'draw', pending: 'Termo de transferência a assinar pelas partes' },
+  { phase: 'SHIPPING', title: 'Retirada e transporte', icon: 'local_shipping', pending: 'Transportadora a definir' },
+  { phase: 'DELIVERY', title: 'Entrega e leitura da etiqueta', icon: 'contactless', pending: 'Comprador encosta o celular no verso para confirmar' },
+  { phase: 'TRANSFER', title: 'Escritura emitida', icon: 'contract', pending: 'Novo titular registrado e valores liberados' },
+]
+
+export function phaseIndex(phase: DealPhase): number {
+  return DEAL_PHASES.indexOf(phase)
+}
+
+/** The step the deal is AT (0..5); COMPLETED = 6 (all done). */
+export function progressPct(phase: DealPhase): number {
+  return Math.round((phaseIndex(phase) / 6) * 100)
+}
+
+export function nextPhase(phase: DealPhase): DealPhase | null {
+  const i = phaseIndex(phase)
+  return i >= 0 && i < DEAL_PHASES.length - 1 ? DEAL_PHASES[i + 1] : null
+}
+
+export function dealCode(year: number, seq: number): string {
+  return `DL-${year}-${String(seq).padStart(6, '0')}`
+}
+
+export const ESCROW_HOURS = 24

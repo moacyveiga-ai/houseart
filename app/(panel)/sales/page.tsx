@@ -3,6 +3,9 @@ import { negotiatorOf, sellerOffers } from '@/lib/offers/server'
 import { negotiatorLabel } from '@/lib/offers/mandate-core'
 import { Tabs } from '@/components/ds/Tabs'
 import { OffersTable } from '@/components/offers/OffersTable'
+import { sellerDeals } from '@/lib/deals/server'
+import { DealTimeline, serializeDeal } from '@/components/deals/DealTimeline'
+import { flagOn } from '@/lib/flags'
 
 export const metadata = { title: 'Vendas e ofertas — HouseArt' }
 
@@ -10,9 +13,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const { scope } = await requirePanelPage('/sales')
   const tab = (await searchParams).tab === 'deals' ? 'deals' : 'offers'
   const offers = await sellerOffers(scope)
+  const deals = tab === 'deals' && flagOn('FLAG_DEALS') ? await sellerDeals(scope) : []
   const mandate = await negotiatorOf(scope)
   const open = offers.filter((o) => o.open).length
-  const live = offers.filter((o) => o.status === 'ACCEPTED' || o.status === 'IN_DEAL').length
+  const live = flagOn('FLAG_DEALS') ? (await sellerDeals(scope)).filter((d) => d.phase !== 'COMPLETED').length : offers.filter((o) => o.status === 'ACCEPTED' || o.status === 'IN_DEAL').length
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Vendas e ofertas</h1></div>
@@ -23,7 +27,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, expiresIn: o.expiresIn, differenceLabel: o.differenceLabel, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null,
         }))} />
       ) : (
-        <div className="ha-card ha-card--pad"><p className="ha-muted">{live ? `${live} venda(s) aceita(s). O acompanhamento em etapas (garantia, documentação, transporte, entrega, escritura) entra com o módulo de negócios.` : 'Nenhuma venda em andamento.'}</p></div>
+        deals.length === 0 ? <div className="ha-card ha-card--pad"><p className="ha-muted">Nenhuma venda em andamento.</p></div> : deals.map((d) => <DealTimeline key={d.id} deal={serializeDeal(d)} side="seller" />)
       )}
     </div>
   )

@@ -6,7 +6,8 @@ describe('profiles', () => {
     expect(hasTotalScope('admin')).toBe(true)
     expect(hasTotalScope('member')).toBe(false)
     expect(isInternal('member')).toBe(true)
-    expect(isInternal('collector')).toBe(false)
+    expect(isInternal('collector')).toBe(true)
+    expect(isInternal('institution')).toBe(false)
     expect(isInternal({ profile: 'operator' })).toBe(true)
   })
   it('unknown profile fails closed', () => {

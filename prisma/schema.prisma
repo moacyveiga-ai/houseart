@@ -243,6 +243,10 @@ model Artwork {
   mandates          Mandate[]
   offers            Offer[]
   opportunities     Opportunity[]
+  deals             Deal[]
+  transfers         OwnershipTransfer[]
+  royalties         RoyaltyPayment[]
+  insurancePolicies InsurancePolicy[]
 
   @@index([tenantId, status])
   @@index([memberId, status])
@@ -539,6 +543,7 @@ model Offer {
   rounds               OfferRound[]
   events               OfferEvent[]
   opportunities        Opportunity[]
+  deal                 Deal?
 
   @@index([artworkId, status])
   @@index([memberId, status])
@@ -631,4 +636,164 @@ model Notification {
   createdAt DateTime  @default(now())
 
   @@index([userId, readAt])
+}
+
+/// The sale after the accepted offer: 6 phases + COMPLETED. HOT model; tenantId from the seller member.
+model Deal {
+  id                   Int       @id @default(autoincrement())
+  code                 String    @unique // DL-AAAA-NNNNNN
+  artworkId            Int
+  artwork              Artwork   @relation(fields: [artworkId], references: [id])
+  offerId              Int       @unique
+  offer                Offer     @relation(fields: [offerId], references: [id])
+  sellerMemberId       Int
+  memberId             Int // = sellerMemberId (trigger)
+  tenantId             Int?
+  buyerUserId          Int
+  market               String    @default("PRIMARY") // PRIMARY | SECONDARY
+  amountCents          BigInt
+  shippingCents        BigInt    @default(0)
+  insuranceCents       BigInt    @default(0)
+  phase                String    @default("OFFER_ACCEPTED") // DEAL_PHASES
+  exceptionStatus      String? // CANCELLED | DISPUTE
+  escrowPaymentRef     String?
+  escrowPaidAt         DateTime?
+  sellerSignedAt       DateTime?
+  buyerSignedAt        DateTime?
+  carrierName          String?
+  trackingCode         String?
+  insurerName          String?
+  policyRef            String?
+  shippedAt            DateTime?
+  deliveredAt          DateTime?
+  deliveryMarkerReadId Int?
+  completedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  phaseEvents          DealPhaseEvent[]
+  splits               DealSplit[]
+  transfer             OwnershipTransfer?
+  royalty              RoyaltyPayment?
+
+  @@index([memberId, phase])
+  @@index([tenantId, phase])
+  @@index([buyerUserId, phase])
+}
+
+model DealPhaseEvent {
+  id          Int      @id @default(autoincrement())
+  dealId      Int
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  phase       String
+  title       String
+  description String?
+  actorKind   String   @default("SYSTEM") // SELLER | BUYER | STAFF | SYSTEM
+  occurredAt  DateTime @default(now())
+
+  @@index([dealId, occurredAt])
+}
+
+/// Split of the deal amount ("Repartição dos valores"). Sum = amountCents.
+model DealSplit {
+  id          Int      @id @default(autoincrement())
+  dealId      Int
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  party       String // ARTIST | GALLERY | PLATFORM | ADVISOR | ARTIST_ROYALTY | SHIPPING | INSURANCE
+  bps         Int
+  amountCents BigInt
+  status      String   @default("HELD") // HELD | RELEASED | PAID
+  payoutRef   String?
+
+  @@index([dealId])
+}
+
+/// Change of holder: on-platform (dealId) or off-platform (fee R$ 199).
+model OwnershipTransfer {
+  id               Int       @id @default(autoincrement())
+  certificateId    Int
+  artworkId        Int
+  artwork          Artwork   @relation(fields: [artworkId], references: [id])
+  dealId           Int?      @unique
+  deal             Deal?     @relation(fields: [dealId], references: [id])
+  fromUserId       Int
+  toUserId         Int?
+  toName           String
+  toEmail          String
+  toDocumentHash   String?
+  toDocumentEnc    String?
+  toDocumentMask   String?
+  priceCents       BigInt?
+  priceSealed      Boolean   @default(false)
+  sealedPriceHash  String?
+  royaltyCents     BigInt    @default(0)
+  feeCents         BigInt    @default(0)
+  status           String    @default("DRAFT") // DRAFT | INVITED | KYC_PENDING | SELLER_SIGNED | BUYER_SIGNED | SIGNED | FEE_PAID | AWAITING_TAP | COMPLETED | CANCELLED
+  inviteTokenHash  String?   @unique
+  inviteIssuedAt   DateTime?
+  kycStatus        String? // PENDING | APPROVED | REJECTED
+  sellerSignedAt   DateTime?
+  buyerSignedAt    DateTime?
+  feePaidAt        DateTime?
+  feePaymentRef    String?
+  tapMarkerReadId  Int?
+  completedAt      DateTime?
+  newVersionId     Int?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([fromUserId, status])
+  @@index([toUserId, status])
+  @@index([artworkId])
+}
+
+/// Resale royalty: 5 % of the appreciation, withheld in the split and paid to the artist.
+model RoyaltyPayment {
+  id                 Int       @id @default(autoincrement())
+  artworkId          Int
+  artwork            Artwork   @relation(fields: [artworkId], references: [id])
+  artistId           Int
+  transferId         Int?
+  dealId             Int?      @unique
+  deal               Deal?     @relation(fields: [dealId], references: [id])
+  saleCents          BigInt
+  previousSaleCents  BigInt
+  appreciationCents  BigInt
+  royaltyCents       BigInt
+  status             String    @default("PENDING") // PENDING | HELD | PAID
+  paidAt             DateTime?
+  receiptRef         String?
+  createdAt          DateTime  @default(now())
+
+  @@index([artistId, status])
+}
+
+model KycVerification {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  provider          String    @default("mock")
+  status            String    @default("PENDING") // PENDING | APPROVED | REJECTED | EXPIRED
+  documentHash      String?
+  biometricScoreBps Int?
+  pepHit            Boolean   @default(false)
+  verifiedAt        DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@index([userId, status])
+}
+
+model InsurancePolicy {
+  id            Int      @id @default(autoincrement())
+  artworkId     Int
+  artwork       Artwork  @relation(fields: [artworkId], references: [id])
+  kind          String // TRANSIT | COLLECTION
+  insurer       String
+  policyNumber  String
+  validFrom     DateTime
+  validUntil    DateTime
+  coverageCents BigInt
+  status        String   @default("ACTIVE") // ACTIVE | EXPIRED | CANCELLED
+  createdAt     DateTime @default(now())
+
+  @@index([artworkId, status])
 }

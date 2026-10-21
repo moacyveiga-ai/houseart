@@ -10,8 +10,8 @@ export const STAFF_PROFILES: readonly Profile[] = ['admin', 'manager', 'operator
 export const SCOPED_PROFILES: readonly Profile[] = ['member', 'appraiser']
 /** External: own portals, never the panel. */
 export const EXTERNAL_PROFILES: readonly Profile[] = ['collector', 'institution']
-/** Can open the panel (staff + scoped). */
-export const PANEL_PROFILES: readonly Profile[] = [...STAFF_PROFILES, ...SCOPED_PROFILES]
+/** Can open the panel shell (staff + scoped + the collector, whose pages read by userId). */
+export const PANEL_PROFILES: readonly Profile[] = [...STAFF_PROFILES, ...SCOPED_PROFILES, 'collector']
 /** Profiles that never get a panel session even with the right password. */
 export const NO_PANEL_LOGIN_PROFILES: readonly Profile[] = ['institution']
 

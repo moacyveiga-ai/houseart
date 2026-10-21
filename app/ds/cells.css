@@ -258,3 +258,6 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-login__caption .ha-eyebrow, .ha-login__caption .ha-title { color: inherit; }
 .ha-kanban__col .ha-select { margin-top: var(--ha-space-2); font-size: var(--ha-text-caption); padding: var(--ha-space-1) var(--ha-space-2); }
 .ha-tabs .ha-chip__n { margin-left: var(--ha-space-1); }
+.ha-callout--ok { background: var(--ha-verified-100); }
+.ha-callout--ok .ha-icon { color: var(--ha-verified-500); }
+.ha-list__btn { background: transparent; border: var(--ha-border-w) solid transparent; cursor: pointer; font: inherit; color: inherit; border-radius: var(--ha-radius-sm); }

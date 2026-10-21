@@ -15,6 +15,7 @@ import { ArtworkError } from '@/lib/artworks/server'
 import { canTransition as artworkCanTransition } from '@/lib/artworks/state-machine'
 import { notify } from '@/lib/notifications/server'
 import { syncOpportunityFromOffer } from '@/lib/crm/server'
+import { createDealFromOffer } from '@/lib/deals/server'
 import { LIVE_STATUSES, OFFER_VALIDITY_DAYS, offerCode, OTP_MAX_ATTEMPTS, OTP_TTL_MS, RETRACTION_WINDOW_MS, type OfferStatus } from './domain'
 import { evaluateOffer, mandateProblems } from './mandate-core'
 import { assertTransition, statusAfterOtp } from './state'
@@ -120,6 +121,7 @@ export async function confirmPublicOffer(code: string, otp: string): Promise<{ o
     await notify({ userId: seller.userId, email: seller.user?.email, kind: next === 'ACCEPTED' ? 'offer.auto_accepted' : 'offer.received', title: next === 'ACCEPTED' ? `Proposta aceita pelo negociador · ${title}` : `Nova proposta · ${title}`, body: `Proposta ${o.code}`, href: '/sales', emailSubject: next === 'ACCEPTED' ? 'O negociador aceitou uma proposta' : 'Você recebeu uma proposta na HouseArt' })
     await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.confirmed', title: `Proposta ${o.code} enviada`, body: next === 'ACCEPTED' ? 'Sua proposta foi aceita.' : engine.counterCents ? 'O vendedor respondeu com uma contraproposta.' : 'Sua proposta foi recebida.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi registrada' })
     await syncOpportunityFromOffer(o.id)
+    if (next === 'ACCEPTED') await createDealFromOffer(o.id)
     return { ok: true, retractionToken }
   })
 }
@@ -156,6 +158,7 @@ export async function acceptOffer(scope: Scope, id: number, actor: { userId: num
   })
   await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.accepted', title: `Proposta ${o.code} aceita`, body: 'Você tem 24 h para pagar em garantia.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi aceita' })
   await syncOpportunityFromOffer(id)
+  await createDealFromOffer(id)
   void audit.event({ entity: 'offer', entityId: id, action: 'accept', userId: actor.userId })
 }
 
@@ -239,6 +242,7 @@ export async function buyerReply(code: string, token: string, reply: { accept: t
     const seller = await prisma.member.findUnique({ where: { id: o.sellerMemberId }, select: { userId: true, user: { select: { email: true } } } })
     await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.buyer_replied', title: `Resposta do comprador em ${o.code}`, href: '/sales', emailSubject: 'O comprador respondeu' })
     await syncOpportunityFromOffer(o.id)
+    if (reply.accept) await createDealFromOffer(o.id)
     return true
   })
 }

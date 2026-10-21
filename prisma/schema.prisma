@@ -327,8 +327,144 @@ model Certificate {
   currentVersionId Int?
   status           String    @default("DRAFT") // DRAFT | ACTIVE | CONTESTED | REVOKED
   stage            Int       @default(0) // 0..5
+  signedAt         DateTime?
+  signedByUserId   Int?
+  signatureJson    String? // JWS of the issuer + evidence of the member's signature (ip, ua, time)
+  timestampTokenRef String? // ACT ICP-Brasil (mock in the MVP)
+  issuedAt         DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  versions         CertificateVersion[]
+  events           CertificateEvent[]
+}
+
+model CertificateVersion {
+  id                 Int         @id @default(autoincrement())
+  certificateId      Int
+  certificate        Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  version            Int
+  holderName         String
+  holderDocumentHash String?
+  holderDocumentMask String?
+  holderUserId       Int?
+  contentJson        String
+  contentHash        String
+  prevHash           String?
+  signaturesJson     String      @default("[]")
+  timestampTokenRef  String?
+  issuedAt           DateTime    @default(now())
+  pdfRef             String?
+  pdfHash            String?
+  status             String      @default("ACTIVE") // ACTIVE | SUPERSEDED
+
+  @@unique([certificateId, version])
+}
+
+model CertificateEvent {
+  id            Int         @id @default(autoincrement())
+  certificateId Int
+  certificate   Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  seq           Int
+  kind          String // CREATED | CERTIFIED | LISTED | TRANSFERRED | LOANED | RESTORED | STOLEN | DISPUTED | INSURED
+  payloadJson   String      @default("{}")
+  hash          String
+  prevHash      String?
+  actorUserId   Int?
+  occurredAt    DateTime    @default(now())
+  anchorDay     String? // YYYY-MM-DD of the DailyAnchor that covers it
+
+  @@unique([certificateId, seq])
+  @@index([occurredAt])
+}
+
+model DailyAnchor {
+  id         Int      @id @default(autoincrement())
+  day        String   @unique // YYYY-MM-DD (house timezone)
+  merkleRoot String
+  network    String   @default("NONE") // NONE | OPENTIMESTAMPS | POLYGON
+  txRef      String?
+  eventCount Int
+  createdAt  DateTime @default(now())
+}
+
+/// Batches of NFC markers imported from the vendor (Admin · Etiquetas).
+model MarkerBatch {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique // 2026-10
+  quantity    Int
+  destination String
+  tenantId    Int?
+  status      String   @default("NEW") // NEW | IN_USE | EXHAUSTED
+  createdAt   DateTime @default(now())
+  markers     PhysicalMarker[]
+}
+
+model PhysicalMarker {
+  id             Int         @id @default(autoincrement())
+  batchId        Int
+  batch          MarkerBatch @relation(fields: [batchId], references: [id])
+  uid            String      @unique // 7 bytes hex
+  keyRef         String // reference of the diversified key; never the key
+  status         String      @default("STOCK") // STOCK | SHIPPED | LINKED | REMOVED | REVOKED
+  artworkId      Int?        @unique
+  orderId        Int?
+  linkedAt       DateTime?
+  linkedByUserId Int?
+  readCounter    Int         @default(0)
+  lastReadAt     DateTime?
+  reads          MarkerRead[]
+
+  @@index([status])
+  @@index([orderId])
+}
+
+model MarkerRead {
+  id         Int            @id @default(autoincrement())
+  markerId   Int
+  marker     PhysicalMarker @relation(fields: [markerId], references: [id], onDelete: Cascade)
+  counter    Int
+  cmacValid  Boolean
+  tamperFlag Boolean        @default(false)
+  ipHash     String?
+  userId     Int?
+  purpose    String // VERIFY | LINK | DELIVERY_CONFIRM | TRANSFER_CONFIRM
+  createdAt  DateTime       @default(now())
+
+  @@index([markerId, createdAt])
+}
+
+/// A member's kit order ("Pedir etiquetas · R$ 150"). `orderId` → Order (Phase 5), no FK.
+model MarkerOrder {
+  id             Int      @id @default(autoincrement())
+  tenantId       Int
+  memberId       Int
+  quantity       Int
+  unitPriceCents BigInt   @default(1500)
+  status         String   @default("REQUESTED") // REQUESTED | SHIPPED | DELIVERED
+  orderId        Int?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([memberId, status])
+  @@index([status])
+}
+
+/// Admin review queue (Admin · Obras e certificados).
+model ReviewQueueItem {
+  id              Int       @id @default(autoincrement())
+  kind            String // DUPLICATE | CONTESTATION | NEW_ISSUER | MARKER_REMOVED | EXPORT_RESTRICTION
+  artworkId       Int?
+  tenantId        Int?
+  reason          String
+  refId           Int? // DuplicateCheck / MarkerRead id when relevant
+  status          String    @default("OPEN") // OPEN | APPROVED | REJECTED
+  decidedByUserId Int?
+  decidedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([artworkId])
 }
 
 /// Job lease (lib/job-lease): one run at a time per job name.

@@ -7,7 +7,7 @@ export const SCREEN_MAP: Record<string, string | null> = {
   'Dashboard': 'app/(panel)/page.tsx',
   'Minhas obras': 'app/(panel)/artworks/page.tsx',
   'Cadastro de obra': 'app/(panel)/artworks/[id]/edit/page.tsx',
-  'Certificação': null,
+  'Certificação': 'app/(panel)/certification/page.tsx',
   'Vendas e ofertas': null,
   'Direito de sequência': null,
   'Cobrança': null,
@@ -17,6 +17,6 @@ export const SCREEN_MAP: Record<string, string | null> = {
   'Transferência fora da plataforma': null,
   'Marketplace': null,
   'Laudo de opinião de valor': null,
-  'Admin · Obras e certificados': null,
-  'Admin · Etiquetas': null,
+  'Admin · Obras e certificados': 'app/(panel)/admin/review/page.tsx',
+  'Admin · Etiquetas': 'app/(panel)/admin/markers/page.tsx',
 }

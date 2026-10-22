@@ -42,10 +42,18 @@ export const theme = {
 } as const
 
 /**
- * --ha-font-display is Fraunces (italic for artwork titles). The app bundles no
- * font file (no new dependency in this phase), so the display face is the
- * system serif — Georgia on iOS, "serif" on Android — until Fraunces ships.
+ * --ha-font-display is Fraunces (italic for artwork titles). The three static
+ * faces ship in assets/fonts (OFL, Google Fonts static build) and are
+ * registered in app/_layout.tsx by `useFonts` under these family names; the
+ * system serif stays as the fallback while they load or if they fail.
  */
+export const FONT_FILES = {
+  'Fraunces-Regular': require('../assets/fonts/Fraunces-Regular.ttf') as number,
+  'Fraunces-Italic': require('../assets/fonts/Fraunces-Italic.ttf') as number,
+  'Fraunces-SemiBold': require('../assets/fonts/Fraunces-SemiBold.ttf') as number,
+} as const
+
 export const fonts = {
-  display: { ios: 'Georgia', android: 'serif', default: 'serif' } as const,
+  display: { regular: 'Fraunces-Regular', italic: 'Fraunces-Italic', semibold: 'Fraunces-SemiBold' },
+  displayFallback: { ios: 'Georgia', android: 'serif', default: 'serif' } as const,
 } as const

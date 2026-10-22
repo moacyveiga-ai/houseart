@@ -1,6 +1,5 @@
-import { WebScreen } from '@/ui/WebScreen'
-import { TABS } from '@/nav/tabs'
+import { CommunityScreen } from '@/screens/community/CommunityScreen'
 
 export default function Screen() {
-  return <WebScreen path={TABS.community.path ?? '/'} />
+  return <CommunityScreen />
 }

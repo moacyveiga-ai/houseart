@@ -49,9 +49,14 @@ export function Chip({ label, on, onPress, icon }: { label: string; on?: boolean
   )
 }
 
-/** Fraunces-style display text (system serif until the font ships). */
-export function Display({ children, italic, size = 28, line, color = theme.fg, style }: { children: React.ReactNode; italic?: boolean; size?: number; line?: number; color?: string; style?: StyleProp<ViewStyle> }) {
-  return <Text style={[{ fontFamily: Platform.select(fonts.display), fontSize: size, lineHeight: line ?? Math.round(size * 1.25), color, fontStyle: italic ? 'italic' : 'normal' }, style as never]}>{children}</Text>
+/** Whether the Fraunces files are registered (set once by app/_layout.tsx after `useFonts`). */
+let displayLoaded = false
+export const setDisplayFontLoaded = (on: boolean) => { displayLoaded = on }
+
+/** Fraunces display text: italic and semibold are their own faces; the system serif while the font is not registered. */
+export function Display({ children, italic, semibold, size = 28, line, color = theme.fg, style, numberOfLines }: { children: React.ReactNode; italic?: boolean; semibold?: boolean; size?: number; line?: number; color?: string; style?: StyleProp<ViewStyle>; numberOfLines?: number }) {
+  const family = displayLoaded ? (italic ? fonts.display.italic : semibold ? fonts.display.semibold : fonts.display.regular) : Platform.select(fonts.displayFallback)
+  return <Text numberOfLines={numberOfLines} style={[{ fontFamily: family, fontSize: size, lineHeight: line ?? Math.round(size * 1.25), color, fontStyle: italic && !displayLoaded ? 'italic' : 'normal' }, style as never]}>{children}</Text>
 }
 
 /** Back + title + right actions, under the status bar (the screen handles the safe area). */

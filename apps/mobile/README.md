@@ -7,7 +7,10 @@ jornadas web dentro de uma WebView com a sessão, sair, push preparado. As telas
 nativas dos protótipos (`houseart-design/handoff/designs/HouseArt App *.dc.html`)
 entram por fase, substituindo cada WebView. **Fase 1 do App Colecionador (feita):**
 Explorar (feed e descobrir), Página da obra, Minha coleção, Favoritos e curtidos,
-Mensagens e Conversa, Busca — ver "O que é nativo" abaixo.
+Mensagens e Conversa, Busca. **Fase 2 (feita):** Fazer oferta em 5 etapas,
+Sua oferta / Contraproposta recebida, Comprar direto, Comunidade (feed, post,
+comentários, enquete, evento), badge de não lidas em Mensagens e a Fraunces
+embarcada — ver "O que é nativo" abaixo.
 
 Pacote **independente** do root (não está em `workspaces`; o `npm install` do root
 não o instala; o `tsconfig.json` e o ESLint do root o excluem). Nada aqui importa
@@ -64,7 +67,7 @@ emitir o token de push.
 | Token | `src/auth/token-store.ts` | `expo-secure-store` (64 hex, validado) |
 | Cookie da WebView | `src/auth/cookies.ts` | `CookieManager.set` de `houseart_session=<token>` só para o host da API (`Secure` em https; `HttpOnly` não é possível no cliente — aceito) |
 | Sessão | `src/auth/session.tsx` | `SessionProvider`/`useSession`: login por senha, código por e-mail (`/api/auth/code/start` + `/verify`), `GET /api/auth/me`, `GET/POST /api/profiles`, sair |
-| Abas por perfil | `src/nav/tabs.ts`, `app/(tabs)/_layout.tsx` | Colecionador = Explorar · Coleção · Comunidade · Mensagens · Perfil (a ordem do protótipo; Explorar, Coleção e Mensagens nativas, `path: null`); Galeria/Consultor = Início · Acervo · Vendas · Mensagens · Comunidade; Artista = Início · Obras · Certificação · Mensagens · Avisos. As abas fora do perfil recebem `href: null`; aba nativa desenha o próprio topo (`headerShown: false`) |
+| Abas por perfil | `src/nav/tabs.ts`, `app/(tabs)/_layout.tsx` | Colecionador = Explorar · Coleção · Comunidade · Mensagens · Perfil (a ordem do protótipo; as quatro primeiras nativas, `path: null`; a aba Mensagens leva o badge de `GET /api/messages/unread`, consultado a cada 30 s com o app em primeiro plano — `src/api/unread.ts`); Galeria/Consultor = Início · Acervo · Vendas · Mensagens · Comunidade; Artista = Início · Obras · Certificação · Mensagens · Avisos. As abas fora do perfil recebem `href: null`; aba nativa desenha o próprio topo (`headerShown: false`) |
 | WebView | `src/ui/WebScreen.tsx` | Abre a rota do site com `sharedCookiesEnabled`; injeta a classe `ha-shell--embedded` no `<html>` e um CSS que esconde `.ha-topbar`, `.ha-sidebar` e `.ha-ticker` **só no app** (o web não muda); `houseart://` vira navegação do app, link de outro host abre no navegador; cair em `/login` = sessão morta → sair |
 | Perfil nativo | `src/ui/ProfileScreen.tsx` | Dados da conta, toggle "Avisos no celular" (**Em breve**), "Minha conta (site)", trocar de perfil, Sair |
 | Push | `src/push/register.ts` | Registra o token do Expo; o envio ao servidor espera `PUSH_API_READY` |
@@ -91,19 +94,32 @@ Fonte das telas: `houseart-design/handoff/designs/HouseArt App Colecionador.dc.h
 | Mensagens | aba `messages` | `src/screens/MessagesScreen.tsx` | `GET /api/messages?q=` |
 | Conversa com galeria | `/messages/[id]` | `src/screens/ConversationScreen.tsx` | `GET /api/messages/[id]?after=` (5 s), `POST /api/messages/[id]` |
 | Busca | `/search` | `src/screens/SearchScreen.tsx` | `GET /api/public/search?q=` |
+| Fazer oferta (5 etapas) | `/artwork/[publicId]/offer` | `src/screens/market/OfferScreen.tsx`, `offer-core.ts` | `GET /api/public/artworks/[publicId]`, `GET/PATCH /api/auth/identity`, `POST /api/auth/phone/{start,verify}`, `GET/POST /api/collector/payment-methods`, `GET /api/public/shipping-quote`, `POST /api/public/offers`, `POST /api/public/offers/[code]/confirm` |
+| Sua oferta · Contraproposta recebida | `/offer/[code]` | `src/screens/market/OfferStatusScreen.tsx` | `GET /api/collector/offers/[code]`, `POST /api/public/offers/[code]/{reply,retract}`, `POST /api/messages` (Conversar) |
+| Comprar direto | `/artwork/[publicId]/buy` | `src/screens/market/CheckoutScreen.tsx`, `checkout-core.ts` | `GET /api/public/artworks/[publicId]`, `GET /api/public/shipping-quote`, `GET/POST /api/collector/payment-methods`, `POST /api/public/checkout` |
+| Comunidade · Comentários · Novo post | aba `community` | `src/screens/community/{CommunityScreen,CommentsSheet,Composer}.tsx`, `community-core.ts` | `GET /api/public/community/feed?tab=`, `GET /api/public/community/comments`, `POST /api/community/{posts,comments,reactions}`, `POST /api/community/polls/[id]/vote`, `GET /api/collector/wallet` (obra marcada) |
 
 Peças comuns: `src/ui/kit.tsx` (ícone, parede, avatar, chip, barra do topo,
-loading/erro/toast), `src/ui/format.ts` (R$, parcela, ficha, iniciais, URL
-absoluta da mídia), `src/api/hooks.ts` (`useApi`), `src/api/reactions.ts`,
-`src/api/types.ts` (DTOs), `src/ui/share.ts` (Share nativo).
+loading/erro/toast, `Display` em Fraunces), `src/ui/forms.tsx` (campo, cartão
+de opção, linha chave·valor, segmentos de passo, toggle, bottom sheet),
+`src/ui/CardForm.tsx` (Adicionar cartão), `src/ui/format.ts` (R$, parcela,
+ficha, iniciais, URL absoluta da mídia), `src/api/hooks.ts` (`useApi`),
+`src/api/reactions.ts`, `src/api/market.ts` (oferta, compra, cartões,
+identidade, cotação), `src/api/unread.ts`, `src/api/types.ts` (DTOs),
+`src/ui/share.ts` (Share nativo). A fonte de exibição é a **Fraunces**
+embarcada (`assets/fonts/Fraunces-{Regular,Italic,SemiBold}.ttf`, OFL,
+build estático do Google Fonts; registrada por `useFonts` em `app/_layout.tsx`
+com os nomes de `fonts.display` de `src/theme.ts`; o serif do sistema fica
+como fallback enquanto carrega ou se falhar).
 
 **Continua em WebView** (`/web?path=…&title=…`, `app/web.tsx`, só caminhos do
-site): Fazer oferta (`/e/artwork/[id]/offer`), Comprar direto (`/e/artwork/[id]/buy`),
-Cadastrar obra (`/wallet/register`), Vender esta obra (`/wallet`), Compras
-(`/purchases`), Vendas (`/sales`), perfil do artista e da galeria (`/e/artist/…`,
-`/e/gallery/…`), certificado público (`/verify/[id]`), Comunidade (aba),
-Minha conta (`/account`) e todas as abas dos perfis Galeria/Consultor/Artista
-(a aba `wallet` desses perfis segue sendo a "Carteira" web).
+site): Cadastrar obra (`/wallet/register`), Vender esta obra (`/wallet`), Compras
+(`/purchases` — "Acompanhar a compra" depois da oferta aceita ou do pagamento),
+Vendas (`/sales`), perfil do artista e da galeria (`/e/artist/…`,
+`/e/gallery/…`), certificado público (`/verify/[id]`), notícia inteira
+(`/e/news/[slug]`, aberta pelo "Ler" da Comunidade), Minha conta (`/account`)
+e todas as abas dos perfis Galeria/Consultor/Artista (a aba `wallet` desses
+perfis segue sendo a "Carteira" web).
 
 Decisões onde o protótipo não bate com a API: sem contador de curtidas nem
 comentários em obra (a API não conta); "Desenho" não existe no catálogo (Obra
@@ -112,20 +128,33 @@ na obra); a obra não tem zoom por ponto (toque alterna a parede cheia); sem
 "Denunciar" nem "Enviar foto" na conversa (sem API); respostas rápidas são as
 do lado comprador; a busca não tem sugestões de pessoas sem consulta (a API
 só responde com termo) e "Em alta" são as categorias; buscas recentes vivem só
-na sessão do app; KPI "valorização" fica "—" (sem estimativa na API); a fonte
-de exibição (Fraunces) não vem no pacote — serif do sistema até entrar
-(`src/theme.ts`, `fonts.display`); ícones por Material Icons do
-`@expo/vector-icons` no lugar dos Material Symbols; o badge de não lidas na
-aba Mensagens não existe ainda.
+na sessão do app; KPI "valorização" fica "—" (sem estimativa na API); ícones por Material
+Icons do `@expo/vector-icons` no lugar dos Material Symbols.
+
+Decisões da fase 2: a folha "Fazer oferta" do protótipo (um só passo) virou as
+**cinco etapas** do fluxo web (Valor · Condições · Identidade · Garantia ·
+Revisão) porque a API exige identidade verificada e garantia; as sugestões
+(−5/−10/−15 %, arredondadas a R$ 500), a validade 24/48/72 h, a mensagem e a
+linha dos 70 % são as do protótipo, mas a recusa é do servidor (regras do
+vendedor) — o app só impede enviar abaixo de metade do preço pedido; o
+comprador logado com e-mail provado não recebe código (a tela do código só
+aparece se a API pedir). "Sua oferta" mostra o nome do vendedor e "Conversar"
+só quando a obra pública carrega. Comprar direto: só cartão (sem Pix/boleto
+nem parcelas na API), o endereço é só o CEP (sem cadastro de endereços),
+"Acompanhar a compra" abre `/purchases` na WebView. Comunidade: sem Instagram
+e sem "Guia" escuro; "Seguindo" é o feed filtrado por quem a pessoa segue;
+"Responder" só prefixa o @nome; foto = obra marcada ou URL (sem upload);
+"Ler" abre a notícia no site. Cartão novo pede os dados na própria tela
+(sem a prévia animada do cartão).
 
 ## O que falta (fora do M0 e da fase 1)
 
 - **Push via Expo** (ver abaixo): o toggle existe, desligado, com "Em breve".
-- **Telas nativas** dos protótipos (29 Colecionador — 8 feitas na fase 1 —,
+- **Telas nativas** dos protótipos (29 Colecionador — 14 feitas nas fases 1 e 2 —,
   20 Galeria, 9 Artista): cada aba troca a WebView por tela nativa, por fase,
   sobre as mesmas rotas de `app/api/*`. Enquanto isso o app entrega as
-  jornadas do site. Próximas do Colecionador: oferta em 5 etapas e compra
-  direta nativas, Comunidade, Compras/Vendas, Cadastrar obra, Perfil completo.
+  jornadas do site. Próximas do Colecionador: Compras/Vendas, Cadastrar obra,
+  Vender uma obra, Carteira e cartões, Pix, Perfil completo, Ler notícia.
 - Leitura NFC da etiqueta no app do Artista (`react-native-nfc-manager`; hoje o
   web faz por Web NFC/URL em `/certification/link/[artworkId]`).
 - Biometria para reabrir o app (`expo-local-authentication`), deep links

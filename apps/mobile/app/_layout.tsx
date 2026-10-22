@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
+import { useFonts } from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '@/auth/session'
-import { theme } from '@/theme'
+import { FONT_FILES, theme } from '@/theme'
+import { setDisplayFontLoaded } from '@/ui/kit'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
@@ -36,6 +38,11 @@ function Gate() {
 }
 
 export default function RootLayout() {
+  // Fraunces (assets/fonts): the tree waits for the files; on an error the system serif stays.
+  const [fontsLoaded, fontsError] = useFonts(FONT_FILES)
+  const ready = fontsLoaded || !!fontsError
+  setDisplayFontLoaded(fontsLoaded && !fontsError)
+  if (!ready) return null
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -49,7 +56,10 @@ export default function RootLayout() {
             <Stack.Screen name="profiles" options={{ headerShown: true, title: 'Escolher perfil', headerBackVisible: false }} />
             <Stack.Screen name="account-web" />
             <Stack.Screen name="web" />
-            <Stack.Screen name="artwork/[publicId]" />
+            <Stack.Screen name="artwork/[publicId]/index" />
+            <Stack.Screen name="artwork/[publicId]/offer" />
+            <Stack.Screen name="artwork/[publicId]/buy" />
+            <Stack.Screen name="offer/[code]" />
             <Stack.Screen name="messages/[id]" />
             <Stack.Screen name="favorites" />
             <Stack.Screen name="search" />

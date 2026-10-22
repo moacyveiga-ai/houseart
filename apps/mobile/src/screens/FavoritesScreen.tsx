@@ -60,7 +60,7 @@ export function FavoritesScreen({ initialTab }: { initialTab: FavoritesTab }) {
                     <View style={styles.rowActs}>
                       <IconButton name="bookmark" label="Remover dos favoritos" box={34} size={20} onPress={() => void remove(r, 'SAVE')} />
                       {available(r) && r.priceCents !== null
-                        ? <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/web', params: { path: `/e/artwork/${r.publicId}/buy`, title: 'Comprar' } })} style={styles.btnPrimary}><Text style={styles.btnText}>Comprar</Text></Pressable>
+                        ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${r.publicId}/buy`)} style={styles.btnPrimary}><Text style={styles.btnText}>Comprar</Text></Pressable>
                         : <Pressable accessibilityRole="button" onPress={() => open(r)} style={styles.btnOutline}><Text style={styles.btnText}>Ver</Text></Pressable>}
                     </View>
                   </View>

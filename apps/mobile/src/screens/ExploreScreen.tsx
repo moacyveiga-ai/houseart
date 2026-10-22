@@ -75,7 +75,7 @@ export function ExploreScreen() {
           data={items}
           keyExtractor={(i) => String(i.id)}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={theme.accent} />}
-          renderItem={({ item }) => <FeedCard item={item} react={react} onOpen={() => router.push(`/artwork/${item.publicId}`)} onOffer={() => router.push({ pathname: '/web', params: { path: `/e/artwork/${item.publicId}/offer`, title: 'Fazer oferta' } })} onBuy={() => router.push({ pathname: '/web', params: { path: `/e/artwork/${item.publicId}/buy`, title: 'Comprar' } })} />}
+          renderItem={({ item }) => <FeedCard item={item} react={react} onOpen={() => router.push(`/artwork/${item.publicId}`)} onOffer={() => router.push(`/artwork/${item.publicId}/offer`)} onBuy={() => router.push(`/artwork/${item.publicId}/buy`)} />}
           ListEmptyComponent={<Text style={styles.empty}>Nenhuma obra nesta categoria agora.</Text>}
           ListFooterComponent={<Text style={styles.foot}>Todas as obras têm certificado assinado e etiqueta no verso.</Text>}
         />

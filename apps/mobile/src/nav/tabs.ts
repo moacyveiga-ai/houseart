@@ -11,14 +11,14 @@ export interface TabDef {
   title: string
   /** Material icon name (@expo/vector-icons MaterialIcons). */
   icon: TabIcon
-  /** Web route opened inside the WebView; null = native screen (fase 1 do App Colecionador: Explorar, Coleção, Mensagens). */
+  /** Web route opened inside the WebView; null = native screen (App Colecionador fases 1 e 2: Explorar, Coleção, Mensagens, Comunidade). */
   path: string | null
 }
 
 export const TABS: Record<TabKey, TabDef> = {
   explore: { key: 'explore', title: 'Explorar', icon: 'explore', path: null },
   messages: { key: 'messages', title: 'Mensagens', icon: 'chat', path: null },
-  community: { key: 'community', title: 'Comunidade', icon: 'forum', path: '/community' },
+  community: { key: 'community', title: 'Comunidade', icon: 'forum', path: null },
   // Native "Minha coleção" for the collector; the web "Carteira" for the other profiles (see app/(tabs)/wallet.tsx).
   wallet: { key: 'wallet', title: 'Carteira', icon: 'account-balance-wallet', path: null },
   profile: { key: 'profile', title: 'Perfil', icon: 'person', path: null },

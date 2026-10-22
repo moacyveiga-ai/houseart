@@ -2,6 +2,7 @@ import { Tabs, useRouter } from 'expo-router'
 import { Pressable } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useSession } from '@/auth/session'
+import { useUnreadMessages } from '@/api/unread'
 import { TABS, iconFor, isCollector, labelFor, tabsFor, type TabKey } from '@/nav/tabs'
 import { theme } from '@/theme'
 
@@ -13,8 +14,10 @@ const ALL: TabKey[] = ['explore', 'messages', 'community', 'wallet', 'profile', 
  * first so the first visible tab is the initial one.
  */
 export default function TabsLayout() {
-  const { me } = useSession()
+  const { me, status } = useSession()
   const router = useRouter()
+  // The Mensagens badge: unread messages polled every 30 s while the app is active.
+  const unread = useUnreadMessages(status === 'signed-in')
   const kind = me?.activeProfileKind ?? null
   const visible = tabsFor(kind)
   const ordered = [...visible, ...ALL.filter((k) => !visible.includes(k))]
@@ -53,6 +56,8 @@ export default function TabsLayout() {
               // The native screens draw their own top (brand, search, title) as the prototype does.
               headerShown: key === 'profile' || def.path !== null || (key === 'wallet' && !isCollector(kind)),
               tabBarIcon: ({ color, size }) => <MaterialIcons name={icon} size={size} color={color} />,
+              tabBarBadge: key === 'messages' && unread > 0 ? (unread > 99 ? '99+' : unread) : undefined,
+              tabBarBadgeStyle: { backgroundColor: theme.accent, color: theme.fg, fontSize: 10, fontWeight: '600' },
             }}
           />
         )

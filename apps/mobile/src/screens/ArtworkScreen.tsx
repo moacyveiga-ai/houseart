@@ -2,7 +2,7 @@
 // with share · salvar · curtir, the wall (tap to enlarge), thumbnails by media
 // kind, artist › title › sheet, price box, "Certificado HouseArt" card,
 // Proveniência, the seller card with "Conversar", the two guarantees and the
-// footer: "Fazer oferta" / "Comprar agora" (web flows in a WebView),
+// footer: "Fazer oferta" / "Comprar agora" (native flows of fase 2),
 // "Reservada · em negociação", or "Vender esta obra" for a held one.
 import { useCallback, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -136,8 +136,8 @@ export function ArtworkScreen({ publicId, mine }: { publicId: string; mine: bool
         {mine ? (
           <Pressable accessibilityRole="button" onPress={() => web('/wallet', 'Minha coleção')} style={styles.btnInk}><Text style={styles.btnInkText}>Vender esta obra</Text></Pressable>
         ) : listed ? (<>
-          {a.acceptsOffers ? <Pressable accessibilityRole="button" onPress={() => web(`/e/artwork/${a.publicId}/offer`, 'Fazer oferta')} style={styles.btnOutline}><Text style={styles.btnOutlineText}>Fazer oferta</Text></Pressable> : null}
-          {a.priceCents !== null ? <Pressable accessibilityRole="button" onPress={() => web(`/e/artwork/${a.publicId}/buy`, 'Comprar')} style={styles.btnPrimary}><Text style={styles.btnPrimaryText}>Comprar agora</Text></Pressable> : null}
+          {a.acceptsOffers ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${a.publicId}/offer`)} style={styles.btnOutline}><Text style={styles.btnOutlineText}>Fazer oferta</Text></Pressable> : null}
+          {a.priceCents !== null ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${a.publicId}/buy`)} style={styles.btnPrimary}><Text style={styles.btnPrimaryText}>Comprar agora</Text></Pressable> : null}
         </>) : a.status === 'IN_DEAL' ? (
           <View style={styles.reserved}><Text style={styles.reservedText}>Reservada · em negociação</Text></View>
         ) : a.status === 'SOLD' ? (

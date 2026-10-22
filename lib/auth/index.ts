@@ -97,7 +97,12 @@ export async function destroySession(token: string): Promise<void> {
 
 export async function getSession(): Promise<SessionUser | null> {
   const store = await cookies()
-  const token = store.get(COOKIE_NAME)?.value
+  let token = store.get(COOKIE_NAME)?.value
+  if (!token) {
+    // The mobile apps (apps/mobile) send the same session token as a bearer.
+    const auth = (await headers()).get('authorization')
+    if (auth?.startsWith('Bearer ')) token = auth.slice(7).trim()
+  }
   if (!token) return null
   return getSessionByToken(token)
 }

@@ -21,5 +21,5 @@ export async function POST(req: Request) {
   }
   await clearLoginRateLimit(credential)
   void recordAudit({ entity: 'auth', entityId: r.user.id, action: 'login', userId: r.user.id, userName: r.user.name, ip: ip === 'no-ip' ? undefined : ip, userAgent, origin: 'api' })
-  return sessionResponse(r.user, r.token, safeNext(body.next), body.remember !== false)
+  return sessionResponse(r.user, r.token, safeNext(body.next), body.remember !== false, { withToken: req.headers.get('x-houseart-client') === 'mobile' })
 }

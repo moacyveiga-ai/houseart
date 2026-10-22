@@ -12,5 +12,5 @@ export async function POST(req: Request) {
   const ip = rawIpFromHeaders(req.headers)
   const r = await verifyAccessCode(token, code, { ip: ip === 'no-ip' ? undefined : ip, userAgent: req.headers.get('user-agent') ?? undefined })
   if (!r.ok) return NextResponse.json({ ok: false, error: r.error }, { status: 401 })
-  return sessionResponse(r.user, r.token, safeNext(body.next))
+  return sessionResponse(r.user, r.token, safeNext(body.next), true, { withToken: req.headers.get('x-houseart-client') === 'mobile' })
 }

@@ -37,6 +37,14 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          "cameraPermission": "O HouseArt usa a câmera para fotografar a obra na certificação.",
+          "photosPermission": "O HouseArt usa suas fotos para cadastrar a obra.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/adaptive-icon.png",

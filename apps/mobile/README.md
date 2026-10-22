@@ -12,8 +12,9 @@ Sua oferta / Contraproposta recebida, Comprar direto, Comunidade (feed, post,
 comentários, enquete, evento), badge de não lidas em Mensagens e a Fraunces
 embarcada. **App Galeria (feito):** Painel do dia, Acervo, Gestão do anúncio,
 Negócios (Ofertas recebidas · Vendas até o repasse · Regras de ofertas), a
-venda até o repasse, Equipe, Artistas representados e Conta da galeria — ver
-"O que é nativo" abaixo.
+venda até o repasse, Equipe, Artistas representados e Conta da galeria. **App Artista (feito):** Início do artista, Obras, Nova obra ·
+câmera guiada (com `expo-image-picker`), Vincular etiqueta, Carteira de
+escrituras e Avisos — ver "O que é nativo" abaixo.
 
 Pacote **independente** do root (não está em `workspaces`; o `npm install` do root
 não o instala; o `tsconfig.json` e o ESLint do root o excluem). Nada aqui importa
@@ -70,9 +71,9 @@ emitir o token de push.
 | Token | `src/auth/token-store.ts` | `expo-secure-store` (64 hex, validado) |
 | Cookie da WebView | `src/auth/cookies.ts` | `CookieManager.set` de `houseart_session=<token>` só para o host da API (`Secure` em https; `HttpOnly` não é possível no cliente — aceito) |
 | Sessão | `src/auth/session.tsx` | `SessionProvider`/`useSession`: login por senha, código por e-mail (`/api/auth/code/start` + `/verify`), `GET /api/auth/me`, `GET/POST /api/profiles`, sair |
-| Abas por perfil | `src/nav/tabs.ts`, `app/(tabs)/_layout.tsx` | Colecionador = Explorar · Coleção · Comunidade · Mensagens · Perfil (a ordem do protótipo; as quatro primeiras nativas, `path: null`; a aba Mensagens leva o badge de `GET /api/messages/unread`, consultado a cada 30 s com o app em primeiro plano — `src/api/unread.ts`); Galeria/Consultor = Início · Acervo · Vendas · Mensagens · Comunidade (as cinco nativas: Início, Acervo e Vendas só para GALLERY/ADVISOR, por `NATIVE_FOR`/`isNativeTab` — o `path` fica para o Artista, que ainda abre essas abas na WebView); Artista = Início · Obras · Certificação · Mensagens · Avisos. As abas fora do perfil recebem `href: null`; aba nativa desenha o próprio topo (`headerShown: false`) |
+| Abas por perfil | `src/nav/tabs.ts`, `app/(tabs)/_layout.tsx` | Colecionador = Explorar · Coleção · Comunidade · Mensagens · Perfil (a ordem do protótipo; as quatro primeiras nativas, `path: null`; a aba Mensagens leva o badge de `GET /api/messages/unread`, consultado a cada 30 s com o app em primeiro plano — `src/api/unread.ts`); Galeria/Consultor = Início · Acervo · Vendas · Mensagens · Comunidade (as cinco nativas: Início, Acervo e Vendas por `NATIVE_FOR`/`isNativeTab` — Vendas segue WebView para quem não é galeria/consultor); Artista = Início · Obras · Escrituras · Mensagens · Avisos (as cinco nativas: Início, Obras, Escrituras e Avisos também por `NATIVE_FOR`; Perfil pelo avatar do Início → `/settings`). As abas fora do perfil recebem `href: null`; aba nativa desenha o próprio topo (`headerShown: false`) |
 | WebView | `src/ui/WebScreen.tsx` | Abre a rota do site com `sharedCookiesEnabled`; injeta a classe `ha-shell--embedded` no `<html>` e um CSS que esconde `.ha-topbar`, `.ha-sidebar` e `.ha-ticker` **só no app** (o web não muda); `houseart://` vira navegação do app, link de outro host abre no navegador; cair em `/login` = sessão morta → sair |
-| Perfil nativo | `src/ui/ProfileScreen.tsx` | Dados da conta, toggle "Avisos no celular" (**Em breve**), "Minha conta (site)", trocar de perfil, Sair |
+| Perfil nativo | `src/ui/ProfileScreen.tsx` | Dados da conta, toggle "Avisos no celular" (`src/push/usePushToggle.ts`, o mesmo da tela Avisos; o token Expo do aparelho fica no secure store), "Minha conta (site)", trocar de perfil, Sair |
 | Push | `src/push/register.ts` | Registra o token do Expo; o envio ao servidor espera `PUSH_API_READY` |
 
 Fluxo das portas (`app/_layout.tsx`, `Gate`): sem token → `/(auth)/login`; com
@@ -152,6 +153,65 @@ da diretora acima de R$ 50 mil"; a conta da galeria é um menu (dados da
 galeria, página pública, endereço e horários, Face ID e aparelhos não existem
 na API).
 
+### App Artista (ARTIST)
+
+Fonte das telas: `houseart-design/handoff/designs/HouseArt App Artista.dc.html`.
+A única dependência nova é **`expo-image-picker` ~17.0.11** (câmera e galeria;
+permissões no plugin do `app.json`).
+
+| Tela (protótipo) | Rota do app | Fonte | API |
+| --- | --- | --- | --- |
+| Início do artista | aba `home` | `src/screens/artist/ArtistHomeScreen.tsx`, `artist-core.ts` | `GET /api/artist/home` |
+| Obras | aba `artworks` (`?filter=`) | `src/screens/gallery/InventoryScreen.tsx` (`artist`) | `GET /api/gallery/inventory` (escopo por membro) |
+| Nova obra · câmera guiada + Ficha rápida | `/artworks/new` (`?id=` continua um rascunho) | `src/screens/artist/NewArtworkScreen.tsx` | `POST /api/artworks`, `GET/PATCH /api/artworks/[id]`, `POST /api/artworks/[id]/media` (multipart: `kind` + `file`), `POST /api/artworks/[id]/read-photos`, `POST /api/artworks/[id]/duplicates/[checkId]`, `POST /api/artworks/[id]/submit` |
+| Vincular etiqueta | `/certification/link/[artworkId]` | `src/screens/artist/LinkMarkerScreen.tsx`, `src/nfc/reader.ts` | `GET /api/artist/artworks/[id]/link`, `POST /api/markers/link`, `POST /api/certificates/[id]/sign` |
+| Carteira de escrituras | aba `certification` (título "Escrituras") | `src/screens/artist/DeedsScreen.tsx` | `GET /api/artist/certificates` |
+| Avisos | aba `notifications` | `src/screens/NotificationsScreen.tsx`, `src/push/usePushToggle.ts` | `GET/POST /api/notifications`, `POST /api/notifications/[id]/read`, `POST/DELETE /api/notifications/push` |
+| Verificar obra · Confirmar recebimento | WebView `/verify` · `/purchases` | — | — |
+| Onboarding | sem design utilizável no mapa — não feito | — | — |
+
+Rotas novas no root (finas, sobre `lib/dashboard`, `lib/certificates`,
+`lib/artworks`, `lib/physical-markers`): `GET /api/artist/home`
+(`{ ok, home: { dateLabel, name, initials, kpis, actions, recent } }`),
+`GET /api/artist/certificates` (`{ ok, items: [{ artworkId, certificateId,
+title, publicId, coverUrl, status, stage, stageLabel, action, actionLabel,
+version }], orders }`; 404 sem `FLAG_CERTIFICATES`) e
+`GET /api/artist/artworks/[id]/link` (`{ ok, artwork: { id, title, status,
+publicId }, certificateId, signed, issued, simulateAllowed }`; 404 fora do
+escopo ou sem `FLAG_CERTIFICATES`/`FLAG_PHYSICAL_MARKERS`). Nenhuma leva hash,
+assinatura, referência do cofre nem o mandato. Prova:
+`test/integration/artist-mobile-api.integration.test.ts`.
+
+**NFC:** este build não lê a etiqueta (`react-native-nfc-manager` exige
+código nativo e dev build, e não foi adicionado). `src/nfc/reader.ts` é o ponto
+de extensão (`TagReader`, hoje só `manualReader`): a tela de vincular aceita a
+URL da etiqueta colada/digitada (o mesmo campo do web) e, quando a API diz que
+o ambiente aceita (`simulateAllowed`: `MARKER_VENDOR=mock` fora de produção),
+"Simular leitura" com o UID de uma etiqueta do kit. Para plugar o NFC:
+`npx expo install react-native-nfc-manager`, o plugin no `app.json` (iOS:
+`NFCReaderUsageDescription` e o entitlement de NDEF), implementar o leitor
+`nfc` em `src/nfc/reader.ts` (NDEF → primeiro registro URI → `{ url }`) e
+devolvê-lo em `tagReader()` quando `NfcManager.isSupported()`; build com
+`npx expo run:ios|android` ou EAS.
+
+Decisões onde o protótipo não bate com a API: a barra do artista segue o
+conjunto do app (Início · Obras · Escrituras · Mensagens · Avisos), não as
+quatro do protótipo (Início · Carteira · Verificar · Avisos); o Início ganhou os
+quatro números do web Início abaixo de "Suas obras" e "Olá, <nome>" usa o nome
+da conta; a câmera é a do sistema (`expo-image-picker`), sem moldura ao vivo
+sobre o vídeo — a moldura, o cartão de cor e o ponto da macro aparecem no
+quadro do slot, com a foto enviada dentro dele; são os **dez** slots do web (os
+seis obrigatórios do protótipo e quatro opcionais que se pulam); "Foco e luz
+bons" é o veredito do servidor (`quality`), e foto desfocada pede refazer; a
+leitura assistida ("Preencher com as fotos") e a decisão sobre obra parecida
+entram na Ficha rápida; "Enviar e vincular etiqueta" envia para certificação e
+abre o vincular, que sem kit entregue responde o erro do servidor; sem anel
+pulsante animado; a Carteira do artista lista as obras em certificação
+(etapa e próxima ação) e as escrituras emitidas (ID e versão), sem "Valor
+registrado", "Titular desde", Vender/Transferir/Segurar nem o cartão "chega
+hoje" (são da carteira do colecionador); "Emitir" abre a Certificação do site;
+Avisos ganhou o switch "Avisos no celular" e "Marcar todos como lidos".
+
 Peças comuns: `src/ui/kit.tsx` (ícone, parede, avatar, chip, barra do topo,
 loading/erro/toast, `Display` em Fraunces), `src/ui/forms.tsx` (campo, cartão
 de opção, linha chave·valor, segmentos de passo, toggle, bottom sheet),
@@ -171,7 +231,8 @@ site): Cadastrar obra (`/wallet/register`), Vender esta obra (`/wallet`), Compra
 Vendas (`/sales`), perfil do artista e da galeria (`/e/artist/…`,
 `/e/gallery/…`), certificado público (`/verify/[id]`), notícia inteira
 (`/e/news/[slug]`, aberta pelo "Ler" da Comunidade), Minha conta (`/account`),
-todas as abas do perfil Artista, a aba `wallet` dos perfis que não são o
+no App Artista Verificar obra (`/verify`), Confirmar recebimento
+(`/purchases`), Vendas (`/sales`) e Emitir (`/certification`), a aba `wallet` dos perfis que não são o
 colecionador (a "Carteira" web) e, no App Galeria, Cadastrar obra
 (`/artworks/new`), Editar cadastro (`/artworks/[id]/edit`), Pix para repasses
 (`/sales/payout`), Plano e cobrança (`/billing`), Carteira e cartões
@@ -209,12 +270,13 @@ e sem "Guia" escuro; "Seguindo" é o feed filtrado por quem a pessoa segue;
 - **Push via Expo** (ver abaixo): o toggle existe, desligado, com "Em breve".
 - **Telas nativas** dos protótipos (29 Colecionador — 14 feitas nas fases 1 e 2 —,
   20 Galeria — 13 feitas, ficam Cadastrar obra (câmera guiada), Instagram, Ler
-  notícia e Guia —, 9 Artista): cada aba troca a WebView por tela nativa, por
+  notícia e Guia —, 9 Artista — 6 feitas; ficam Onboarding, Verificar obra e
+  Confirmar recebimento): cada aba troca a WebView por tela nativa, por
   fase, sobre as mesmas rotas de `app/api/*`. Enquanto isso o app entrega as
   jornadas do site. Próximas do Colecionador: Compras/Vendas, Cadastrar obra,
   Vender uma obra, Carteira e cartões, Pix, Perfil completo, Ler notícia.
-- Leitura NFC da etiqueta no app do Artista (`react-native-nfc-manager`; hoje o
-  web faz por Web NFC/URL em `/certification/link/[artworkId]`).
+- Leitura NFC da etiqueta no app do Artista (`react-native-nfc-manager` num dev
+  build; o ponto de extensão é `src/nfc/reader.ts`; hoje cola-se a URL).
 - Biometria para reabrir o app (`expo-local-authentication`), deep links
   universais (`https://…/e/artwork/...` → app), tema escuro.
 - `eas.json`, `extra.eas.projectId`, ícones por sub-marca, lojas.

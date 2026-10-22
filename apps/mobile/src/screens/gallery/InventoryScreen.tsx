@@ -4,6 +4,10 @@
 // (wall · title · artist · year · price · status pill · stats). Tapping a
 // row opens the Gestão do anúncio. Data: GET /api/gallery/inventory; chips
 // and search are applied here, as the web page does.
+// The artist's "Obras" (App Artista) is the same list over the same route
+// (`listArtworks` is scoped by member): "+" opens the native "Nova obra ·
+// câmera guiada", a draft continues there, a work in certification opens
+// "Vincular etiqueta", and the rest the Gestão do anúncio.
 import { useMemo, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -14,7 +18,7 @@ import { theme } from '@/theme'
 import { Chip, Display, ErrorState, Icon, Loading, Wall } from '@/ui/kit'
 import { INVENTORY_CHIPS, emptyInventoryText, filterInventory, rowPrice, rowStats, rowStatus } from './gallery-core'
 
-export function InventoryScreen() {
+export function InventoryScreen({ artist = false }: { artist?: boolean } = {}) {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const params = useLocalSearchParams<{ filter?: string }>()
@@ -23,16 +27,22 @@ export function InventoryScreen() {
   const [chip, setChip] = useState(INVENTORY_CHIPS.some((c) => c.key === params.filter) ? (params.filter as string) : 'all')
   const [q, setQ] = useState('')
   const items = useMemo(() => filterInventory(data?.items ?? [], chip, q), [data, chip, q])
+  const add = () => (artist ? router.push('/artworks/new') : router.push({ pathname: '/web', params: { path: '/artworks/new', title: 'Cadastrar obra' } }))
+  const open = (o: { id: number; status: string }) => {
+    if (artist && o.status === 'DRAFT') { router.push({ pathname: '/artworks/new', params: { id: String(o.id) } }); return }
+    if (artist && o.status === 'IN_CERTIFICATION') { router.push({ pathname: '/certification/link/[artworkId]', params: { artworkId: String(o.id) } }); return }
+    router.push({ pathname: '/artworks/[id]/listing', params: { id: String(o.id) } })
+  }
 
   return (
     <View style={[styles.fill, { paddingTop: insets.top }]}>
       <View style={styles.head}>
         <View style={styles.titleRow}>
           <View style={{ flex: 1 }}>
-            <Display size={28} line={36}>Acervo</Display>
+            <Display size={28} line={36}>{artist ? 'Obras' : 'Acervo'}</Display>
             <Text style={styles.summary}>{data?.summary ?? ' '}</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Adicionar nova obra" onPress={() => router.push({ pathname: '/web', params: { path: '/artworks/new', title: 'Cadastrar obra' } })} style={styles.add}><Icon name="add" size={26} color={theme.bg} /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Adicionar nova obra" onPress={add} style={styles.add}><Icon name="add" size={26} color={theme.bg} /></Pressable>
         </View>
         <View style={styles.search}>
           <Icon name="search" size={20} color={theme.fgMuted} />
@@ -48,7 +58,7 @@ export function InventoryScreen() {
           {items.length === 0 ? <Text style={styles.empty}>{emptyInventoryText(q)}</Text> : items.map((o) => {
             const st = rowStatus(o)
             return (
-              <Pressable key={o.id} accessibilityRole="button" accessibilityLabel={o.title} onPress={() => router.push({ pathname: '/artworks/[id]/listing', params: { id: String(o.id) } })} style={styles.row}>
+              <Pressable key={o.id} accessibilityRole="button" accessibilityLabel={o.title} onPress={() => open(o)} style={styles.row}>
                 <Wall uri={o.coverUrl} padding={8} style={styles.rowWall} square={false} />
                 <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                   <Display italic size={15} line={20} numberOfLines={1}>{o.title}</Display>

@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '@/auth/session'
-import { FONT_FILES, theme } from '@/theme'
+import { FONT_FILES, colors, theme } from '@/theme'
 import { setDisplayFontLoaded } from '@/ui/kit'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
@@ -64,6 +64,8 @@ export default function RootLayout() {
             <Stack.Screen name="favorites" />
             <Stack.Screen name="search" />
             <Stack.Screen name="artworks/[id]/listing" />
+            <Stack.Screen name="artworks/new" options={{ contentStyle: { backgroundColor: colors.ink900 } }} />
+            <Stack.Screen name="certification/link/[artworkId]" options={{ contentStyle: { backgroundColor: colors.ink900 } }} />
             <Stack.Screen name="deal/[id]" />
             <Stack.Screen name="sales/rules" />
             <Stack.Screen name="gallery/team" />

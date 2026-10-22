@@ -15,7 +15,8 @@ export interface TabDef {
    * Web route opened inside the WebView; null = native for every profile (App
    * Colecionador fases 1 e 2: Explorar, Coleção, Mensagens, Comunidade). A tab
    * that is native only for some profiles keeps the path for the others and is
-   * listed in `NATIVE_FOR` (App Galeria: Início, Acervo e Negócios).
+   * listed in `NATIVE_FOR` (App Galeria: Início, Acervo e Negócios; App
+   * Artista: Início, Obras, Carteira de escrituras e Avisos).
    */
   path: string | null
 }
@@ -54,9 +55,12 @@ export function tabsFor(kind: ProfileKind | null): TabKey[] {
 
 /** Tabs that are native for these profiles only (the web route stays for the rest). */
 const NATIVE_FOR: Partial<Record<TabKey, readonly ProfileKind[]>> = {
-  home: ['GALLERY', 'ADVISOR'],
-  artworks: ['GALLERY', 'ADVISOR'],
+  home: ['GALLERY', 'ADVISOR', 'ARTIST'],
+  artworks: ['GALLERY', 'ADVISOR', 'ARTIST'],
   sales: ['GALLERY', 'ADVISOR'],
+  // App Artista: Carteira de escrituras and Avisos.
+  certification: ['ARTIST'],
+  notifications: ['ARTIST'],
 }
 
 /** Native screen (draws its own top) or WebView for this profile and tab. */
@@ -70,6 +74,7 @@ export function isNativeTab(kind: ProfileKind | null, key: TabKey): boolean {
 export function labelFor(kind: ProfileKind | null, key: TabKey): string {
   if (key === 'artworks' && (kind === 'GALLERY' || kind === 'ADVISOR')) return 'Acervo'
   if (key === 'wallet' && isCollector(kind)) return 'Coleção'
+  if (key === 'certification' && kind === 'ARTIST') return 'Escrituras'
   return TABS[key].title
 }
 

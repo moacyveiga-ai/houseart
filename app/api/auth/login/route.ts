@@ -8,7 +8,7 @@ import { safeNext } from '@/lib/auth/safe-next'
 import { sessionResponse } from '../_cookie'
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({})) as { credential?: string; password?: string; next?: string }
+  const body = await req.json().catch(() => ({})) as { credential?: string; password?: string; next?: string; remember?: boolean }
   const credential = String(body.credential ?? '')
   const ip = rawIpFromHeaders(req.headers)
   const brake = await checkLoginRateLimit({ ip, credential })
@@ -21,5 +21,5 @@ export async function POST(req: Request) {
   }
   await clearLoginRateLimit(credential)
   void recordAudit({ entity: 'auth', entityId: r.user.id, action: 'login', userId: r.user.id, userName: r.user.name, ip: ip === 'no-ip' ? undefined : ip, userAgent, origin: 'api' })
-  return sessionResponse(r.user, r.token, safeNext(body.next))
+  return sessionResponse(r.user, r.token, safeNext(body.next), body.remember !== false)
 }

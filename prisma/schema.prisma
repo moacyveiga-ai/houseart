@@ -48,6 +48,12 @@ model User {
   tenant               Tenant?       @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   tenantRole           String? // ADMIN | MEMBER
   authProviderId       String?       @unique
+  phone                String? // E.164 (+55…), verified by SMS code
+  phoneVerifiedAt      DateTime?
+  emailVerifiedAt      DateTime?
+  termsAcceptedAt      DateTime?
+  marketingOptIn       Boolean       @default(false)
+  preferencesJson      String        @default("{}") // onboarding: uses, interests, city
   recoverySessionId    String?
   recoverySessionUntil DateTime?
   collectorVerifiedAt  DateTime?
@@ -59,6 +65,7 @@ model User {
   profiles             UserProfile[]
   member               Member?
   auditLogs            AuditLog[]
+  identities           UserIdentity[]
 
   @@index([tenantId])
   @@index([profile, active])
@@ -98,8 +105,11 @@ model Session {
 model AccessCode {
   id           Int       @id @default(autoincrement())
   tokenHash    String    @unique
-  purpose      String // SIGNUP | LOGIN | SILENT
+  purpose      String // SIGNUP | LOGIN | SILENT | PHONE | RESET
   email        String
+  channel      String    @default("EMAIL") // EMAIL | SMS
+  phone        String? // E.164, for PHONE
+  userId       Int? // the logged user who verifies a phone
   codeHash     String
   attempts     Int       @default(0)
   resends      Int       @default(0)
@@ -1111,4 +1121,19 @@ model AgendaEvent {
   createdAt DateTime @default(now())
 
   @@index([startsOn])
+}
+
+// ── Access (handoff 2026-10-21, Fase 2) ──────────────────────────────────────
+/// A social identity (Google, Apple, Facebook, LinkedIn — or MOCK outside production) linked to a user.
+model UserIdentity {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String // GOOGLE | APPLE | FACEBOOK | LINKEDIN | MOCK
+  providerUserId String
+  email          String?
+  createdAt      DateTime @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
 }

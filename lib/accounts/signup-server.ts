@@ -11,9 +11,10 @@ import { loginProfileOf, memberKindOf, type ProfileKindKey } from '@/lib/profile
 export interface NewAccount {
   email: string
   name: string
-  passwordHash: string
+  passwordHash: string | null
   profileKind: ProfileKindKey
   cpf?: string | null
+  emailVerified?: boolean
 }
 
 export async function createMemberAccount(a: NewAccount) {
@@ -28,6 +29,7 @@ export async function createMemberAccount(a: NewAccount) {
         passwordHash: a.passwordHash,
         profile: loginProfileOf(a.profileKind),
         active: true,
+        emailVerifiedAt: a.emailVerified ? new Date() : null,
         profiles: { create: { kind: a.profileKind, isDefault: true } },
       },
     })

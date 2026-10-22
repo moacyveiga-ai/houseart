@@ -86,6 +86,11 @@ export async function openSession(user: UserRow & { active?: boolean }, ctx: { i
   return { ok: true, token, user: userForSession(user, { id: null, activeProfileKind }) }
 }
 
+/** Closes every session of the user (password reset). */
+export async function destroyAllSessions(userId: number): Promise<void> {
+  await prisma.session.deleteMany({ where: { userId } }).catch(() => {})
+}
+
 export async function destroySession(token: string): Promise<void> {
   await prisma.session.deleteMany({ where: { token: sessionTokenKey(token) } }).catch(() => {})
 }

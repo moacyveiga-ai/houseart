@@ -149,7 +149,7 @@ export function Home({ works, news, agenda }: HomeData) {
         <section id="noticias" className="hp-container hp-home-news" aria-label="Notícias">
           <div className="hp-home-news__head">
             <h2 className="hp-section-title">Notícias do mundo da arte</h2>
-            <span className="hp-home-news__all" aria-disabled="true" title="Em breve">Todas as notícias</span>
+            <Link href="/e/news" className="hp-home-news__all">Todas as notícias</Link>
           </div>
           <div className="hp-home-news__grid">
             <article className="hp-home-news__featured">

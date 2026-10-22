@@ -54,7 +54,10 @@ const GALLERY: NavItem[] = [
   { key: 'account', label: 'Conta da galeria', icon: 'settings', href: '/gallery/account' },
 ]
 
+// Handoff "Web Colecionador": Explorar (feed · descobrir) opens the profile,
+// Favoritos e curtidos and Perfil · minha conta close it.
 const COLLECTOR: NavItem[] = [
+  { key: 'explore', label: 'Explorar', icon: 'explore', href: '/explore' },
   { key: 'wallet', label: 'Carteira de escrituras', icon: 'account_balance_wallet', href: '/wallet' },
   { key: 'cards', label: 'Carteira e cartões', icon: 'credit_card', href: '/wallet/cards' },
   { key: 'purchases', label: 'Compras', icon: 'local_shipping', href: '/purchases' },
@@ -62,6 +65,8 @@ const COLLECTOR: NavItem[] = [
   { key: 'marketplace', label: 'Marketplace', icon: 'storefront', href: '/marketplace' },
   { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },
   { key: 'community', label: 'Comunidade', icon: 'forum', href: '/community' },
+  { key: 'favorites', label: 'Favoritos', icon: 'favorite', href: '/favorites' },
+  { key: 'account', label: 'Minha conta', icon: 'person', href: '/account' },
 ]
 
 const APPRAISER: NavItem[] = [

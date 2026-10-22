@@ -147,3 +147,6 @@ a.hp-artwork__seller-name:hover { text-decoration: underline; color: var(--ha-in
 .hp-artwork__related { margin-top: var(--ha-space-20); }
 .hp-artwork__related-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ha-space-4); margin-bottom: var(--ha-space-8); }
 .hp-artwork__all { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-ink-900); }
+.hp-artwork__share { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-ink-300); border-radius: var(--ha-radius-full); background: transparent; color: var(--ha-ink-900); font: inherit; font-size: var(--ha-text-caption); font-weight: 600; cursor: pointer; }
+.hp-artwork__share:hover { background: var(--ha-paper-100); }
+.hp-artwork__share:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }

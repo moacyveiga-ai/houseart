@@ -16,6 +16,7 @@ import { ArtworkMedia, type MediaItem } from './ArtworkMedia'
 import { ArtworkOffer } from './ArtworkOffer'
 import { ShippingQuote } from './ShippingQuote'
 import { TalkToSellerButton } from './TalkToSellerButton'
+import { ShareButton } from './ShareSheet'
 import { ARTWORK_CATEGORY_LABELS, CONDITION_GRADE_LABELS, formatBRL } from '@/lib/artworks/domain'
 import type { MarketItem } from '@/lib/marketplace/filter-core'
 import type { PublicArtworkPage } from '@/lib/marketplace/public-server'
@@ -125,6 +126,7 @@ export function Artwork({ artwork: a, related, signedIn = false }: { artwork: Pu
             <StatusBadge status={badgeOf(a)} />
             <ArtworkId id={a.publicId} qr={false} />
             <Link href={`/verify/${a.publicId}`} className="hp-artwork__verify">Verificar certificado</Link>
+            <ShareButton artwork={{ publicId: a.publicId, title: a.title, artist: a.artist, year: a.year, cover: a.cover, price: listed && price !== null ? formatBRL(price) : null }} className="hp-artwork__share" />
           </div>
 
           {a.status === 'STOLEN' ? (

@@ -57,15 +57,20 @@
 .hp-market-empty a { font-weight: 600; color: var(--ha-ink-900); text-decoration: underline; }
 
 /* card da obra (com a linha do vendedor do protótipo) */
-.hp-market-card { display: flex; flex-direction: column; gap: var(--ha-space-3); text-decoration: none; color: inherit; }
-.hp-market-card:hover { color: inherit; }
-.hp-market-card:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 4px; }
+.hp-market-card { position: relative; }
+.hp-market-card__link { display: flex; flex-direction: column; gap: var(--ha-space-3); text-decoration: none; color: inherit; }
+.hp-market-card__link:hover { color: inherit; }
+.hp-market-card__link:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 4px; }
 .hp-market-card__wall { position: relative; background: var(--ha-wall); aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; padding: var(--ha-space-6); transition: background var(--ha-dur-fast) ease; }
 .hp-market-card:hover .hp-market-card__wall { background: var(--ha-paper-200); }
 .hp-market-card__wall img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; box-shadow: 0 6px 18px rgba(20, 18, 15, .18); object-fit: contain; }
 .hp-market-card__seal { position: absolute; top: var(--ha-space-3); left: var(--ha-space-3); display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px var(--ha-space-2); border-radius: var(--ha-radius-full); background: var(--ha-paper-50); color: var(--ha-ink-900); }
 .hp-market-card__seal .ha-icon { font-size: 14px; }
-.hp-market-card__fav { position: absolute; top: var(--ha-space-3); right: var(--ha-space-3); width: 32px; height: 32px; border-radius: 50%; background: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; color: var(--ha-ink-900); }
+.hp-market-card__fav { position: absolute; z-index: 1; top: var(--ha-space-3); right: var(--ha-space-3); width: 32px; height: 32px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; color: var(--ha-ink-900); text-decoration: none; }
+.hp-market-card__fav:hover { background: var(--ha-paper-200); }
+.hp-market-card__fav:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.hp-market-card__fav--on { color: var(--ha-alert-500); }
+.hp-market-card__fav[disabled] { cursor: default; opacity: .7; }
 .hp-market-card__fav .ha-icon { font-size: 18px; }
 .hp-market-card__body { display: flex; flex-direction: column; gap: 2px; }
 .hp-market-card__artist { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-ink-900); }

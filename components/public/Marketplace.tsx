@@ -11,7 +11,7 @@ import {
   PRICE_RANGES, SELLER_LABELS, MARKET_LABELS, SIZE_LABELS,
   type GroupKey, type MarketItem, type Selection, type SortKey,
 } from '@/lib/marketplace/filter-core'
-import { MarketCard, priceLabel } from './MarketCard'
+import { MarketCard, priceLabel, type MarketCardLikeState } from './MarketCard'
 import { ArtistCard } from './Artists'
 import { MarketplaceSortSelect } from './MarketplaceSortSelect'
 import './marketplace.css'
@@ -43,7 +43,11 @@ function groupsOf(items: MarketItem[]): Group[] {
   ]
 }
 
-export function Marketplace({ items, artists, sel, q, sort }: { items: MarketItem[]; artists: MarketArtist[]; sel: Selection; q: string; sort: SortKey }) {
+/** The viewer's like state per publicId (numeric id + liked), from the page; absent = anonymous heart. */
+export interface MarketReactions { signedIn: boolean; byPublicId: Record<string, { id: number; liked: boolean }> }
+
+export function Marketplace({ items, artists, sel, q, sort, reactions }: { items: MarketItem[]; artists: MarketArtist[]; sel: Selection; q: string; sort: SortKey; reactions?: MarketReactions }) {
+  const likeOf = (publicId: string): MarketCardLikeState | undefined => reactions ? { signedIn: reactions.signedIn, id: reactions.byPublicId[publicId]?.id ?? null, liked: reactions.byPublicId[publicId]?.liked ?? false } : undefined
   const href = (s: Selection, query = q, order = sort) => '/e/marketplace' + paramsOf(s, query, order)
   const groups = groupsOf(items)
   const list = sortItems(items.filter((i) => passes(i, sel, q)), sort)
@@ -126,7 +130,7 @@ export function Marketplace({ items, artists, sel, q, sort }: { items: MarketIte
             </div>
           ) : null}
           {list.length ? (
-            <div className="hp-market-grid">{list.map((o) => <MarketCard key={o.publicId} item={o} />)}</div>
+            <div className="hp-market-grid">{list.map((o) => <MarketCard key={o.publicId} item={o} like={likeOf(o.publicId)} />)}</div>
           ) : (
             <div className="hp-market-empty">Nenhuma obra com esses filtros. <Link href={href(EMPTY_SELECTION, '')}>Limpar filtros</Link></div>
           )}

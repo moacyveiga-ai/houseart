@@ -1,0 +1,14 @@
+/* Perfil · minha conta (handoff "HouseArt App Colecionador" › Perfil). Prefix ha-cacct; the base is components/gallery/account.css. */
+.ha-cacct__ver { display: flex; align-items: center; gap: 4px; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-pending-500); }
+.ha-cacct__ver--ok { color: var(--ha-verified-500); }
+.ha-cacct__sw { cursor: default; }
+.ha-cacct__bar { display: flex; align-items: center; gap: 4px; margin: 0 -6px; }
+.ha-cacct__back { width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: var(--ha-radius-md); }
+.ha-cacct__back:hover { background: var(--ha-surface); }
+.ha-cacct__back:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-cacct__bar-t { font-size: var(--ha-text-body); font-weight: 600; color: var(--ha-fg); }
+.ha-cacct__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-cacct__field-k { display: flex; justify-content: space-between; gap: var(--ha-space-2); }
+.ha-cacct__field-n { font-weight: 500; color: var(--ha-fg-muted); }
+.ha-cacct__ro { background: var(--ha-paper-100); color: var(--ha-fg-body); }
+.ha-cacct__note { font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }

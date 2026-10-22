@@ -1,0 +1,32 @@
+/* Compartilhar obra (handoff "HouseArt App Colecionador" › Compartilhar obra). Prefix ha-share-. */
+.ha-share-scrim { align-items: flex-end; padding: 0; }
+@media (min-width: 720px) { .ha-share-scrim { align-items: center; padding: var(--ha-space-6); } }
+.ha-share { width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; background: var(--ha-bg); border-radius: var(--ha-radius-lg) var(--ha-radius-lg) 0 0; box-shadow: var(--ha-shadow-lg); padding: var(--ha-space-4) var(--ha-space-4) var(--ha-space-8); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ha-space-4); animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
+@media (min-width: 720px) { .ha-share { border-radius: var(--ha-radius-lg); padding: var(--ha-space-6); } }
+.ha-share__head { display: flex; align-items: center; justify-content: space-between; }
+.ha-share__title { font-size: var(--ha-text-body); font-weight: 600; color: var(--ha-fg); }
+.ha-share__card { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-share__wall img { box-shadow: var(--ha-shadow-sm); object-fit: contain; }
+.ha-share__txt { min-width: 0; gap: 2px; }
+.ha-share__t { font-family: var(--ha-font-display); font-size: var(--ha-text-body); color: var(--ha-fg); }
+.ha-share__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-share__link { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-share__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px var(--ha-space-2); }
+@media (min-width: 720px) { .ha-share__grid { grid-template-columns: repeat(5, 1fr); } }
+.ha-share__ch { display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: var(--ha-fg); }
+.ha-share__ch:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; border-radius: var(--ha-radius-sm); }
+.ha-share__circle { width: 52px; height: 52px; border-radius: 50%; background: var(--ha-paper-100); border: var(--ha-border-w) solid var(--ha-border); color: var(--ha-fg); display: flex; align-items: center; justify-content: center; transition: background var(--ha-dur-fast) var(--ha-ease); }
+.ha-share__ch:hover .ha-share__circle { background: var(--ha-paper-200); }
+.ha-share__letter { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.ha-share__letter--sm { font-size: 15px; }
+.ha-share__name { font-size: 11px; line-height: 14px; text-align: center; }
+.ha-share__field { display: flex; flex-direction: column; gap: 6px; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-share__msg { resize: none; min-height: 92px; padding: 10px 12px; border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-bg); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 400; line-height: var(--ha-lh-body-sm); color: var(--ha-fg); }
+.ha-share__msg:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-share__opts { display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); overflow: hidden; }
+.ha-share__opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) 14px; border: 0; background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; }
+.ha-share__opt:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-share__opt-n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-share__opt-s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-share__note { display: flex; gap: 6px; font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); }
+.ha-share__note .ha-icon { color: var(--ha-fg); flex: none; }

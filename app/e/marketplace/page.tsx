@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Marketplace } from '@/components/public/Marketplace'
-import { marketArtists, marketItems } from '@/lib/marketplace/public-server'
+import { listPublicArtworks, marketArtists, marketItems } from '@/lib/marketplace/public-server'
+import { artworkFlags } from '@/lib/community/server'
+import { getSession } from '@/lib/auth'
 import { selectionFromParams, type SortKey } from '@/lib/marketplace/filter-core'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +17,10 @@ export default async function PublicMarketplacePage({ searchParams }: { searchPa
   const q = one(p.q).trim().slice(0, 120)
   const sortRaw = one(p.sort) as SortKey
   const sort: SortKey = SORTS.includes(sortRaw) ? sortRaw : 'rel'
-  const [items, artists] = await Promise.all([marketItems(500), marketArtists(6)])
-  return <Marketplace items={items} artists={artists} sel={sel} q={q} sort={sort} />
+  const [items, artists, cards, session] = await Promise.all([marketItems(500), marketArtists(6), listPublicArtworks({}, 500), getSession()])
+  // The heart of each card: the numeric id (reactions) and whether this person already liked it.
+  const flags = await artworkFlags(session?.id ?? null, cards.map((c) => c.id))
+  const byPublicId: Record<string, { id: number; liked: boolean }> = {}
+  for (const c of cards) byPublicId[c.publicId] = { id: c.id, liked: flags.get(c.id)?.liked ?? false }
+  return <Marketplace items={items} artists={artists} sel={sel} q={q} sort={sort} reactions={{ signedIn: !!session, byPublicId }} />
 }

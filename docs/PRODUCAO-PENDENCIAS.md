@@ -43,6 +43,11 @@ trocar `APP_URL` para a URL final → Redeploy.
 Criar `Housemap/houseart` vazio → `git remote set-url origin git@github.com:Housemap/houseart.git`
 → `git push -u origin main` → Vercel → Settings → Git → reconectar.
 
+### 7. Acesso (Fase 2 do handoff)
+- Login social: criar os apps e colocar `OAUTH_<GOOGLE|APPLE|FACEBOOK|LINKEDIN>_CLIENT_ID/SECRET` na Vercel; redirect URI `<APP_URL>/api/auth/oauth/<provedor>/callback`. Sem a chave o botão aparece "Em breve".
+- SMS: `SMS_PROVIDER=twilio` + `TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM`; sem eles o código do celular não sai (fica no log sem o código) e o cadastro trava no passo do celular.
+- Texto jurídico de `/terms` e `/privacy` (hoje provisórios).
+
 ## Depois do MVP (produto)
 Stripe real (`STRIPE_ENV=live`, chaves e webhook; remover `STRIPE_MOCK_ALLOWED`), KYC real,
 etiquetas NTAG 424 reais (`MARKER_VENDOR=ntag424` + master key), carimbo do tempo, âncora,

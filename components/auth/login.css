@@ -1,0 +1,74 @@
+/* Entrar (handoff "HouseArt Entrar.dc.html"): the card, the social buttons,
+   the password field with the eye, the callouts and the consent line. Only
+   this page imports it; the shell lives in app/ds/cells.css (.ha-login*). */
+
+.ha-login--entrar .ha-login__card { max-width: 400px; gap: var(--ha-space-6); }
+.ha-login--entrar .ha-login__lead { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); margin: 0; }
+.ha-login--entrar .ha-login__lead a { font-weight: 600; color: var(--ha-fg); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── social buttons ──────────────────────────────────────────────────────── */
+/* Provider chrome follows each provider's own brand guideline (the design
+   draws Google white/bordered and Apple black). Page-local tokens, so no
+   colour sits loose in a rule. */
+.ha-login-social {
+  --ha-social-google-bg: #FFFFFF; --ha-social-google-fg: #1F1F1F; --ha-social-google-border: #DADCE0; --ha-social-google-hover: #F8F9FA;
+  --ha-social-apple-bg: #000000; --ha-social-apple-fg: #FFFFFF; --ha-social-apple-hover: #222222;
+  --ha-social-facebook-bg: #1877F2; --ha-social-facebook-fg: #FFFFFF; --ha-social-facebook-hover: #166FE5;
+  --ha-social-linkedin-bg: #0A66C2; --ha-social-linkedin-fg: #FFFFFF; --ha-social-linkedin-hover: #004182;
+  display: flex; flex-direction: column; gap: var(--ha-space-2);
+}
+.ha-social-btn {
+  display: flex; align-items: center; justify-content: center; gap: var(--ha-space-3);
+  height: 48px; padding: 0 var(--ha-space-4); border-radius: var(--ha-radius-md);
+  border: var(--ha-border-w) solid transparent; font: inherit; font-weight: 500; font-size: var(--ha-text-body-sm);
+  cursor: pointer; text-decoration: none; position: relative;
+  transition: background var(--ha-dur-fast), border-color var(--ha-dur-fast);
+}
+.ha-social-btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-social-btn:active:not([aria-disabled="true"]) { transform: translateY(1px); }
+.ha-social-btn svg { flex: none; display: block; }
+.ha-social-btn--google { background: var(--ha-social-google-bg); color: var(--ha-social-google-fg); border-color: var(--ha-social-google-border); }
+.ha-social-btn--google:hover { background: var(--ha-social-google-hover); }
+.ha-social-btn--apple { background: var(--ha-social-apple-bg); color: var(--ha-social-apple-fg); }
+.ha-social-btn--apple:hover { background: var(--ha-social-apple-hover); }
+.ha-social-btn--facebook { background: var(--ha-social-facebook-bg); color: var(--ha-social-facebook-fg); }
+.ha-social-btn--facebook:hover { background: var(--ha-social-facebook-hover); }
+.ha-social-btn--linkedin { background: var(--ha-social-linkedin-bg); color: var(--ha-social-linkedin-fg); }
+.ha-social-btn--linkedin:hover { background: var(--ha-social-linkedin-hover); }
+.ha-social-btn--mock { background: transparent; color: var(--ha-fg); border-color: var(--ha-ink-900); border-style: dashed; }
+.ha-social-btn--mock:hover { background: var(--ha-surface); }
+/* not configured yet: the design shows the button; here it is inert and says why */
+.ha-social-btn[aria-disabled="true"] { cursor: default; background: var(--ha-paper-100); color: var(--ha-ink-300); border-color: var(--ha-paper-200); padding-inline: 72px; white-space: nowrap; }
+.ha-social-btn[aria-disabled="true"] svg { opacity: .45; filter: grayscale(1); }
+.ha-social-btn__soon { position: absolute; right: var(--ha-space-3); top: 50%; transform: translateY(-50%); font-size: var(--ha-text-caption); font-weight: 500; color: var(--ha-ink-300); }
+
+/* ── form ────────────────────────────────────────────────────────────────── */
+.ha-login-form { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-login-form .ha-label { gap: var(--ha-space-2); }
+.ha-login-form .ha-input { background: var(--ha-bg); }
+.ha-login-form .ha-input::placeholder { color: var(--ha-ink-300); }
+.ha-login-form__label-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ha-space-3); }
+.ha-login-form__forgot { background: transparent; border: 0; padding: 0; cursor: pointer; font: inherit; font-weight: 500; font-size: var(--ha-text-caption); color: var(--ha-ink-500); text-decoration: underline; text-underline-offset: 3px; }
+.ha-login-form__forgot:hover { color: var(--ha-fg); }
+.ha-login-form__forgot:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; border-radius: var(--ha-radius-sm); }
+.ha-login-form__pw { position: relative; display: flex; }
+.ha-login-form__pw .ha-input { padding-right: 48px; }
+.ha-login-form__eye { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; background: transparent; color: var(--ha-ink-500); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ha-radius-sm); }
+.ha-login-form__eye:hover { color: var(--ha-fg); }
+.ha-login-form__eye:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 0; }
+.ha-login-form__check { display: flex; gap: var(--ha-space-2); align-items: center; font-size: var(--ha-text-body-sm); font-weight: 400; color: var(--ha-fg-body); cursor: pointer; }
+.ha-login-form__check input { accent-color: var(--ha-ink-900); width: 16px; height: 16px; margin: 0; }
+.ha-login-form__submit { height: 52px; width: 100%; }
+.ha-login-form__submit .ha-spinner { width: 18px; height: 18px; }
+.ha-login-note { display: flex; gap: var(--ha-space-2); align-items: flex-start; padding: var(--ha-space-3); border-radius: var(--ha-radius-sm); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); }
+.ha-login-note .ha-icon { font-size: 18px; flex: none; }
+.ha-login-note--error { background: var(--ha-alert-100); color: var(--ha-alert-500); }
+.ha-login-note--ok { background: var(--ha-verified-100); color: var(--ha-verified-500); }
+.ha-login-note--info { background: var(--ha-pending-100); color: var(--ha-pending-500); }
+.ha-login-consent { margin: 0; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-500); text-wrap: pretty; }
+.ha-login-consent a { color: var(--ha-ink-700); }
+.ha-login-alt { margin: 0; text-align: center; font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-login-alt .ha-link { font-size: var(--ha-text-caption); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.ha-login-form__back { align-self: flex-start; }
+
+@media (max-width: 720px) { .ha-login--entrar .ha-login__form { padding: var(--ha-space-8) var(--ha-space-4); } }

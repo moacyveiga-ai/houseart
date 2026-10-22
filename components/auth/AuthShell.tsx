@@ -1,26 +1,65 @@
-// The two-panel entrance of the design ("Login" / "Criar conta" screens in
-// houseart-design/screens.html): the ink panel with the brand, the framed
-// artwork and the house claim on the left; a 380px column on the right.
+// The two-panel entrance of the design: the ink panel with the brand on the
+// left; a column for the card on the right. Two looks for the panel:
+//   · `frame` (default — "Login" / "Criar conta" of screens.html): the framed
+//     artwork and the house claim with a caption (or `foot`, e.g. the plan
+//     summary of HouseArt Cadastro.dc.html).
+//   · `claim` (HouseArt Entrar.dc.html): headline + tagline at the bottom of a
+//     darkened wall, no frame.
+// The API `{title, lead, children}` is kept; `hideHeading` (or no `title`)
+// lets an island draw its own header — the login swaps to "Recuperar senha"
+// in place. `brandHeight` follows the handoff table (§4.5: 30 on Entrar and
+// Cadastro, 48 on the Web App login). `className` adds a modifier to the root.
 import type { ReactNode } from 'react'
 import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
 
-export function AuthShell({ title, lead, children }: { title: string; lead: string; children: ReactNode }) {
+export interface AuthShellProps {
+  title?: string
+  lead?: ReactNode
+  children: ReactNode
+  /** replaces the claim/caption block of the `frame` panel */
+  foot?: ReactNode
+  className?: string
+  brandHeight?: number
+  hideHeading?: boolean
+  /** look of the ink panel (see the header comment) */
+  variant?: 'frame' | 'claim'
+  /** headline of the `claim` panel (`<i>` for the italic part) */
+  claim?: ReactNode
+  /** sentence under the headline of the `claim` panel; `null` hides it */
+  tagline?: ReactNode
+}
+
+export function AuthShell({ title, lead, children, foot, className, brandHeight, hideHeading = false, variant = 'frame', claim, tagline }: AuthShellProps) {
+  const isClaim = variant === 'claim'
   return (
-    <main className="ha-login">
-      <section className="ha-login__art" aria-hidden="true">
-        <HouseArtLogo version="full_horiz" tone="negativo" height={48} />
-        <div className="ha-login__stage"><div className="ha-login__frame" /></div>
-        <div className="ha-login__foot">
-          <div className="ha-login__claim">A escritura da obra de arte</div>
-          <div className="ha-login__caption">Joana Teixeira · <i>Construção para um dia claro</i>, 2025</div>
-        </div>
+    <main className={['ha-login', isClaim ? 'ha-login--claim' : '', className ?? ''].filter(Boolean).join(' ')}>
+      <section className="ha-login__art">
+        <a href="/e" className="ha-login__brand" aria-label="HouseArt — site"><HouseArtLogo version="full_horiz" tone="negativo" height={brandHeight ?? (isClaim ? 30 : 48)} /></a>
+        {isClaim ? (
+          <div className="ha-login__hero" aria-hidden="true">
+            <h2 className="ha-login__headline">{claim ?? <>Sua coleção, <i>com escritura.</i></>}</h2>
+            {tagline === null ? null : <p className="ha-login__tagline">{tagline ?? 'Acompanhe ofertas, entregas e certificados das suas obras em um só lugar.'}</p>}
+          </div>
+        ) : (
+          <>
+            <div className="ha-login__stage" aria-hidden="true"><div className="ha-login__frame" /></div>
+            {foot ?? (
+              <div className="ha-login__foot" aria-hidden="true">
+                <div className="ha-login__claim">{claim ?? 'A escritura da obra de arte'}</div>
+                <div className="ha-login__caption">Joana Teixeira · <i>Construção para um dia claro</i>, 2025</div>
+              </div>
+            )}
+          </>
+        )}
       </section>
       <section className="ha-login__form">
         <div className="ha-login__card">
-          <div>
-            <h1 className="ha-h1">{title}</h1>
-            <p className="ha-login__lead">{lead}</p>
-          </div>
+          {hideHeading || !title ? null : (
+            <div className="ha-login__head">
+              <h1 className="ha-h1">{title}</h1>
+              {lead ? <p className="ha-login__lead">{lead}</p> : null}
+            </div>
+          )}
           {children}
         </div>
       </section>

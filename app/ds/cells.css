@@ -226,6 +226,13 @@
 .ha-login__lead { margin: var(--ha-space-2) 0 0; color: var(--ha-fg-muted); }
 .ha-login__links { justify-content: space-between; }
 @media (max-width: 720px) { .ha-login__art { min-height: 0; padding: var(--ha-space-6); } .ha-login__stage { display: none; } .ha-login__claim { font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); } }
+/* `claim` panel of the handoff (Entrar / Cadastro): brand on top, headline + tagline at the bottom, darkened wall. */
+.ha-login--claim .ha-login__art { justify-content: space-between; gap: var(--ha-space-10); background: linear-gradient(180deg, var(--ha-ink-700), var(--ha-ink-900) 65%); min-height: 320px; }
+.ha-login__hero { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 460px; }
+.ha-login__headline { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: clamp(36px, 4vw, 56px); line-height: 1.05; color: var(--ha-paper-50); }
+.ha-login__tagline { margin: 0; color: var(--ha-paper-200); text-wrap: pretty; }
+.ha-login__head { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+@media (max-width: 720px) { .ha-login--claim .ha-login__art { min-height: 0; gap: var(--ha-space-6); } .ha-login__headline { font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); } }
 .ha-profile-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ha-space-3); text-align: left; padding: var(--ha-space-6); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); cursor: pointer; transition: box-shadow var(--ha-dur-fast), border-color var(--ha-dur-fast); text-decoration: none; color: inherit; }
 .ha-profile-card:hover { border-color: var(--ha-ink-900); box-shadow: var(--ha-shadow-sm); }
 .ha-profile-card:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
@@ -443,3 +450,4 @@ a.ha-card { color: inherit; text-decoration: none; }
 
 /* index-ticker (molécula): a faixa do handoff tem padding 8/16 e começa à esquerda */
 .ha-ticker--left { justify-content: flex-start; padding: var(--ha-space-2) var(--ha-space-4); }
+.ha-login__brand { display: inline-flex; align-self: flex-start; }

@@ -1,0 +1,132 @@
+/* Signup — HouseArt Cadastro.dc.html (the card) + the stepped "Cadastro" of
+   HouseArt App Colecionador.dc.html. Scoped under .ha-login--signup; only
+   --ha-* tokens (the four provider badges carry third-party brand colours,
+   exactly as the prototype draws them). */
+
+.ha-login--signup .ha-login__art { justify-content: space-between; gap: var(--ha-space-10); padding: var(--ha-space-10) var(--ha-space-10) var(--ha-space-12); }
+.ha-login--signup .ha-login__stage { flex: 0 0 auto; padding: 0; }
+.ha-login--signup .ha-login__frame { width: 100%; max-width: 520px; aspect-ratio: 4 / 3; border: 0; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-10); box-sizing: border-box; }
+.ha-login--signup .ha-login__frame::before { content: ''; display: block; width: 100%; aspect-ratio: 2296 / 2869; max-height: 100%; background: linear-gradient(160deg, var(--ha-paper-200), var(--ha-ink-300) 70%); box-shadow: var(--ha-shadow-wall); }
+.ha-login--signup .ha-login__form { padding: var(--ha-space-12) var(--ha-space-6); }
+.ha-login--signup .ha-login__card { max-width: 420px; gap: var(--ha-space-6); }
+
+/* aside: Plano escolhido */
+.ha-signup-plan { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 520px; }
+.ha-signup-plan__eyebrow { font-size: var(--ha-text-caption); letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--ha-paper-200); }
+.ha-signup-plan__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ha-space-4); padding-bottom: var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-ink-700); }
+.ha-signup-plan__name { font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); }
+.ha-signup-plan__price { font-size: var(--ha-text-h3); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ha-signup-plan__per { font-size: var(--ha-text-body-sm); font-weight: 400; color: var(--ha-paper-200); }
+.ha-signup-plan__chips { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); }
+.ha-signup-plan__chip { cursor: pointer; font-size: var(--ha-text-body-sm); padding: var(--ha-space-1) var(--ha-space-3); border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-ink-700); background: transparent; color: var(--ha-paper-200); transition: background var(--ha-dur-fast), color var(--ha-dur-fast), border-color var(--ha-dur-fast); }
+.ha-signup-plan__chip:hover { border-color: var(--ha-paper-200); }
+.ha-signup-plan__chip--on, .ha-signup-plan__chip--on:hover { background: var(--ha-paper-50); color: var(--ha-ink-900); border-color: var(--ha-paper-50); }
+.ha-signup-plan__chip:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-signup-plan__note { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-paper-200); }
+
+/* card */
+.ha-signup { display: flex; flex-direction: column; gap: var(--ha-space-6); }
+.ha-signup__title { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-signup__title .ha-h1 { line-height: 1.1; text-wrap: balance; }
+.ha-signup__sub { margin: 0; color: var(--ha-ink-500); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); text-wrap: pretty; }
+.ha-signup__notice { margin: 0; padding: var(--ha-space-3) var(--ha-space-4); border-radius: var(--ha-radius-md); background: var(--ha-pending-100); color: var(--ha-ink-900); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); }
+
+.ha-signup__socials { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-signup__social { display: flex; align-items: center; justify-content: center; gap: var(--ha-space-3); padding: var(--ha-space-3) var(--ha-space-4); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-paper-200); background: var(--ha-paper-50); color: var(--ha-ink-900); text-decoration: none; font-weight: 500; font-size: var(--ha-text-body-sm); transition: border-color var(--ha-dur-fast); }
+.ha-signup__social:hover { border-color: var(--ha-ink-900); color: var(--ha-ink-900); }
+.ha-signup__social:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-signup__social--off { color: var(--ha-ink-300); cursor: not-allowed; }
+.ha-signup__social--off:hover { border-color: var(--ha-paper-200); color: var(--ha-ink-300); }
+.ha-signup__social--off .ha-signup__social-badge { opacity: .45; }
+.ha-signup__social--mock { border-style: dashed; }
+.ha-signup__social-badge { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: var(--ha-ink-900); }
+.ha-signup__social-badge--facebook { color: #1877F2; }
+.ha-signup__social-badge--linkedin { color: #0A66C2; }
+.ha-signup__social-badge--mock { color: var(--ha-ink-500); }
+
+.ha-signup__divider { display: flex; align-items: center; gap: var(--ha-space-3); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-signup__divider span { flex: 1; height: 1px; background: var(--ha-paper-200); }
+
+.ha-signup__form { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-signup__form .ha-label { gap: var(--ha-space-2); }
+.ha-signup__form .ha-input { border-color: var(--ha-paper-200); background: var(--ha-paper-50); }
+.ha-signup__form .ha-input:hover { border-color: var(--ha-ink-500); }
+.ha-signup__form .ha-input:focus { border-color: var(--ha-ink-900); }
+.ha-signup__field { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-signup__label { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-signup__segmented { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ha-space-1); padding: var(--ha-space-1); border-radius: var(--ha-radius-md); background: var(--ha-paper-100); }
+.ha-signup__segment { cursor: pointer; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); font-weight: 600; padding: var(--ha-space-2) 0; border-radius: var(--ha-radius-sm); border: 0; background: transparent; color: var(--ha-ink-500); transition: background var(--ha-dur-fast), color var(--ha-dur-fast); }
+.ha-signup__segment--on { background: var(--ha-paper-50); color: var(--ha-ink-900); box-shadow: var(--ha-shadow-sm); }
+.ha-signup__segment:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+
+.ha-signup__password { position: relative; display: flex; }
+.ha-signup__password .ha-input { padding-right: var(--ha-space-12); }
+.ha-signup__eye { position: absolute; right: var(--ha-space-2); top: 50%; transform: translateY(-50%); border: 0; background: transparent; padding: var(--ha-space-1); color: var(--ha-ink-500); cursor: pointer; display: inline-flex; border-radius: var(--ha-radius-sm); }
+.ha-signup__eye:hover { color: var(--ha-ink-900); }
+.ha-signup__eye:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); }
+.ha-signup__rules { list-style: none; margin: calc(-1 * var(--ha-space-2)) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ha-space-1); }
+.ha-signup__rule { display: flex; align-items: center; gap: var(--ha-space-2); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-signup__rule--ok { color: var(--ha-verified-500); }
+
+.ha-signup__terms { display: flex; gap: var(--ha-space-2); align-items: flex-start; font-size: var(--ha-text-body-sm); line-height: 1.4; color: var(--ha-ink-500); cursor: pointer; }
+.ha-signup__terms input { margin: 2px 0 0; accent-color: var(--ha-ink-900); flex: none; width: 16px; height: 16px; }
+.ha-signup__terms--bad { color: var(--ha-alert-500); }
+.ha-signup__termlink { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.ha-signup__cta { width: 100%; padding-top: var(--ha-space-4); padding-bottom: var(--ha-space-4); }
+.ha-signup__alt { align-self: center; }
+
+/* steps 2–4 header: "Passo N de 4" + the four segments of the app */
+.ha-signup__head { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-signup__headrow { display: flex; align-items: center; gap: var(--ha-space-2); min-height: 32px; }
+.ha-signup__back { width: 32px; height: 32px; margin-left: calc(-1 * var(--ha-space-2)); border: 0; background: transparent; color: var(--ha-ink-900); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ha-radius-sm); }
+.ha-signup__back:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); }
+.ha-signup__stepno { font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
+.ha-signup__segments { display: flex; gap: var(--ha-space-1); }
+.ha-signup__seg { flex: 1; height: 3px; border-radius: var(--ha-radius-full); background: var(--ha-paper-200); }
+.ha-signup__seg--on { background: var(--ha-ink-900); }
+
+/* code: six boxes over one input */
+.ha-signup__code { display: flex; flex-direction: column; gap: var(--ha-space-3); }
+.ha-signup__boxes { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--ha-space-2); cursor: text; }
+.ha-signup__box { height: 56px; border-radius: var(--ha-radius-sm); border: 1.5px solid var(--ha-ink-300); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; color: var(--ha-ink-900); font-variant-numeric: tabular-nums; background: var(--ha-paper-50); }
+.ha-signup__box--filled { border-color: var(--ha-ink-500); }
+.ha-signup__box--cursor { border-color: var(--ha-ink-900); }
+.ha-signup__code-input { letter-spacing: .3em; font-variant-numeric: tabular-nums; }
+.ha-signup__code-input::placeholder { letter-spacing: 0; }
+.ha-signup__meta { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-ink-500); overflow-wrap: anywhere; }
+.ha-signup__meta .ha-icon { vertical-align: -4px; margin-right: var(--ha-space-1); }
+.ha-signup__meta b { color: var(--ha-ink-900); font-weight: 600; }
+.ha-signup__meta--split { display: flex; align-items: center; justify-content: space-between; gap: var(--ha-space-2); }
+.ha-signup__resend-wait { color: var(--ha-ink-500); white-space: nowrap; }
+.ha-signup__echo { margin: 0; font-size: var(--ha-text-caption); color: var(--ha-ink-300); }
+.ha-signup__echo code { font-variant-numeric: tabular-nums; letter-spacing: .08em; color: var(--ha-ink-500); }
+
+/* step 4: uses, interests, city, newsletter */
+.ha-signup__uses { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-signup__use { display: grid; grid-template-columns: 28px minmax(0, 1fr) 24px; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); color: var(--ha-ink-900); cursor: pointer; text-align: left; transition: border-color var(--ha-dur-fast), background var(--ha-dur-fast); }
+.ha-signup__use:hover { border-color: var(--ha-ink-500); }
+.ha-signup__use--on { border-color: var(--ha-ink-900); background: var(--ha-paper-100); }
+.ha-signup__use:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-signup__use-name { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-signup__chips { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); }
+.ha-signup__chips .ha-chip { font-weight: 600; font-size: var(--ha-text-body-sm); padding: var(--ha-space-2) var(--ha-space-4); }
+.ha-signup__optin { display: flex; align-items: center; justify-content: space-between; gap: var(--ha-space-4); padding: var(--ha-space-3) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-ink-700); }
+
+/* step 5: Conta criada */
+.ha-signup__done { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-signup__seal { position: relative; width: 120px; height: 120px; align-self: center; margin: var(--ha-space-3) 0; }
+.ha-signup__seal svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ha-signup__seal-ring { stroke: var(--ha-verified-500); animation: ha-close 700ms var(--ha-ease) forwards; }
+.ha-signup__seal-core { position: absolute; inset: 22px; border-radius: 50%; background: var(--ha-verified-500); color: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; animation: ha-fade 500ms 400ms var(--ha-ease) both; }
+.ha-signup__summary { margin: 0; display: flex; flex-direction: column; border-top: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-signup__row { display: flex; justify-content: space-between; gap: var(--ha-space-3); padding: var(--ha-space-3) 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); font-size: var(--ha-text-body-sm); }
+.ha-signup__row dt { color: var(--ha-ink-500); flex: none; white-space: nowrap; }
+.ha-signup__row dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-weight: 600; color: var(--ha-ink-900); text-align: right; }
+
+@media (max-width: 720px) {
+  .ha-login--signup .ha-login__art { padding: var(--ha-space-6); gap: var(--ha-space-6); }
+  .ha-login--signup .ha-login__stage { display: none; }
+  .ha-login--signup .ha-login__form { padding: var(--ha-space-8) var(--ha-space-4); }
+  .ha-signup__segment { font-size: 11px; }
+}

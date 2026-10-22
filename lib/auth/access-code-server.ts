@@ -75,13 +75,13 @@ export async function startSignupCode(rawEmail: string, payload: SignupPayload):
   return { ok: true, token, ...(codeEchoAllowed() ? { echo: code } : {}) }
 }
 
-export async function resendCode(token: string): Promise<{ ok: boolean }> {
+export async function resendCode(token: string): Promise<{ ok: boolean; echo?: string }> {
   const row = await prisma.accessCode.findUnique({ where: { tokenHash: sha256(token) } })
   if (!row || row.consumedAt || row.resends >= CODE_MAX_RESENDS || row.expiresAt < new Date()) return { ok: true }
   const code = newCode()
   await prisma.accessCode.update({ where: { id: row.id }, data: { codeHash: sha256(row.purpose === 'SILENT' ? newCode() : code), resends: { increment: 1 }, attempts: 0, expiresAt: new Date(Date.now() + CODE_TTL_MS) } })
   if (row.purpose !== 'SILENT') mailCode(row.email, code, row.purpose as 'LOGIN' | 'SIGNUP')
-  return { ok: true }
+  return { ok: true, ...(codeEchoAllowed() && row.purpose !== 'SILENT' ? { echo: code } : {}) }
 }
 
 /** Verify the code; on success opens the session (LOGIN) or creates the account and opens it (SIGNUP). */

@@ -108,6 +108,12 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-22 — Handoff Fase 2 feita: acesso no desenho.** Entrar e Cadastro em passos (`app/login`, `app/signup`,
+  `app/signup/welcome`), login social em `lib/auth/oauth/` (Google/Apple/Facebook/LinkedIn; `MOCK` só com `OAUTH_MOCK=1`
+  fora de produção; provedor sem chave = botão "Em breve"), celular por SMS (`lib/sms/`, Twilio ou mock), reset de senha por
+  link de 1 h, "Manter conectado", preferências do onboarding, `UserIdentity`; migration `20261022100000_phase2_access`.
+  `/terms` e `/privacy` provisórios. Divergências em `docs/HANDOFF-2026-10-21.md` §5. **Próximas:** Fase 4, 3, 6, 5, Web
+  Colecionador/Galeria; apps mobile dependem de decisão.
 - **2026-10-21 — Handoff Fases 1 e 7 feitas: design system em código e o site público no ar.**
   `/design-system` (galeria pública dos componentes, seção a seção como o protótipo; `components/ds/`
   ganhou Field, Toggle, ArtworkFrame, StatusBadge, ArtworkId, ArtworkCard, ProvenanceChain,
@@ -122,7 +128,7 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   **sem tela de edição ainda** (entra por SQL; `scripts/seed-public-demo.ts` semeia um exemplo LOCAL).
   Catraca `handoff-screens` com 65 telas pendentes (apps mobile, Web Colecionador/Galeria, Entrar/Cadastro
   novos). Divergências por página no relatório de cada lote em `docs/HANDOFF-2026-10-21.md` §5.
-  **Próximas:** Fase 2 (celular + código, login social), Fase 4 (oferta em 5 etapas, checkout, carteira),
+  **Próximas (na época):** Fase 2 (celular + código, login social), Fase 4 (oferta em 5 etapas, checkout, carteira),
   Fase 3 (captura guiada), Fase 6 (galeria), Fase 5 (mensagens, comunidade, push).
 - **2026-10-21 — Handoff de design completo recebido; Fase 0 dele feita.** Pacote em
   `houseart-design/handoff/` (site, home, marketplace, obra, oferta, artista, galeria(s), verificar,

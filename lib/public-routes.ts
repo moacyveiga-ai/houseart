@@ -15,6 +15,7 @@ const PUBLIC_EXACT = new Set<string>([
   '/collector/access',           // collector entry by e-mail code
   '/api/version',                // deploy probe
   '/privacy',
+  '/terms',
   '/robots.txt',
   '/sitemap.xml',
   '/verify',                     // public certificate verification: the code field (prefix '/verify/' covers the result)

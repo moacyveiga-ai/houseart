@@ -26,5 +26,5 @@ export async function POST(req: Request) {
   if (!brake.allowed) return rateLimitResponse(brake.decision, { ok: false, error: 'Muitas tentativas. Aguarde um pouco e tente de novo.' })
   const r = await startSignupCode(email, { name: parsed.data.name, password: parsed.data.password, profileKind: parsed.data.profileKind, cpf: parsed.data.cpf ?? null })
   if (!r.ok) return NextResponse.json(r, { status: 400 })
-  return NextResponse.json({ ok: true, token: r.token, message: 'Enviamos um código para o seu e-mail.' })
+  return NextResponse.json({ ok: true, token: r.token, message: 'Enviamos um código para o seu e-mail.', ...(r.echo ? { echo: r.echo } : {}) })
 }

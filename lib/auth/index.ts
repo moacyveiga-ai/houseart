@@ -29,6 +29,8 @@ export interface SessionUser extends ProfilePrincipal {
   memberId: number | null
   tenantId: number | null
   tenantRole: 'ADMIN' | 'MEMBER' | null
+  /** Member.kind of the login (null without a member). */
+  memberKind: string | null
   /** Product profile active in this session (lib/profiles); null = not chosen yet. */
   activeProfileKind: string | null
   /** Session row id (to switch the active profile). */
@@ -41,6 +43,7 @@ export function verifyPassword(plain: string, hash: string): Promise<boolean> { 
 type UserRow = {
   id: number; name: string; email: string; cpf: string | null; profile: string
   memberId: number | null; tenantId: number | null; tenantRole: string | null
+  member?: { kind: string } | null
 }
 
 export function userForSession(u: UserRow, session: { id: number | null; activeProfileKind: string | null } = { id: null, activeProfileKind: null }): SessionUser {
@@ -53,6 +56,7 @@ export function userForSession(u: UserRow, session: { id: number | null; activeP
     memberId: u.memberId ?? null,
     tenantId: u.tenantId ?? null,
     tenantRole: u.tenantRole === 'ADMIN' || u.tenantRole === 'MEMBER' ? u.tenantRole : null,
+    memberKind: u.member?.kind ?? null,
     activeProfileKind: session.activeProfileKind,
     sessionId: session.id,
   }
@@ -109,7 +113,7 @@ export async function getSession(): Promise<SessionUser | null> {
 
 export async function getSessionByToken(token: string): Promise<SessionUser | null> {
   if (!/^[0-9a-f]{64}$/.test(token)) return null
-  const session = await prisma.session.findUnique({ where: { token: sessionTokenKey(token) }, include: { user: true } })
+  const session = await prisma.session.findUnique({ where: { token: sessionTokenKey(token) }, include: { user: { include: { member: { select: { kind: true } } } } } })
   if (!session) return null
   if (session.expiresAt < new Date()) {
     afterResponse('auth: expired session', () => prisma.session.deleteMany({ where: { id: session.id } }))

@@ -18,10 +18,15 @@ const sha256 = (v: string) => createHash('sha256').update(v).digest('hex')
 
 export interface TeamPerson { kind: 'MEMBER' | 'INVITE'; id: number; name: string; email: string | null; role: TeamRole; roleLabel: string; sub: string; isSelf: boolean }
 
-function requireTenantAdmin(scope: Scope): number {
+async function requireTenantAdmin(scope: Scope): Promise<number> {
   if (scope.kind !== 'tenant' && scope.kind !== 'total') throw new ArtworkError('FORBIDDEN', 'Só o administrador da galeria gere a equipe.', 403)
   const tenantId = tenantOfScope(scope)
   if (!tenantId) throw new ArtworkError('NO_TENANT', 'Galeria não encontrada.', 404)
+  if (scope.kind === 'tenant' && scope.memberId) {
+    // Sales and inventory staff see the gallery but do not manage the team.
+    const m = await prisma.member.findUnique({ where: { id: scope.memberId }, select: { role: true, user: { select: { tenantRole: true } } } })
+    if (m && m.role !== 'ADMIN' && m.user?.tenantRole !== 'ADMIN') throw new ArtworkError('FORBIDDEN', 'Só o administrador da galeria gere a equipe.', 403)
+  }
   return tenantId
 }
 
@@ -43,7 +48,7 @@ export async function teamOf(scope: Scope, selfUserId: number): Promise<TeamPers
 
 /** Invites by e-mail. Blind on an e-mail that already belongs to the team (no second row, no error). */
 export async function invite(scope: Scope, rawEmail: string, role: string, actor: { userId: number; name: string }): Promise<{ ok: true } | { ok: false; error: string }> {
-  const tenantId = requireTenantAdmin(scope)
+  const tenantId = await requireTenantAdmin(scope)
   const email = normalizeEmail(rawEmail)
   if (!email) return { ok: false, error: 'Informe um e-mail válido.' }
   if (!(TEAM_ROLES as readonly string[]).includes(role)) return { ok: false, error: 'Papel inválido.' }
@@ -60,13 +65,13 @@ export async function invite(scope: Scope, rawEmail: string, role: string, actor
 }
 
 export async function revokeInvite(scope: Scope, inviteId: number): Promise<boolean> {
-  const tenantId = requireTenantAdmin(scope)
+  const tenantId = await requireTenantAdmin(scope)
   const r = await prisma.teamInvite.updateMany({ where: { id: inviteId, tenantId, status: 'PENDING' }, data: { status: 'REVOKED' } })
   return r.count > 0
 }
 
 export async function setRole(scope: Scope, memberId: number, role: string, actor: { userId: number }): Promise<boolean> {
-  const tenantId = requireTenantAdmin(scope)
+  const tenantId = await requireTenantAdmin(scope)
   if (!(TEAM_ROLES as readonly string[]).includes(role)) return false
   const m = await prisma.member.findFirst({ where: { id: memberId, tenantId, kind: 'GALLERY_STAFF' }, include: { user: { select: { id: true } } } })
   if (!m) return false
@@ -80,7 +85,7 @@ export async function setRole(scope: Scope, memberId: number, role: string, acto
 }
 
 export async function removeFromTeam(scope: Scope, memberId: number, actor: { userId: number }): Promise<boolean> {
-  const tenantId = requireTenantAdmin(scope)
+  const tenantId = await requireTenantAdmin(scope)
   const m = await prisma.member.findFirst({ where: { id: memberId, tenantId, kind: 'GALLERY_STAFF', status: 'ACTIVE' }, include: { user: { select: { id: true } } } })
   if (!m) return false
   if (m.user?.id === actor.userId) throw new ArtworkError('SELF_REMOVE', 'Você não pode se remover da própria galeria.', 409)

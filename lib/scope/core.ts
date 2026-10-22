@@ -40,6 +40,8 @@ export interface UserForScope {
   tenantId?: number | null
   /** 'ADMIN' manages the whole tenant; 'MEMBER' operates their own portfolio. */
   tenantRole?: string | null
+  /** Member.kind: GALLERY_STAFF of any team role sees the gallery's whole inventory and offers. */
+  memberKind?: string | null
 }
 
 /**
@@ -57,7 +59,7 @@ export function scopeOfUser(
   const tenantId = validId(user.tenantId) ? user.tenantId : null
   const memberId = validId(user.memberId) ? user.memberId : null
   const tenantLevel = options.tenantLevel ?? true
-  if (tenantLevel && user.tenantRole === 'ADMIN' && tenantId !== null) {
+  if (tenantLevel && (user.tenantRole === 'ADMIN' || user.memberKind === 'GALLERY_STAFF') && tenantId !== null) {
     return { kind: 'tenant', tenantId, memberId }
   }
   return memberId !== null ? { kind: 'member', memberId, tenantId } : NONE_SCOPE

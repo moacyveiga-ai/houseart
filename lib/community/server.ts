@@ -141,7 +141,7 @@ export async function createPost(userId: number, raw: Record<string, unknown>): 
   if (v.imageUrl && !isOwnImageUrl(v.imageUrl)) throw new ArtworkError('BAD_IMAGE', 'A foto do post precisa ser uma imagem enviada à HouseArt.', 422)
   if (v.artworkId) {
     const a = await prisma.artwork.findUnique({ where: { id: v.artworkId }, select: { memberId: true, status: true, publicId: true } })
-    if (!a || !a.publicId || !['LISTED', 'AUTHENTICATED', 'SOLD'].includes(a.status)) throw new ArtworkError('ARTWORK', 'Só obras autenticadas entram num post.', 422)
+    if (!a || !a.publicId || !['LISTED', 'AUTHENTICATED', 'IN_DEAL', 'SOLD'].includes(a.status)) throw new ArtworkError('ARTWORK', 'Só obras autenticadas entram num post.', 422)
   }
   const p = await prisma.post.create({ data: {
     authorUserId: userId, authorMemberId: u.memberId, tenantId: u.tenantId, kind: v.kind, body: v.body, imageUrl: v.imageUrl ?? null, artworkId: v.artworkId ?? null,

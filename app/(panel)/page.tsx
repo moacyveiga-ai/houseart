@@ -43,7 +43,10 @@ export default async function DashboardPage() {
           <div className="ha-eyebrow">{dateLabel(now)}</div>
           <h1 className="ha-h1">{greetingFor(user.name, now)}</h1>
         </div>
-        <Link href="/artworks/new" className="ha-btn ha-btn--primary ha-btn--md"><Icon name="add" size={18} />Nova obra</Link>
+        <div className="ha-row" style={{ gap: 'var(--ha-space-3)' }}>
+          {nav === 'artist' ? <Link href="/profile/public" className="ha-btn ha-btn--outline ha-btn--md"><Icon name="badge" size={18} />Perfil público</Link> : null}
+          <Link href="/artworks/new" className="ha-btn ha-btn--primary ha-btn--md"><Icon name="add" size={18} />Nova obra</Link>
+        </div>
       </div>
       <Kpis items={kpisFor(profile, counts, year)} />
       <div className="ha-split">

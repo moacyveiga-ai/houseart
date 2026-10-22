@@ -79,6 +79,8 @@ const APPRAISER: NavItem[] = [
 const ADMIN: NavItem[] = [
   { key: 'review', label: 'Obras e certificados', icon: 'fact_check', href: '/admin/review' },
   { key: 'markers', label: 'Etiquetas', icon: 'sell', href: '/admin/markers' },
+  // Not in the design: the editors of the public site (news and agenda), 2026-10-22.
+  { key: 'content', label: 'Conteúdo do site', icon: 'newspaper', href: '/admin/content' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
 ]
 

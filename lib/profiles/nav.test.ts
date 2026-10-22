@@ -12,7 +12,8 @@ describe('NAV per profile (from the design)', () => {
     expect(NAV.collector.slice(-2).map((i) => i.href)).toEqual(['/favorites', '/account'])
     for (const k of ['artist', 'gallery', 'collector'] as const) expect(NAV[k].map((i) => i.href)).toEqual(expect.arrayContaining(['/messages', '/community']))
     expect(NAV.appraiser).toHaveLength(1)
-    expect(NAV.admin).toHaveLength(3)
+    expect(NAV.admin).toHaveLength(4)
+    expect(NAV.admin.map((i) => i.href)).toContain('/admin/content')
     expect(NAV.advisor).toBe(NAV.gallery)
   })
   it('homeOf and activeNavKey', () => {

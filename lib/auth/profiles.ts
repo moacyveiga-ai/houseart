@@ -20,6 +20,8 @@ export const FINANCE_ADMIN_PROFILES: readonly Profile[] = ['admin', 'manager']
 export const FINANCE_OPS_PROFILES: readonly Profile[] = ['admin', 'manager', 'finance']
 export const FINANCE_READ_PROFILES: readonly Profile[] = ['admin', 'manager', 'finance', 'operator']
 export const MEMBER_APPROVAL_PROFILES: readonly Profile[] = ['admin', 'manager']
+/** The house team that edits the public site (news and agenda). Finance does not. */
+export const CONTENT_EDITOR_PROFILES: readonly Profile[] = ['admin', 'manager', 'operator']
 
 export interface ProfilePrincipal { profile: string }
 const profileOf = (p: string | ProfilePrincipal): string => (typeof p === 'string' ? p : p.profile)
@@ -30,6 +32,7 @@ export const isInternal = (p: string | ProfilePrincipal) => has(PANEL_PROFILES, 
 export const isExternal = (p: string | ProfilePrincipal) => has(EXTERNAL_PROFILES, p)
 export const canManageAdmin = (p: string | ProfilePrincipal) => profileOf(p) === 'admin'
 export const canOperateAuthenticationDesk = (p: string | ProfilePrincipal) => has(AUTHENTICATION_DESK_PROFILES, p)
+export const canEditPublicContent = (p: string | ProfilePrincipal) => has(CONTENT_EDITOR_PROFILES, p)
 export const canApproveMembers = (p: string | ProfilePrincipal) => has(MEMBER_APPROVAL_PROFILES, p)
 export const canAdministerFinance = (p: string | ProfilePrincipal) => has(FINANCE_ADMIN_PROFILES, p)
 export const canOperateFinance = (p: string | ProfilePrincipal) => has(FINANCE_OPS_PROFILES, p)

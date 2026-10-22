@@ -23,3 +23,18 @@ export const jsonList = (s: string | null | undefined): string[] => {
 
 /** "1931–2009" for a deceased artist, null otherwise. */
 export const lifeSpan = (birth: number | null, death: number | null): string | null => (death ? `${birth ?? '?'}–${death}` : null)
+
+// ── editing (the editor screens) ────────────────────────────────────────────
+export const ARTIST_ENTRY_KIND_LABELS: Record<ArtistEntryKind, string> = { TRAJECTORY: 'Trajetória', SOLO: 'Exposição individual', GROUP: 'Exposição coletiva', AWARD: 'Prêmio', EDUCATION: 'Formação', COLLECTION: 'Acervo público' }
+export type PublicationKind = (typeof PUBLICATION_KINDS)[number]
+export type PublicationAction = (typeof PUBLICATION_ACTIONS)[number]
+export type GalleryItemKind = (typeof GALLERY_ITEM_KINDS)[number]
+export const GALLERY_ITEM_KIND_LABELS: Record<GalleryItemKind, string> = { MILESTONE: 'Marco', TEAM: 'Equipe', PHOTO: 'Foto', VIDEO: 'Vídeo', ROOM: 'Sala' }
+/** What the subtitle of an item means, per kind (the editor's placeholder). */
+export const GALLERY_ITEM_SUBTITLE_HINT: Record<GalleryItemKind, string> = { MILESTONE: 'Ano (ex.: 2014)', TEAM: 'Função (ex.: Curadora)', PHOTO: 'Legenda', VIDEO: 'Legenda', ROOM: 'Legenda' }
+/** Kinds whose `url` is an image uploaded here (VIDEO is an external https link). */
+export const GALLERY_ITEM_IMAGE_KINDS: readonly GalleryItemKind[] = ['TEAM', 'PHOTO', 'ROOM']
+
+/** News categories (the kicker of the Home and of the reader). */
+export const NEWS_CATEGORIES = ['Mercado', 'Feiras', 'Museus', 'Exposições', 'Artistas', 'Direito', 'Instituições', 'Guias'] as const
+export type NewsCategory = (typeof NEWS_CATEGORIES)[number]

@@ -26,7 +26,7 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
   return (
     <div className="ha-split">
       <section className="ha-stack">
-        <div className="ha-eyebrow">{holderName}</div>
+        <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></div>
         <h1 className="ha-h1">Carteira de escrituras</h1>
         <div className="ha-row"><span className="ha-muted">Valor registrado · {items.length} obra(s)</span><b className="ha-num">{formatBRL(BigInt(totalCents))}</b></div>
         <ul className="ha-list">

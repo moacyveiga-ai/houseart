@@ -1,0 +1,123 @@
+/* Carteira e cartões (handoff "HouseArt App Colecionador" › carteira / cartao). Prefix ha-cards-.
+   The brand colours of the card networks are third-party marks, kept as tokens here. */
+.ha-cards {
+  --ha-card-face-visa: linear-gradient(135deg, #1A1F71, #2B3A9E);
+  --ha-card-face-mastercard: linear-gradient(135deg, #2B2B2B, #111111);
+  --ha-card-face-amex: linear-gradient(135deg, #1F72CD, #0E4C92);
+  --ha-card-face-elo: linear-gradient(135deg, #111111, #3A3A3A);
+  --ha-card-face-hipercard: linear-gradient(135deg, #B3131B, #7E0E14);
+  --ha-card-face-other: linear-gradient(135deg, #6B6760, #2B2B2B);
+  --ha-card-chip: linear-gradient(135deg, #E9D49B, #B9872F);
+  --ha-card-ring: rgba(255, 255, 255, .12);
+  --ha-card-shadow: 0 18px 30px -14px rgba(17, 17, 17, .45);
+  --ha-card-mark-visa: #1A1F71;
+  --ha-card-mark-amex: #1F72CD;
+  --ha-card-mark-hipercard: #B3131B;
+  --ha-card-mark-elo-ink: #FFCB05;
+  --ha-card-mc-red: #EB001B;
+  --ha-card-mc-orange: #F79E1B;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ha-space-6);
+}
+@media (min-width: 900px) { .ha-cards { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.ha-cards__col { display: flex; flex-direction: column; gap: var(--ha-space-5); min-width: 0; }
+.ha-cards__title { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); margin: 0; }
+
+/* The big card (default) */
+.ha-cards-face { aspect-ratio: 1.586; max-width: 420px; width: 100%; border-radius: var(--ha-radius-lg); color: var(--ha-paper-50); padding: var(--ha-space-5); display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--ha-card-shadow); position: relative; overflow: hidden; background: var(--ha-card-face-other); transition: background var(--ha-dur-panel) var(--ha-ease); }
+.ha-cards-face--visa { background: var(--ha-card-face-visa); }
+.ha-cards-face--mastercard { background: var(--ha-card-face-mastercard); }
+.ha-cards-face--amex { background: var(--ha-card-face-amex); }
+.ha-cards-face--elo { background: var(--ha-card-face-elo); }
+.ha-cards-face--hipercard { background: var(--ha-card-face-hipercard); }
+.ha-cards-face--sm { max-height: 190px; border-radius: 14px; padding: var(--ha-space-4) var(--ha-space-5); }
+.ha-cards-face__ring { position: absolute; right: -40px; top: -60px; width: 200px; height: 200px; border-radius: 50%; border: 1px solid var(--ha-card-ring); }
+.ha-cards-face__top { display: flex; justify-content: space-between; align-items: center; }
+.ha-cards-face__tag { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.ha-cards-face__chip { width: 38px; height: 28px; border-radius: 5px; background: var(--ha-card-chip); }
+.ha-cards-face--sm .ha-cards-face__chip { width: 34px; height: 24px; border-radius: 4px; }
+.ha-cards-face__num { font-size: 20px; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+.ha-cards-face--sm .ha-cards-face__num { font-size: 18px; letter-spacing: .1em; }
+.ha-cards-face__bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--ha-space-3); }
+.ha-cards-face__kv { display: flex; flex-direction: column; min-width: 0; }
+.ha-cards-face__kv--end { align-items: flex-end; }
+.ha-cards-face__k { font-size: 9px; letter-spacing: .1em; opacity: .7; }
+.ha-cards-face__v { font-size: 13px; font-weight: 600; letter-spacing: .06em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ha-cards-face__mark { font-size: 20px; font-weight: 800; font-style: italic; }
+.ha-cards-face--sm .ha-cards-face__mark { font-size: 18px; }
+.ha-cards-face__names { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; letter-spacing: .06em; gap: var(--ha-space-3); }
+.ha-cards-face__names span:last-child { font-variant-numeric: tabular-nums; }
+
+/* List of saved cards */
+.ha-cards-list { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-cards-item { display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); overflow: hidden; transition: border-color var(--ha-dur-fast); }
+.ha-cards-item--open { border-color: var(--ha-ink-900); }
+.ha-cards-item__head { display: grid; grid-template-columns: 44px minmax(0, 1fr) 24px; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3); border: 0; background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-cards-item__head:hover { background: var(--ha-surface); }
+.ha-cards-item__head:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-cards-item__name { display: flex; align-items: center; gap: var(--ha-space-2); font-size: var(--ha-text-body-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ha-cards-item__default { padding: 0 6px; border-radius: var(--ha-radius-sm); background: var(--ha-sand-100); color: var(--ha-ink-900); font-size: 10px; line-height: 16px; font-weight: 600; }
+.ha-cards-item__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-cards-item__sub--soon { color: var(--ha-pending-500); }
+.ha-cards-item__chev { color: var(--ha-fg-muted); }
+.ha-cards-item__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 var(--ha-space-3) var(--ha-space-3); background: var(--ha-bg); }
+.ha-cards-item__remove { height: 40px; border-radius: var(--ha-radius-md); border: 0; background: var(--ha-alert-100); color: var(--ha-alert-500); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ha-cards-item__remove:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+
+/* Brand mark (44×30 on the list, 30×20 in the input) */
+.ha-cards-mark { width: 44px; height: 30px; flex: none; border-radius: 5px; border: 1px solid var(--ha-border); display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--ha-paper-50); font-size: 11px; font-weight: 800; letter-spacing: -.02em; color: var(--ha-paper-50); transition: opacity var(--ha-dur-fast); }
+.ha-cards-mark--xs { width: 30px; height: 20px; font-size: 9px; }
+.ha-cards-mark--dim { opacity: .25; }
+.ha-cards-mark--visa { background: var(--ha-card-mark-visa); border-color: var(--ha-card-mark-visa); font-style: italic; }
+.ha-cards-mark--amex { background: var(--ha-card-mark-amex); border-color: var(--ha-card-mark-amex); font-size: 10px; }
+.ha-cards-mark--hipercard { background: var(--ha-card-mark-hipercard); border-color: var(--ha-card-mark-hipercard); font-size: 10px; }
+.ha-cards-mark--elo { background: var(--ha-ink-900); border-color: var(--ha-ink-900); color: var(--ha-card-mark-elo-ink); font-size: 13px; }
+.ha-cards-mark--other { color: var(--ha-fg-muted); }
+.ha-cards-mark__mc { display: flex; }
+.ha-cards-mark__mc span { width: 14px; height: 14px; border-radius: 50%; background: var(--ha-card-mc-red); }
+.ha-cards-mark__mc span + span { background: var(--ha-card-mc-orange); margin-left: -6px; mix-blend-mode: multiply; }
+.ha-cards-mark--xs .ha-cards-mark__mc span { width: 10px; height: 10px; }
+.ha-cards-mark--xs .ha-cards-mark__mc span + span { margin-left: -4px; }
+
+.ha-cards-add { height: 48px; border: 1px dashed var(--ha-ink-300); border-radius: var(--ha-radius-md); background: transparent; color: var(--ha-fg); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.ha-cards-add:hover { background: var(--ha-surface); }
+.ha-cards-add:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-cards-empty { font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
+.ha-cards-note { display: flex; gap: 6px; font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); }
+.ha-cards-note .ha-icon { color: var(--ha-fg); flex: none; }
+
+/* Shortcut to the Pix (members who sell) */
+.ha-cards-payout { display: grid; grid-template-columns: 40px minmax(0, 1fr) 20px; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-4); border: 1px dashed var(--ha-ink-300); border-radius: var(--ha-radius-md); background: var(--ha-surface); text-decoration: none; color: var(--ha-fg); }
+.ha-cards-payout--on { border-style: solid; border-color: var(--ha-border); background: var(--ha-bg); }
+.ha-cards-payout__ic { width: 40px; height: 40px; border-radius: 50%; background: var(--ha-bg); display: flex; align-items: center; justify-content: center; }
+.ha-cards-payout--on .ha-cards-payout__ic { background: var(--ha-verified-100); color: var(--ha-verified-500); }
+.ha-cards-payout__t { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-cards-payout__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+
+/* New card sheet (modal body) */
+.ha-cards-form { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-cards-form__label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ha-fg-body); }
+.ha-cards-group { display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); box-shadow: 0 1px 2px rgba(17, 17, 17, .06); overflow: hidden; transition: border-color var(--ha-dur-fast); }
+.ha-cards-group--error { border-color: var(--ha-alert-500); }
+.ha-cards-group:focus-within { border-color: var(--ha-ink-900); }
+.ha-cards-group__row { display: flex; align-items: center; border-bottom: var(--ha-border-w) solid var(--ha-border); }
+.ha-cards-group__row:last-child { border-bottom: 0; }
+.ha-cards-group__half { display: grid; grid-template-columns: 1fr 1fr; }
+.ha-cards-group__cell { display: flex; align-items: center; min-width: 0; }
+.ha-cards-group__cell + .ha-cards-group__cell { border-left: var(--ha-border-w) solid var(--ha-border); }
+.ha-cards-group__cell--static { height: 48px; padding: 0 var(--ha-space-3); justify-content: space-between; font-size: var(--ha-text-body); color: var(--ha-fg); }
+.ha-cards-group__cell--static .ha-icon { color: var(--ha-fg-muted); }
+.ha-cards-group__in { flex: 1; min-width: 0; height: 48px; border: 0; outline: none; background: none; padding: 0 var(--ha-space-3); font: inherit; font-size: var(--ha-text-body); color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-cards-group__in::placeholder { color: var(--ha-ink-300); }
+.ha-cards-group__in--upper { text-transform: uppercase; }
+.ha-cards-group__marks { display: flex; gap: 4px; padding-right: 10px; }
+.ha-cards-group__ic { color: var(--ha-fg-muted); padding-right: var(--ha-space-3); }
+.ha-cards-error { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ha-alert-500); }
+.ha-cards-check { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; cursor: pointer; text-align: left; font: inherit; font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-cards-check:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-cards-fine { font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); margin: 0; }
+.ha-cards-foot { display: flex; flex-direction: column; gap: var(--ha-space-2); width: 100%; }
+.ha-cards-foot .ha-btn { width: 100%; }
+.ha-cards-foot__by { text-align: center; font-size: 11px; color: var(--ha-fg-muted); }
+.ha-cards-foot__by strong { font-weight: 700; color: var(--ha-fg-body); }

@@ -1,0 +1,50 @@
+/* Pix para receber vendas (handoff "HouseArt App Colecionador" › sheet pix + bloco "Recebimentos das vendas"). Prefix ha-payout-. */
+.ha-payout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ha-space-6); }
+@media (min-width: 900px) { .ha-payout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; } }
+.ha-payout__main { display: flex; flex-direction: column; gap: var(--ha-space-4); min-width: 0; }
+.ha-payout__aside { display: flex; flex-direction: column; gap: var(--ha-space-3); min-width: 0; }
+.ha-payout__sub { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); text-wrap: pretty; }
+.ha-payout__label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ha-fg-body); }
+.ha-payout-types { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ha-payout-type { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 2px; border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); cursor: pointer; font: inherit; color: var(--ha-fg); transition: border-color var(--ha-dur-fast), background var(--ha-dur-fast); }
+.ha-payout-type:hover { background: var(--ha-surface); }
+.ha-payout-type--on { border-color: var(--ha-ink-900); background: var(--ha-surface); }
+.ha-payout-type:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-payout-type__n { font-size: var(--ha-text-caption); font-weight: 600; }
+.ha-payout-input { display: flex; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); box-shadow: 0 1px 2px rgba(17, 17, 17, .06); transition: border-color var(--ha-dur-fast); }
+.ha-payout-input:focus-within { border-color: var(--ha-ink-900); }
+.ha-payout-input--error { border-color: var(--ha-alert-500); }
+.ha-payout-input input { flex: 1; min-width: 0; height: 50px; border: 0; outline: none; background: none; padding: 0 var(--ha-space-3); font: inherit; font-size: var(--ha-text-body); color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-payout-input input::placeholder { color: var(--ha-ink-300); }
+.ha-payout-random { display: flex; flex-direction: column; gap: 6px; padding: var(--ha-space-3); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-payout-random__t { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-payout-random input { height: 44px; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-sm); outline: none; background: var(--ha-bg); padding: 0 10px; font-size: 13px; color: var(--ha-fg); font-family: ui-monospace, monospace; }
+.ha-payout-random input:focus { border-color: var(--ha-ink-900); }
+.ha-payout-random input.ha-payout-random--error { border-color: var(--ha-alert-500); }
+.ha-payout-random .ha-link { align-self: flex-start; text-decoration: underline; text-underline-offset: 3px; }
+.ha-payout-error { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ha-alert-500); }
+.ha-payout-holder { display: flex; flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-payout-holder__k { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-payout-holder__v { display: flex; align-items: center; gap: 6px; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-payout-holder__v .ha-icon { color: var(--ha-verified-500); }
+.ha-payout-holder__s { font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); }
+.ha-payout-notes { display: flex; flex-direction: column; gap: 6px; font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); }
+.ha-payout-notes span { display: flex; gap: 6px; }
+.ha-payout-notes .ha-icon { color: var(--ha-fg); flex: none; }
+.ha-payout-foot { display: flex; flex-direction: column; gap: var(--ha-space-2); padding-top: var(--ha-space-3); border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-payout-foot .ha-btn { width: 100%; }
+.ha-payout-foot__secondary { display: flex; gap: var(--ha-space-2); }
+.ha-payout-foot__secondary .ha-btn { width: auto; flex: 1; }
+.ha-payout-remove { height: 40px; border: 0; background: none; color: var(--ha-alert-500); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; border-radius: var(--ha-radius-md); }
+.ha-payout-remove:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+
+/* Registered key (prototype "Recebimentos das vendas") */
+.ha-payout-card { display: flex; flex-direction: column; gap: 10px; padding: var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-payout-card__row { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; }
+.ha-payout-card__ic { width: 40px; height: 40px; border-radius: 50%; background: var(--ha-verified-100); color: var(--ha-verified-500); display: flex; align-items: center; justify-content: center; }
+.ha-payout-card__ic--off { background: var(--ha-surface); color: var(--ha-fg); }
+.ha-payout-card__k { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-payout-card__v { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ha-payout-card__holder { display: flex; align-items: center; gap: 6px; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-body); }
+.ha-payout-card__holder .ha-icon { color: var(--ha-verified-500); }
+.ha-payout-card__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }

@@ -1,5 +1,6 @@
 // Navigation per profile — ported literally from `NAV` in
-// houseart-design/app-source.tsx (the Claude Design source of truth). The
+// houseart-design/app-source.tsx (the Claude Design source of truth), plus the
+// handoff Phase 4 entries ("Carteira e cartões", "Pix para receber"). The
 // consultant uses the gallery screens (B.1); the badge count comes from the
 // server at render time, never from here.
 export type ProfileKind = 'artist' | 'gallery' | 'collector' | 'appraiser' | 'advisor' | 'admin'
@@ -26,6 +27,7 @@ const ARTIST: NavItem[] = [
   { key: 'new', label: 'Nova obra', icon: 'add_photo_alternate', href: '/artworks/new' },
   { key: 'certification', label: 'Certificação', icon: 'verified', href: '/certification' },
   { key: 'sales', label: 'Vendas e ofertas', icon: 'handshake', href: '/sales' },
+  { key: 'payout', label: 'Pix para receber', icon: 'account_balance', href: '/sales/payout' },
   { key: 'royalty', label: 'Direito de sequência', icon: 'autorenew', href: '/royalty' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
 ]
@@ -36,6 +38,7 @@ const GALLERY: NavItem[] = [
   { key: 'new', label: 'Nova obra', icon: 'add_photo_alternate', href: '/artworks/new' },
   { key: 'certification', label: 'Certificação', icon: 'verified', href: '/certification' },
   { key: 'sales', label: 'Vendas e ofertas', icon: 'handshake', href: '/sales' },
+  { key: 'payout', label: 'Pix para receber', icon: 'account_balance', href: '/sales/payout' },
   { key: 'crm', label: 'Colecionadores', icon: 'view_kanban', href: '/crm' },
   { key: 'royalty', label: 'Direito de sequência', icon: 'autorenew', href: '/royalty' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
@@ -43,6 +46,7 @@ const GALLERY: NavItem[] = [
 
 const COLLECTOR: NavItem[] = [
   { key: 'wallet', label: 'Carteira de escrituras', icon: 'account_balance_wallet', href: '/wallet' },
+  { key: 'cards', label: 'Carteira e cartões', icon: 'credit_card', href: '/wallet/cards' },
   { key: 'purchases', label: 'Compras', icon: 'local_shipping', href: '/purchases' },
   { key: 'transfer', label: 'Transferir obra', icon: 'swap_horiz', href: '/transfer' },
   { key: 'marketplace', label: 'Marketplace', icon: 'storefront', href: '/marketplace' },

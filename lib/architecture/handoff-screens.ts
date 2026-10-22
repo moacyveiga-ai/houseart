@@ -22,10 +22,10 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
   'HouseArt App Colecionador': {
     Splash: null, 'Tela inicial': null, 'Entrar · login social': null, Cadastro: null,
     'Explorar · feed': null, 'Explorar · descobrir': null, 'Página da obra': null, 'Fazer oferta': null,
-    'Comprar direto': null, 'Contraproposta recebida': null, Comunidade: null, Comentários: null,
+    'Comprar direto': 'app/e/artwork/[publicId]/buy/page.tsx', 'Contraproposta recebida': null, Comunidade: null, Comentários: null,
     Mensagens: null, 'Conversa com galeria': null, 'Minha coleção': null, 'Favoritos e curtidos': null,
-    'Vendas · oferta recebida': null, 'Vender uma obra': null, 'Carteira e cartões': null, 'Adicionar cartão': null,
-    'Cadastrar Pix para receber': null, 'Cadastrar obra': null, 'Serviços para uma obra': null, 'Perfil · minha conta': null,
+    'Vendas · oferta recebida': null, 'Vender uma obra': null, 'Carteira e cartões': 'app/(panel)/wallet/cards/page.tsx', 'Adicionar cartão': 'app/(panel)/wallet/cards/page.tsx',
+    'Cadastrar Pix para receber': 'app/(panel)/sales/payout/page.tsx', 'Cadastrar obra': null, 'Serviços para uma obra': null, 'Perfil · minha conta': null,
     'Instagram · conectar e postar': null, 'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Busca: null,
   },
   'HouseArt App Galeria': {

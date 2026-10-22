@@ -245,7 +245,9 @@
 .ha-bars__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-2); height: 100%; justify-content: flex-end; }
 .ha-bars__bar { width: 100%; max-width: 28px; background: var(--ha-ink-900); }
 .ha-bars__bar--on { background: var(--ha-sand-500); }
-.ha-split { display: flex; height: 10px; border-radius: var(--ha-radius-sm); overflow: hidden; }
+/* Two-column page split (dashboard, carteira de escrituras, fila de laudos); the split BAR is .ha-split-summary__bar. */
+.ha-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ha-space-6); align-items: start; }
+@media (max-width: 900px) { .ha-split { grid-template-columns: 1fr; } }
 .ha-media-slot { aspect-ratio: 1 / 1; background: var(--ha-bg); border: var(--ha-border-w) dashed var(--ha-ink-300); display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--ha-fg-muted); cursor: pointer; }
 .ha-media-slot--has { background: var(--ha-wall); border-style: solid; }
 .ha-media-slot img { width: 100%; height: 100%; object-fit: cover; }

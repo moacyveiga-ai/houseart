@@ -1242,3 +1242,131 @@ model ArtworkViewDay {
 
   @@unique([artworkId, day])
 }
+
+// ── Social (handoff 2026-10-21, Fase 5: mensagens, comunidade, avisos) ────────
+// Conversations are between TWO users about an artwork (or free). Lines with
+// `senderUserId` null are system lines (offer sent, accepted…). Text that
+// carries a phone, e-mail, link or Pix key is refused before it is stored
+// (lib/messaging/core.ts): contacts and payments only through the platform.
+
+model Conversation {
+  id            Int       @id @default(autoincrement())
+  artworkId     Int?
+  userAId       Int // the smaller user id of the pair
+  userBId       Int // the larger user id of the pair
+  lastMessageAt DateTime?
+  lastPreview   String?
+  createdAt     DateTime  @default(now())
+  messages      Message[]
+  participants  ConversationParticipant[]
+
+  @@unique([userAId, userBId, artworkId])
+  @@index([userAId, lastMessageAt])
+  @@index([userBId, lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         Int
+  lastReadAt     DateTime?
+  unread         Int          @default(0)
+
+  @@unique([conversationId, userId])
+  @@index([userId, unread])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderUserId   Int? // null = system line
+  kind           String       @default("TEXT") // TEXT | SYSTEM | OFFER | COUNTER
+  body           String
+  offerId        Int?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, id])
+}
+
+/// A community post by a member or a collector: photo, text, poll or event.
+/// News (NewsArticle) and the agenda (AgendaEvent) enter the feed as they are.
+model Post {
+  id              Int       @id @default(autoincrement())
+  authorUserId    Int
+  authorMemberId  Int?
+  tenantId        Int?
+  kind            String // PHOTO | TEXT | POLL | EVENT
+  body            String
+  imageUrl        String?
+  artworkId       Int?
+  eventTitle      String?
+  eventVenue      String?
+  eventStartsOn   String? // YYYY-MM-DD
+  eventStartsAt   String? // "19h"
+  pollOptionsJson String? // ["Pintura","Fotografia"]
+  likeCount       Int       @default(0)
+  commentCount    Int       @default(0)
+  saveCount       Int       @default(0)
+  rsvpCount       Int       @default(0)
+  hiddenAt        DateTime?
+  createdAt       DateTime  @default(now())
+  comments        PostComment[]
+  votes           PollVote[]
+
+  @@index([createdAt])
+  @@index([authorUserId])
+}
+
+model PostComment {
+  id           Int      @id @default(autoincrement())
+  targetKind   String // POST | NEWS
+  targetId     Int
+  post         Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId       Int?
+  userId       Int
+  body         String
+  likeCount    Int      @default(0)
+  hiddenAt     DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([targetKind, targetId, id])
+}
+
+/// Like / save / rsvp / follow / comment-like, one row per (user, target, kind).
+model Reaction {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  targetKind String // POST | NEWS | EVENT | COMMENT | MEMBER
+  targetId   Int
+  kind       String // LIKE | SAVE | RSVP | FOLLOW
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, targetKind, targetId, kind])
+  @@index([targetKind, targetId, kind])
+}
+
+model PollVote {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    Int
+  optionIdx Int
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
+}

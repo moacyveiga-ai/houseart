@@ -14,6 +14,9 @@ import { afterResponseOrNow } from '@/lib/after'
 import { ArtworkError } from '@/lib/artworks/server'
 import { canTransition as artworkCanTransition } from '@/lib/artworks/state-machine'
 import { notify } from '@/lib/notifications/server'
+import { systemLine } from '@/lib/messaging/server'
+import { formatBRL as formatReais } from '@/lib/format'
+const formatBRL = (c: bigint) => formatReais(Number(c) / 100, { casas: 0 })
 import { syncOpportunityFromOffer } from '@/lib/crm/server'
 import { createDealFromOffer } from '@/lib/deals/server'
 import { LIVE_STATUSES, OFFER_VALIDITY_DAYS, offerCode, OTP_MAX_ATTEMPTS, OTP_TTL_MS, RETRACTION_WINDOW_MS, type OfferStatus } from './domain'
@@ -199,6 +202,8 @@ async function finalizeOffer(offerId: number): Promise<{ ok: true; retractionTok
       const team = await prisma.member.findMany({ where: { tenantId: o.tenantId ?? -1, kind: 'GALLERY_STAFF', status: 'ACTIVE', role: { in: ['ADMIN', 'SALES'] }, user: { id: { not: seller.userId } } }, select: { user: { select: { id: true, email: true } } } })
       for (const m of team) if (m.user) await notify({ userId: m.user.id, email: m.user.email, kind: 'offer.received', title: `Nova proposta · ${title}`, body: `Proposta ${o.code}`, href: '/sales', emailSubject: 'Nova proposta na galeria' })
     }
+    await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'OFFER', offerId: o.id, body: next === 'ACCEPTED' ? `Proposta de ${formatBRL(o.offeredCents)} aceita pelo negociador.` : `Proposta enviada: ${formatBRL(o.offeredCents)}.` })
+    if (next !== 'ACCEPTED' && engine.counterCents) await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'COUNTER', offerId: o.id, body: `Contraproposta do vendedor: ${formatBRL(engine.counterCents)}.` })
     await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.confirmed', title: `Proposta ${o.code} enviada`, body: next === 'ACCEPTED' ? 'Sua proposta foi aceita.' : engine.counterCents ? 'O vendedor respondeu com uma contraproposta.' : 'Sua proposta foi recebida.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi registrada' })
     await syncOpportunityFromOffer(o.id)
     if (next === 'ACCEPTED') await createDealFromOffer(o.id)
@@ -236,6 +241,7 @@ export async function acceptOffer(scope: Scope, id: number, actor: { userId: num
     if (r.count === 0) throw new ArtworkError('CHANGED', 'A proposta acabou de mudar.', 409)
     await tx.offerEvent.create({ data: { offerId: id, kind: 'ACCEPTED', actorKind: 'SELLER', actorUserId: actor.userId, payloadJson: JSON.stringify({ amountCents: amount.toString() }) } })
   })
+  await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'SYSTEM', offerId: id, body: `Proposta de ${formatBRL(amount)} aceita. Você tem 24 h para pagar em garantia.` })
   await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.accepted', title: `Proposta ${o.code} aceita`, body: 'Você tem 24 h para pagar em garantia.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi aceita' })
   await syncOpportunityFromOffer(id)
   await createDealFromOffer(id)
@@ -248,6 +254,7 @@ export async function refuseOffer(scope: Scope, id: number, actor: { userId: num
   const r = await prisma.offer.updateMany({ where: { id, status: o.status }, data: { status: 'REFUSED' } })
   if (r.count === 0) throw new ArtworkError('CHANGED', 'A proposta acabou de mudar.', 409)
   await prisma.offerEvent.create({ data: { offerId: id, kind: 'REFUSED', actorKind: 'SELLER', actorUserId: actor.userId, payloadJson: JSON.stringify({ reason: reason?.slice(0, 200) ?? null }) } })
+  await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'SYSTEM', offerId: id, body: 'O vendedor não aceitou a proposta.' })
   await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.refused', title: `Proposta ${o.code} recusada`, href: `/e/offer/${o.code}`, emailSubject: 'Resposta à sua proposta' })
   await syncOpportunityFromOffer(id)
 }
@@ -267,6 +274,7 @@ export async function counterOffer(scope: Scope, id: number, amountCents: bigint
     await tx.offerRound.create({ data: { offerId: id, number, author: 'SELLER', amountCents, message: message?.slice(0, 500) ?? null } })
     await tx.offerEvent.create({ data: { offerId: id, kind: 'COUNTERED', actorKind: 'SELLER', actorUserId: actor.userId, payloadJson: JSON.stringify({ amountCents: amountCents.toString() }) } })
   })
+  await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'COUNTER', offerId: id, body: `Contraproposta do vendedor: ${formatBRL(amountCents)}.${message ? ` "${message.slice(0, 200)}"` : ''}` })
   await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.countered', title: `Contraproposta em ${o.code}`, href: `/e/offer/${o.code}`, emailSubject: 'Você recebeu uma contraproposta' })
   await syncOpportunityFromOffer(id)
 }

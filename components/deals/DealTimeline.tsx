@@ -3,10 +3,9 @@ import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
-import type { DealView } from '@/lib/deals/server'
+import type { SerializableDeal as Serializable } from './deal-view'
 
 type Side = 'seller' | 'buyer'
-type Serializable = Omit<DealView, 'amountCents' | 'shippingCents' | 'insuranceCents' | 'split'> & { amountCents: string; shippingCents: string; insuranceCents: string; split: { party: string; label: string; amountCents: string; status: string }[] }
 
 export function DealTimeline({ deal, side }: { deal: Serializable; side: Side }) {
   const [toast, setToast] = useState('')
@@ -18,7 +17,9 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
     if (res.ok) window.setTimeout(() => window.location.reload(), 700)
   }
   const amount = BigInt(deal.amountCents)
-  const extras = BigInt(deal.shippingCents) + BigInt(deal.insuranceCents)
+  const shipping = BigInt(deal.shippingCents)
+  const insurance = BigInt(deal.insuranceCents)
+  const extras = shipping + insurance
   const done = deal.phase === 'COMPLETED'
   return (
     <section className="ha-card ha-card--pad ha-stack">
@@ -27,7 +28,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
         <span className="ha-wall ha-wall--72">{deal.cover ? <img src={deal.cover} alt="" /> : null}</span>
         <div style={{ flex: 1 }}>
           <div className="ha-title">{deal.artworkTitle}</div>
-          <div className="ha-muted ha-sm">{side === 'buyer' ? `${deal.artist} · ${deal.sellerName} · ${formatBRL(amount)}${extras ? ` + ${formatBRL(extras)} frete e seguro` : ''}` : `${deal.market === 'PRIMARY' ? 'Venda' : 'Revenda'} · ${formatBRL(amount)} · comprador ${deal.buyerName}`}</div>
+          <div className="ha-muted ha-sm">{side === 'buyer' ? `${deal.artist} · ${deal.sellerName}` : `${deal.market === 'PRIMARY' ? 'Venda' : 'Revenda'} · ${formatBRL(amount)} · comprador ${deal.buyerName}`}</div>
         </div>
         <div className="ha-num">{deal.progressPct}%</div>
       </div>
@@ -58,16 +59,27 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
         </div>
       ) : (
         <div className="ha-stack">
-          {deal.phase === 'OFFER_ACCEPTED' ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('escrow')}>Pagar em garantia · {formatBRL(amount)}</button> : null}
+          {/* The app's "Acompanhar compra": the values paid in escrow (work + shipping + insurance). */}
+          <div className="ha-kv">
+            <span>Obra</span><span className="ha-num">{formatBRL(amount)}</span>
+            <span>Frete</span><span className="ha-num">{shipping ? formatBRL(shipping) : 'Grátis'}</span>
+            <span>Seguro</span><span className="ha-num">{insurance ? formatBRL(insurance) : '—'}</span>
+            <span><b>{deal.escrowPaid || done ? 'Pago em garantia' : 'A pagar em garantia'}</b></span><span className="ha-num"><b>{formatBRL(amount + extras)}</b></span>
+          </div>
+          {deal.phase === 'OFFER_ACCEPTED' ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('escrow')}>Pagar em garantia · {formatBRL(amount + extras)}</button> : null}
           {deal.phase === 'ESCROW' && !deal.buyerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'ESCROW' && deal.buyerSigned && !deal.sellerSigned ? <p className="ha-muted">Aguardando a assinatura do vendedor.</p> : null}
           {deal.phase === 'SHIPPING' || done ? (
             <div className={`ha-callout${done ? ' ha-callout--ok' : ''}`}>
               <Icon name={done ? 'check' : 'contactless'} />
-              <div>
-                <b>{done ? 'Escritura emitida em seu nome' : 'A obra chegou?'}</b>
-                <p className="ha-sm">{done ? 'A obra entrou na sua carteira e o pagamento foi liberado ao vendedor.' : 'Abra o app e encoste o celular na etiqueta do verso. A leitura confirma a posse.'}</p>
-                {!done ? <button type="button" className="ha-btn ha-btn--ink ha-btn--sm" onClick={() => post('confirm-delivery')}>Confirmar recebimento</button> : null}
+              <div className="ha-stack ha-stack--3">
+                <div>
+                  <b>{done ? 'A obra é sua' : 'Entrega · toque na etiqueta'}</b>
+                  <p className="ha-sm">{done ? 'Escritura emitida em seu nome. O pagamento foi liberado ao vendedor e a obra está na sua coleção.' : 'Encoste o celular no verso para confirmar. A leitura confirma a posse: o pagamento é liberado ao vendedor e a escritura passa para o seu nome no mesmo instante.'}</p>
+                </div>
+                {done
+                  ? <a href="/wallet" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="collections" size={18} />Ver na coleção</a>
+                  : <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" onClick={() => post('confirm-delivery')}><Icon name="contactless" size={18} />Confirmar com o toque na etiqueta</button>}
               </div>
             </div>
           ) : null}
@@ -76,8 +88,4 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
       <Toast message={toast} onDone={() => setToast('')} />
     </section>
   )
-}
-
-export function serializeDeal(d: DealView): Serializable {
-  return { ...d, amountCents: d.amountCents.toString(), shippingCents: d.shippingCents.toString(), insuranceCents: d.insuranceCents.toString(), split: d.split.map((s) => ({ ...s, amountCents: s.amountCents.toString() })) }
 }

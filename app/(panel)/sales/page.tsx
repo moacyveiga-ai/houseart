@@ -4,7 +4,8 @@ import { negotiatorLabel } from '@/lib/offers/mandate-core'
 import { Tabs } from '@/components/ds/Tabs'
 import { OffersTable } from '@/components/offers/OffersTable'
 import { sellerDeals } from '@/lib/deals/server'
-import { DealTimeline, serializeDeal } from '@/components/deals/DealTimeline'
+import { DealTimeline } from '@/components/deals/DealTimeline'
+import { serializeDeal } from '@/components/deals/deal-view'
 import { flagOn } from '@/lib/flags'
 
 export const metadata = { title: 'Vendas e ofertas — HouseArt' }

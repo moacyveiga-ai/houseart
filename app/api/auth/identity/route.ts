@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireAuth, AuthError } from '@/lib/auth'
 import { identityOf, setIdentity } from '@/lib/accounts/identity-server'
 
-const schema = z.object({ cpf: z.string().max(20).optional(), city: z.string().max(80).optional() })
+const schema = z.object({ cpf: z.string().max(20).optional(), city: z.string().max(80).optional(), name: z.string().max(120).optional() })
 
 /** The identity checks of the offer flow: CPF (mask), phone and e-mail verified, city. */
 export async function GET() {

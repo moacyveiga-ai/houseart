@@ -34,16 +34,17 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
     const res = await fetch('/api/auth/preferences', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ [key]: next }) })
     if (!res.ok) { setSwitches((s) => ({ ...s, [key]: !next })); setNote('Não foi possível salvar agora.') }
   }
-  async function saveCity() {
+  const [name, setName] = useState(me.name)
+  async function saveData() {
     setSaving(true); setNote('')
-    const res = await fetch('/api/auth/identity', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city }) })
+    const res = await fetch('/api/auth/identity', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city, name }) })
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
     setSaving(false)
-    setNote(res.ok ? 'Dados atualizados' : 'Não foi possível salvar agora.')
+    setNote(res.ok ? 'Dados atualizados' : data.error ?? 'Não foi possível salvar agora.')
   }
 
   if (view === 'data') {
     const fields: { k: string; v: string; note?: string }[] = [
-      { k: 'Nome completo', v: me.name, note: 'Nome verificado' },
       { k: 'E-mail', v: me.email, note: me.emailVerified ? 'Verificado' : 'Não verificado' },
       { k: 'Celular', v: me.phoneMask ?? '—', note: me.phoneMask ? (me.phoneVerified ? 'Verificado' : 'Não verificado') : 'Informado na primeira oferta' },
       { k: 'CPF', v: me.cpfMask ?? '—', note: me.cpfMask ? 'O CPF não pode ser alterado' : 'Informado na primeira oferta' },
@@ -52,11 +53,12 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
       <div className="ha-account ha-cacct">
         <div className="ha-cacct__bar"><Link href="/account" className="ha-iconbtn ha-cacct__back" aria-label="Voltar"><Icon name="arrow_back" size={24} /></Link><span className="ha-cacct__bar-t">Dados pessoais</span></div>
         <div className="ha-account-me"><span className="ha-account-me__av">{initials}</span></div>
+        <label className="ha-cacct__field"><span className="ha-cacct__field-k">Nome completo<span className="ha-cacct__field-n">Como aparece nos certificados e nas conversas</span></span><input className="ha-input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
         {fields.map((f) => (
           <label key={f.k} className="ha-cacct__field"><span className="ha-cacct__field-k">{f.k}<span className="ha-cacct__field-n">{f.note}</span></span><input className="ha-input ha-cacct__ro" value={f.v} readOnly /></label>
         ))}
         <label className="ha-cacct__field"><span className="ha-cacct__field-k">Cidade</span><input className="ha-input" value={city} maxLength={80} onChange={(e) => setCity(e.target.value)} placeholder="Onde você está" /></label>
-        <div className="ha-row"><button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={saving || city === me.city} onClick={saveCity}>Salvar</button>{note ? <span className="ha-cacct__note" role="status">{note}</span> : null}</div>
+        <div className="ha-row"><button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={saving || (city === me.city && name.trim() === me.name)} onClick={saveData}>Salvar</button>{note ? <span className="ha-cacct__note" role="status">{note}</span> : null}</div>
       </div>
     )
   }

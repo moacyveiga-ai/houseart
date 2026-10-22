@@ -3,11 +3,17 @@ import type { ReactNode } from 'react'
 import '@/app/ds/public.css'
 import { PublicHeader } from '@/components/public/PublicHeader'
 import { PublicFooter } from '@/components/public/PublicFooter'
+import { getSession } from '@/lib/auth'
+import { activeNavProfile } from '@/lib/profiles/server'
+import { homeOf, PROFILE_LABELS } from '@/lib/profiles/nav'
 
-export default function PublicLayout({ children }: { children: ReactNode }) {
+export default async function PublicLayout({ children }: { children: ReactNode }) {
+  const user = await getSession().catch(() => null)
+  const nav = user ? await activeNavProfile(user).catch(() => null) : null
+  const account = user ? { href: nav ? homeOf(nav) : '/profiles', label: nav ? PROFILE_LABELS[nav] : 'Minha área' } : null
   return (
     <div className="hp">
-      <PublicHeader />
+      <PublicHeader account={account} />
       <main>{children}</main>
       <PublicFooter />
     </div>

@@ -23,7 +23,8 @@ function subscribeScroll(onChange: () => void) {
   return () => { window.removeEventListener('scroll', onChange); window.removeEventListener('resize', onChange) }
 }
 
-export function PublicHeader() {
+/** `account`: the logged person's panel (href + profile label); null = anonymous. */
+export function PublicHeader({ account = null }: { account?: { href: string; label: string } | null }) {
   const pathname = usePathname()
   const home = pathname === '/e'
   const scrolled = useSyncExternalStore(subscribeScroll, () => window.scrollY > window.innerHeight * 0.8, () => false)
@@ -37,7 +38,9 @@ export function PublicHeader() {
           {PUBLIC_NAV.map((n) => <Link key={n.href} href={n.href} className={`hp-nav__link${active(n.href) ? ' hp-nav__link--on' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>{n.label}</Link>)}
         </nav>
         <div className="hp-header__right">
-          {home ? (
+          {account ? (
+            <><Link href="/verify" className="hp-header__verify"><Icon name="contactless" size={18} />Verificar</Link><Link href={account.href} className="hp-header__login hp-header__login--account" aria-label={`Minha área · ${account.label}`}><Icon name="person" size={18} /><span className="hp-header__label">{account.label}</span></Link></>
+          ) : home ? (
             <><Link href="/login" className="hp-header__enter">Entrar</Link><Link href="/signup" className="hp-header__cta">Criar conta</Link></>
           ) : (
             <><Link href="/verify" className="hp-header__verify"><Icon name="contactless" size={18} />Verificar</Link><Link href="/login" className="hp-header__login">Entrar</Link></>

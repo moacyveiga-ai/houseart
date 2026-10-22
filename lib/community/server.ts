@@ -249,3 +249,9 @@ export async function artworkFlags(viewer: number | null, artworkIds: number[]):
   for (const r of rows) { const f = out.get(r.targetId) ?? { liked: false, saved: false }; if (r.kind === 'LIKE') f.liked = true; if (r.kind === 'SAVE') f.saved = true; out.set(r.targetId, f) }
   return out
 }
+
+/** The viewer's like/save flags and the counts of one article (the news page). */
+export async function newsSignals(viewer: number | null, newsId: number): Promise<{ likes: number; liked: boolean; saved: boolean; comments: number }> {
+  const [counts, mine, comments] = await Promise.all([countsOf('NEWS', [newsId]), myReactions(viewer, [{ kind: 'NEWS', id: newsId }]), commentCounts('NEWS', [newsId])])
+  return { likes: counts.get(`${newsId}:LIKE`) ?? 0, liked: mine.has(`NEWS:${newsId}:LIKE`), saved: mine.has(`NEWS:${newsId}:SAVE`), comments: comments.get(newsId) ?? 0 }
+}

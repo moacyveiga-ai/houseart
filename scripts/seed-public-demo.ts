@@ -43,7 +43,8 @@ async function main() {
     await prisma.publication.create({ data: { tenantId: tid, kind: 'CATALOGUE', title: 'Dia claro', meta: 'Galeria Ladeira · 48 páginas', priceCents: null, action: 'DOWNLOAD', sortOrder: 0 } })
   }
   const staffUser = await prisma.user.upsert({ where: { email: 'a1@galeria.test' }, update: {}, create: { email: 'a1@galeria.test', name: 'Ana Ladeira', passwordHash: pw, profile: 'member', active: true, tenantId: tid, tenantRole: 'ADMIN', profiles: { create: { kind: 'GALLERY', isDefault: true } } } })
-  const staff = await prisma.member.upsert({ where: { slug: 'ana-ladeira' }, update: {}, create: { userId: staffUser.id, tenantId: tid, kind: 'GALLERY_STAFF', displayName: 'Galeria Ladeira', slug: 'ana-ladeira', city: 'Salvador', uf: 'BA' } })
+  const staff = await prisma.member.upsert({ where: { slug: 'ana-ladeira' }, update: {}, create: { userId: staffUser.id, tenantId: tid, kind: 'GALLERY_STAFF', displayName: 'Galeria Ladeira', slug: 'ana-ladeira', city: 'Salvador', uf: 'BA', role: 'ADMIN' } })
+  await prisma.user.update({ where: { id: staffUser.id }, data: { memberId: staff.id } })
 
   const joanaTenant = await prisma.tenant.upsert({ where: { slug: 'joana-teixeira' }, update: {}, create: { kind: 'PERSON', name: 'Joana Teixeira', slug: 'joana-teixeira' } })
   const joanaUser = await prisma.user.upsert({ where: { email: 'joana@artista.test' }, update: {}, create: { email: 'joana@artista.test', name: 'Joana Teixeira', passwordHash: pw, profile: 'member', active: true, tenantId: joanaTenant.id, tenantRole: 'ADMIN', profiles: { create: { kind: 'ARTIST', isDefault: true } } } })

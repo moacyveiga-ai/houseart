@@ -195,11 +195,12 @@
 .ha-main { flex: 1; min-width: 0; padding: var(--ha-space-8) var(--ha-space-8) var(--ha-space-16); }
 .ha-main__inner { max-width: var(--ha-max); margin: 0 auto; }
 @media (max-width: 900px) { .ha-sidebar { display: none; } .ha-main { padding: var(--ha-space-5) var(--ha-space-4) var(--ha-space-12); } .ha-topbar__search { display: none; } }
+@media (max-width: 600px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
 
 /* ── overlays ───────────────────────────────────────────────────────────── */
-.ha-scrim { position: fixed; inset: 0; z-index: 60; background: var(--ha-scrim); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-6); }
+.ha-scrim { position: fixed; inset: 0; z-index: 80; background: var(--ha-scrim); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-6); }
 .ha-modal { width: 100%; max-width: 520px; background: var(--ha-bg); border-radius: var(--ha-radius-lg); box-shadow: var(--ha-shadow-lg); padding: var(--ha-space-8); display: flex; flex-direction: column; gap: var(--ha-space-5); animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
-.ha-toast { position: fixed; left: 50%; bottom: var(--ha-space-8); transform: translateX(-50%); z-index: 70; background: var(--ha-ink-900); color: var(--ha-paper-50); padding: var(--ha-space-3) var(--ha-space-5); border-radius: var(--ha-radius-md); box-shadow: var(--ha-shadow-lg); font-size: var(--ha-text-body-sm); display: flex; align-items: center; gap: var(--ha-space-2); animation: ha-fade var(--ha-dur-fast) var(--ha-ease); }
+.ha-toast { position: fixed; left: 50%; bottom: var(--ha-space-8); transform: translateX(-50%); z-index: 90; background: var(--ha-ink-900); color: var(--ha-paper-50); padding: var(--ha-space-3) var(--ha-space-5); border-radius: var(--ha-radius-md); box-shadow: var(--ha-shadow-lg); font-size: var(--ha-text-body-sm); display: flex; align-items: center; gap: var(--ha-space-2); animation: ha-fade var(--ha-dur-fast) var(--ha-ease); }
 .ha-toast .ha-icon { font-size: 18px; color: var(--ha-sand-500); }
 .ha-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; display: inline-block; animation: ha-spin 700ms linear infinite; }
 .ha-callout { display: flex; gap: var(--ha-space-3); padding: var(--ha-space-4); border-radius: var(--ha-radius-md); background: var(--ha-pending-100); align-items: flex-start; }

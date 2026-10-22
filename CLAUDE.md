@@ -108,6 +108,7 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-22 — Handoff Fase 6 feita: operação da galeria.** Regras de ofertas (`lib/offers/rules-*`, recusa abaixo de 60/70/80 % na hora), equipe por tenant com convite por e-mail e papéis Admin · Vendas · Acervo (`lib/gallery/team-server.ts`, `/team/accept`), artistas representados com contrato, gestão do anúncio (preço ≥ piso, aceita ofertas, pausar) e painel do dia; migration `20261022300000_phase6_gallery`. Telas: Início da galeria, Acervo, `/artworks/[id]/listing`, `/sales/rules`, `/gallery/{team,artists,account}`. Divergências em `docs/HANDOFF-2026-10-21.md` §5.
 - **2026-10-22 — Handoff Fase 3 feita: núcleo da obra.** Captura guiada + editor no passo Mídia (`components/artworks/GuidedCapture.tsx`,
   `PhotoEditor.tsx`, `MediaStep.tsx`; 10 slots em `MEDIA_SLOTS`), leitura assistida das fotos (`lib/artworks/reading-*`,
   `ARTWORK_READING_MODE=claude` + `ANTHROPIC_API_KEY`, só campos vazios), vincular etiqueta no web (`/certification/link/[artworkId]`,

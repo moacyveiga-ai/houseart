@@ -75,3 +75,10 @@ nohup.out
 /.pgdata
 /.pgdata.log
 .claude-shots/
+
+# apps/mobile (Expo; pacote independente, fora dos workspaces do root)
+/apps/mobile/node_modules
+/apps/mobile/.expo
+/apps/mobile/ios
+/apps/mobile/android
+/apps/mobile/dist

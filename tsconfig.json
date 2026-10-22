@@ -40,6 +40,7 @@
     ".claude",
     ".next",
     "houseart-design",
-    "node_modules"
+    "node_modules",
+    "apps"
   ]
 }

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
 import { listConversations, openConversation, readConversation, sendMessage, unreadMessages } from '@/lib/messaging/server'
 import { addComment, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
-import { pushConfig, savePushSubscription } from '@/lib/notifications/push'
+import { isExpoEndpoint, pushConfig, savePushSubscription } from '@/lib/notifications/push'
 import { createScenario, type Scenario } from './fixtures'
 import { asPanel } from './session'
 import { truncateTables } from './db'
@@ -92,6 +92,11 @@ describe('push', () => {
     await savePushSubscription(buyerId, { endpoint: 'https://push.example/1', keys: { p256dh: 'k2', auth: 'a' } }, 'ua')
     expect(await prisma.pushSubscription.count({ where: { userId: buyerId } })).toBe(1)
     await expect(savePushSubscription(buyerId, { endpoint: 'http://x', keys: { p256dh: 'k', auth: 'a' } }, null)).rejects.toThrow()
+    // the mobile app (Expo) registers its device token on the same table
+    expect(isExpoEndpoint('expo:ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true)
+    expect(isExpoEndpoint('expo:garbage')).toBe(false)
+    await savePushSubscription(buyerId, { endpoint: 'expo:ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]', keys: { p256dh: 'expo', auth: 'expo' } }, 'houseart-mobile')
+    expect(await prisma.pushSubscription.count({ where: { userId: buyerId } })).toBe(2)
   })
 })
 

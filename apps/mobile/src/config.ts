@@ -26,4 +26,4 @@ export const CLIENT_HEADER = { 'x-houseart-client': 'mobile' } as const
  * (web push by VAPID). Flip when `POST /api/notifications/push` accepts
  * `expo:<token>` and the server sends through Expo Push. See README.
  */
-export const PUSH_API_READY = false
+export const PUSH_API_READY = true

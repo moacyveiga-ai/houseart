@@ -166,6 +166,7 @@ model Member {
   city        String?
   uf          String?
   status      String    @default("ACTIVE") // PENDING | ACTIVE | REFUSED | INACTIVE
+  role        String? // gallery staff: ADMIN | SALES | INVENTORY (Phase 6)
   approvedAt  DateTime?
   bio         String?
   createdAt   DateTime  @default(now())
@@ -245,6 +246,7 @@ model Artwork {
   seal              String                   @default("NONE") // NONE | YELLOW | GREEN
   sealIssuedAt      DateTime?
   coverMediaId      Int?
+  listingPausedAt   DateTime? // Phase 6: paused listing stays LISTED but leaves the marketplace
   wizardStep        Int                      @default(0)
   submittedAt       DateTime?
   createdAt         DateTime                 @default(now())
@@ -1182,4 +1184,61 @@ model PayoutAccount {
   updatedAt   DateTime @updatedAt
 
   @@index([tenantId])
+}
+
+/// Gallery-wide offer rules (Phase 6, "Regras de ofertas"): defaults for every mandate of the member/tenant.
+model OfferRules {
+  id              Int      @id @default(autoincrement())
+  memberId        Int      @unique
+  tenantId        Int?
+  refuseLow       Boolean  @default(true)
+  refuseBelowBps  Int      @default(7000) // offers under this share of the list price are refused with a gentle message
+  autoAcceptOn    Boolean  @default(false)
+  autoAcceptMinBps Int     @default(9500)
+  responseHours   Int      @default(48) // 24 | 48 | 72
+  notifyTeam      Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+/// Invitation to join a gallery's team (Phase 6). Token only as sha256; 7 days.
+model TeamInvite {
+  id              Int       @id @default(autoincrement())
+  tenantId        Int
+  email           String
+  role            String // ADMIN | SALES | INVENTORY
+  tokenHash       String    @unique
+  invitedByUserId Int
+  status          String    @default("PENDING") // PENDING | ACCEPTED | REVOKED | EXPIRED
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([tenantId, status])
+}
+
+/// The gallery's contract with a represented artist (Phase 6, "Artistas representados").
+model ArtistContract {
+  id         Int       @id @default(autoincrement())
+  tenantId   Int
+  artistId   Int
+  kind       String    @default("REPRESENTED") // REPRESENTED | CONSIGNMENT
+  galleryBps Int       @default(5000) // the gallery's share of the net
+  validUntil DateTime?
+  status     String    @default("ACTIVE") // ACTIVE | ENDED
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([tenantId, artistId])
+}
+
+/// Public views of an artwork per day (Phase 6, listing stats). One row per artwork and day.
+model ArtworkViewDay {
+  id        Int    @id @default(autoincrement())
+  artworkId Int
+  day       String // YYYY-MM-DD in the house timezone
+  count     Int    @default(0)
+
+  @@unique([artworkId, day])
 }

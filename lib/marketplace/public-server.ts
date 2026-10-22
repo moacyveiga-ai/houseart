@@ -15,7 +15,7 @@ export async function listPublicArtworks(f: MarketplaceFilters = {}, take = 60):
   return totalScope('marketplace:list', async () => {
     const rows = await prisma.artwork.findMany({
       where: {
-        status: 'LISTED', seal: 'GREEN', publicId: { not: null },
+        status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null,
         ...(f.category && (ARTWORK_CATEGORIES as readonly string[]).includes(f.category) ? { category: f.category } : {}),
         ...(f.maxPriceCents ? { listPriceCents: { lte: f.maxPriceCents } } : {}),
         ...(f.market === 'PRIMARY' || f.market === 'SECONDARY' ? { market: f.market } : {}),
@@ -98,7 +98,7 @@ export async function relatedArtworks(publicId: string, take = 4): Promise<Marke
     const items = await marketItems(500)
     const byId = new Map(items.map((i) => [i.publicId, i]))
     const rows = await prisma.artwork.findMany({
-      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, id: { not: a.id }, OR: [{ artistId: a.artistId }, { memberId: a.memberId }] },
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, id: { not: a.id }, OR: [{ artistId: a.artistId }, { memberId: a.memberId }] },
       select: { publicId: true, artistId: true }, orderBy: { updatedAt: 'desc' }, take: 40,
     })
     const sorted = [...rows.filter((r) => r.artistId === a.artistId), ...rows.filter((r) => r.artistId !== a.artistId)]
@@ -110,7 +110,7 @@ export async function relatedArtworks(publicId: string, take = 4): Promise<Marke
 export async function marketItems(take = 500): Promise<MarketItem[]> {
   return totalScope('marketplace:items', async () => {
     const rows = await prisma.artwork.findMany({
-      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null } },
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null },
       select: { publicId: true, title: true, year: true, category: true, technique: true, heightMm: true, widthMm: true, depthMm: true, listPriceCents: true, saleMode: true, market: true, updatedAt: true, artist: { select: { name: true, slug: true } }, member: { select: { displayName: true, kind: true, uf: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
       orderBy: { updatedAt: 'desc' }, take,
     })

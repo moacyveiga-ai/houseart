@@ -22,6 +22,8 @@ import { cheapest, insuranceCents, normalizeCep, quoteShipping, ufFromCep } from
 import { usableCard } from '@/lib/payment-methods/server'
 import { GUARANTEE_METHODS, VALIDITY_HOURS, type GuaranteeMethod } from '@/lib/payment-methods/domain'
 import { stripeMode } from '@/lib/stripe/door'
+import { rulesOfMember } from './rules-server'
+import { belowRule, LOW_OFFER_MESSAGE } from './rules-core'
 import { assertTransition, statusAfterOtp } from './state'
 import { toBuyerView, toSellerRow, type BuyerOffer, type OfferRow } from './dto'
 
@@ -159,6 +161,21 @@ async function finalizeOffer(offerId: number): Promise<{ ok: true; retractionTok
   return totalScope('offers:finalize', async () => {
     const o = await prisma.offer.findUnique({ where: { id: offerId }, include: { mandate: true, artwork: { select: { title: true, year: true, listPriceCents: true, member: { select: { userId: true, user: { select: { email: true } } } } } } } })
     if (!o || o.status !== 'AWAITING_OTP') return { ok: false, error: 'Proposta não encontrada ou já confirmada.' }
+    // Phase 6: the gallery's rule refuses low offers at once, with a gentle message (never the floor).
+    const rules = await rulesOfMember(o.sellerMemberId)
+    const listPrice = o.mandate?.listPriceCents ?? o.artwork.listPriceCents ?? 0n
+    if (rules.refuseLow && belowRule(o.offeredCents, listPrice, rules.refuseBelowBps)) {
+      const retractionToken = randomBytes(24).toString('base64url')
+      await prisma.$transaction(async (tx) => {
+        const r = await tx.offer.updateMany({ where: { id: o.id, status: 'AWAITING_OTP' }, data: { status: 'REFUSED', otpHash: null, retractionTokenHash: sha256(retractionToken), retractionIssuedAt: new Date() } })
+        if (r.count === 0) throw new ArtworkError('CHANGED', 'A proposta acabou de mudar.', 409)
+        await tx.offerRound.create({ data: { offerId: o.id, number: 1, author: 'BUYER', amountCents: o.offeredCents, message: o.message } })
+        await tx.offerEvent.create({ data: { offerId: o.id, kind: 'CONFIRMED', actorKind: 'BUYER' } })
+        await tx.offerEvent.create({ data: { offerId: o.id, kind: 'REFUSED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ reason: 'BELOW_GALLERY_RULE' }) } })
+      })
+      await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.refused', title: `Proposta ${o.code} não aceita`, body: LOW_OFFER_MESSAGE, href: `/e/offer/${o.code}`, emailSubject: 'Resposta à sua proposta' })
+      return { ok: true, retractionToken }
+    }
     const engine = o.mandate ? evaluateOffer(o.mandate, o.offeredCents) : { verdict: 'ABOVE_RESERVE' as const, reachesReserve: true }
     const next: OfferStatus = engine.verdict === 'AUTO_ACCEPT' ? 'ACCEPTED' : statusAfterOtp(engine.reachesReserve)
     const retractionToken = randomBytes(24).toString('base64url')
@@ -178,6 +195,10 @@ async function finalizeOffer(offerId: number): Promise<{ ok: true; retractionTok
     const seller = o.artwork.member
     const title = `${o.artwork.title}${o.artwork.year ? `, ${o.artwork.year}` : ''}`
     await notify({ userId: seller.userId, email: seller.user?.email, kind: next === 'ACCEPTED' ? 'offer.auto_accepted' : 'offer.received', title: next === 'ACCEPTED' ? `Proposta aceita pelo negociador · ${title}` : `Nova proposta · ${title}`, body: `Proposta ${o.code}`, href: '/sales', emailSubject: next === 'ACCEPTED' ? 'O negociador aceitou uma proposta' : 'Você recebeu uma proposta na HouseArt' })
+    if (rules.notifyTeam && seller.userId) {
+      const team = await prisma.member.findMany({ where: { tenantId: o.tenantId ?? -1, kind: 'GALLERY_STAFF', status: 'ACTIVE', role: { in: ['ADMIN', 'SALES'] }, user: { id: { not: seller.userId } } }, select: { user: { select: { id: true, email: true } } } })
+      for (const m of team) if (m.user) await notify({ userId: m.user.id, email: m.user.email, kind: 'offer.received', title: `Nova proposta · ${title}`, body: `Proposta ${o.code}`, href: '/sales', emailSubject: 'Nova proposta na galeria' })
+    }
     await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.confirmed', title: `Proposta ${o.code} enviada`, body: next === 'ACCEPTED' ? 'Sua proposta foi aceita.' : engine.counterCents ? 'O vendedor respondeu com uma contraproposta.' : 'Sua proposta foi recebida.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi registrada' })
     await syncOpportunityFromOffer(o.id)
     if (next === 'ACCEPTED') await createDealFromOffer(o.id)

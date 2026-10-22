@@ -8,7 +8,7 @@ const schema = z.object({ carrier: z.string().trim().min(2).max(80), tracking: z
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const c = await dealContext(ctx); if (c.gate) return c.gate
-    if (!c.scope) return NextResponse.json({ error: 'Só o vendedor registra o transporte.' }, { status: 403 })
+    if (c.side !== 'SELLER' || !c.scope) return NextResponse.json({ error: 'Só o vendedor registra o transporte.' }, { status: 403 })
     const parsed = schema.safeParse(await req.json().catch(() => ({})))
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     const d = parsed.data

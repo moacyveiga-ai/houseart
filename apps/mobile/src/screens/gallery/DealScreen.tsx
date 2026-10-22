@@ -35,7 +35,7 @@ export function DealScreen() {
   }
 
   const stageText = (x: DealView): string => {
-    if (x.phase === 'COMPLETED') { const g = x.split.find((s) => s.party === 'GALLERY' || s.party === 'SELLER'); return `Venda concluída. ${g ? `Repasse de ${brl(g.amountCents)} liberado.` : 'Repasses liberados.'}` }
+    if (x.phase === 'COMPLETED') { const g = x.split.find((s) => s.party === 'GALLERY') ?? x.split.find((s) => s.party === 'ARTIST' || s.party === 'ADVISOR' || s.party === 'COLLECTOR'); return `Venda concluída. ${g ? `Repasse de ${brl(g.amountCents)} liberado.` : 'Repasses liberados.'}` }
     const on = x.steps.find((s) => s.state === 'on')
     return on ? `${on.description}.` : ''
   }

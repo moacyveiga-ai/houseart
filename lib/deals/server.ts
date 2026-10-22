@@ -129,6 +129,19 @@ async function sellerDeal(scope: Scope, id: number) {
   return d
 }
 
+/**
+ * Which side of THIS deal the person is on: the buyer by the user, the seller by
+ * the scope over the seller member. Decided by the deal, never by the profile — a
+ * collector also sells (secondary market) and an artist or a gallery also buys.
+ */
+export async function sideOfDeal(dealId: number, userId: number, scope: Scope | null): Promise<'BUYER' | 'SELLER' | null> {
+  const d = await prisma.deal.findUnique({ where: { id: dealId }, select: { buyerUserId: true, memberId: true, tenantId: true } })
+  if (!d) return null
+  if (d.buyerUserId === userId) return 'BUYER'
+  if (scope && canView(scope, d)) return 'SELLER'
+  return null
+}
+
 async function buyerDeal(userId: number, id: number) {
   const d = await prisma.deal.findFirst({ where: { id, buyerUserId: userId } })
   if (!d) throw new ArtworkError('NOT_FOUND', 'Negócio não encontrado.', 404)

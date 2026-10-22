@@ -3,7 +3,7 @@
 -- The media URLs below are the ones produced by the production run of 2026-10-22; on another
 -- environment, replace them by `SELECT "publicUrl" FROM "ArtworkMedia" WHERE kind='FRONT_COLOR_CARD'`.
 
-UPDATE "GalleryPublicProfile" SET "coverUrl"=(SELECT m."publicUrl" FROM "ArtworkMedia" m JOIN "Artwork" a ON a.id=m."artworkId" WHERE a.title='Retábulo do Rio Vermelho' AND m.kind='FRONT_COLOR_CARD'), "updatedAt"=now()
+UPDATE "GalleryPublicProfile" SET "coverUrl"=(SELECT m."publicUrl" FROM "ArtworkMedia" m JOIN "Artwork" a ON a.id=m."artworkId" WHERE a.title='Retábulo do Rio Vermelho' AND m.kind='FRONT_COLOR_CARD' LIMIT 1), "updatedAt"=now()
  WHERE slug='galeria-ladeira-demo' AND "coverUrl" IS NULL;
 
 UPDATE "NewsArticle" n SET "imageUrl"=x.url FROM (VALUES
@@ -13,20 +13,20 @@ UPDATE "NewsArticle" n SET "imageUrl"=x.url FROM (VALUES
 
 UPDATE "Post" p SET "imageUrl"=m."publicUrl" FROM "ArtworkMedia" m
  WHERE p."imageUrl" IS NULL AND p."artworkId"=m."artworkId" AND m.kind='FRONT_COLOR_CARD' AND m."publicUrl" IS NOT NULL;
-UPDATE "Post" p SET "imageUrl"=(SELECT m."publicUrl" FROM "ArtworkMedia" m JOIN "Artwork" a ON a.id=m."artworkId" WHERE a.title='Retábulo do Rio Vermelho' AND m.kind='MACRO_TL')
+UPDATE "Post" p SET "imageUrl"=(SELECT m."publicUrl" FROM "ArtworkMedia" m JOIN "Artwork" a ON a.id=m."artworkId" WHERE a.title='Retábulo do Rio Vermelho' AND m.kind='MACRO_TL' LIMIT 1)
  WHERE p."imageUrl" IS NULL AND p.kind IN ('EVENT','TEXT');
 
 -- Artist portraits = a detail (MACRO_TL) of one of the artist's own works; bios and trajectory.
 INSERT INTO "ArtistProfile" ("artistId","fullName","birthPlace","livesIn","nationality","representation","languagesJson","quote","bio","photoUrl","photoCredit","royaltyBps","createdAt","updatedAt")
-SELECT ar.id, v.full, v.birth, v.lives, 'Brasileira', v.rep, v.langs, v.quote, v.bio,
+SELECT ar.id, v.full_name, v.birth, v.lives, 'Brasileira', v.rep, v.langs, v.quote, v.bio,
        (SELECT m."publicUrl" FROM "ArtworkMedia" m JOIN "Artwork" a ON a.id=m."artworkId" WHERE a."artistId"=ar.id AND m.kind='MACRO_TL' AND m."publicUrl" IS NOT NULL ORDER BY a.id LIMIT 1),
        'Detalhe de obra', 500, now(), now()
 FROM (VALUES
-  ('joana-teixeira-demo','Joana Teixeira','Salvador/BA','Salvador/BA','Galeria Ladeira','["Pintura","Acrílica sobre tela"]','Pinto a cidade que sobe e desce ladeira: o que ela esconde atrás dos muros.','Joana Teixeira nasceu em Salvador em 1988 e mantém ateliê em Santo Antônio Além do Carmo.\n\nA série Construções (2024–2026) parte de fachadas e andaimes do Centro Histórico para chegar a composições quase abstratas, de cor cheia e geometria solta.'),
+  ('joana-teixeira-demo','Joana Teixeira','Salvador/BA','Salvador/BA','Galeria Ladeira','["Pintura","Acrílica sobre tela"]','Pinto a cidade que sobe e desce ladeira: o que ela esconde atrás dos muros.',E'Joana Teixeira nasceu em Salvador em 1988 e mantém ateliê em Santo Antônio Além do Carmo.\n\nA série Construções (2024–2026) parte de fachadas e andaimes do Centro Histórico para chegar a composições quase abstratas, de cor cheia e geometria solta.'),
   ('marta-okoye-demo','Marta Okoye','Recife/PE','Recife/PE',NULL,'["Fotografia","Pintura"]','O litoral muda de cor duas vezes por dia; eu só anoto.','Fotógrafa e artista visual nascida em Recife em 1991. Trabalha com o litoral de Pernambuco, entre a fotografia de longa exposição e a pintura.'),
-  ('tomas-barreto-demo','Tomás Barreto','Cachoeira/BA','Salvador/BA','Galeria Ladeira','["Pintura","Óleo sobre linho"]','Quem pinta o Recôncavo pinta água e barro.','Tomás Barreto (Cachoeira, 1952) é um dos nomes da pintura baiana da virada do século. Retábulos, marés e luas atravessam cinco décadas de trabalho.\n\nRepresentado pela Galeria Ladeira desde 2011.'),
+  ('tomas-barreto-demo','Tomás Barreto','Cachoeira/BA','Salvador/BA','Galeria Ladeira','["Pintura","Óleo sobre linho"]','Quem pinta o Recôncavo pinta água e barro.',E'Tomás Barreto (Cachoeira, 1952) é um dos nomes da pintura baiana da virada do século. Retábulos, marés e luas atravessam cinco décadas de trabalho.\n\nRepresentado pela Galeria Ladeira desde 2011.'),
   ('lia-mendes-demo','Lia Mendes','Ilhéus/BA','Salvador/BA','Galeria Ladeira','["Pintura","Têmpera"]',NULL,'Lia Mendes (Ilhéus, 1979) pinta a orla de Salvador em têmpera, em séries curtas sobre a maré.')
-) AS v(slug,full,birth,lives,rep,langs,quote,bio) JOIN "Artist" ar ON ar.slug=v.slug
+) AS v(slug,full_name,birth,lives,rep,langs,quote,bio) JOIN "Artist" ar ON ar.slug=v.slug
 ON CONFLICT ("artistId") DO NOTHING;
 
 INSERT INTO "ArtistEntry" ("artistId",kind,year,title,venue,city,"sortOrder")

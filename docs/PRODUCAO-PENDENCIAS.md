@@ -32,7 +32,7 @@ Envs de Production: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FR
 (ex.: Resend/SES/Google Workspace). Sem elas, só login por senha funciona. Redeploy.
 
 ### 4. Senhas geradas nesta sessão (trocar)
-- Admin `moacyveiga@gmail.com`: entrar e trocar em Perfil.
+- Admin `moacyveiga@gmail.com`: senha redefinida em 2026-10-22 a pedido do Moacy (enviada no chat); trocar em Perfil.
 - Papel `houseart_app` no Supabase: SQL Editor → `ALTER ROLE houseart_app PASSWORD '<nova>';`
   → editar `DATABASE_URL` e `DIRECT_URL` na Vercel com a senha nova → Redeploy.
 

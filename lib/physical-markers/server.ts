@@ -10,7 +10,7 @@ import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
 import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, MARKER_UNIT_PRICE_CENTS, publicIdOf, UID_RE, type ReadPurpose } from './domain'
-import { mockMasterKey, verifySun } from './sun-core'
+import { mockMasterKey, mockSunMessage, verifySun } from './sun-core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
 
@@ -121,6 +121,12 @@ export async function availableMarkers(scope: Scope): Promise<number> {
 }
 
 // ── linking (the app's tap) ───────────────────────────────────────────────
+/** Dev/CI only (MARKER_VENDOR=mock outside production): a simulated tap = a valid SUN message for the uid. */
+export function simulatedSun(uid: string, env: NodeJS.ProcessEnv = process.env): { uid: string; ctr: number; cmac: string } | null {
+  if ((env.MARKER_VENDOR ?? 'mock') !== 'mock' || env.NODE_ENV === 'production' || env.VERCEL_ENV === 'production') return null
+  return mockSunMessage(uid, Math.floor(Date.now() / 1000) % 0xffffff)
+}
+
 export async function linkMarker(scope: Scope, opt: { uid: string; ctr: number; cmac: string; artworkId: number }, actor: { userId: number }) {
   const artwork = await prisma.artwork.findUnique({ where: { id: opt.artworkId }, select: { id: true, memberId: true, tenantId: true, status: true, publicId: true, year: true } })
   if (!artwork || !canView(scope, artwork)) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)

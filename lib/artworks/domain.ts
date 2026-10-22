@@ -48,16 +48,43 @@ export const SALE_MODE_CARDS: { key: (typeof SALE_MODES)[number]; name: string; 
   { key: 'ON_REQUEST', name: 'Sob consulta', description: 'O preço não aparece; interessados pedem contato.' },
 ]
 
-export const MEDIA_KINDS = ['FRONT_COLOR_CARD', 'BACK', 'MACRO_TL', 'MACRO_TR', 'MACRO_BL', 'MACRO_BR', 'DETAIL', 'OTHER'] as const
+export const MEDIA_KINDS = ['FRONT_COLOR_CARD', 'BACK', 'MACRO_TL', 'MACRO_TR', 'MACRO_BL', 'MACRO_BR', 'SIGNATURE', 'DETAIL', 'SIDE', 'IN_SITU', 'OTHER'] as const
 export type MediaKind = (typeof MEDIA_KINDS)[number]
-/** The six fixed slots of the "Mídia" step, in the design order. */
-export const MEDIA_SLOTS: { kind: MediaKind; name: string }[] = [
-  { kind: 'FRONT_COLOR_CARD', name: 'Frontal com cartão de cor' },
-  { kind: 'BACK', name: 'Verso' },
-  { kind: 'MACRO_TL', name: 'Macro 1 · sup. esq.' },
-  { kind: 'MACRO_TR', name: 'Macro 2 · sup. dir.' },
-  { kind: 'MACRO_BL', name: 'Macro 3 · inf. esq.' },
-  { kind: 'MACRO_BR', name: 'Macro 4 · inf. dir.' },
+export interface MediaSlot {
+  kind: MediaKind
+  name: string
+  /** the guide shown in the capture (handoff: apps › Cadastrar obra / Nova obra · câmera guiada) */
+  hint: string
+  icon: string
+  required: boolean
+  /** the colour card overlay belongs to the front shot */
+  colorCard?: true
+  /** macro: the region of the artwork the guide points to, as CSS transform-origin */
+  focus?: string
+}
+/**
+ * The capture slots of the "Mídia" step, in the design order: the six fixed
+ * shots of the certification (front with colour card, back, four macros) are
+ * required; signature, surface detail, side and in-situ are optional.
+ */
+export const MEDIA_SLOTS: MediaSlot[] = [
+  { kind: 'FRONT_COLOR_CARD', name: 'Frontal com cartão de cor', hint: 'Obra inteira no quadro, celular paralelo à tela. Cartão de cor no canto, luz difusa e sem flash.', icon: 'crop_portrait', required: true, colorCard: true },
+  { kind: 'BACK', name: 'Verso', hint: 'Chassi inteiro à vista, com etiquetas antigas, carimbos e anotações. É aqui que a etiqueta será colada.', icon: 'flip', required: true },
+  { kind: 'MACRO_TL', name: 'Macro 1 · sup. esq.', hint: 'Aproxime até ver a trama da tela.', icon: 'center_focus_weak', required: true, focus: '12% 12%' },
+  { kind: 'MACRO_TR', name: 'Macro 2 · sup. dir.', hint: 'Mesma distância da anterior.', icon: 'center_focus_weak', required: true, focus: '88% 12%' },
+  { kind: 'MACRO_BL', name: 'Macro 3 · inf. esq.', hint: 'Inclua a pincelada mais marcada da região.', icon: 'center_focus_weak', required: true, focus: '12% 88%' },
+  { kind: 'MACRO_BR', name: 'Macro 4 · inf. dir.', hint: 'Mantenha o celular paralelo à obra.', icon: 'center_focus_weak', required: true, focus: '88% 88%' },
+  { kind: 'SIGNATURE', name: 'Assinatura', hint: 'Aproxime até ler a assinatura e a data com nitidez.', icon: 'draw', required: false, focus: '85% 88%' },
+  { kind: 'DETAIL', name: 'Detalhe da superfície', hint: 'A um palmo de distância, numa área com pincelada ou textura marcada.', icon: 'texture', required: false },
+  { kind: 'SIDE', name: 'Lateral', hint: 'Espessura do chassi e acabamento da borda.', icon: 'view_sidebar', required: false },
+  { kind: 'IN_SITU', name: 'Na parede', hint: 'Ajuda o comprador a entender a escala. Inclua um móvel ou a porta.', icon: 'chair', required: false },
+]
+export const REQUIRED_MEDIA_SLOTS = MEDIA_SLOTS.filter((s) => s.required)
+export const CAPTURE_TIPS: { icon: string; text: string }[] = [
+  { icon: 'wb_sunny', text: 'Luz natural indireta, perto de uma janela. Evite sol direto e flash.' },
+  { icon: 'straighten', text: 'Celular paralelo à obra, na altura do centro dela.' },
+  { icon: 'palette', text: 'Deixe o cartão de cor no canto na foto da frente. Usamos para calibrar a cor.' },
+  { icon: 'block', text: 'Tire vidro ou acrílico se puder. Reflexos escondem detalhes.' },
 ]
 export const MEDIA_QUALITIES = ['GOOD', 'BLURRY', 'PENDING'] as const
 export const MEDIA_QUALITY_LABELS: Record<(typeof MEDIA_QUALITIES)[number], string> = { GOOD: 'Boa', BLURRY: 'Desfocada', PENDING: 'Pendente' }

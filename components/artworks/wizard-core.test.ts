@@ -12,11 +12,11 @@ describe('wizard core', () => {
   it('review lines follow the design', () => {
     expect(reviewLines(s).map((l) => `${l.k}: ${l.v}`)).toEqual([
       'Título: Maré de março, 2026', 'Técnica: Têmpera sobre tela', 'Dimensões: 90 × 90 × 3,5 cm', 'Edição: Obra única',
-      'Mídia: 2 de 6 fotos · 4 pendente(s)', 'Condition report: Excelente · 1 ponto(s) de atenção', 'Preço: R$\u00a021.000 · aceita ofertas',
+      'Mídia: 2 de 6 fotos obrigatórias · 4 pendente(s)', 'Condition report: Excelente · 1 ponto(s) de atenção', 'Preço: R$\u00a021.000 · aceita ofertas',
     ])
     expect(nextLabel(5)).toBe('Enviar para certificação')
     expect(nextLabel(0)).toBe('Continuar')
-    expect(mediaSummary([])).toBe('0 de 6 fotos · 6 pendente(s)')
+    expect(mediaSummary([])).toBe('0 de 6 fotos obrigatórias · 6 pendente(s)')
   })
   it('sheetPatch sends cm', () => {
     expect(sheetPatch(s)).toMatchObject({ heightMm: 90, depthMm: 3.5 })

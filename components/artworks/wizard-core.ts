@@ -1,6 +1,6 @@
 // Wizard decisions — PURE (tested): what each step saves, the review lines,
 // the next-button label, the media summary.
-import { CONDITION_GRADE_LABELS, CONDITION_STATE_LABELS, formatBRL, formatDimensions, MEDIA_SLOTS, WIZARD_STEPS } from '@/lib/artworks/domain'
+import { CONDITION_GRADE_LABELS, CONDITION_STATE_LABELS, formatBRL, formatDimensions, MEDIA_SLOTS, REQUIRED_MEDIA_SLOTS, WIZARD_STEPS } from '@/lib/artworks/domain'
 
 export interface WizardMedia { id: number; kind: string; publicUrl: string | null; quality: string | null }
 export interface WizardRegion { region: string; note: string; state: string }
@@ -21,9 +21,10 @@ export function nextLabel(step: number): string {
 }
 
 export function mediaSummary(media: WizardMedia[]): string {
-  const have = MEDIA_SLOTS.filter((s) => media.some((m) => m.kind === s.kind)).length
-  const pending = MEDIA_SLOTS.length - have
-  return `${have} de ${MEDIA_SLOTS.length} fotos${pending ? ` · ${pending} pendente(s)` : ''}`
+  const have = REQUIRED_MEDIA_SLOTS.filter((s) => media.some((m) => m.kind === s.kind)).length
+  const pending = REQUIRED_MEDIA_SLOTS.length - have
+  const extras = MEDIA_SLOTS.filter((s) => !s.required && media.some((m) => m.kind === s.kind)).length
+  return `${have} de ${REQUIRED_MEDIA_SLOTS.length} fotos obrigatórias${pending ? ` · ${pending} pendente(s)` : ''}${extras ? ` · ${extras} opcional(is)` : ''}`
 }
 
 export function reviewLines(s: WizardState): { k: string; v: string }[] {

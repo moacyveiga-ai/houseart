@@ -4,6 +4,7 @@ Produção: https://houseart-housemapp.vercel.app · projeto Vercel `houseart` (
 repositório `moacyveiga-ai/houseart` · Supabase `houseart` (ref `zqxkwaivqqlkocbmdvch`).
 
 ## Feito pelo agente
+- **2026-10-22 — posse das tabelas:** o schema inicial foi criado pelo conector como `postgres`, e o `migrate deploy` do build (papel `houseart_app`) só conseguia CRIAR tabelas, não ALTERAR as existentes (`must be owner of table AccessCode`, deploy `a6f97f0` vermelho). Todas as tabelas, sequências e funções de `public` passaram a `houseart_app` (`ALTER … OWNER TO`), a migration `20261022100000_phase2_access` foi aplicada à mão como `postgres` e marcada aplicada em `_prisma_migrations`; redeploy em seguida. Regra: toda migration nova é aplicada pelo build, como de costume.
 - Repositório, push da `main`, projeto Vercel com todas as envs, banco com schema e seeds, admin,
   `APP_URL`, primeiro deploy e correção do login.
 

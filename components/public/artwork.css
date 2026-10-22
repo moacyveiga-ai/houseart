@@ -112,7 +112,8 @@
 .hp-artwork__seller-name { font-weight: 600; color: var(--ha-ink-900); text-decoration: none; }
 a.hp-artwork__seller-name:hover { text-decoration: underline; color: var(--ha-ink-900); }
 .hp-artwork__seller-meta { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
-.hp-artwork__seller-talk { margin-left: auto; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-900); white-space: nowrap; }
+.hp-artwork__talk { width: 100%; padding: var(--ha-space-3); }
+.hp-artwork__seller-talk { margin-left: auto; border: 0; background: none; padding: 0; font: inherit; cursor: pointer; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-900); white-space: nowrap; }
 
 /* the three columns */
 .hp-artwork__info { margin-top: var(--ha-space-20); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--ha-space-12); padding-top: var(--ha-space-10); border-top: var(--ha-border-w) solid var(--ha-paper-200); }

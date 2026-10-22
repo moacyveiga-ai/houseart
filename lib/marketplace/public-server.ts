@@ -37,6 +37,8 @@ export interface PublicArtworkArtist { slug: string; name: string; birthYear: nu
 export interface PublicArtworkEvent { kind: string; label: string; at: string }
 
 export interface PublicArtworkPage extends PublicArtworkCard {
+  /** The numeric id, only for opening the conversation about the artwork (POST /api/messages). */
+  id: number
   status: string; certificateStatus: 'PENDING' | 'ACTIVE' | 'CONTESTED' | 'REVOKED'
   artistSlug: string; technique: string | null; materials: string | null; dimensions: string; size: { heightMm: number | null; widthMm: number | null; depthMm: number | null }
   edition: string | null; signatureLocation: string | null; series: string | null; conditionGrade: string | null; conditionAt: string | null
@@ -74,7 +76,7 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
     const fixedPrice = a.mandates[0]?.fixedPrice ?? false
     const c = a.certificate
     return {
-      publicId, title: a.title, year: a.year, artist: a.artist.name, artistSlug: a.artist.slug, category: a.category,
+      id: a.id, publicId, title: a.title, year: a.year, artist: a.artist.name, artistSlug: a.artist.slug, category: a.category,
       status: a.status, certificateStatus: !c || !c.issuedAt ? 'PENDING' : (c.status as 'ACTIVE' | 'CONTESTED' | 'REVOKED'),
       priceCents: listed && a.saleMode !== 'ON_REQUEST' ? a.listPriceCents : null, saleMode: a.saleMode,
       cover: a.media.find((m) => m.kind === 'FRONT_COLOR_CARD')?.publicUrl ?? null,

@@ -15,6 +15,7 @@ import { StatusBadge, type ArtworkStatus } from '@/components/ds/StatusBadge'
 import { ArtworkMedia, type MediaItem } from './ArtworkMedia'
 import { ArtworkOffer } from './ArtworkOffer'
 import { ShippingQuote } from './ShippingQuote'
+import { TalkToSellerButton } from './TalkToSellerButton'
 import { ARTWORK_CATEGORY_LABELS, CONDITION_GRADE_LABELS, formatBRL } from '@/lib/artworks/domain'
 import type { MarketItem } from '@/lib/marketplace/filter-core'
 import type { PublicArtworkPage } from '@/lib/marketplace/public-server'
@@ -76,7 +77,7 @@ function cardOf(i: MarketItem): ArtworkCardData {
   return { href: `/e/artwork/${i.publicId}`, src: i.cover, artist: i.artist, title: i.title, year: i.year, technique: i.technique, dimensions: i.dimensions, price: i.priceCents === null ? 'Sob consulta' : formatBRL(i.priceCents), verified: true }
 }
 
-export function Artwork({ artwork: a, related }: { artwork: PublicArtworkPage; related: MarketItem[] }) {
+export function Artwork({ artwork: a, related, signedIn = false }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean }) {
   const language = LANGUAGE_OF[a.category]
   const media = mediaItemsOf(a.cover, a.media.find((m) => m.kind === 'BACK')?.url ?? null)
   const wall = a.size.heightMm && a.size.widthMm ? { heightMm: a.size.heightMm, widthMm: a.size.widthMm, dimensions: a.dimensions } : null
@@ -96,6 +97,7 @@ export function Artwork({ artwork: a, related }: { artwork: PublicArtworkPage; r
   const seller = a.seller
   const sellerMeta = [[seller.city, seller.uf].filter(Boolean).join('/') || null, seller.representsArtist ? 'representa a artista' : null].filter(Boolean).join(' · ')
   const sellerHref = seller.kind === 'GALLERY' && seller.slug ? `/e/gallery/${seller.slug}` : null
+  const talkLabel = seller.kind === 'GALLERY' ? 'Falar com a galeria' : 'Falar com o vendedor'
   const p = a.artistProfile
   const artistMeta = [[p.birthPlace?.split('/')[0], p.birthYear].filter(Boolean).join(', ') || null, p.livesIn ? `vive e trabalha em ${p.livesIn.split('/')[0]}` : null].filter(Boolean).join(' · ')
 
@@ -141,9 +143,9 @@ export function Artwork({ artwork: a, related }: { artwork: PublicArtworkPage; r
                 <ShippingQuote fromUf={seller.uf} size={a.size} priceCents={price} />
                 {price !== null && a.acceptsOffers ? (
                   <ArtworkOffer publicId={a.publicId} priceCents={String(price)} fixedOnly={a.fixedPrice || a.saleMode === 'FIXED'} />
-                ) : sellerHref ? (
-                  <Link href={sellerHref} className="ha-btn ha-btn--outline ha-btn--md" style={{ width: '100%', padding: 'var(--ha-space-3)' }}>Falar com a galeria</Link>
-                ) : null}
+                ) : (
+                  <TalkToSellerButton artworkId={a.id} publicId={a.publicId} signedIn={signedIn} label={talkLabel} className="ha-btn ha-btn--outline ha-btn--md hp-artwork__talk" />
+                )}
                 <div className="hp-artwork__assure">
                   <span><Icon name="lock" size={16} />Pagamento em garantia: liberado ao vendedor só depois que você confirma o recebimento.</span>
                   <span><Icon name="contract" size={16} />A escritura passa para o seu nome na entrega.</span>
@@ -163,7 +165,7 @@ export function Artwork({ artwork: a, related }: { artwork: PublicArtworkPage; r
                 {sellerHref ? <Link href={sellerHref} className="hp-artwork__seller-name">{seller.name}</Link> : <span className="hp-artwork__seller-name">{seller.name}</span>}
                 {sellerMeta ? <div className="hp-artwork__seller-meta">{sellerMeta}</div> : null}
               </div>
-              {sellerHref ? <Link href={sellerHref} className="hp-artwork__seller-talk">Falar com a galeria</Link> : null}
+              {a.status === 'SOLD' || a.status === 'STOLEN' ? null : <TalkToSellerButton artworkId={a.id} publicId={a.publicId} signedIn={signedIn} label={talkLabel} className="hp-artwork__seller-talk" />}
             </div>
           </div>
         </aside>

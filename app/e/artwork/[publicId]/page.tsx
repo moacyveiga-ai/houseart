@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { Artwork } from '@/components/public/Artwork'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import { publicArtwork, relatedArtworks } from '@/lib/marketplace/public-server'
+import { getSession } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,6 @@ export default async function PublicArtworkPage({ params }: Params) {
   if (!isPublicId(publicId)) notFound()
   const a = await publicArtwork(publicId)
   if (!a) notFound()
-  const related = await relatedArtworks(publicId, 4)
-  return <Artwork artwork={a} related={related} />
+  const [related, session] = await Promise.all([relatedArtworks(publicId, 4), getSession()])
+  return <Artwork artwork={a} related={related} signedIn={!!session} />
 }

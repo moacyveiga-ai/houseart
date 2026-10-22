@@ -3,12 +3,20 @@
    --ha-* tokens (the four provider badges carry third-party brand colours,
    exactly as the prototype draws them). */
 
-.ha-login--signup .ha-login__art { justify-content: space-between; gap: var(--ha-space-10); padding: var(--ha-space-10) var(--ha-space-10) var(--ha-space-12); }
-.ha-login--signup .ha-login__stage { flex: 0 0 auto; padding: 0; }
-.ha-login--signup .ha-login__frame { width: 100%; max-width: 520px; aspect-ratio: 4 / 3; border: 0; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-10); box-sizing: border-box; }
+/* Desktop: the two panels fill exactly one viewport — the ink panel is pinned to the
+   viewport height and the card is tight enough for step 1 to fit without a page scroll. */
+.ha-login--signup .ha-login__art { justify-content: space-between; gap: var(--ha-space-6); padding: var(--ha-space-8) var(--ha-space-10) var(--ha-space-8); min-height: 100vh; min-height: 100dvh; box-sizing: border-box; position: sticky; top: 0; max-height: 100vh; max-height: 100dvh; overflow: hidden; }
+.ha-login--signup .ha-login__stage { flex: 1 1 auto; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
+.ha-login--signup .ha-login__frame { width: 100%; max-width: 520px; max-height: 100%; aspect-ratio: 4 / 3; border: 0; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-8); box-sizing: border-box; }
 .ha-login--signup .ha-login__frame::before { content: ''; display: block; width: 100%; aspect-ratio: 2296 / 2869; max-height: 100%; background: linear-gradient(160deg, var(--ha-paper-200), var(--ha-ink-300) 70%); box-shadow: var(--ha-shadow-wall); }
-.ha-login--signup .ha-login__form { padding: var(--ha-space-12) var(--ha-space-6); }
-.ha-login--signup .ha-login__card { max-width: 420px; gap: var(--ha-space-6); }
+.ha-login--signup .ha-login__frame--art::before { display: none; }
+.ha-login--signup .ha-login__frame--art img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; box-shadow: var(--ha-shadow-wall); }
+.ha-login--signup .ha-login__form { padding: var(--ha-space-8) var(--ha-space-6); min-height: 100vh; min-height: 100dvh; box-sizing: border-box; }
+.ha-login--signup .ha-login__card { max-width: 420px; gap: var(--ha-space-5); }
+.ha-login--signup .ha-signup { gap: var(--ha-space-5); }
+.ha-login--signup .ha-signup__form { gap: var(--ha-space-3); }
+.ha-login--signup .ha-signup__socials { gap: var(--ha-space-2); }
+.ha-login--signup .ha-signup__cta { padding-top: var(--ha-space-3); padding-bottom: var(--ha-space-3); }
 
 /* aside: Plano escolhido */
 .ha-signup-plan { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 520px; }
@@ -124,8 +132,20 @@
 .ha-signup__row dt { color: var(--ha-ink-500); flex: none; white-space: nowrap; }
 .ha-signup__row dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-weight: 600; color: var(--ha-ink-900); text-align: right; }
 
+/* short desktop viewports (laptops at 768 px): tighter title and gaps, still no page scroll */
+@media (min-width: 721px) and (max-height: 820px) {
+  .ha-login--signup .ha-login__form { padding-top: var(--ha-space-5); padding-bottom: var(--ha-space-5); }
+  .ha-login--signup .ha-login__card { gap: var(--ha-space-4); }
+  .ha-login--signup .ha-signup { gap: var(--ha-space-4); }
+  .ha-login--signup .ha-signup__title .ha-h1 { font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); }
+  .ha-login--signup .ha-signup__form .ha-input { padding-top: var(--ha-space-2); padding-bottom: var(--ha-space-2); }
+  .ha-login--signup .ha-signup__social { padding-top: var(--ha-space-2); padding-bottom: var(--ha-space-2); }
+  .ha-login--signup .ha-login__art { padding-top: var(--ha-space-6); padding-bottom: var(--ha-space-6); }
+}
+
 @media (max-width: 720px) {
-  .ha-login--signup .ha-login__art { padding: var(--ha-space-6); gap: var(--ha-space-6); }
+  .ha-login--signup .ha-login__art { padding: var(--ha-space-6); gap: var(--ha-space-6); min-height: 0; max-height: none; position: static; }
+  .ha-login--signup .ha-login__form { min-height: 0; }
   .ha-login--signup .ha-login__stage { display: none; }
   .ha-login--signup .ha-login__form { padding: var(--ha-space-8) var(--ha-space-4); }
   .ha-signup__segment { font-size: 11px; }

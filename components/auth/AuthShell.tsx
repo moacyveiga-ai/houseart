@@ -10,6 +10,7 @@
 // in place. `brandHeight` follows the handoff table (§4.5: 30 on Entrar and
 // Cadastro, 48 on the Web App login). `className` adds a modifier to the root.
 import type { ReactNode } from 'react'
+import Image from 'next/image'
 import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
 
 export interface AuthShellProps {
@@ -27,9 +28,11 @@ export interface AuthShellProps {
   claim?: ReactNode
   /** sentence under the headline of the `claim` panel; `null` hides it */
   tagline?: ReactNode
+  /** picture hung inside the frame of the `frame` panel (public-domain artwork, as the prototype) */
+  art?: { src: string; alt: string }
 }
 
-export function AuthShell({ title, lead, children, foot, className, brandHeight, hideHeading = false, variant = 'frame', claim, tagline }: AuthShellProps) {
+export function AuthShell({ title, lead, children, foot, className, brandHeight, hideHeading = false, variant = 'frame', claim, tagline, art }: AuthShellProps) {
   const isClaim = variant === 'claim'
   return (
     <main className={['ha-login', isClaim ? 'ha-login--claim' : '', className ?? ''].filter(Boolean).join(' ')}>
@@ -42,7 +45,7 @@ export function AuthShell({ title, lead, children, foot, className, brandHeight,
           </div>
         ) : (
           <>
-            <div className="ha-login__stage" aria-hidden="true"><div className="ha-login__frame" /></div>
+            <div className="ha-login__stage" aria-hidden="true"><div className={art ? 'ha-login__frame ha-login__frame--art' : 'ha-login__frame'}>{art ? <Image src={art.src} alt={art.alt} width={700} height={875} priority unoptimized /> : null}</div></div>
             {foot ?? (
               <div className="ha-login__foot" aria-hidden="true">
                 <div className="ha-login__claim">{claim ?? 'A escritura da obra de arte'}</div>

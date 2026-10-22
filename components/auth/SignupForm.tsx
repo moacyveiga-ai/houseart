@@ -17,12 +17,11 @@ export type SignupStep = 1 | 2 | 3 | 4 | 5
 
 const SELF_SIGNUP: readonly SignupProfileKind[] = ['ARTIST', 'GALLERY', 'COLLECTOR', 'ADVISOR']
 
-/** Social buttons in the order of the prototypes (Cadastro: Google, Apple, LinkedIn; the app adds Facebook). */
+/** Social buttons of the signup: Google and Apple only (decision of 2026-10-22 — Facebook and
+ * LinkedIn stay configurable for the login but are not offered here). */
 const SOCIAL = [
   { key: 'GOOGLE', slug: 'google', name: 'Google' },
   { key: 'APPLE', slug: 'apple', name: 'Apple' },
-  { key: 'FACEBOOK', slug: 'facebook', name: 'Facebook' },
-  { key: 'LINKEDIN', slug: 'linkedin', name: 'LinkedIn' },
 ] as const
 
 const SOCIAL_NOTICE: Record<string, string> = {

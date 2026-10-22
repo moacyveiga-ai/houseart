@@ -49,6 +49,10 @@ Criar `Housemap/houseart` vazio → `git remote set-url origin git@github.com:Ho
 - SMS: `SMS_PROVIDER=twilio` + `TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM`; sem eles o código do celular não sai (fica no log sem o código) e o cadastro trava no passo do celular.
 - Texto jurídico de `/terms` e `/privacy` (hoje provisórios).
 
+### 8. Avisos no celular (Fase 5 do handoff) — FEITO (2026-10-22)
+- Chaves VAPID geradas e gravadas na Vercel (`WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` sensível, `WEB_PUSH_SUBJECT` = URL da Vercel). Ao ter domínio próprio, trocar o `WEB_PUSH_SUBJECT` pelo `mailto:` ou URL do domínio (não exige gerar chaves novas).
+- O push só chega em HTTPS com permissão do navegador; o toggle fica em `/notifications`.
+
 ## Depois do MVP (produto)
 Stripe real (`STRIPE_ENV=live`, chaves e webhook; remover `STRIPE_MOCK_ALLOWED`), KYC real,
 etiquetas NTAG 424 reais (`MARKER_VENDOR=ntag424` + master key), carimbo do tempo, âncora,

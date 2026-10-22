@@ -1,30 +1,45 @@
+// The buyer's page of one offer — the "Enviada" step of the handoff (HouseArt
+// Oferta): status, the seller's counter, the timeline and the artwork aside.
+// Opened by the one-time token of the e-mail (?t=) or by the logged buyer;
+// never indexed.
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
-import { Badge } from '@/components/ds/Badge'
+import '@/components/offers/offer-wizard.css'
+import { OfferBar, type OfferArtwork } from '@/components/offers/OfferFrame'
+import { OfferSent } from '@/components/offers/OfferSent'
+import type { StatusOffer } from '@/components/offers/offer-status-core'
+import { getSession } from '@/lib/auth'
 import { buyerOffer } from '@/lib/offers/server'
-import { formatBRL } from '@/lib/artworks/domain'
-import { BuyerOfferActions } from '@/components/offers/BuyerOfferActions'
+import { publicArtwork } from '@/lib/marketplace/public-server'
+import { formatCep } from '@/lib/shipping/quote-core'
 
 export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { title: 'Sua oferta — HouseArt', robots: { index: false, follow: false } }
 
-/** The buyer's page, by the one-time token handed after the OTP (never indexed). */
 export default async function BuyerOfferPage({ params, searchParams }: { params: Promise<{ code: string }>; searchParams: Promise<{ t?: string }> }) {
   const code = (await params).code.toUpperCase()
   const token = (await searchParams).t ?? null
-  const o = await buyerOffer(code, token)
-  if (!o || !token) notFound()
-  const authorLabel = (a: string) => (a === 'BUYER' ? 'Você' : a === 'NEGOTIATOR' ? 'Negociador do vendedor' : 'Vendedor')
+  const session = token ? null : await getSession()
+  const o = await buyerOffer(code, token ?? (session ? { userId: session.id } : null))
+  if (!o) notFound()
+  const a = o.artworkPublicId ? await publicArtwork(o.artworkPublicId) : null
+  const [title, year] = (() => { const m = /^(.*), (\d{4})$/.exec(o.artworkTitle); return m ? [m[1], Number(m[2])] : [o.artworkTitle, null] })()
+  const artwork: OfferArtwork = {
+    publicId: o.artworkPublicId ?? '', title: a?.title ?? title, year: a?.year ?? year, artist: a?.artist ?? o.artistName ?? '', technique: a?.technique ?? null, dimensions: a?.dimensions ?? '—',
+    cover: a?.cover ?? o.artworkCover, certified: a ? a.certificateStatus === 'ACTIVE' : true,
+    seller: a ? { name: a.seller.name, kind: a.seller.kind } : { name: 'Vendedor', kind: 'PRIVATE' }, priceCents: Number(o.listPriceCents ?? o.offeredCents),
+  }
+  const offer: StatusOffer = {
+    status: o.status, canReply: o.canReply, canRetract: o.canRetract, validityHours: o.validityHours,
+    offeredCents: Number(o.offeredCents), currentCents: Number(o.currentCents), listPriceCents: o.listPriceCents === null ? null : Number(o.listPriceCents),
+    rounds: o.rounds.map((r) => ({ number: r.number, author: r.author, amountCents: Number(r.amountCents), message: r.message, at: r.at })),
+    createdAt: o.createdAt, expiresAt: o.expiresAt, counterCents: o.counterCents === null ? null : Number(o.counterCents), counterMessage: o.counterMessage,
+    guaranteeMethod: o.guaranteeMethod, shippingCents: Number(o.shippingCents), insuranceCents: Number(o.insuranceCents),
+  }
   return (
-    <main className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <HouseArtLogo height={30} />
-      <p className="ha-eyebrow">Sua proposta</p>
-      <h1 className="ha-h1">{o.artworkTitle}</h1>
-      <div className="ha-row"><Badge tone={o.status === 'ACCEPTED' ? 'verified' : o.status === 'REFUSED' || o.status === 'EXPIRED' || o.status === 'RETRACTED' ? 'neutral' : 'pending'}>{o.statusLabel}</Badge><span className="ha-muted ha-sm">{o.code} · válida até {new Date(o.expiresAt).toLocaleDateString('pt-BR')}</span></div>
-      <ul className="ha-list">
-        {o.rounds.map((r) => <li key={r.number} className="ha-list__row" style={{ gridTemplateColumns: '1fr auto auto' }}><span><b>{authorLabel(r.author)}</b>{r.message ? <><br /><span className="ha-muted ha-sm">{r.message}</span></> : null}</span><span className="ha-num">{formatBRL(r.amountCents)}</span><span className="ha-muted ha-sm">{new Date(r.at).toLocaleDateString('pt-BR')}</span></li>)}
-      </ul>
-      {o.status === 'ACCEPTED' ? <div className="ha-callout">Proposta aceita por {formatBRL(o.currentCents)}. Você tem 24 h para pagar em garantia; a HouseArt entra em contato com as instruções.</div> : null}
-      <BuyerOfferActions code={o.code} token={token} canRetract={o.canRetract} canReply={o.canReply} />
-    </main>
+    <>
+      <OfferBar backHref={o.artworkPublicId ? `/e/artwork/${o.artworkPublicId}` : '/e/marketplace'} backLabel={o.artworkPublicId ? 'Voltar à obra' : 'Marketplace'} />
+      <OfferSent code={o.code} offer={offer} artwork={artwork} token={token} deliveryCep={o.deliveryCep ? formatCep(o.deliveryCep) : null} />
+    </>
   )
 }

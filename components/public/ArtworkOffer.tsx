@@ -1,26 +1,12 @@
-'use client'
-// "Comprar a preço fixo" / "Fazer oferta": both open the existing OfferForm
-// (POST /api/public/offers + OTP) in a sheet below the buttons — the fixed
-// purchase is the form with the list price filled in and locked.
-import { useState } from 'react'
-import { Button } from '@/components/ds/Button'
-import { OfferForm } from '@/components/marketplace/OfferForm'
+// "Comprar a preço fixo" / "Fazer oferta" of the price box: links to the two
+// flows of the handoff — the purchase (/buy) and the five-step offer (/offer).
+import { ButtonLink } from '@/components/ds/Button'
 
-export function ArtworkOffer({ publicId, priceCents, fixedOnly }: { publicId: string; priceCents: string; fixedOnly: boolean }) {
-  const [mode, setMode] = useState<'buy' | 'offer' | null>(null)
+export function ArtworkOffer({ publicId, fixedOnly }: { publicId: string; priceCents?: string; fixedOnly: boolean }) {
   return (
     <div className="hp-artwork__buy">
-      <Button variant="primary" size="md" onClick={() => setMode('buy')} aria-expanded={mode === 'buy'}>Comprar a preço fixo</Button>
-      {fixedOnly ? null : <Button variant="outline" size="md" onClick={() => setMode('offer')} aria-expanded={mode === 'offer'}>Fazer oferta</Button>}
-      {mode ? (
-        <div className="hp-artwork__form" role="region" aria-label={mode === 'buy' ? 'Comprar a preço fixo' : 'Fazer oferta'}>
-          <div className="hp-artwork__form-head">
-            <b>{mode === 'buy' ? 'Comprar a preço fixo' : 'Fazer oferta'}</b>
-            <button type="button" className="ha-link" onClick={() => setMode(null)}>Fechar</button>
-          </div>
-          <OfferForm key={mode} publicId={publicId} fixedPriceCents={mode === 'buy' ? priceCents : null} />
-        </div>
-      ) : null}
+      <ButtonLink href={`/e/artwork/${publicId}/buy`} variant="primary" size="md">Comprar a preço fixo</ButtonLink>
+      {fixedOnly ? null : <ButtonLink href={`/e/artwork/${publicId}/offer`} variant="outline" size="md">Fazer oferta</ButtonLink>}
     </div>
   )
 }

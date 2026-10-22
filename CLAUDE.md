@@ -108,6 +108,14 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-22 — Handoff Fase 4 feita: mercado.** Oferta em 5 etapas (`/e/artwork/[publicId]/offer` → `/e/offer/[code]`
+  com contraproposta e linha do tempo), compra direta (`/e/artwork/[publicId]/buy`), Carteira e cartões (`/wallet/cards`),
+  Pix de recebimento (`/sales/payout`). `lib/payment-methods/` (cartão só marca/últimos 4 + token mock; Pix cifrado),
+  garantia/validade/cotação na `Offer`, captura em garantia no aceite, `buyNow`, identidade do comprador
+  (`lib/accounts/identity-server.ts`); migration `20261022200000_phase4_market`. **Produção:** a posse das tabelas passou ao
+  `houseart_app` (o conector criou o schema como `postgres`; migration que ALTERA tabela falhava no build) — ver
+  `docs/PRODUCAO-PENDENCIAS.md`. Divergências em `docs/HANDOFF-2026-10-21.md` §5. **Próximas:** Fase 3 (captura guiada),
+  Fase 6 (galeria), Fase 5 (mensagens, comunidade, push), Web Colecionador/Galeria.
 - **2026-10-22 — Handoff Fase 2 feita: acesso no desenho.** Entrar e Cadastro em passos (`app/login`, `app/signup`,
   `app/signup/welcome`), login social em `lib/auth/oauth/` (Google/Apple/Facebook/LinkedIn; `MOCK` só com `OAUTH_MOCK=1`
   fora de produção; provedor sem chave = botão "Em breve"), celular por SMS (`lib/sms/`, Twilio ou mock), reset de senha por

@@ -11,7 +11,12 @@ export interface TabDef {
   title: string
   /** Material icon name (@expo/vector-icons MaterialIcons). */
   icon: TabIcon
-  /** Web route opened inside the WebView; null = native screen (App Colecionador fases 1 e 2: Explorar, Coleção, Mensagens, Comunidade). */
+  /**
+   * Web route opened inside the WebView; null = native for every profile (App
+   * Colecionador fases 1 e 2: Explorar, Coleção, Mensagens, Comunidade). A tab
+   * that is native only for some profiles keeps the path for the others and is
+   * listed in `NATIVE_FOR` (App Galeria: Início, Acervo e Negócios).
+   */
   path: string | null
 }
 
@@ -45,6 +50,20 @@ export function tabsFor(kind: ProfileKind | null): TabKey[] {
     case 'STAFF': return GALLERY
     default: return COLLECTOR
   }
+}
+
+/** Tabs that are native for these profiles only (the web route stays for the rest). */
+const NATIVE_FOR: Partial<Record<TabKey, readonly ProfileKind[]>> = {
+  home: ['GALLERY', 'ADVISOR'],
+  artworks: ['GALLERY', 'ADVISOR'],
+  sales: ['GALLERY', 'ADVISOR'],
+}
+
+/** Native screen (draws its own top) or WebView for this profile and tab. */
+export function isNativeTab(kind: ProfileKind | null, key: TabKey): boolean {
+  if (TABS[key].path === null) return true
+  const only = NATIVE_FOR[key]
+  return !!only && kind !== null && only.includes(kind)
 }
 
 /** The web route that `Obras` means for this profile (`/artworks` is the same path for both). */

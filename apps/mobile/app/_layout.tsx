@@ -63,6 +63,12 @@ export default function RootLayout() {
             <Stack.Screen name="messages/[id]" />
             <Stack.Screen name="favorites" />
             <Stack.Screen name="search" />
+            <Stack.Screen name="artworks/[id]/listing" />
+            <Stack.Screen name="deal/[id]" />
+            <Stack.Screen name="sales/rules" />
+            <Stack.Screen name="gallery/team" />
+            <Stack.Screen name="gallery/artists" />
+            <Stack.Screen name="gallery/account" />
             <Stack.Screen name="settings" options={{ headerShown: true, title: 'Perfil', headerTintColor: theme.fg, headerStyle: { backgroundColor: theme.bg } }} />
           </Stack>
         </SessionProvider>

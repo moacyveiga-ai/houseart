@@ -3,7 +3,7 @@ import { Pressable } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useSession } from '@/auth/session'
 import { useUnreadMessages } from '@/api/unread'
-import { TABS, iconFor, isCollector, labelFor, tabsFor, type TabKey } from '@/nav/tabs'
+import { TABS, iconFor, isCollector, isNativeTab, labelFor, tabsFor, type TabKey } from '@/nav/tabs'
 import { theme } from '@/theme'
 
 const ALL: TabKey[] = ['explore', 'messages', 'community', 'wallet', 'profile', 'home', 'artworks', 'sales', 'certification', 'notifications']
@@ -43,7 +43,6 @@ export default function TabsLayout() {
       }}
     >
       {ordered.map((key) => {
-        const def = TABS[key]
         const shown = visible.includes(key)
         const icon = iconFor(kind, key)
         return (
@@ -54,7 +53,7 @@ export default function TabsLayout() {
               href: shown ? undefined : null,
               title: labelFor(kind, key),
               // The native screens draw their own top (brand, search, title) as the prototype does.
-              headerShown: key === 'profile' || def.path !== null || (key === 'wallet' && !isCollector(kind)),
+              headerShown: key === 'profile' || !isNativeTab(kind, key) || (key === 'wallet' && !isCollector(kind)),
               tabBarIcon: ({ color, size }) => <MaterialIcons name={icon} size={size} color={color} />,
               tabBarBadge: key === 'messages' && unread > 0 ? (unread > 99 ? '99+' : unread) : undefined,
               tabBarBadgeStyle: { backgroundColor: theme.accent, color: theme.fg, fontSize: 10, fontWeight: '600' },

@@ -1,6 +1,7 @@
 // A small loader over `api()`: loading / error / data / reload. Screens stay
 // declarative; the error text is the one the API sent (or a generic line).
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useFocusEffect } from 'expo-router'
 import { api } from './client'
 
 export interface Loaded<T> { data: T | null; error: string | null; loading: boolean; reload: () => Promise<void> }
@@ -23,4 +24,13 @@ export function useApi<T>(path: string | null): Loaded<T> {
   }, [path])
   useEffect(() => { void reload() }, [reload])
   return { data, error, loading, reload }
+}
+
+/** Reloads when the screen comes back into focus (not on the first focus, which `useApi` already loads). */
+export function useReloadOnFocus(reload: () => Promise<void>): void {
+  const first = useRef(true)
+  useFocusEffect(useCallback(() => {
+    if (first.current) { first.current = false; return }
+    void reload()
+  }, [reload]))
 }

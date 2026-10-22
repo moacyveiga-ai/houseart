@@ -8,7 +8,7 @@ export class ApiError extends Error {
 }
 
 export interface ApiOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
   /** Overrides the stored token (login flows pass the fresh one). */
   token?: string | null

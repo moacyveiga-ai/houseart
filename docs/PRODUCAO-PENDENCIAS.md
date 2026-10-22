@@ -34,14 +34,17 @@ Envs de Production: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FR
 ### 4. Senhas geradas nesta sessão (trocar)
 - Admin `moacyveiga@gmail.com`: senha redefinida em 2026-10-22 a pedido do Moacy (enviada no chat); trocar em Perfil.
 - Papel `houseart_app` no Supabase: SQL Editor → `ALTER ROLE houseart_app PASSWORD '<nova>';`
-  → editar `DATABASE_URL` e `DIRECT_URL` na Vercel com a senha nova → Redeploy.
+  → editar `DATABASE_URL` e `DIRECT_URL` na Vercel com a senha nova → Redeploy. (2026-10-22: o agente
+  não fez — as envs são sensíveis e ilegíveis pelo conector, e o pooler não é alcançável daqui para
+  testar a senha nova antes de trocar; fazer pelo painel com os dois valores à mão evita derrubar a
+  produção por um erro de URL.)
 
 ### 5. Domínio próprio
 Vercel → Settings → Domains → adicionar (ex.: `app.houseart.com.br`) → DNS no registrador →
 trocar `APP_URL` para a URL final → Redeploy.
 
 ### 6. Repositório na org Housemap (opcional)
-Criar `Housemap/houseart` vazio → `git remote set-url origin git@github.com:Housemap/houseart.git`
+Criar `Housemap/houseart` vazio (2026-10-22: a conta do agente segue sem admin na org — 403) → `git remote set-url origin git@github.com:Housemap/houseart.git`
 → `git push -u origin main` → Vercel → Settings → Git → reconectar.
 
 ### 7. Acesso (Fase 2 do handoff)

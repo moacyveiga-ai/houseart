@@ -1,6 +1,9 @@
 // Navigation per profile — ported literally from `NAV` in
 // houseart-design/app-source.tsx (the Claude Design source of truth), plus the
-// handoff Phase 4 entries ("Carteira e cartões", "Pix para receber"). The
+// handoff Phase 4 entries ("Carteira e cartões", "Pix para receber") and the
+// Phase 5 ones ("Mensagens", "Comunidade" for artist, gallery, collector and
+// advisor — the App Artista prototype has no community yet; handoff §6 Fase 8
+// says to reuse the Colecionador/Galeria screens). The
 // consultant uses the gallery screens (B.1); the badge count comes from the
 // server at render time, never from here.
 export type ProfileKind = 'artist' | 'gallery' | 'collector' | 'appraiser' | 'advisor' | 'admin'
@@ -28,6 +31,8 @@ const ARTIST: NavItem[] = [
   { key: 'certification', label: 'Certificação', icon: 'verified', href: '/certification' },
   { key: 'sales', label: 'Vendas e ofertas', icon: 'handshake', href: '/sales' },
   { key: 'payout', label: 'Pix para receber', icon: 'account_balance', href: '/sales/payout' },
+  { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },
+  { key: 'community', label: 'Comunidade', icon: 'forum', href: '/community' },
   { key: 'royalty', label: 'Direito de sequência', icon: 'autorenew', href: '/royalty' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
 ]
@@ -40,6 +45,8 @@ const GALLERY: NavItem[] = [
   { key: 'sales', label: 'Vendas e ofertas', icon: 'handshake', href: '/sales' },
   { key: 'payout', label: 'Pix para receber', icon: 'account_balance', href: '/sales/payout' },
   { key: 'crm', label: 'Colecionadores', icon: 'view_kanban', href: '/crm' },
+  { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },
+  { key: 'community', label: 'Comunidade', icon: 'forum', href: '/community' },
   { key: 'royalty', label: 'Direito de sequência', icon: 'autorenew', href: '/royalty' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
   { key: 'team', label: 'Equipe', icon: 'groups', href: '/gallery/team' },
@@ -53,6 +60,8 @@ const COLLECTOR: NavItem[] = [
   { key: 'purchases', label: 'Compras', icon: 'local_shipping', href: '/purchases' },
   { key: 'transfer', label: 'Transferir obra', icon: 'swap_horiz', href: '/transfer' },
   { key: 'marketplace', label: 'Marketplace', icon: 'storefront', href: '/marketplace' },
+  { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },
+  { key: 'community', label: 'Comunidade', icon: 'forum', href: '/community' },
 ]
 
 const APPRAISER: NavItem[] = [

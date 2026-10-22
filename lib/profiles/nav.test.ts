@@ -3,10 +3,11 @@ import { activeNavKey, homeOf, NAV } from './nav'
 
 describe('NAV per profile (from the design)', () => {
   it('keeps the item count of the design', () => {
-    expect(NAV.artist.map((i) => i.label)).toEqual(['Início', 'Minhas obras', 'Nova obra', 'Certificação', 'Vendas e ofertas', 'Pix para receber', 'Direito de sequência', 'Cobrança'])
-    expect(NAV.gallery).toHaveLength(12)
-    expect(NAV.gallery.slice(9).map((i) => i.href)).toEqual(['/gallery/team', '/gallery/artists', '/gallery/account'])
-    expect(NAV.collector).toHaveLength(5)
+    expect(NAV.artist.map((i) => i.label)).toEqual(['Início', 'Minhas obras', 'Nova obra', 'Certificação', 'Vendas e ofertas', 'Pix para receber', 'Mensagens', 'Comunidade', 'Direito de sequência', 'Cobrança'])
+    expect(NAV.gallery).toHaveLength(14)
+    expect(NAV.gallery.slice(11).map((i) => i.href)).toEqual(['/gallery/team', '/gallery/artists', '/gallery/account'])
+    expect(NAV.collector).toHaveLength(7)
+    for (const k of ['artist', 'gallery', 'collector'] as const) expect(NAV[k].map((i) => i.href)).toEqual(expect.arrayContaining(['/messages', '/community']))
     expect(NAV.appraiser).toHaveLength(1)
     expect(NAV.admin).toHaveLength(3)
     expect(NAV.advisor).toBe(NAV.gallery)
@@ -23,5 +24,7 @@ describe('NAV per profile (from the design)', () => {
     expect(activeNavKey('gallery', '/gallery/team')).toBe('team')
     expect(activeNavKey('gallery', '/gallery/account')).toBe('account')
     expect(activeNavKey('gallery', '/sales/rules')).toBe('sales')
+    expect(activeNavKey('collector', '/messages/12')).toBe('messages')
+    expect(activeNavKey('artist', '/community')).toBe('community')
   })
 })

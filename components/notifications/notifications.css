@@ -1,0 +1,26 @@
+/* Avisos (handoff "HouseArt App Artista" › Avisos). Prefix ha-ntf-. */
+.ha-ntf { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 680px; }
+.ha-ntf__head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ha-space-4); flex-wrap: wrap; }
+.ha-ntf__list { display: flex; flex-direction: column; }
+.ha-ntf-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--ha-space-3); padding: var(--ha-space-3) 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); border-top: 0; border-left: 0; border-right: 0; background: transparent; text-align: left; cursor: pointer; width: 100%; font: inherit; color: inherit; align-items: start; border-radius: var(--ha-radius-sm); }
+.ha-ntf-row:hover { background: var(--ha-paper-100); }
+.ha-ntf-row:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-ntf-row__icon { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--ha-paper-100); color: var(--ha-ink-900); }
+.ha-ntf-row__icon--unread { background: var(--ha-sand-100); }
+.ha-ntf-row__icon--verified { background: var(--ha-verified-100); color: var(--ha-verified-500); }
+.ha-ntf-row__icon .ha-icon { font-size: 20px; }
+.ha-ntf-row__body { min-width: 0; display: flex; flex-direction: column; }
+.ha-ntf-row__title { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-ink-900); }
+.ha-ntf-row--read .ha-ntf-row__title { font-weight: 500; }
+.ha-ntf-row__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-500); overflow-wrap: anywhere; }
+.ha-ntf-row__when { font-size: var(--ha-text-caption); color: var(--ha-ink-500); white-space: nowrap; padding-top: 2px; }
+.ha-ntf__empty { padding: var(--ha-space-8) 0; font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
+
+/* "Avisos no celular" */
+.ha-ntf-push { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); }
+.ha-ntf-push__icon { width: 40px; height: 40px; border-radius: 50%; background: var(--ha-paper-100); display: inline-flex; align-items: center; justify-content: center; color: var(--ha-ink-900); }
+.ha-ntf-push__t { display: flex; flex-direction: column; min-width: 0; }
+.ha-ntf-push__name { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-ink-900); }
+.ha-ntf-push__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-500); }
+.ha-ntf-push__sub--error { color: var(--ha-alert-500); }
+@media (max-width: 480px) { .ha-ntf-row__when { grid-column: 2; grid-row: 2; padding-top: 0; } .ha-ntf-row { grid-template-rows: auto auto; } .ha-ntf-row__icon { grid-row: span 2; } }

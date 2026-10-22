@@ -20,7 +20,7 @@ export const POLL_OPTION_MAX = 40
 
 /** Which reaction kinds each target accepts. */
 export const ALLOWED_REACTIONS: Record<ReactionTarget, readonly ReactionKind[]> = {
-  POST: ['LIKE', 'SAVE'],
+  POST: ['LIKE', 'SAVE', 'RSVP'], // RSVP only on an EVENT post (the server checks the kind)
   NEWS: ['LIKE', 'SAVE'],
   EVENT: ['LIKE', 'SAVE', 'RSVP'],
   COMMENT: ['LIKE'],

@@ -153,6 +153,10 @@ export async function toggleReaction(userId: number, target: string, targetId: n
     if (!m) throw new ArtworkError('NOT_FOUND', 'Perfil não encontrado.', 404)
     if (m.userId === userId) throw new ArtworkError('SELF', 'Você não segue a si mesmo.', 400)
   }
+  if (target === 'POST' && kind === 'RSVP') {
+    const p = await prisma.post.findFirst({ where: { id: targetId, hiddenAt: null }, select: { kind: true } })
+    if (p?.kind !== 'EVENT') throw new ArtworkError('BAD_REACTION', '"Eu vou" só vale para um evento.', 422)
+  }
   const col = kind === 'LIKE' ? 'likeCount' : kind === 'SAVE' ? 'saveCount' : kind === 'RSVP' ? 'rsvpCount' : null
   return prisma.$transaction(async (tx) => {
     const existing = await tx.reaction.findUnique({ where: { userId_targetKind_targetId_kind: { userId, targetKind: target, targetId, kind } } })

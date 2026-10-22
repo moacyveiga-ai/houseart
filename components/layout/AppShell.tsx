@@ -14,10 +14,12 @@ export type { TickerItem }
  * NAV[profile] and footer (links + Sair) → main with max-width var(--ha-max).
  * Badges per item come from the server (`badges`), never from the NAV.
  */
-export function AppShell({ user, activeKey, badges = {}, ticker = [], children }: {
+export function AppShell({ user, activeKey, badges = {}, bell = 0, ticker = [], children }: {
   user: ShellUser
   activeKey: string | null
   badges?: Record<string, number>
+  /** Unread notifications (the dot on the bell); from the server. */
+  bell?: number
   ticker?: TickerItem[]
   children: ReactNode
 }) {
@@ -32,7 +34,7 @@ export function AppShell({ user, activeKey, badges = {}, ticker = [], children }
           <input name="q" className="ha-topbar__input" placeholder="Buscar obras, artistas, galerias ou IDs" aria-label="Buscar" />
         </form>
         <div className="ha-topbar__right">
-          <Link href="/notifications" className="ha-btn ha-btn--ghost ha-btn--xs" aria-label="Notificações"><Icon name="notifications" /></Link>
+          <Link href="/notifications" className="ha-btn ha-btn--ghost ha-btn--xs ha-bell" aria-label={bell ? `Notificações, ${bell} não lidas` : 'Notificações'}><Icon name="notifications" />{bell ? <span className="ha-bell__dot" /> : null}</Link>
           <Link href="/profiles" className="ha-profilebtn" aria-label="Trocar de perfil">
             <span className="ha-avatar">{user.initials}</span>
             <span className="ha-profilebtn__name">{PROFILE_LABELS[user.profile]}</span>

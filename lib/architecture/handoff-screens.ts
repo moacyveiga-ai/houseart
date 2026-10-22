@@ -22,8 +22,8 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
   'HouseArt App Colecionador': {
     Splash: null, 'Tela inicial': null, 'Entrar · login social': null, Cadastro: null,
     'Explorar · feed': null, 'Explorar · descobrir': null, 'Página da obra': null, 'Fazer oferta': null,
-    'Comprar direto': 'app/e/artwork/[publicId]/buy/page.tsx', 'Contraproposta recebida': null, Comunidade: null, Comentários: null,
-    Mensagens: null, 'Conversa com galeria': null, 'Minha coleção': null, 'Favoritos e curtidos': null,
+    'Comprar direto': 'app/e/artwork/[publicId]/buy/page.tsx', 'Contraproposta recebida': null, Comunidade: 'app/(panel)/community/page.tsx', Comentários: 'components/community/CommentsSheet.tsx',
+    Mensagens: 'app/(panel)/messages/page.tsx', 'Conversa com galeria': 'app/(panel)/messages/[id]/page.tsx', 'Minha coleção': null, 'Favoritos e curtidos': null,
     'Vendas · oferta recebida': null, 'Vender uma obra': null, 'Carteira e cartões': 'app/(panel)/wallet/cards/page.tsx', 'Adicionar cartão': 'app/(panel)/wallet/cards/page.tsx',
     'Cadastrar Pix para receber': 'app/(panel)/sales/payout/page.tsx', 'Cadastrar obra': null, 'Serviços para uma obra': null, 'Perfil · minha conta': null,
     'Instagram · conectar e postar': null, 'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Busca: null,
@@ -31,12 +31,12 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
   'HouseArt App Galeria': {
     Splash: null, 'Tela inicial e login': 'app/login/page.tsx', 'Cadastro da galeria': 'app/signup/page.tsx', 'Galeria · painel do dia': 'app/(panel)/page.tsx', Acervo: 'app/(panel)/artworks/page.tsx',
     'Cadastrar obra': null, 'Gestão do anúncio': 'app/(panel)/artworks/[id]/listing/page.tsx', 'Ofertas recebidas': 'app/(panel)/sales/page.tsx', 'Vendas até o repasse': 'app/(panel)/sales/page.tsx', 'Regras de ofertas': 'app/(panel)/sales/rules/page.tsx',
-    Mensagens: null, 'Conversa com compradora': null, 'Comunidade e eventos': null, 'Instagram · conectar e postar': null,
+    Mensagens: 'app/(panel)/messages/page.tsx', 'Conversa com compradora': 'app/(panel)/messages/[id]/page.tsx', 'Comunidade e eventos': 'app/(panel)/community/page.tsx', 'Instagram · conectar e postar': null,
     'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Equipe: 'app/(panel)/gallery/team/page.tsx', 'Artistas representados': 'app/(panel)/gallery/artists/page.tsx', 'Conta, equipe e repasses': 'app/(panel)/gallery/account/page.tsx',
   },
   'HouseArt App Artista': {
     Onboarding: null, Login: null, 'Início do artista': null, 'Nova obra · câmera guiada': 'components/artworks/GuidedCapture.tsx', 'Vincular etiqueta': 'app/(panel)/certification/link/[artworkId]/page.tsx',
-    'Verificar obra': null, 'Carteira de escrituras': null, 'Confirmar recebimento': null, Avisos: null,
+    'Verificar obra': null, 'Carteira de escrituras': null, 'Confirmar recebimento': null, Avisos: 'app/(panel)/notifications/page.tsx',
   },
   // Desktop versions of the apps: same screens, side panel of detail (handoff §5)
   'HouseArt Web Colecionador': { 'Web Colecionador': null },

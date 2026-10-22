@@ -5,6 +5,8 @@ import { activeNavProfile } from '@/lib/profiles/server'
 import { initialsOf } from '@/lib/profiles/core'
 import { activeNavKey } from '@/lib/profiles/nav'
 import { headers } from 'next/headers'
+import { unreadCount } from '@/lib/notifications/server'
+import { unreadMessages } from '@/lib/messaging/server'
 
 // The shell only; each page calls requirePanelPage() (authorization lives in the page).
 export default async function PanelLayout({ children }: { children: ReactNode }) {
@@ -13,8 +15,10 @@ export default async function PanelLayout({ children }: { children: ReactNode })
   if (!s || !nav) return <>{children}</>
   const h = await headers()
   const pathname = h.get('x-pathname') ?? '/'
+  // Counters of the shell (bell + "Mensagens" badge) — best-effort, never block the page.
+  const [bell, messages] = await Promise.all([unreadCount(s.user.id).catch(() => 0), unreadMessages(s.user.id).catch(() => 0)])
   return (
-    <AppShell user={{ initials: initialsOf(s.user.name), profile: nav, name: s.user.name }} activeKey={activeNavKey(nav, pathname)}>
+    <AppShell user={{ initials: initialsOf(s.user.name), profile: nav, name: s.user.name }} activeKey={activeNavKey(nav, pathname)} bell={bell} badges={messages ? { messages } : {}}>
       {children}
     </AppShell>
   )

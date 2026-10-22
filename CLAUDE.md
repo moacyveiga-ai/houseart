@@ -108,6 +108,12 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-22 — Handoff Fase 3 feita: núcleo da obra.** Captura guiada + editor no passo Mídia (`components/artworks/GuidedCapture.tsx`,
+  `PhotoEditor.tsx`, `MediaStep.tsx`; 10 slots em `MEDIA_SLOTS`), leitura assistida das fotos (`lib/artworks/reading-*`,
+  `ARTWORK_READING_MODE=claude` + `ANTHROPIC_API_KEY`, só campos vazios), vincular etiqueta no web (`/certification/link/[artworkId]`,
+  Web NFC ou URL colada; `simulate:true` só com `MARKER_VENDOR=mock` fora de produção). Backend da Fase 6 (galeria) em `lib/gallery/`
+  (regras de ofertas em `lib/offers/rules-*`, equipe com convites, contratos de artistas, gestão do anúncio, views; migration
+  `20261022300000_phase6_gallery`). Divergências em `docs/HANDOFF-2026-10-21.md` §5.
 - **2026-10-22 — Handoff Fase 4 feita: mercado.** Oferta em 5 etapas (`/e/artwork/[publicId]/offer` → `/e/offer/[code]`
   com contraproposta e linha do tempo), compra direta (`/e/artwork/[publicId]/buy`), Carteira e cartões (`/wallet/cards`),
   Pix de recebimento (`/sales/payout`). `lib/payment-methods/` (cartão só marca/últimos 4 + token mock; Pix cifrado),

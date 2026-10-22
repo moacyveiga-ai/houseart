@@ -1,0 +1,167 @@
+/* Captura guiada + editor de foto do passo "Mídia" (handoff: "HouseArt App
+   Colecionador › Cadastrar obra" passos 1 e 2 e a câmera; "HouseArt App
+   Artista › Nova obra · câmera guiada"). Importado por MediaStep/GuidedCapture.
+   Só tokens --ha-*; os valores soltos são os tokens LOCAIS abaixo. */
+
+.ha-cap, .ha-cap-step {
+  /* O cartão de cor de referência é uma fotografia de um objeto físico com
+     cores fixas (vermelho, verde, azul, preto, cinza, branco) — não são cores
+     de UI e não trocam com o tema, por isso tokens locais documentados. */
+  --ha-cap-swatch-red: #B23A2F;
+  --ha-cap-swatch-green: #2E7D5B;
+  --ha-cap-swatch-blue: #3A5F8A;
+  --ha-cap-swatch-black: #111111;
+  --ha-cap-swatch-gray: #6B6760;
+  --ha-cap-swatch-white: #FFFFFF;
+  --ha-cap-swatch-edge: #CCCCCC;
+  /* véu sobre o visor (o protótipo usa rgba(17,17,17,.72)) e a linha da grade de recorte */
+  --ha-cap-veil: rgba(17, 17, 17, .72);
+  --ha-cap-grid-line: rgba(251, 250, 247, .6);
+  --ha-cap-glare: rgba(255, 255, 255, .75);
+}
+
+/* ── passo 1: a grade ────────────────────────────────────────────────────── */
+.ha-cap-step { gap: var(--ha-space-4); }
+.ha-cap-summary { display: flex; align-items: center; gap: var(--ha-space-3); padding: var(--ha-space-3) var(--ha-space-3); border-radius: var(--ha-radius-md); background: var(--ha-surface); color: var(--ha-fg); }
+.ha-cap-summary__main { flex: 1; font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-cap-summary__total { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+
+.ha-cap-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ha-space-3); }
+@media (min-width: 720px) { .ha-cap-grid { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); } }
+
+.ha-cap-card { display: flex; flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-2); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); color: var(--ha-fg); text-align: left; cursor: pointer; font: inherit; }
+.ha-cap-card--required { border-color: var(--ha-ink-300); }
+.ha-cap-card--done { border-color: var(--ha-paper-200); }
+.ha-cap-card:hover:not([disabled]) { box-shadow: var(--ha-shadow-sm); }
+.ha-cap-card:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-cap-card[disabled] { cursor: default; opacity: .7; }
+.ha-cap-card__pic { position: relative; aspect-ratio: 1 / 1; border-radius: var(--ha-radius-sm); overflow: hidden; background: var(--ha-paper-100); display: flex; align-items: center; justify-content: center; }
+.ha-cap-card--done .ha-cap-card__pic { background: var(--ha-wall); }
+.ha-cap-card__pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ha-cap-card__empty { display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-1); color: var(--ha-ink-500); font-size: 11px; font-weight: 600; }
+.ha-cap-card__check { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; background: var(--ha-verified-500); color: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; }
+.ha-cap-card__check--alert { background: var(--ha-alert-500); }
+.ha-cap-card__cover { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: var(--ha-radius-sm); background: var(--ha-sand-500); color: var(--ha-ink-900); font-size: 10px; font-weight: 600; }
+.ha-cap-card__text { display: flex; flex-direction: column; gap: 1px; }
+.ha-cap-card__name { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-cap-card__st { font-size: 11px; line-height: 14px; }
+.ha-cap-card__st--muted { color: var(--ha-fg-muted); }
+.ha-cap-card__st--ok { color: var(--ha-verified-500); }
+.ha-cap-card__st--alert { color: var(--ha-alert-500); }
+
+.ha-cap-step__cta { gap: var(--ha-space-4); flex-wrap: wrap; }
+.ha-cap-step__cta p { margin: 0; flex: 1; min-width: 200px; }
+
+.ha-cap-tips { display: flex; flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-cap-tips__title { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-cap-tips__row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: var(--ha-space-2); font-size: var(--ha-text-body-sm); line-height: 18px; color: var(--ha-fg-body); }
+.ha-cap-tips__row .ha-icon { color: var(--ha-fg); }
+
+/* ── a câmera guiada (tela cheia escura) ────────────────────────────────── */
+.ha-cap, .ha-cap *, .ha-cap *::before, .ha-cap *::after { box-sizing: border-box; }
+.ha-cap { position: fixed; inset: 0; z-index: 60; background: var(--ha-ink-900); color: var(--ha-paper-50); display: flex; flex-direction: column; overflow-y: auto; animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
+.ha-cap__top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--ha-space-1) var(--ha-space-2); width: 100%; max-width: 560px; margin: 0 auto; }
+.ha-cap__iconbtn { width: 44px; height: 44px; border: 0; background: none; color: var(--ha-paper-50); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ha-radius-md); }
+.ha-cap__iconbtn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-cap__spacer { width: 44px; }
+.ha-cap__counter { font-size: var(--ha-text-body-sm); font-weight: 600; }
+
+.ha-cap__finder { position: relative; margin: 0 auto; width: calc(100% - var(--ha-space-8)); max-width: 480px; aspect-ratio: 4 / 5; background: var(--ha-ink-900); overflow: hidden; border-radius: 6px; border: var(--ha-border-w) solid var(--ha-ink-700); }
+@media (min-height: 700px) and (min-width: 720px) { .ha-cap__finder { max-height: 56vh; aspect-ratio: auto; height: 56vh; } }
+.ha-cap__video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--ha-ink-900); }
+.ha-cap__finder:not(.ha-cap__finder--live) .ha-cap__video { visibility: hidden; position: absolute; }
+.ha-cap__nocam { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ha-space-2); padding: var(--ha-space-8); text-align: center; color: var(--ha-ink-300); }
+.ha-cap__nocam-title { font-weight: 600; color: var(--ha-paper-50); }
+.ha-cap__nocam-sub { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); max-width: 260px; }
+.ha-cap__guide { position: absolute; inset: 12%; border: 2px solid var(--ha-sand-500); pointer-events: none; transition: border-color var(--ha-dur-panel) var(--ha-ease); }
+.ha-cap__guide--ok { border-color: var(--ha-verified-500); }
+.ha-cap__corner { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+.ha-cap__corner--tl { left: 12%; top: 12%; border-left: 4px solid var(--ha-paper-50); border-top: 4px solid var(--ha-paper-50); }
+.ha-cap__corner--br { right: 12%; bottom: 12%; border-right: 4px solid var(--ha-paper-50); border-bottom: 4px solid var(--ha-paper-50); }
+/* região de foco das macros: um anel no ponto que o slot aponta */
+.ha-cap__focus { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border: 2px dashed var(--ha-sand-500); border-radius: 50%; pointer-events: none; animation: ha-cap-pulse 1.6s ease-in-out infinite; }
+@keyframes ha-cap-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.ha-cap__card { position: absolute; right: var(--ha-space-3); bottom: var(--ha-space-3); display: grid; grid-template-columns: repeat(3, 12px); gap: 2px; padding: 4px; background: var(--ha-paper-50); }
+.ha-cap__swatch { display: block; height: 12px; }
+.ha-cap__swatch--red { background: var(--ha-cap-swatch-red); }
+.ha-cap__swatch--green { background: var(--ha-cap-swatch-green); }
+.ha-cap__swatch--blue { background: var(--ha-cap-swatch-blue); }
+.ha-cap__swatch--black { background: var(--ha-cap-swatch-black); }
+.ha-cap__swatch--gray { background: var(--ha-cap-swatch-gray); }
+.ha-cap__swatch--white { background: var(--ha-cap-swatch-white); outline: 1px solid var(--ha-cap-swatch-edge); }
+.ha-cap__chip { position: absolute; left: var(--ha-space-3); top: var(--ha-space-3); display: flex; align-items: center; gap: var(--ha-space-1); padding: 2px var(--ha-space-2); border-radius: var(--ha-radius-sm); background: var(--ha-cap-veil); font-size: var(--ha-text-caption); font-weight: 600; }
+.ha-cap__chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--ha-sand-500); }
+.ha-cap__chip--ok i { background: var(--ha-verified-500); }
+
+.ha-cap__text { width: 100%; max-width: 560px; margin: 0 auto; padding: var(--ha-space-4) var(--ha-space-5) 0; display: flex; flex-direction: column; gap: var(--ha-space-1); }
+.ha-cap__name { font-weight: 600; }
+.ha-cap__hint { font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-ink-300); }
+.ha-cap__bars { width: 100%; max-width: 560px; margin: 0 auto; display: flex; gap: var(--ha-space-2); padding: var(--ha-space-4) var(--ha-space-5); }
+.ha-cap__bar { flex: 1; height: 4px; border-radius: var(--ha-radius-full); background: var(--ha-ink-700); }
+.ha-cap__bar--done { background: var(--ha-paper-50); }
+.ha-cap__bar--current { background: var(--ha-sand-500); }
+
+.ha-cap__actions { margin-top: auto; width: 100%; max-width: 560px; margin-left: auto; margin-right: auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: var(--ha-space-3) var(--ha-space-6) var(--ha-space-9); }
+.ha-cap__side { justify-self: start; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: var(--ha-text-caption); color: var(--ha-paper-50); cursor: pointer; position: relative; }
+.ha-cap__side:focus-within { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; border-radius: var(--ha-radius-sm); }
+.ha-cap__side--end { justify-self: end; cursor: default; }
+.ha-cap__state { font-size: var(--ha-text-caption); color: var(--ha-ink-300); text-align: right; }
+.ha-cap__skip { border: 0; background: none; color: var(--ha-paper-50); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.ha-cap__shutter { width: 76px; height: 76px; border-radius: 50%; border: 4px solid var(--ha-paper-50); background: transparent; padding: 5px; cursor: pointer; transition: border-color var(--ha-dur-panel) var(--ha-ease); }
+.ha-cap__shutter--ok { border-color: var(--ha-verified-500); }
+.ha-cap__shutter > span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--ha-paper-50); }
+.ha-cap__shutter:active > span { background: var(--ha-paper-200); }
+.ha-cap__shutter:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 4px; }
+
+/* ── passo 2: o editor (folha clara dentro da tela escura) ──────────────── */
+.ha-cap__sheet { flex: 1; width: 100%; max-width: 560px; margin: 0 auto; background: var(--ha-bg); color: var(--ha-fg); border-radius: var(--ha-radius-lg) var(--ha-radius-lg) 0 0; padding: var(--ha-space-5) var(--ha-space-4) var(--ha-space-9); animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
+.ha-cap-editor { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-cap-editor__title { font-family: var(--ha-font-display); font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); }
+.ha-cap-editor__sub { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); }
+
+.ha-cap-frame { position: relative; aspect-ratio: 1 / 1; border-radius: var(--ha-radius-md); overflow: hidden; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; touch-action: none; }
+.ha-cap-frame__canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
+.ha-cap-frame--crop .ha-cap-frame__canvas { width: 100%; height: 100%; object-fit: contain; }
+.ha-cap-frame__tag { position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: var(--ha-radius-full); background: var(--ha-cap-veil); color: var(--ha-paper-50); font-size: 11px; font-weight: 600; }
+.ha-cap-frame__glare { position: absolute; right: 18%; top: 14%; width: 34%; height: 18%; border-radius: 50%; background: radial-gradient(closest-side, var(--ha-cap-glare), transparent); pointer-events: none; }
+/* a janela de recorte: borda clara, véu ao redor, grade de terços e os quatro cantos arrastáveis */
+.ha-cap-crop { position: absolute; border: 2px solid var(--ha-paper-50); box-shadow: 0 0 0 999px var(--ha-scrim); box-sizing: border-box; }
+.ha-cap-crop__line { position: absolute; background: var(--ha-cap-grid-line); pointer-events: none; }
+.ha-cap-crop__line--h1 { left: 0; right: 0; top: 33.3%; height: 1px; }
+.ha-cap-crop__line--h2 { left: 0; right: 0; top: 66.6%; height: 1px; }
+.ha-cap-crop__line--v1 { top: 0; bottom: 0; left: 33.3%; width: 1px; }
+.ha-cap-crop__line--v2 { top: 0; bottom: 0; left: 66.6%; width: 1px; }
+.ha-cap-crop__corner { position: absolute; width: 28px; height: 28px; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; }
+.ha-cap-crop__corner::before { content: ''; position: absolute; inset: 3px; border: 4px solid var(--ha-sand-500); }
+.ha-cap-crop__corner--tl { left: -8px; top: -8px; } .ha-cap-crop__corner--tl::before { border-right: 0; border-bottom: 0; }
+.ha-cap-crop__corner--tr { right: -8px; top: -8px; } .ha-cap-crop__corner--tr::before { border-left: 0; border-bottom: 0; }
+.ha-cap-crop__corner--bl { left: -8px; bottom: -8px; } .ha-cap-crop__corner--bl::before { border-right: 0; border-top: 0; }
+.ha-cap-crop__corner--br { right: -8px; bottom: -8px; } .ha-cap-crop__corner--br::before { border-left: 0; border-top: 0; }
+.ha-cap-crop__corner:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); }
+
+.ha-cap-thumbs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.ha-cap-thumb { flex: none; width: 52px; height: 52px; border: 2px solid transparent; border-radius: 6px; overflow: hidden; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; color: var(--ha-ink-500); }
+.ha-cap-thumb--on { border-color: var(--ha-ink-900); }
+.ha-cap-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.ha-cap-tools { display: flex; gap: 4px; padding: 3px; background: var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-cap-tool { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0; border: 0; border-radius: 6px; background: transparent; color: var(--ha-ink-900); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.ha-cap-tool--on { background: var(--ha-paper-50); }
+.ha-cap-tool:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+
+.ha-cap-auto { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ha-cap-auto__item { display: flex; align-items: center; gap: var(--ha-space-2); font-size: var(--ha-text-body-sm); color: var(--ha-fg-body); }
+.ha-cap-auto__item .ha-icon { color: var(--ha-ink-300); }
+.ha-cap-auto__item--on .ha-icon { color: var(--ha-verified-500); }
+
+.ha-cap-slider { display: flex; flex-direction: column; gap: 2px; font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-cap-slider__head { display: flex; justify-content: space-between; font-weight: 600; }
+.ha-cap-slider__head .ha-num { color: var(--ha-fg-muted); font-weight: 400; }
+.ha-cap-slider input[type="range"] { width: 100%; accent-color: var(--ha-ink-900); }
+.ha-cap-chips { gap: var(--ha-space-2); flex-wrap: wrap; }
+.ha-cap-chips p { margin: 0; flex: 1; min-width: 180px; }
+.ha-cap-chips .ha-chip { display: inline-flex; align-items: center; gap: 4px; }
+
+.ha-cap-editor__secondary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ha-cap-editor__secondary .ha-btn { width: 100%; }
+.ha-cap-editor__use { width: 100%; }

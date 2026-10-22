@@ -3,8 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Stepper } from '@/components/ds/Stepper'
 import { Toast } from '@/components/ds/Toast'
-import { CONDITION_GRADES, CONDITION_GRADE_LABELS, CONDITION_REGIONS, CONDITION_REGION_LABELS, HISTORY_KINDS, HISTORY_KIND_LABELS, MEDIA_QUALITY_LABELS, MEDIA_SLOTS, SALE_MODE_CARDS, WIZARD_STEPS } from '@/lib/artworks/domain'
+import { MediaStep } from './MediaStep'
+import { CONDITION_GRADES, CONDITION_GRADE_LABELS, CONDITION_REGIONS, CONDITION_REGION_LABELS, HISTORY_KINDS, HISTORY_KIND_LABELS, SALE_MODE_CARDS, WIZARD_STEPS } from '@/lib/artworks/domain'
 import { nextLabel, regionStateLabel, reviewLines, sheetPatch, STEP_COUNT, type WizardHistory, type WizardMedia, type WizardRegion, type WizardState } from './wizard-core'
+import { ReadingPanel } from './ReadingPanel'
 
 export interface WizardArtwork extends WizardState {
   id: number
@@ -72,7 +74,7 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
     const form = new FormData(); form.set('kind', kind); form.set('file', file)
     const { res, data } = await api(`/api/artworks/${a.id}/media`, { method: 'POST', body: form })
     setBusy(false)
-    if (!res.ok) { setToast(String(data.error ?? 'Falha ao enviar a foto.')); return }
+    if (!res.ok) { setToast(String(data.error ?? 'Falha ao enviar a foto.')); return false }
     const media = data.media as WizardMedia
     const dups = (data.duplicates as { id: number; similarityBps: number; candidateArtworkId: number }[] | undefined) ?? []
     setA((prev) => ({
@@ -81,6 +83,7 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
       duplicates: dups.length ? dups.map((d) => ({ id: d.id, similarityBps: d.similarityBps, candidate: { title: 'Obra parecida', year: null, publicId: null, mine: false } })) : prev.duplicates,
     }))
     if (dups.length) window.location.reload()
+    return true
   }
 
   async function decideDuplicate(checkId: number, decision: 'DIFFERENT' | 'SAME') {
@@ -155,41 +158,27 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
           ) : null}
 
           {step === 0 ? (
-            <fieldset disabled={locked} className="ha-form-grid">
-              <label className="ha-label ha-col-span">Título<input className="ha-input" value={a.title} onChange={(e) => field('title', e.target.value)} /></label>
-              <label className="ha-label">Ano<input className="ha-input ha-input--num" inputMode="numeric" value={a.year ?? ''} onChange={(e) => field('year', e.target.value)} /></label>
-              <label className="ha-label">Técnica<input className="ha-input" value={a.technique ?? ''} onChange={(e) => field('technique', e.target.value)} /></label>
-              <label className="ha-label ha-col-span">Materiais<input className="ha-input" value={a.materials ?? ''} onChange={(e) => field('materials', e.target.value)} /></label>
-              <label className="ha-label">Altura (cm)<input className="ha-input ha-input--num" inputMode="decimal" value={a.heightMm === null ? '' : a.heightMm / 10} onChange={(e) => field('heightMm', e.target.value)} /></label>
-              <label className="ha-label">Largura (cm)<input className="ha-input ha-input--num" inputMode="decimal" value={a.widthMm === null ? '' : a.widthMm / 10} onChange={(e) => field('widthMm', e.target.value)} /></label>
-              <label className="ha-label">Profundidade (cm)<input className="ha-input ha-input--num" inputMode="decimal" placeholder="3,5" value={a.depthMm === null ? '' : a.depthMm / 10} onChange={(e) => field('depthMm', e.target.value)} /></label>
-              <label className="ha-label">Edição / tiragem<input className="ha-input" placeholder="Obra única" value={a.edition ?? ''} onChange={(e) => field('edition', e.target.value)} /></label>
-              <label className="ha-label">Assinatura<input className="ha-input" placeholder="Verso, canto inferior esquerdo" value={a.signatureLocation ?? ''} onChange={(e) => field('signatureLocation', e.target.value)} /></label>
-              <label className="ha-label">Série<input className="ha-input" value={a.series ?? ''} onChange={(e) => field('series', e.target.value)} /></label>
-              <p className="ha-muted ha-sm ha-col-span">Artista: {a.artistName}</p>
-            </fieldset>
+            <ReadingPanel artworkId={a.id} disabled={locked} onToast={setToast} onApplied={(patch) => setA((prev) => ({ ...prev, ...patch } as WizardArtwork))}>
+              {(hl) => (
+                <fieldset disabled={locked} className="ha-form-grid">
+                  <label className="ha-label ha-col-span">Título<input className={`ha-input${hl.has('title') ? ' ha-input--read' : ''}`} value={a.title} onChange={(e) => field('title', e.target.value)} /></label>
+                  <label className="ha-label">Ano<input className={`ha-input ha-input--num${hl.has('year') ? ' ha-input--read' : ''}`} inputMode="numeric" value={a.year ?? ''} onChange={(e) => field('year', e.target.value)} /></label>
+                  <label className="ha-label">Técnica<input className={`ha-input${hl.has('technique') ? ' ha-input--read' : ''}`} value={a.technique ?? ''} onChange={(e) => field('technique', e.target.value)} /></label>
+                  <label className="ha-label ha-col-span">Materiais<input className={`ha-input${hl.has('materials') ? ' ha-input--read' : ''}`} value={a.materials ?? ''} onChange={(e) => field('materials', e.target.value)} /></label>
+                  <label className="ha-label">Altura (cm)<input className="ha-input ha-input--num" inputMode="decimal" value={a.heightMm === null ? '' : a.heightMm / 10} onChange={(e) => field('heightMm', e.target.value)} /></label>
+                  <label className="ha-label">Largura (cm)<input className="ha-input ha-input--num" inputMode="decimal" value={a.widthMm === null ? '' : a.widthMm / 10} onChange={(e) => field('widthMm', e.target.value)} /></label>
+                  <label className="ha-label">Profundidade (cm)<input className="ha-input ha-input--num" inputMode="decimal" placeholder="3,5" value={a.depthMm === null ? '' : a.depthMm / 10} onChange={(e) => field('depthMm', e.target.value)} /></label>
+                  <label className="ha-label">Edição / tiragem<input className={`ha-input${hl.has('edition') ? ' ha-input--read' : ''}`} placeholder="Obra única" value={a.edition ?? ''} onChange={(e) => field('edition', e.target.value)} /></label>
+                  <label className="ha-label">Assinatura<input className={`ha-input${hl.has('signatureLocation') ? ' ha-input--read' : ''}`} placeholder="Verso, canto inferior esquerdo" value={a.signatureLocation ?? ''} onChange={(e) => field('signatureLocation', e.target.value)} /></label>
+                  <label className="ha-label">Série<input className="ha-input" value={a.series ?? ''} onChange={(e) => field('series', e.target.value)} /></label>
+                  <p className="ha-muted ha-sm ha-col-span">Artista: {a.artistName}</p>
+                </fieldset>
+              )}
+            </ReadingPanel>
           ) : null}
 
           {step === 1 ? (
-            <div className="ha-stack">
-              <div className="ha-grid-cards ha-grid-cards--3">
-                {MEDIA_SLOTS.map((slot) => {
-                  const m = a.media.find((x) => x.kind === slot.kind)
-                  const q = m?.quality ?? 'PENDING'
-                  return (
-                    <label key={slot.kind} className={`ha-media-slot${m ? ' ha-media-slot--has' : ''}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
-                      {m?.publicUrl ? <img src={m.publicUrl} alt={slot.name} /> : <Icon name="add_a_photo" size={28} />}
-                      <span className="ha-media-slot__name">{slot.name}</span>
-                      <span className={`ha-media-slot__q ha-media-slot__q--${q.toLowerCase()}`}>{MEDIA_QUALITY_LABELS[q as keyof typeof MEDIA_QUALITY_LABELS] ?? q}</span>
-                      <input type="file" accept="image/*" className="ha-sr" disabled={locked || busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(slot.kind, f) }} />
-                      <span className="ha-btn ha-btn--outline ha-btn--xs">{m ? 'Trocar' : 'Enviar'}</span>
-                    </label>
-                  )
-                })}
-              </div>
-              <p className="ha-muted ha-sm">No celular, o app guia a captura: frontal com cartão de cor, 4 macros em regiões fixas e verso.</p>
-            </div>
+            <MediaStep media={a.media} dims={{ heightMm: a.heightMm, widthMm: a.widthMm }} locked={locked} busy={busy} onUpload={upload} onToast={setToast} />
           ) : null}
 
           {step === 2 ? (

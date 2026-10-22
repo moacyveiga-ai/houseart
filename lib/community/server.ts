@@ -153,6 +153,10 @@ export async function toggleReaction(userId: number, target: string, targetId: n
     if (!m) throw new ArtworkError('NOT_FOUND', 'Perfil não encontrado.', 404)
     if (m.userId === userId) throw new ArtworkError('SELF', 'Você não segue a si mesmo.', 400)
   }
+  if (target === 'ARTWORK') {
+    const a = await prisma.artwork.findFirst({ where: { id: targetId, publicId: { not: null }, seal: 'GREEN' }, select: { id: true } })
+    if (!a) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
+  }
   if (target === 'POST' && kind === 'RSVP') {
     const p = await prisma.post.findFirst({ where: { id: targetId, hiddenAt: null }, select: { kind: true } })
     if (p?.kind !== 'EVENT') throw new ArtworkError('BAD_REACTION', '"Eu vou" só vale para um evento.', 422)
@@ -219,4 +223,29 @@ export async function vote(userId: number, postId: number, optionIdx: number): P
 export async function followingOf(viewer: number): Promise<number[]> {
   const rows = await prisma.reaction.findMany({ where: { userId: viewer, targetKind: 'MEMBER', kind: 'FOLLOW' }, select: { targetId: true } })
   return rows.map((r) => r.targetId)
+}
+
+export interface FavoriteArtwork { id: number; publicId: string; title: string; year: number | null; artist: string; priceCents: bigint | null; saleMode: string | null; status: string; cover: string | null; liked: boolean; saved: boolean; at: string }
+
+/** The artworks the person liked or saved, newest reaction first (the marketplace cards + the two flags). */
+export async function favoritesOf(userId: number, take = 100): Promise<FavoriteArtwork[]> {
+  const rows = await prisma.reaction.findMany({ where: { userId, targetKind: 'ARTWORK', kind: { in: ['LIKE', 'SAVE'] } }, orderBy: { createdAt: 'desc' }, take: take * 2 })
+  const ids = [...new Set(rows.map((r) => r.targetId))].slice(0, take)
+  if (!ids.length) return []
+  const arts = await prisma.artwork.findMany({ where: { id: { in: ids }, publicId: { not: null } }, select: { id: true, publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, status: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } })
+  const byId = new Map(arts.map((a) => [a.id, a]))
+  return ids.flatMap((id) => {
+    const a = byId.get(id); if (!a) return []
+    const mine = rows.filter((r) => r.targetId === id)
+    return [{ id: a.id, publicId: a.publicId!, title: a.title, year: a.year, artist: a.artist.name, priceCents: a.saleMode === 'ON_REQUEST' ? null : a.listPriceCents, saleMode: a.saleMode, status: a.status, cover: a.media[0]?.publicUrl ?? null, liked: mine.some((r) => r.kind === 'LIKE'), saved: mine.some((r) => r.kind === 'SAVE'), at: mine[0]!.createdAt.toISOString() }]
+  })
+}
+
+/** The viewer's like/save flags for a set of artworks (public cards). */
+export async function artworkFlags(viewer: number | null, artworkIds: number[]): Promise<Map<number, { liked: boolean; saved: boolean }>> {
+  const out = new Map<number, { liked: boolean; saved: boolean }>()
+  if (!viewer || !artworkIds.length) return out
+  const rows = await prisma.reaction.findMany({ where: { userId: viewer, targetKind: 'ARTWORK', targetId: { in: artworkIds } }, select: { targetId: true, kind: true } })
+  for (const r of rows) { const f = out.get(r.targetId) ?? { liked: false, saved: false }; if (r.kind === 'LIKE') f.liked = true; if (r.kind === 'SAVE') f.saved = true; out.set(r.targetId, f) }
+  return out
 }

@@ -133,6 +133,20 @@ export async function listNews(take = 5): Promise<{ featured: NewsCard | null; o
   })
 }
 
+export interface NewsPage extends NewsCard { id: number; body: string[]; sourceName: string | null; sourceUrl: string | null; readMinutes: number; related: NewsCard[] }
+
+/** One published article by slug, with the body in paragraphs and three related cards. */
+export async function newsArticle(slug: string): Promise<NewsPage | null> {
+  return totalScope('public:news-article', async () => {
+    const n = await prisma.newsArticle.findFirst({ where: { slug, publishedAt: { not: null, lte: new Date() } } })
+    if (!n) return null
+    const others = await prisma.newsArticle.findMany({ where: { publishedAt: { not: null, lte: new Date() }, id: { not: n.id } }, orderBy: { publishedAt: 'desc' }, take: 3 })
+    const body = paragraphsOf(n.body ?? n.summary ?? '')
+    const words = body.join(' ').split(/\s+/).filter(Boolean).length
+    return { id: n.id, slug: n.slug, category: n.category, title: n.title, summary: n.summary, imageUrl: n.imageUrl, publishedAt: n.publishedAt!, body, sourceName: n.sourceName, sourceUrl: n.sourceUrl, readMinutes: Math.max(1, Math.round(words / 200)), related: others.map((o) => ({ slug: o.slug, category: o.category, title: o.title, summary: o.summary, imageUrl: o.imageUrl, publishedAt: o.publishedAt! })) }
+  })
+}
+
 export interface AgendaItem { id: number; kind: string; title: string; venue: string; city: string; startsOn: string; period: string | null; url: string | null }
 
 /** Events from the first day of `fromMonth` (YYYY-MM) for `months` months, oldest first. */

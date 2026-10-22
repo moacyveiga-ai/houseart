@@ -5,7 +5,7 @@
 
 export const POST_KINDS = ['PHOTO', 'TEXT', 'POLL', 'EVENT'] as const
 export type PostKind = (typeof POST_KINDS)[number]
-export const REACTION_TARGETS = ['POST', 'NEWS', 'EVENT', 'COMMENT', 'MEMBER'] as const
+export const REACTION_TARGETS = ['POST', 'NEWS', 'EVENT', 'COMMENT', 'MEMBER', 'ARTWORK'] as const
 export type ReactionTarget = (typeof REACTION_TARGETS)[number]
 export const REACTION_KINDS = ['LIKE', 'SAVE', 'RSVP', 'FOLLOW'] as const
 export type ReactionKind = (typeof REACTION_KINDS)[number]
@@ -25,6 +25,7 @@ export const ALLOWED_REACTIONS: Record<ReactionTarget, readonly ReactionKind[]> 
   EVENT: ['LIKE', 'SAVE', 'RSVP'],
   COMMENT: ['LIKE'],
   MEMBER: ['FOLLOW'],
+  ARTWORK: ['LIKE', 'SAVE'], // "curtir" and "favoritar" a public artwork (by its numeric id)
 }
 
 export function reactionAllowed(target: string, kind: string): target is ReactionTarget {

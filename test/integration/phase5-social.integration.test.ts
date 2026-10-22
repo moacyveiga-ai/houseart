@@ -94,3 +94,20 @@ describe('push', () => {
     await expect(savePushSubscription(buyerId, { endpoint: 'http://x', keys: { p256dh: 'k', auth: 'a' } }, null)).rejects.toThrow()
   })
 })
+
+describe('artwork favorites and search', () => {
+  it('likes/saves a public artwork, lists favorites, and the search finds it by title and id', async () => {
+    const { favoritesOf, artworkFlags } = await import('@/lib/community/server')
+    const { search } = await import('@/lib/search/server')
+    expect(await toggleReaction(buyerId, 'ARTWORK', s.a1.artworkId, 'SAVE')).toEqual({ on: true, count: 1 })
+    await toggleReaction(buyerId, 'ARTWORK', s.a1.artworkId, 'LIKE')
+    await expect(toggleReaction(buyerId, 'ARTWORK', 999_999, 'LIKE')).rejects.toMatchObject({ status: 404 })
+    const favs = await favoritesOf(buyerId)
+    expect(favs).toMatchObject([{ publicId: 'HA-2026-TEST-0007', liked: true, saved: true }])
+    expect((await artworkFlags(buyerId, [s.a1.artworkId])).get(s.a1.artworkId)).toEqual({ liked: true, saved: true })
+    const title = (await prisma.artwork.findUniqueOrThrow({ where: { id: s.a1.artworkId } })).title
+    expect((await search(title)).artworks.map((a) => a.publicId)).toContain('HA-2026-TEST-0007')
+    expect((await search('ha-2026-test-0007')).artworks).toHaveLength(1)
+    expect((await search('')).total).toBe(0)
+  })
+})

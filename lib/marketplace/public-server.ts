@@ -9,7 +9,7 @@ import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 
 export interface MarketplaceFilters { category?: string | null; maxPriceCents?: bigint | null; market?: string | null; uf?: string | null; q?: string | null }
 
-export interface PublicArtworkCard { publicId: string; title: string; year: number | null; artist: string; priceCents: bigint | null; saleMode: string | null; cover: string | null; category: string }
+export interface PublicArtworkCard { /** numeric id, only for reactions (like/save) */ id: number; publicId: string; title: string; year: number | null; artist: string; priceCents: bigint | null; saleMode: string | null; cover: string | null; category: string }
 
 export async function listPublicArtworks(f: MarketplaceFilters = {}, take = 60): Promise<PublicArtworkCard[]> {
   return totalScope('marketplace:list', async () => {
@@ -20,12 +20,12 @@ export async function listPublicArtworks(f: MarketplaceFilters = {}, take = 60):
         ...(f.maxPriceCents ? { listPriceCents: { lte: f.maxPriceCents } } : {}),
         ...(f.market === 'PRIMARY' || f.market === 'SECONDARY' ? { market: f.market } : {}),
         ...(f.uf ? { member: { uf: f.uf.toUpperCase() } } : {}),
-        ...(f.q ? { OR: [{ title: { contains: f.q, mode: 'insensitive' } }, { artist: { name: { contains: f.q, mode: 'insensitive' } } }] } : {}),
+        ...(f.q ? { OR: [{ title: { contains: f.q, mode: 'insensitive' } }, { artist: { name: { contains: f.q, mode: 'insensitive' } } }, { publicId: { equals: f.q.replace(/\s/g, '').toUpperCase() } }] } : {}),
       },
-      select: { publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, category: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
+      select: { id: true, publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, category: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
       orderBy: { updatedAt: 'desc' }, take,
     })
-    return rows.map((r) => ({ publicId: r.publicId!, title: r.title, year: r.year, artist: r.artist.name, priceCents: r.saleMode === 'ON_REQUEST' ? null : r.listPriceCents, saleMode: r.saleMode, cover: r.media[0]?.publicUrl ?? null, category: r.category }))
+    return rows.map((r) => ({ id: r.id, publicId: r.publicId!, title: r.title, year: r.year, artist: r.artist.name, priceCents: r.saleMode === 'ON_REQUEST' ? null : r.listPriceCents, saleMode: r.saleMode, cover: r.media[0]?.publicUrl ?? null, category: r.category }))
   })
 }
 

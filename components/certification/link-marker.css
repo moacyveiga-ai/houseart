@@ -1,0 +1,40 @@
+/* "Vincular etiqueta" (handoff "HouseArt App Artista" › leitor, LT.vincular): the dark reading screen. Prefix ha-tag-link-. */
+.ha-tag-link { background: var(--ha-ink-900); color: var(--ha-paper-50); border-radius: var(--ha-radius-lg); padding: var(--ha-space-5) var(--ha-space-6) var(--ha-space-10); display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--ha-space-6); min-height: 560px; max-width: 560px; width: 100%; margin: 0 auto; }
+@media (max-width: 720px) { .ha-tag-link { border-radius: 0; margin: calc(-1 * var(--ha-space-4)); width: auto; max-width: none; min-height: calc(100vh - 64px); } }
+
+.ha-tag-link__top { align-self: stretch; display: flex; justify-content: space-between; align-items: center; }
+.ha-tag-link__back { display: inline-flex; color: var(--ha-paper-50); border-radius: var(--ha-radius-sm); }
+.ha-tag-link__back:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-tag-link__topname { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-tag-link__spacer { width: 26px; }
+
+.ha-tag-link__body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ha-space-8); }
+.ha-tag-link__ring { position: relative; width: 136px; height: 136px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.ha-tag-link__ring .ha-reader__pulse { animation-duration: calc(var(--ha-dur-tap) * 2); }
+.ha-tag-link__core { position: absolute; inset: 30px; border-radius: 50%; background: var(--ha-sand-500); color: var(--ha-ink-900); display: flex; align-items: center; justify-content: center; }
+.ha-tag-link__ring--ok { border: 4px solid var(--ha-verified-500); color: var(--ha-verified-500); animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
+.ha-tag-link__ring--signed { border: 4px solid var(--ha-verified-500); background: var(--ha-verified-100); color: var(--ha-verified-500); animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
+.ha-tag-link__ring--error { border: 4px solid var(--ha-alert-500); color: var(--ha-alert-500); }
+
+.ha-tag-link__texts { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-tag-link__title { font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); }
+.ha-tag-link__text { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-ink-300); font-variant-numeric: tabular-nums; }
+.ha-tag-link__decl { margin: 0; max-width: 360px; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-300); }
+.ha-tag-link__err { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-alert-500); }
+
+.ha-tag-link__cta { align-self: stretch; min-height: 52px; }
+.ha-tag-link__cta[disabled] { background: var(--ha-ink-700); color: var(--ha-ink-300); }
+
+.ha-tag-link__alt { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-3); }
+.ha-tag-link__hint { margin: 0; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-300); max-width: 360px; }
+.ha-tag-link__qr { display: inline-flex; align-items: center; gap: var(--ha-space-2); border: 0; background: transparent; color: var(--ha-paper-50); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; padding: var(--ha-space-2); border-radius: var(--ha-radius-sm); }
+.ha-tag-link__qr:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-tag-link__paste { align-self: stretch; display: flex; flex-direction: column; gap: var(--ha-space-2); text-align: left; }
+.ha-tag-link__label { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); font-weight: 600; color: var(--ha-ink-300); }
+.ha-tag-link__input { background: var(--ha-ink-700); border-color: var(--ha-ink-500); color: var(--ha-paper-50); font-variant-numeric: tabular-nums; }
+.ha-tag-link__input::placeholder { color: var(--ha-ink-300); }
+.ha-tag-link__input:hover { border-color: var(--ha-ink-300); }
+.ha-tag-link__input:focus { border-color: var(--ha-sand-500); }
+.ha-tag-link__paste-actions { display: flex; gap: var(--ha-space-3); flex-wrap: wrap; }
+.ha-tag-link__sim { color: var(--ha-paper-50); }
+.ha-tag-link__sim[disabled] { color: var(--ha-ink-500); }

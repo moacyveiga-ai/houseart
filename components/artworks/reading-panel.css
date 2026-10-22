@@ -1,0 +1,18 @@
+/* "Preencher com as fotos" (handoff "HouseArt App Colecionador" › Cadastrar obra, passo 3). Prefix ha-reading-. */
+.ha-reading { display: flex; flex-direction: column; gap: var(--ha-space-2); grid-column: 1 / -1; margin-bottom: var(--ha-space-2); }
+.ha-reading__btn { display: flex; align-items: center; gap: var(--ha-space-3); padding: var(--ha-space-3) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-sand-500); border-radius: var(--ha-radius-md); background: var(--ha-sand-100); color: var(--ha-ink-900); cursor: pointer; text-align: left; font: inherit; width: 100%; transition: background var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease); }
+.ha-reading__btn:hover:not([disabled]) { border-color: var(--ha-sand-600); }
+.ha-reading__btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-reading__btn[disabled] { cursor: default; }
+.ha-reading__btn[aria-busy="true"] { opacity: .85; }
+.ha-reading--applied .ha-reading__btn { background: var(--ha-paper-100); border-color: var(--ha-verified-500); }
+.ha-reading__text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.ha-reading__title { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); font-weight: 600; color: var(--ha-ink-900); }
+.ha-reading__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-700); }
+.ha-reading__spin { animation: ha-spin 900ms linear infinite; }
+.ha-reading__msg { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); }
+.ha-reading__note { margin: 0; display: flex; align-items: flex-start; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border-radius: var(--ha-radius-sm); background: var(--ha-pending-100); color: var(--ha-ink-700); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); }
+.ha-reading__note .ha-icon { color: var(--ha-pending-500); margin-top: 2px; }
+
+/* A field the reading just filled: subtle sand highlight for a few seconds (HIGHLIGHT_MS), then back to normal. */
+.ha-input--read { border-color: var(--ha-sand-500); background: var(--ha-sand-100); transition: background 600ms var(--ha-ease), border-color 600ms var(--ha-ease); }

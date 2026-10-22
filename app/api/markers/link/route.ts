@@ -20,6 +20,6 @@ export async function POST(req: Request) {
     const parsed = read ? { success: true as const, data: read } : schema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: 'Leitura inválida.' }, { status: 400 })
     const r = await linkMarker(scope, parsed.data, { userId: user.id })
-    return NextResponse.json({ ok: true, publicId: r.publicId })
+    return NextResponse.json({ ok: true, publicId: r.publicId, certificateId: r.certificateId })
   } catch (e) { return artworkErrorResponse(e) }
 }

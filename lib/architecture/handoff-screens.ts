@@ -35,7 +35,7 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
     'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Equipe: null, 'Artistas representados': null, 'Conta, equipe e repasses': null,
   },
   'HouseArt App Artista': {
-    Onboarding: null, Login: null, 'Início do artista': null, 'Nova obra · câmera guiada': null, 'Vincular etiqueta': null,
+    Onboarding: null, Login: null, 'Início do artista': null, 'Nova obra · câmera guiada': null, 'Vincular etiqueta': 'app/(panel)/certification/link/[artworkId]/page.tsx',
     'Verificar obra': null, 'Carteira de escrituras': null, 'Confirmar recebimento': null, Avisos: null,
   },
   // Desktop versions of the apps: same screens, side panel of detail (handoff §5)

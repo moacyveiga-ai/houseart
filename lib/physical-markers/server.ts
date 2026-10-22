@@ -141,16 +141,18 @@ export async function linkMarker(scope: Scope, opt: { uid: string; ctr: number; 
   await prisma.markerRead.create({ data: { markerId: marker.id, counter: opt.ctr, cmacValid: verdict.ok, purpose: 'LINK', userId: actor.userId } })
   if (!verdict.ok) throw new ArtworkError('BAD_READ', `Leitura inválida (${verdict.reason}).`, 422)
   const publicId = publicIdOf(artwork.year && artwork.year > 1900 ? new Date().getUTCFullYear() : new Date().getUTCFullYear(), randomBytes(5))
+  let certificateId: number | null = null
   await prisma.$transaction(async (tx) => {
     const r = await tx.physicalMarker.updateMany({ where: { id: marker.id, status: 'SHIPPED' }, data: { status: 'LINKED', artworkId: artwork.id, linkedAt: new Date(), linkedByUserId: actor.userId, readCounter: opt.ctr, lastReadAt: new Date() } })
     if (r.count === 0) throw new ArtworkError('MARKER_UNAVAILABLE', 'A etiqueta acabou de ser usada.', 409)
     await tx.artwork.update({ where: { id: artwork.id }, data: { publicId } })
-    await tx.certificate.upsert({ where: { artworkId: artwork.id }, create: { artworkId: artwork.id, publicId, stage: 3 }, update: { publicId, stage: 3 } })
+    const c = await tx.certificate.upsert({ where: { artworkId: artwork.id }, create: { artworkId: artwork.id, publicId, stage: 3 }, update: { publicId, stage: 3 } })
+    certificateId = c.id
     if (order.status === 'SHIPPED') await tx.markerOrder.update({ where: { id: order.id }, data: { status: 'DELIVERED', deliveredAt: new Date() } })
   })
   await recordEvent(artwork.id, 'CREATED', { publicId, markerUid: marker.uid }, actor.userId)
   void audit.event({ entity: 'artwork', entityId: artwork.id, action: 'marker_linked', userId: actor.userId, after: { publicId } })
-  return { publicId }
+  return { publicId, certificateId }
 }
 
 // ── public read (the verification page) ──────────────────────────────────

@@ -112,7 +112,16 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
                 ))}
               </div>
               <div><Badge tone={i.stage === 5 ? 'verified' : 'pending'}>{CERT_STAGES[i.stage]}</Badge></div>
-              <div><button type="button" className={`ha-btn ha-btn--sm ${i.action === 'SIGN' || i.action === 'ISSUE' ? 'ha-btn--primary' : 'ha-btn--outline'}`} disabled={busy || i.action === 'WAIT_MARKER'} onClick={() => act(i)}>{i.label}</button></div>
+              <div>
+                {i.action === 'LINK_IN_APP' ? (
+                  <span className="ha-stack" style={{ gap: 'var(--ha-space-1)' }}>
+                    <a className="ha-btn ha-btn--primary ha-btn--sm" href={`/certification/link/${i.id}`}>Vincular etiqueta</a>
+                    <span className="ha-muted ha-sm">ou pelo app</span>
+                  </span>
+                ) : (
+                  <button type="button" className={`ha-btn ha-btn--sm ${i.action === 'SIGN' || i.action === 'ISSUE' ? 'ha-btn--primary' : 'ha-btn--outline'}`} disabled={busy || i.action === 'WAIT_MARKER'} onClick={() => act(i)}>{i.label}</button>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -13,3 +13,6 @@ Logins de demonstração (senha `Demo-HouseArt-2026`): joana.demo@ (artista) · 
 ana.demo@ (galeria, admin) · caio.demo@ (galeria, vendas) · helena.demo@ (consultora) ·
 marina.demo@, marcelo.demo@, lia.demo@ (colecionadores) · rui.demo@ (avaliador) — todos `@houseart.test`.
 Os CPFs são de teste (dígitos válidos, não pertencem a ninguém); os cartões são os números de teste do Stripe.
+3. Conteúdo público com imagem (capa da galeria, notícias, posts, retratos e trajetória dos artistas, fotos/salas/equipe
+   da galeria, publicações): `scripts/demo/content.sql`, depois do roteiro — reaproveita as derivadas públicas das obras.
+   Aplicado em produção em 2026-10-22.

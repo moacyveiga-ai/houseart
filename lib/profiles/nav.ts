@@ -42,6 +42,9 @@ const GALLERY: NavItem[] = [
   { key: 'crm', label: 'Colecionadores', icon: 'view_kanban', href: '/crm' },
   { key: 'royalty', label: 'Direito de sequência', icon: 'autorenew', href: '/royalty' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
+  { key: 'team', label: 'Equipe', icon: 'groups', href: '/gallery/team' },
+  { key: 'artists', label: 'Artistas', icon: 'palette', href: '/gallery/artists' },
+  { key: 'account', label: 'Conta da galeria', icon: 'settings', href: '/gallery/account' },
 ]
 
 const COLLECTOR: NavItem[] = [

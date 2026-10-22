@@ -3,6 +3,8 @@ import { requirePanelPage } from '../../../_session'
 import { getArtwork } from '@/lib/artworks/server'
 import { ArtworkWizard, type WizardArtwork } from '@/components/artworks/ArtworkWizard'
 import { ListForSaleDialog } from '@/components/artworks/ListForSaleDialog'
+import Link from 'next/link'
+import { Icon } from '@/components/ds/Icon'
 
 export const metadata = { title: 'Cadastro de obra — HouseArt' }
 
@@ -25,7 +27,7 @@ export default async function EditArtworkPage({ params }: { params: Promise<{ id
   const saleable = a.status === 'AUTHENTICATED' || a.status === 'LISTED'
   return (
     <>
-      {saleable ? <div className="ha-page" style={{ paddingBottom: 0 }}><div className="ha-row ha-row--end"><ListForSaleDialog artworkId={a.id} title={a.title} defaultPrice={a.listPriceCents ? String(Number(a.listPriceCents) / 100) : ''} listed={a.status === 'LISTED'} /></div></div> : null}
+      {saleable ? <div className="ha-page" style={{ paddingBottom: 0 }}><div className="ha-row ha-row--end" style={{ gap: 'var(--ha-space-2)' }}>{a.status === 'LISTED' ? <Link href={`/artworks/${a.id}/listing`} className="ha-btn ha-btn--outline ha-btn--sm"><Icon name="tune" size={18} />Gestão do anúncio</Link> : null}<ListForSaleDialog artworkId={a.id} title={a.title} defaultPrice={a.listPriceCents ? String(Number(a.listPriceCents) / 100) : ''} listed={a.status === 'LISTED'} /></div></div> : null}
       <ArtworkWizard initial={initial} userName={user.name} />
     </>
   )

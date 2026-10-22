@@ -29,10 +29,10 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
     'Instagram · conectar e postar': null, 'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Busca: null,
   },
   'HouseArt App Galeria': {
-    Splash: null, 'Tela inicial e login': null, 'Cadastro da galeria': null, 'Galeria · painel do dia': null, Acervo: null,
-    'Cadastrar obra': null, 'Gestão do anúncio': null, 'Ofertas recebidas': null, 'Vendas até o repasse': null, 'Regras de ofertas': null,
+    Splash: null, 'Tela inicial e login': 'app/login/page.tsx', 'Cadastro da galeria': 'app/signup/page.tsx', 'Galeria · painel do dia': 'app/(panel)/page.tsx', Acervo: 'app/(panel)/artworks/page.tsx',
+    'Cadastrar obra': null, 'Gestão do anúncio': 'app/(panel)/artworks/[id]/listing/page.tsx', 'Ofertas recebidas': 'app/(panel)/sales/page.tsx', 'Vendas até o repasse': 'app/(panel)/sales/page.tsx', 'Regras de ofertas': 'app/(panel)/sales/rules/page.tsx',
     Mensagens: null, 'Conversa com compradora': null, 'Comunidade e eventos': null, 'Instagram · conectar e postar': null,
-    'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Equipe: null, 'Artistas representados': null, 'Conta, equipe e repasses': null,
+    'Compartilhar obra': null, 'Ler notícia': null, 'Guia de educação': null, Equipe: 'app/(panel)/gallery/team/page.tsx', 'Artistas representados': 'app/(panel)/gallery/artists/page.tsx', 'Conta, equipe e repasses': 'app/(panel)/gallery/account/page.tsx',
   },
   'HouseArt App Artista': {
     Onboarding: null, Login: null, 'Início do artista': null, 'Nova obra · câmera guiada': 'components/artworks/GuidedCapture.tsx', 'Vincular etiqueta': 'app/(panel)/certification/link/[artworkId]/page.tsx',

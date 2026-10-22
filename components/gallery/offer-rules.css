@@ -1,0 +1,11 @@
+/* Regras de ofertas (handoff "HouseArt App Galeria" › Negócios › Regras). Prefix ha-rules-. */
+.ha-rules { display: flex; flex-direction: column; gap: var(--ha-space-3); max-width: 640px; }
+.ha-rules__intro { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); text-wrap: pretty; }
+.ha-rules-item { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); }
+.ha-rules-item__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; }
+.ha-rules-item__n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-rules-item__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-rules-item__ops { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-rules-item__ops .ha-chip { height: 34px; font-weight: 600; font-size: 13px; }
+.ha-rules-item__ops .ha-chip[disabled] { cursor: progress; }
+.ha-toggle[disabled] { cursor: default; opacity: .7; }

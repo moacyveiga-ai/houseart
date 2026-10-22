@@ -1,0 +1,38 @@
+/* Equipe (handoff "HouseArt App Galeria" › Conta › Equipe). Prefix ha-team-. */
+.ha-team { display: flex; flex-direction: column; gap: var(--ha-space-3); max-width: 640px; }
+.ha-team__sub { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); text-wrap: pretty; }
+.ha-team-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ha-team-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; width: 100%; min-height: 64px; padding: var(--ha-space-2) 0; border: 0; border-bottom: var(--ha-border-w) solid var(--ha-border); background: none; cursor: pointer; text-align: left; font: inherit; color: inherit; border-radius: var(--ha-radius-sm); }
+.ha-team-row:hover { background: var(--ha-surface); }
+.ha-team-row:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-team-row__txt { min-width: 0; }
+.ha-team-row__n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-team-row__me { font-weight: 400; color: var(--ha-fg-muted); }
+.ha-team-row__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-team-av { width: 44px; height: 44px; border-radius: 50%; background: var(--ha-paper-200); color: var(--ha-ink-900); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: none; }
+.ha-team-av--admin { background: var(--ha-ink-900); color: var(--ha-paper-50); }
+.ha-team-av--pending { background: var(--ha-paper-100); color: var(--ha-ink-500); }
+.ha-team-tag { padding: 2px 8px; border-radius: var(--ha-radius-full); background: var(--ha-paper-200); font-size: 11px; font-weight: 600; color: var(--ha-ink-900); white-space: nowrap; }
+.ha-team-tag--pending { background: var(--ha-pending-100); }
+.ha-team-empty { padding: var(--ha-space-4) 0; font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
+.ha-team-foot { padding-top: var(--ha-space-3); border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-team-cta { width: 100%; }
+@media (min-width: 720px) { .ha-team-cta { width: auto; } }
+.ha-team-sheet__k { margin: 0; font-size: var(--ha-text-caption); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ha-fg-muted); }
+.ha-team-roles { display: flex; flex-direction: column; gap: 6px; }
+.ha-team-role { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: 10px 12px; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-team-role:hover { background: var(--ha-surface); }
+.ha-team-role--on { border-color: var(--ha-ink-900); background: var(--ha-surface); }
+.ha-team-role[disabled] { cursor: default; }
+.ha-team-role:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-team-role__n { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-team-role__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-team-danger { height: 40px; border: 0; background: none; color: var(--ha-alert-500); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; border-radius: var(--ha-radius-md); align-self: flex-start; padding: 0; }
+.ha-team-danger:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-team-confirm { display: flex; flex-direction: column; gap: var(--ha-space-3); }
+.ha-team-confirm__btns { display: flex; align-items: center; gap: var(--ha-space-3); }
+
+/* Convite aceito fora do painel (/team/accept) */
+.ha-team-accept { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 480px; margin: 0 auto; padding: var(--ha-space-8) var(--ha-space-4); }
+.ha-team-accept__ic { width: 56px; height: 56px; border-radius: 50%; background: var(--ha-sand-100); color: var(--ha-ink-900); display: flex; align-items: center; justify-content: center; }
+.ha-team-accept__err { color: var(--ha-alert-500); font-size: var(--ha-text-body-sm); margin: 0; }

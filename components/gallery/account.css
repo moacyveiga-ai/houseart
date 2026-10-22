@@ -1,0 +1,25 @@
+/* Conta, equipe e repasses (handoff "HouseArt App Galeria" › Galeria › Conta). Prefix ha-account-. */
+.ha-account { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--ha-space-5); max-width: 640px; }
+.ha-account-me { display: flex; align-items: center; gap: 14px; }
+.ha-account-me__av { width: 68px; height: 68px; flex: none; border-radius: 50%; background: var(--ha-paper-200); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: var(--ha-ink-900); }
+.ha-account-me__txt { flex: 1; min-width: 0; gap: 2px; }
+.ha-account-me__n { font-family: var(--ha-font-display); font-size: 24px; line-height: 30px; color: var(--ha-fg); }
+.ha-account-me__e { font-size: 13px; color: var(--ha-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-account-sec { display: flex; flex-direction: column; }
+.ha-account-sec__k { font-size: var(--ha-text-caption); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ha-fg-muted); margin-bottom: 4px; }
+.ha-account-sec__box { display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); overflow: hidden; }
+.ha-account-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; min-height: 54px; padding: var(--ha-space-2) 14px; border-bottom: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); color: inherit; text-decoration: none; }
+.ha-account-item:last-child { border-bottom: 0; }
+.ha-account-item:hover { background: var(--ha-surface); }
+.ha-account-item:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-account-item > .ha-icon { color: var(--ha-fg); }
+.ha-account-item__txt { min-width: 0; }
+.ha-account-item__n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-account-item__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-account-item__arrow { color: var(--ha-fg-muted); }
+.ha-account-logout { height: 50px; border: var(--ha-border-w) solid var(--ha-ink-900); border-radius: var(--ha-radius-md); background: transparent; color: var(--ha-fg); font: inherit; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.ha-account-logout:hover { background: var(--ha-surface); }
+.ha-account-logout:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-account-logout[disabled] { color: var(--ha-ink-300); border-color: var(--ha-ink-300); cursor: default; }
+.ha-account-foot { text-align: center; font-size: 11px; color: var(--ha-fg-muted); }
+.ha-account-foot a { color: inherit; }

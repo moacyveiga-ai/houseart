@@ -9,13 +9,31 @@ import { Icon } from '@/components/ds/Icon'
 import { Badge } from '@/components/ds/Badge'
 import { homeOf } from '@/lib/profiles/nav'
 import { redirect } from 'next/navigation'
+import { dayPanel } from '@/lib/gallery/panel-server'
+import { listingOf } from '@/lib/gallery/listing-server'
+import { initialsOf } from '@/lib/profiles/core'
+import { DayPanel, type TopViewed } from '@/components/gallery/DayPanel'
 
 export const metadata = { title: 'Início — HouseArt' }
+
+/** "Galeria · painel do dia": the panel of the gallery (and of the advisor, the same desk). */
+async function GalleryDay({ scope, userName, now }: { scope: Parameters<typeof dayPanel>[0]; userName: string; now: Date }) {
+  const [data, listed] = await Promise.all([dayPanel(scope, now), listArtworks(scope, { filter: 'listed' })])
+  const top: TopViewed[] = []
+  for (const a of listed.items) {
+    if (a.status !== 'LISTED') continue
+    const l = await listingOf(scope, a.id, now)
+    if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers })
+  }
+  top.sort((x, y) => y.views7d - x.views7d)
+  return <DayPanel data={data} who={{ initials: initialsOf(userName), name: userName, dateLabel: dateLabel(now) }} top={top.slice(0, 3)} />
+}
 
 export default async function DashboardPage() {
   const { user, scope, nav } = await requirePanelPage('/')
   if (nav !== 'artist' && nav !== 'gallery' && nav !== 'advisor' && nav !== 'admin') redirect(homeOf(nav))
   const now = new Date()
+  if (nav === 'gallery' || nav === 'advisor') return <GalleryDay scope={scope} userName={user.name} now={now} />
   const [counts, recent] = await Promise.all([dashboardCounts(scope, now), listArtworks(scope, { take: 6 })])
   const profile = nav === 'artist' ? 'artist' : 'gallery'
   const year = Number(new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: 'America/Bahia' }).format(now))

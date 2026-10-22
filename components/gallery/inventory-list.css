@@ -1,0 +1,38 @@
+/* "Acervo" (handoff "HouseArt Web Galeria" › Acervo). Prefix ha-inv-. */
+.ha-inv { display: flex; flex-direction: column; gap: var(--ha-space-3); }
+.ha-inv__head { display: flex; align-items: center; gap: var(--ha-space-3); }
+.ha-inv__who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ha-inv__title { font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); color: var(--ha-fg); margin: 0; }
+.ha-inv__summary { font-size: 13px; color: var(--ha-ink-500); }
+.ha-inv__add { width: 44px; height: 44px; flex: none; border: 0; border-radius: var(--ha-radius-full); background: var(--ha-ink-900); color: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.ha-inv__add .ha-icon { font-size: 26px; }
+.ha-inv__add:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-inv__search { height: 42px; border-radius: var(--ha-radius-md); background: var(--ha-paper-100); display: flex; align-items: center; gap: var(--ha-space-2); padding: 0 var(--ha-space-3); }
+.ha-inv__search .ha-icon { color: var(--ha-ink-500); }
+.ha-inv__input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-inv__input::placeholder { color: var(--ha-ink-500); }
+.ha-inv__chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.ha-inv__chips .ha-chip { flex: none; }
+.ha-inv__list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-inv__row { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-inv__main { display: contents; color: inherit; text-decoration: none; }
+.ha-inv__wall { height: 68px; width: 68px; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-2); }
+.ha-inv__wall img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; object-fit: contain; box-shadow: var(--ha-shadow-sm); }
+.ha-inv__wall .ha-icon { color: var(--ha-ink-300); }
+.ha-inv__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ha-inv__name { font-family: var(--ha-font-display); font-style: italic; font-size: 15px; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-inv__artist { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-500); }
+.ha-inv__price-line { display: flex; align-items: center; gap: var(--ha-space-2); flex-wrap: wrap; }
+.ha-inv__price { font-size: 13px; font-weight: 600; color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-inv__pill { padding: 0 7px; border-radius: var(--ha-radius-sm); background: var(--ha-paper-200); font-size: 11px; line-height: 18px; font-weight: 600; color: var(--ha-ink-900); }
+.ha-inv__pill--verified { background: var(--ha-verified-100); }
+.ha-inv__pill--pending { background: var(--ha-pending-100); }
+.ha-inv__pill--sand { background: var(--ha-sand-100); }
+.ha-inv__pill--alert { background: var(--ha-alert-100); }
+.ha-inv__stats { font-size: 11px; color: var(--ha-ink-500); }
+.ha-inv__aside { display: flex; align-items: center; gap: var(--ha-space-2); }
+.ha-inv__manage { display: inline-flex; align-items: center; gap: var(--ha-space-1); height: 32px; padding: 0 var(--ha-space-3); border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-paper-50); color: var(--ha-ink-900); font-size: var(--ha-text-caption); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.ha-inv__manage:hover { border-color: var(--ha-ink-900); }
+.ha-inv__chev { color: var(--ha-ink-500); }
+.ha-inv__empty { padding: var(--ha-space-8) 0; font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
+@media (max-width: 480px) { .ha-inv__manage span:last-child { display: none; } .ha-inv__manage { padding: 0 var(--ha-space-2); } }

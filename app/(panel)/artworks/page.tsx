@@ -5,12 +5,28 @@ import { ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimension
 import { Chip } from '@/components/ds/Chip'
 import { Icon } from '@/components/ds/Icon'
 import { Badge } from '@/components/ds/Badge'
+import { listingOf } from '@/lib/gallery/listing-server'
+import { InventoryList } from '@/components/gallery/InventoryList'
+import { chipCounts, chipKey, filterInventory, type InventoryItem } from '@/components/gallery/inventory-core'
 
 export const metadata = { title: 'Minhas obras — HouseArt' }
 
-export default async function ArtworksPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
+/** "Acervo" of the gallery: the whole inventory loaded once, chips and search applied here (listArtworks has no q). */
+async function GalleryInventory({ scope, chip, q }: { scope: Parameters<typeof listArtworks>[0]; chip: string; q: string }) {
+  const { items } = await listArtworks(scope, { filter: 'all' })
+  const all: InventoryItem[] = []
+  for (const a of items) {
+    const listing = a.status === 'LISTED' ? await listingOf(scope, a.id) : null
+    all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused } : null })
+  }
+  return <InventoryList title="Acervo" all={all} items={filterInventory(all, chip, q)} chip={chip} q={q} counts={chipCounts(all)} />
+}
+
+export default async function ArtworksPage({ searchParams }: { searchParams: Promise<{ filter?: string; q?: string }> }) {
   const { scope, nav } = await requirePanelPage('/artworks')
-  const filter = (await searchParams).filter ?? 'all'
+  const sp = await searchParams
+  if (nav === 'gallery' || nav === 'advisor') return <GalleryInventory scope={scope} chip={chipKey(sp.filter)} q={(sp.q ?? '').slice(0, 80)} />
+  const filter = sp.filter ?? 'all'
   const { items, counts } = await listArtworks(scope, { filter })
   return (
     <div className="ha-page">

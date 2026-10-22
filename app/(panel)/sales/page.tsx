@@ -21,7 +21,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Vendas e ofertas</h1></div>
-      <Tabs active={tab} items={[{ key: 'offers', label: 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: 'Em andamento', href: '/sales?tab=deals', count: live }]} />
+      <Tabs active={tab} items={[{ key: 'offers', label: 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: 'Em andamento', href: '/sales?tab=deals', count: live }, { key: 'rules', label: 'Regras', href: '/sales/rules' }]} />
       {tab === 'offers' ? (
         <OffersTable negotiatorLine={mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'} offers={offers.map((o) => ({
           id: o.id, code: o.code, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),

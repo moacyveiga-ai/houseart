@@ -35,8 +35,10 @@ const sha256 = (v: string) => createHash('sha256').update(v).digest('hex')
 // ── mandate + listing ────────────────────────────────────────────────────
 export async function listArtworkForSale(scope: Scope, artworkId: number, m: { listPriceCents: bigint; reservePriceCents: bigint; autoNegotiatorOn: boolean; autoAcceptMinBps: number; fixedPrice: boolean }, actor: { userId: number }) {
   const memberId = memberOfScope(scope)
-  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { id: true, memberId: true, tenantId: true, status: true, seal: true } })
+  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { id: true, memberId: true, tenantId: true, status: true, seal: true, market: true, acquisitionKind: true, member: { select: { kind: true, tenantId: true } } } })
   if (!a || !canView(scope, a) || !memberId) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
+  // Secondary market: an artwork that already changed hands, or one a collector registered as theirs.
+  const market = a.market === 'SECONDARY' || a.acquisitionKind || a.member.kind === 'COLLECTOR' ? 'SECONDARY' : 'PRIMARY'
   const problems = mandateProblems(m)
   if (problems.length) throw new ArtworkError('BAD_MANDATE', problems.join(' '), 400)
   const verdict = artworkCanTransition(a.status as never, 'LISTED', { seal: a.seal })
@@ -44,7 +46,7 @@ export async function listArtworkForSale(scope: Scope, artworkId: number, m: { l
   await prisma.$transaction(async (tx) => {
     await tx.mandate.updateMany({ where: { artworkId, status: 'ACTIVE' }, data: { status: 'SUPERSEDED' } })
     await tx.mandate.create({ data: { artworkId, memberId, listPriceCents: m.listPriceCents, reservePriceCents: m.reservePriceCents, autoNegotiatorOn: m.autoNegotiatorOn, autoAcceptMinBps: m.autoAcceptMinBps, fixedPrice: m.fixedPrice } })
-    const r = await tx.artwork.updateMany({ where: { id: artworkId, status: a.status }, data: { status: 'LISTED', listPriceCents: m.listPriceCents, saleMode: m.fixedPrice ? 'FIXED' : 'FIXED_WITH_OFFERS', market: 'PRIMARY' } })
+    const r = await tx.artwork.updateMany({ where: { id: artworkId, status: a.status }, data: { status: 'LISTED', listPriceCents: m.listPriceCents, saleMode: m.fixedPrice ? 'FIXED' : 'FIXED_WITH_OFFERS', market } })
     if (r.count === 0) throw new ArtworkError('CHANGED', 'A obra acabou de mudar.', 409)
   })
   void audit.event({ entity: 'artwork', entityId: artworkId, action: 'list', userId: actor.userId, after: { listPriceCents: m.listPriceCents.toString() } })

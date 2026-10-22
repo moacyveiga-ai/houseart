@@ -36,7 +36,7 @@ export function defaultPlanFor(audience: PlanAudience): PlanCode {
 
 /** Member.kind → plan audience. */
 export function audienceOfMemberKind(kind: string): PlanAudience {
-  return kind === 'ARTIST' ? 'ARTIST' : kind === 'ADVISOR' ? 'ADVISOR' : 'GALLERY'
+  return kind === 'ARTIST' || kind === 'COLLECTOR' ? 'ARTIST' : kind === 'ADVISOR' ? 'ADVISOR' : 'GALLERY'
 }
 
 export function isPlanCode(v: string): v is PlanCode {

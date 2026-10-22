@@ -12,6 +12,7 @@ import { normalizeEmail } from '@/lib/auth/credential'
 import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
 import { ensureCollectorUser } from '@/lib/accounts/collector-server'
+import { moveArtworkToHolder } from '@/lib/tenant/member-server'
 import { verifyIdentity } from '@/lib/kyc/server'
 import { royaltyFor } from '@/lib/resale-royalty/core'
 import { recordEvent } from '@/lib/certificate-events/server'
@@ -160,7 +161,7 @@ export async function buyerTap(token: string, sun: { uid: string; ctr: number; c
       const v = await tx.certificateVersion.create({ data: { certificateId: t.certificateId, version: prev.version + 1, holderName: t.toName, holderDocumentHash: t.toDocumentHash, holderDocumentMask: t.toDocumentMask, holderUserId: t.toUserId, contentJson: JSON.stringify(content), contentHash, prevHash: prev.contentHash, status: 'ACTIVE' } })
       await tx.certificate.update({ where: { id: t.certificateId }, data: { currentVersionId: v.id } })
       await tx.ownershipTransfer.update({ where: { id: t.id }, data: { newVersionId: v.id } })
-      await tx.artwork.update({ where: { id: t.artworkId }, data: { market: 'SECONDARY' } })
+      await moveArtworkToHolder(tx, t.artworkId, t.toUserId!)
       if (t.royaltyCents > 0n) {
         const a = await tx.artwork.findUniqueOrThrow({ where: { id: t.artworkId }, select: { artistId: true } })
         await tx.royaltyPayment.create({ data: { artworkId: t.artworkId, artistId: a.artistId, transferId: t.id, saleCents: t.priceCents ?? 0n, previousSaleCents: (t.priceCents ?? 0n) - (t.royaltyCents * 20n), appreciationCents: t.royaltyCents * 20n, royaltyCents: t.royaltyCents, status: 'PENDING' } })

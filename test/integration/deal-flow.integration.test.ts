@@ -146,7 +146,12 @@ describe('deal flow', () => {
     expect(done.splits.every((l) => l.status === 'RELEASED')).toBe(true)
     expect(done.phaseEvents.map((e) => e.phase)).toEqual(['OFFER_ACCEPTED', 'ESCROW', 'DOCUMENTS', 'SHIPPING', 'DELIVERY', 'COMPLETED'])
     expect((await prisma.offer.findUniqueOrThrow({ where: { id: offer.id } })).status).toBe('CONVERTED')
-    expect(await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).toMatchObject({ status: 'SOLD', market: 'SECONDARY' })
+    // the artwork now belongs to the buyer: a COLLECTOR member is born for them and the work is held (not for sale), secondary from now on
+    const owned = await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId }, include: { member: true } })
+    expect(owned).toMatchObject({ status: 'AUTHENTICATED', market: 'SECONDARY' })
+    expect(owned.member).toMatchObject({ kind: 'COLLECTOR', userId: buyer.id })
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: buyer.id } })).memberId).toBe(owned.memberId)
+    expect(await prisma.mandate.count({ where: { artworkId: s.b.artworkId, status: 'ACTIVE' } })).toBe(0)
     const versions = await prisma.certificateVersion.findMany({ where: { certificate: { artworkId: s.b.artworkId } }, orderBy: { version: 'asc' } })
     expect(versions.map((v) => [v.version, v.status, v.holderUserId])).toEqual([[1, 'SUPERSEDED', s.b.userId], [2, 'ACTIVE', buyer.id]])
     expect(versions[1].prevHash).toBe(versions[0].contentHash)
@@ -155,7 +160,8 @@ describe('deal flow', () => {
     expect(transfer).toMatchObject({ status: 'COMPLETED', fromUserId: s.b.userId, toUserId: buyer.id, priceCents: 4_400_000n, newVersionId: versions[1].id })
     const pub = await publicCertificate(publicId)
     expect(pub).toMatchObject({ status: 'ACTIVE', version: 2, chainValid: true })
-    expect(pub!.holder).toMatch(/^Marcelo Bastos/)
+    // the holder is a private collector now: the public certificate never prints their name
+    expect(pub!.holder).toMatch(/^Colecionador particular/)
     expect(json(pub)).not.toContain('52998224725')
     // the buyer's view and wallet
     const [bv] = await buyerDeals(buyer.id)
@@ -198,6 +204,25 @@ describe('deal flow', () => {
     expect(v3).toMatchObject({ version: 3, holderName: 'Helena Prado' })
     const helena = await prisma.user.findUniqueOrThrow({ where: { email: 'helena@col.test' } })
     expect((await walletOf(helena.id)).items.map((i) => i.version)).toEqual([3])
+    // Helena holds it now: the artwork moved to her member too
+    const helenaOwned = await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId }, include: { member: true } })
+    expect(helenaOwned.member).toMatchObject({ kind: 'COLLECTOR', userId: helena.id })
+
+    // ── the collector resells on the platform (secondary mandate) and registers an own artwork ──
+    const { sellOwnArtwork, registerOwnArtwork, artworkServices, orderArtworkService } = await import('@/lib/collectors/server')
+    await expect(sellOwnArtwork(buyer.id, s.b.artworkId, { listPriceCents: 5_500_000n, reservePriceCents: 5_000_000n, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false })).rejects.toMatchObject({ status: 404 })
+    await sellOwnArtwork(helena.id, s.b.artworkId, { listPriceCents: 5_500_000n, reservePriceCents: 5_000_000n, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false })
+    expect(await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).toMatchObject({ status: 'LISTED', market: 'SECONDARY', listPriceCents: 5_500_000n })
+    const own = await registerOwnArtwork(helena.id, { title: 'Sem título (herança)', artistName: 'Joana Teixeira', acquisitionKind: 'INHERITED', acquisitionYear: 2015, acquisitionFrom: 'Família', acquisitionPriceCents: null })
+    const ownRow = await prisma.artwork.findUniqueOrThrow({ where: { id: own.id }, include: { artist: true, member: true } })
+    expect(ownRow).toMatchObject({ status: 'DRAFT', acquisitionKind: 'INHERITED', acquisitionYear: 2015, member: { userId: helena.id } })
+    expect(ownRow.artist.name).toBe('Joana Teixeira')
+    await expect(registerOwnArtwork(helena.id, { artistName: '', acquisitionKind: 'BOUGHT_OUTSIDE' })).rejects.toMatchObject({ code: 'NO_ARTIST' })
+    // services for an artwork the person holds
+    expect((await artworkServices()).map((x) => x.code)).toContain('APPRAISAL_SIGNED')
+    expect(await orderArtworkService(helena.id, s.b.artworkId, 'SHIPPING')).toEqual({ quote: true })
+    await expect(orderArtworkService(buyer.id, s.b.artworkId, 'APPRAISAL_SIGNED')).rejects.toMatchObject({ code: 'NOT_OWNER' })
+    await expect(orderArtworkService(helena.id, s.b.artworkId, 'TAG_KIT')).rejects.toMatchObject({ code: 'BAD_SERVICE' })
     expect((await walletOf(buyer.id)).items).toEqual([])
     // the sealed price never shows in the public certificate; the royalty reached the artist's ledger
     const pub3 = await publicCertificate(publicId)

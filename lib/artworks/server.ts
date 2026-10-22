@@ -50,13 +50,21 @@ export async function listArtworks(scope: Scope, opt: { filter?: string; take?: 
 }
 
 /** Creates a DRAFT for the session's member (the gallery staff creates for an artist of the gallery). */
-export async function createDraft(scope: Scope, opt: { artistId?: number | null; title?: string } = {}) {
+export async function createDraft(scope: Scope, opt: { artistId?: number | null; artistName?: string | null; title?: string } = {}) {
   const memberId = memberOfScope(scope)
   if (!memberId) throw new ArtworkError('NO_MEMBER', 'Só um membro (artista, galeria ou consultor) cadastra obras.', 403)
   const member = await prisma.member.findUnique({ where: { id: memberId }, include: { artist: true } })
   if (!member) throw new ArtworkError('NO_MEMBER', 'Membro não encontrado.', 403)
   let artistId = opt.artistId ?? member.artist?.id ?? null
-  if (artistId && !member.artist) {
+  if (member.kind === 'COLLECTOR') {
+    // A collector registers a work by any artist: an existing one by id, or a named one (born unverified in their tenant).
+    if (artistId && !(await prisma.artist.findUnique({ where: { id: artistId }, select: { id: true } }))) throw new ArtworkError('ARTIST_NOT_FOUND', 'Artista não encontrado.', 404)
+    const name = opt.artistName?.replace(/\s+/g, ' ').trim()
+    if (!artistId && name) {
+      const found = await prisma.artist.findFirst({ where: { name: { equals: name, mode: 'insensitive' } }, select: { id: true }, orderBy: { id: 'asc' } })
+      artistId = found?.id ?? (await prisma.artist.create({ data: { tenantId: member.tenantId, name, slug: `artista-${member.tenantId}-${Date.now().toString(36)}` } })).id
+    }
+  } else if (artistId && !member.artist) {
     const artist = await prisma.artist.findFirst({ where: { id: artistId, OR: [{ tenantId: member.tenantId }, { member: { tenantId: member.tenantId } }] } })
     if (!artist) throw new ArtworkError('ARTIST_NOT_REACHABLE', 'Artista fora da sua galeria.', 404)
   }

@@ -1,6 +1,6 @@
 // The PATCH body of the wizard (autosave): validated with zod, cm → mm. Pure.
 import { z } from 'zod'
-import { ARTWORK_CATEGORIES, CONDITION_GRADES, CONDITION_REGIONS, CONDITION_STATES, HISTORY_KINDS, SALE_MODES } from './domain'
+import { ACQUISITION_KINDS, ARTWORK_CATEGORIES, CONDITION_GRADES, CONDITION_REGIONS, CONDITION_STATES, HISTORY_KINDS, SALE_MODES } from './domain'
 
 const cmToMm = (v: unknown) => {
   if (v === '' || v === null || v === undefined) return null
@@ -31,6 +31,11 @@ export const artworkPatchSchema = z.object({
   signatureLocation: text(120),
   series: text(120),
   category: z.enum(ARTWORK_CATEGORIES).optional(),
+  acquisitionKind: z.enum(ACQUISITION_KINDS).nullable().optional(),
+  acquisitionYear: intOrNull,
+  acquisitionFrom: text(160),
+  acquisitionNote: text(500),
+  acquisitionPriceCents: z.union([z.string().regex(/^\d{1,15}$/), z.number().int().nonnegative()]).transform((v) => BigInt(v)).nullable().optional(),
   conditionGrade: z.enum(CONDITION_GRADES).nullable().optional(),
   conditionRegions: z.array(z.object({ region: z.enum(CONDITION_REGIONS), note: z.string().trim().max(300).default(''), state: z.enum(CONDITION_STATES) })).max(5).optional(),
   historyItems: z.array(z.object({ kind: z.enum(HISTORY_KINDS), description: z.string().trim().min(1).max(300), occurredOn: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/) })).max(50).optional(),

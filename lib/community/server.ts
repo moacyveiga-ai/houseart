@@ -40,7 +40,7 @@ async function authorsOf(userIds: number[], viewer: number | null): Promise<Map<
   const fset = new Set(follows.map((f) => f.targetId))
   return new Map(users.map((u) => {
     const name = u.member?.displayName ?? u.name
-    const sub = u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : 'Consultor') + (u.member.city ? ` · ${u.member.city}` : '') : 'Colecionador'
+    const sub = u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : u.member.kind === 'COLLECTOR' ? 'Colecionador' : 'Consultor') + (u.member.city ? ` · ${u.member.city}` : '') : 'Colecionador'
     return [u.id, { name, initials: initials(name), sub, memberId: u.member?.id ?? null, memberSlug: u.member?.slug ?? null, following: u.member ? fset.has(u.member.id) : false }]
   }))
 }

@@ -24,7 +24,7 @@ export async function counterpartOfArtwork(artworkId: number): Promise<{ userId:
 
 async function subOf(userId: number): Promise<string> {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { member: { select: { kind: true, displayName: true, city: true } } } })
-  if (u?.member) return u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : 'Consultor'
+  if (u?.member) return u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : u.member.kind === 'COLLECTOR' ? 'Colecionador' : 'Consultor'
   return 'Colecionador'
 }
 
@@ -68,7 +68,7 @@ export async function listConversations(me: number, q?: string | null): Promise<
     const name = u.member?.displayName ?? u.name
     const row: ConversationRow = {
       id: r.id, artworkId: r.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null,
-      other: { id: u.id, name, initials: initials(name), sub: u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : 'Consultor') : 'Colecionador' },
+      other: { id: u.id, name, initials: initials(name), sub: u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : u.member.kind === 'COLLECTOR' ? 'Colecionador' : 'Consultor') : 'Colecionador' },
       preview: r.lastPreview ?? '', when: r.lastMessageAt ? whenLabel(r.lastMessageAt) : '', unread: r.participants[0]?.unread ?? 0,
     }
     if (q && !`${row.other.name} ${row.artworkTitle ?? ''}`.toLowerCase().includes(q.toLowerCase())) continue

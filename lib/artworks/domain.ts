@@ -36,6 +36,15 @@ export const CONDITION_REGION_LABELS: Record<(typeof CONDITION_REGIONS)[number],
 export const CONDITION_STATES = ['INTACT', 'ATTENTION', 'DAMAGED'] as const
 export const CONDITION_STATE_LABELS: Record<(typeof CONDITION_STATES)[number], string> = { INTACT: 'Íntegra', ATTENTION: 'Atenção', DAMAGED: 'Danificada' }
 
+/** How a collector came to own the artwork they register (App Colecionador › Cadastrar obra). */
+export const ACQUISITION_KINDS = ['BOUGHT_OUTSIDE', 'FROM_ARTIST', 'INHERITED'] as const
+export type AcquisitionKind = (typeof ACQUISITION_KINDS)[number]
+export const ACQUISITION_KIND_CARDS: { key: AcquisitionKind; name: string; description: string; icon: string }[] = [
+  { key: 'BOUGHT_OUTSIDE', name: 'Comprei fora da HouseArt', description: 'Em galeria, feira ou direto de outra pessoa', icon: 'shopping_bag' },
+  { key: 'FROM_ARTIST', name: 'Recebi do próprio artista', description: 'Compra no ateliê, presente ou troca', icon: 'brush' },
+  { key: 'INHERITED', name: 'Herdei ou ganhei', description: 'Herança, doação ou presente de família', icon: 'family_restroom' },
+]
+
 export const HISTORY_KINDS = ['EXHIBITION', 'PUBLICATION', 'AWARD', 'RESTORATION', 'LOAN'] as const
 export const HISTORY_KIND_LABELS: Record<(typeof HISTORY_KINDS)[number], string> = {
   EXHIBITION: 'Exposição', PUBLICATION: 'Publicação', AWARD: 'Prêmio', RESTORATION: 'Restauro', LOAN: 'Empréstimo',

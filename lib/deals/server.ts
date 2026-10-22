@@ -9,6 +9,7 @@ import { audit } from '@/lib/audit'
 import { flagOn } from '@/lib/flags'
 import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
+import { moveArtworkToHolder } from '@/lib/tenant/member-server'
 import { ensureCollectorUser } from '@/lib/accounts/collector-server'
 import { computeSplit, SPLIT_PARTY_LABELS, type SplitLine } from '@/lib/commission/split-core'
 import { royaltyFor } from '@/lib/resale-royalty/core'
@@ -75,7 +76,10 @@ async function lastSalePrice(artworkId: number): Promise<bigint> {
   const t = await prisma.ownershipTransfer.findFirst({ where: { artworkId, status: 'COMPLETED', priceCents: { not: null } }, orderBy: { completedAt: 'desc' } })
   if (t?.priceCents) return t.priceCents
   const d = await prisma.deal.findFirst({ where: { artworkId, phase: 'COMPLETED' }, orderBy: { completedAt: 'desc' } })
-  return d?.amountCents ?? 0n
+  if (d?.amountCents) return d.amountCents
+  // A collector-registered artwork: what they declared paying (nothing declared = the whole price appreciated).
+  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { acquisitionPriceCents: true } })
+  return a?.acquisitionPriceCents ?? 0n
 }
 
 // ── reads ────────────────────────────────────────────────────────────────
@@ -206,8 +210,8 @@ async function completeTransfer(dealId: number) {
       await tx.deal.update({ where: { id: d.id }, data: { phase: 'COMPLETED', completedAt: new Date() } })
       await tx.dealPhaseEvent.create({ data: { dealId: d.id, phase: 'COMPLETED', title: 'Escritura emitida', description: 'Novo titular registrado e valores liberados', actorKind: 'SYSTEM' } })
       await tx.offer.updateMany({ where: { id: d.offerId }, data: { status: 'CONVERTED' } })
-      await tx.artwork.update({ where: { id: d.artworkId }, data: { status: 'SOLD', market: 'SECONDARY' } })
-      await tx.mandate.updateMany({ where: { artworkId: d.artworkId, status: 'ACTIVE' }, data: { status: 'CLOSED' } })
+      // The artwork now belongs to the buyer (collector member born here when needed): held, not for sale, secondary from now on.
+      await moveArtworkToHolder(tx, d.artworkId, buyer.id)
     })
     await recordEvent(d.artworkId, 'TRANSFERRED', { dealCode: d.code, version: prev.version + 1 }, buyer.id)
     await notify({ userId: buyer.id, email: buyer.email, kind: 'certificate.transferred', title: 'Escritura emitida em seu nome', body: 'A obra entrou na sua carteira.', href: '/wallet', emailSubject: 'Escritura emitida em seu nome' })

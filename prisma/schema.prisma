@@ -160,7 +160,7 @@ model Member {
   user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   tenantId    Int
   tenant      Tenant    @relation(fields: [tenantId], references: [id])
-  kind        String // ARTIST | GALLERY_STAFF | ADVISOR
+  kind        String // ARTIST | GALLERY_STAFF | ADVISOR | COLLECTOR (the collector who registers or resells own artworks)
   displayName String
   slug        String    @unique
   city        String?
@@ -242,6 +242,12 @@ model Artwork {
   saleMode          String? // FIXED | FIXED_WITH_OFFERS | ON_REQUEST
   listPriceCents    BigInt?
   priceSealed       Boolean                  @default(false)
+  // Collector-registered artwork (decision 2026-10-22): where it came from. ACQUISITION_KINDS in lib/artworks/domain.
+  acquisitionKind       String?
+  acquisitionYear       Int?
+  acquisitionFrom       String?
+  acquisitionNote       String?
+  acquisitionPriceCents BigInt?
   publicId          String?                  @unique
   seal              String                   @default("NONE") // NONE | YELLOW | GREEN
   sealIssuedAt      DateTime?

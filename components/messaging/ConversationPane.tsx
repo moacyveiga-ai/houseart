@@ -40,7 +40,7 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
     if (!r || !r.ok) { if (after === 0) setError(r?.status === 404 ? 'Conversa não encontrada.' : 'Não foi possível abrir a conversa.'); return }
     const j = (await r.json()) as Loaded
     const cur = dataRef.current
-    if (!cur) { lastId.current = lastIdOf(j.messages); setData(j); changed.current(j.header, null); return }
+    if (!cur) { lastId.current = lastIdOf(j.messages); setData(j); return } // opening a thread is not news for the list
     const messages = mergeMessages(cur.messages, j.messages)
     lastId.current = lastIdOf(messages)
     setData({ header: j.header, messages })

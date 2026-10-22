@@ -30,15 +30,24 @@ async function subOf(userId: number): Promise<string> {
 
 /** Opens (or finds) the conversation between `me` and the other side of the artwork. */
 export async function openConversation(me: number, artworkId: number | null, otherUserId?: number): Promise<number> {
-  let other = otherUserId ?? null
-  if (artworkId != null && other == null) { const c = await counterpartOfArtwork(artworkId); other = c?.userId ?? null }
-  if (other == null) throw new ArtworkError('NO_COUNTERPART', 'Esta obra ainda não tem quem responda por ela.', 404)
+  let other: number | null = null
+  if (artworkId != null) { const c = await counterpartOfArtwork(artworkId); other = c?.userId ?? null }
+  else if (otherUserId != null) {
+    // A direct conversation only with someone who answers for artworks (a member) — never collector ↔ collector by id.
+    const u = await prisma.user.findFirst({ where: { id: otherUserId, active: true, member: { status: 'ACTIVE' } }, select: { id: true } })
+    other = u?.id ?? null
+  }
+  if (other == null) throw new ArtworkError('NO_COUNTERPART', artworkId != null ? 'Esta obra ainda não tem quem responda por ela.' : 'Pessoa não encontrada.', 404)
   if (other === me) throw new ArtworkError('SELF', 'Você não pode conversar com você mesmo.', 400)
   const pair = pairOf(me, other)
-  const found = await prisma.conversation.findFirst({ where: { ...pair, artworkId } , select: { id: true } })
-  if (found) return found.id
-  const c = await prisma.conversation.create({ data: { ...pair, artworkId, participants: { create: [{ userId: me }, { userId: other }] } } })
-  return c.id
+  return prisma.$transaction(async (tx) => {
+    // One row per pair (+ artwork): the unique index does not cover artworkId NULL, so the pair is serialized here.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`conv:${pair.userAId}:${pair.userBId}:${artworkId ?? 0}`}))`
+    const found = await tx.conversation.findFirst({ where: { ...pair, artworkId }, select: { id: true } })
+    if (found) return found.id
+    const c = await tx.conversation.create({ data: { ...pair, artworkId, participants: { create: [{ userId: me }, { userId: other }] } } })
+    return c.id
+  })
 }
 
 export async function listConversations(me: number, q?: string | null): Promise<ConversationRow[]> {
@@ -101,10 +110,10 @@ async function append(conversationId: number, sender: number | null, kind: Messa
     await tx.conversationParticipant.updateMany({ where: { conversationId, userId: sender == null ? undefined : { not: sender } }, data: { unread: { increment: 1 } } })
     return row
   })
-  const recipients = sender == null ? [c.userAId, c.userBId] : [otherOf(c, sender)]
-  const sName = sender ? (await prisma.user.findUnique({ where: { id: sender }, select: { name: true, member: { select: { displayName: true } } } })) : null
-  for (const r of recipients) {
-    await notify({ userId: r, kind: 'message.received', title: sender ? `Mensagem de ${sName?.member?.displayName ?? sName?.name ?? 'alguém'}` : 'Atualização da conversa', body: body.slice(0, 120), href: `/messages/${conversationId}` })
+  // A system line only updates the thread: the offer flow already sends its own aviso to each side.
+  if (sender != null) {
+    const sName = await prisma.user.findUnique({ where: { id: sender }, select: { name: true, member: { select: { displayName: true } } } })
+    await notify({ userId: otherOf(c, sender), kind: 'message.received', title: `Mensagem de ${sName?.member?.displayName ?? sName?.name ?? 'alguém'}`, body: body.slice(0, 120), href: `/messages/${conversationId}` })
   }
   return { id: m.id, mine: false, kind, body, at: m.createdAt.toISOString(), offerId }
 }

@@ -35,7 +35,8 @@ export function whenShort(iso: string, now = new Date()): string {
   const diff = now.getTime() - at.getTime()
   if (diff < 60_000) return 'agora'
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min`
-  if (diff < 86_400_000 && at.getDate() === now.getDate()) return `${Math.floor(diff / 3_600_000)} h`
+  const day = (d: Date) => d.toLocaleDateString('pt-BR', { timeZone: 'America/Bahia' })
+  if (diff < 86_400_000 && day(at) === day(now)) return `${Math.floor(diff / 3_600_000)} h`
   if (diff < 2 * 86_400_000) return 'ontem'
   return at.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Bahia' })
 }

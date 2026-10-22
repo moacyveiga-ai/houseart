@@ -14,11 +14,12 @@ export const metadata = { title: 'Minhas obras — HouseArt' }
 /** "Acervo" of the gallery: the whole inventory loaded once, chips and search applied here (listArtworks has no q). */
 async function GalleryInventory({ scope, chip, q }: { scope: Parameters<typeof listArtworks>[0]; chip: string; q: string }) {
   const { items } = await listArtworks(scope, { filter: 'all' })
+  const listings = await Promise.all(items.map((a) => (a.status === 'LISTED' ? listingOf(scope, a.id).catch(() => null) : Promise.resolve(null))))
   const all: InventoryItem[] = []
-  for (const a of items) {
-    const listing = a.status === 'LISTED' ? await listingOf(scope, a.id) : null
+  items.forEach((a, i) => {
+    const listing = listings[i]
     all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused } : null })
-  }
+  })
   return <InventoryList title="Acervo" all={all} items={filterInventory(all, chip, q)} chip={chip} q={q} counts={chipCounts(all)} />
 }
 

@@ -31,6 +31,7 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
   const [blocked, setBlocked] = useState(false)
   const [sending, setSending] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const liking = useRef(new Set<number>())
 
   // The parent remounts the sheet per item (`key`), so state starts clean; only the load runs here.
   useEffect(() => {
@@ -60,8 +61,11 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
   }
 
   async function like(c: CommentRow) {
+    if (liking.current.has(c.id)) return
+    liking.current.add(c.id)
     setRows((rs) => rs?.map((r) => (r.id === c.id ? { ...r, liked: !r.liked, likes: r.likes + (r.liked ? -1 : 1) } : r)) ?? rs)
     const res = await fetch('/api/community/reactions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ target: 'COMMENT', targetId: c.id, kind: 'LIKE' }) })
+    liking.current.delete(c.id)
     if (!res.ok) { setRows((rs) => rs?.map((r) => (r.id === c.id ? { ...r, liked: c.liked, likes: c.likes } : r)) ?? rs); onToast('Não foi possível curtir.') }
   }
 

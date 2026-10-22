@@ -6,6 +6,9 @@ describe('messaging core', () => {
     for (const t of ['me liga 71 99999-1234', 'escreve joana@gmail.com', 'veja https://site.com', 'www.site.com', 'wa.me/5571', 'pix: 123'])
       expect(hasContactLeak(t), t).toBe(true)
     expect(hasContactLeak('A obra mede 120 x 90 cm e custa R$ 12.500')).toBe(false)
+    expect(hasContactLeak('Aceito R$ 1.200.000')).toBe(false)
+    expect(hasContactLeak('Fica em 1.500.000,00?')).toBe(false)
+    expect(hasContactLeak('zap 71.99999.1234')).toBe(true)
     expect(checkMessage('me liga 71 99999-1234')).toMatchObject({ ok: false, code: 'CONTACT', error: CONTACT_GUARD })
   })
   it('trims, refuses empty and too long', () => {

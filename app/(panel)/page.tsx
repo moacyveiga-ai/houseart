@@ -19,12 +19,10 @@ export const metadata = { title: 'Início — HouseArt' }
 /** "Galeria · painel do dia": the panel of the gallery (and of the advisor, the same desk). */
 async function GalleryDay({ scope, userName, now }: { scope: Parameters<typeof dayPanel>[0]; userName: string; now: Date }) {
   const [data, listed] = await Promise.all([dayPanel(scope, now), listArtworks(scope, { filter: 'listed' })])
+  const ls = listed.items.filter((a) => a.status === 'LISTED')
+  const stats = await Promise.all(ls.map((a) => listingOf(scope, a.id, now).catch(() => null)))
   const top: TopViewed[] = []
-  for (const a of listed.items) {
-    if (a.status !== 'LISTED') continue
-    const l = await listingOf(scope, a.id, now)
-    if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers })
-  }
+  ls.forEach((a, i) => { const l = stats[i]; if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers }) })
   top.sort((x, y) => y.views7d - x.views7d)
   return <DayPanel data={data} who={{ initials: initialsOf(userName), name: userName, dateLabel: dateLabel(now) }} top={top.slice(0, 3)} />
 }

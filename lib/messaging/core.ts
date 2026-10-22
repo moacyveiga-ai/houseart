@@ -12,8 +12,11 @@ export const CONTACT_GUARD = 'Para manter a garantia, contatos e pagamentos só 
 /** The prototype's filter, verbatim: phone, e-mail, link, WhatsApp or Pix. */
 const CONTACT_LEAK = /(\+?\d[\d\s().-]{7,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(https?:\/\/|www\.|wa\.me|pix\s*:)/i
 
+/** Money and thousands-grouped numbers ("R$ 1.200.000,00", "1.500.000") are not contacts. */
+const MONEY = /(?<![\d.])(?:R\$\s?)?\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?(?![\d.])/g
+
 export function hasContactLeak(text: string): boolean {
-  return CONTACT_LEAK.test(text)
+  return CONTACT_LEAK.test(text.replace(MONEY, ' '))
 }
 
 export type MessageCheck = { ok: true; body: string } | { ok: false; error: string; code: 'EMPTY' | 'TOO_LONG' | 'CONTACT' }

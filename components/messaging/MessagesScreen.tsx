@@ -26,7 +26,11 @@ export function MessagesScreen({ initialRows, initialConversationId, role }: { i
   }, [])
 
   // Search (debounced) and a slow poll of the list while visible.
-  useEffect(() => { const t = window.setTimeout(() => { refresh(q).catch(() => {}) }, q ? 250 : 0); return () => window.clearTimeout(t) }, [q, refresh])
+  const mounted = useRef(false)
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; if (!q) return } // the server already rendered the empty-query list
+    const t = window.setTimeout(() => { refresh(q).catch(() => {}) }, q ? 250 : 0); return () => window.clearTimeout(t)
+  }, [q, refresh])
   useEffect(() => {
     const tick = () => { if (document.visibilityState === 'visible') refresh(qRef.current).catch(() => {}) }
     const t = window.setInterval(tick, LIST_POLL_MS)

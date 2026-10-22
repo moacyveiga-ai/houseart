@@ -28,10 +28,20 @@ export async function subscribe(publicKey: string): Promise<{ ok: true } | { ok:
   const perm = await Notification.requestPermission()
   if (perm !== 'granted') return { ok: false, reason: 'Permita as notificações no navegador para ligar.' }
   const reg = await registration()
-  const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyBytes(publicKey) as BufferSource }))
+  const key = vapidKeyBytes(publicKey)
+  let sub = await reg.pushManager.getSubscription()
+  // A subscription bound to another VAPID key (rotation) is useless to the server: start over.
+  if (sub && !sameKey(sub.options.applicationServerKey, key)) { await sub.unsubscribe().catch(() => undefined); sub = null }
+  sub = sub ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key as BufferSource }))
   const res = await fetch('/api/notifications/push', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(sub.toJSON()) })
   if (!res.ok) { await sub.unsubscribe().catch(() => undefined); return { ok: false, reason: 'Não foi possível guardar a inscrição.' } }
   return { ok: true }
+}
+
+function sameKey(a: ArrayBuffer | null | undefined, b: Uint8Array): boolean {
+  if (!a) return true // the browser does not report it: keep what exists
+  const x = new Uint8Array(a)
+  return x.length === b.length && x.every((v, i) => v === b[i])
 }
 
 export async function unsubscribe(): Promise<void> {

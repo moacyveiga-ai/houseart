@@ -61,8 +61,8 @@ export function CommunityScreen({ items: initial, tab, me, artworks, compose }: 
     },
     onGoing: async (item) => {
       patch(item.key, (i) => ({ iAmGoing: !i.iAmGoing, going: (i.going ?? 0) + (i.iAmGoing ? -1 : 1) }))
-      // The domain only takes RSVP on target EVENT (brief: EVENT posts and the agenda both go as EVENT).
-      const r = await react(item, 'EVENT', item.id, 'RSVP')
+      // An EVENT post is a POST target; only the agenda is an EVENT target.
+      const r = await react(item, item.kind === 'AGENDA' ? 'EVENT' : 'POST', item.id, 'RSVP')
       if (r) { patch(item.key, { iAmGoing: r.on, going: r.count }); if (r.on) setToast('Adicionado à sua agenda') } else patch(item.key, { iAmGoing: item.iAmGoing, going: item.going })
     },
     onVote: async (item, option) => {

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
 import { whenLabel } from '@/lib/messaging/core'
+import { publicUrlHosts } from '@/lib/public-url'
 import { checkComment, checkPost, dayMonthOf, pollResult, reactionAllowed, type CommentTarget, type ReactionKind, type ReactionTarget } from './domain'
 
 export interface FeedAuthor { name: string; initials: string; sub: string; memberId: number | null; memberSlug: string | null; following: boolean }
@@ -72,7 +73,7 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
 
   const [posts, news, agenda] = await Promise.all([
     tab === 'NEWS' ? [] : prisma.post.findMany({ where: { hiddenAt: null, ...(savedKeys ? { id: { in: savedIds('POST') } } : { createdAt: { gte: since } }), ...(tab === 'EVENTS' ? { kind: 'EVENT' } : {}) }, orderBy: { createdAt: 'desc' }, take }),
-    tab === 'EVENTS' ? [] : prisma.newsArticle.findMany({ where: { publishedAt: { not: null }, ...(savedKeys ? { id: { in: savedIds('NEWS') } } : {}) }, orderBy: { publishedAt: 'desc' }, take: tab === 'NEWS' ? take : 10 }),
+    tab === 'EVENTS' ? [] : prisma.newsArticle.findMany({ where: { publishedAt: { not: null, lte: new Date() }, ...(savedKeys ? { id: { in: savedIds('NEWS') } } : {}) }, orderBy: { publishedAt: 'desc' }, take: tab === 'NEWS' ? take : 10 }),
     tab === 'NEWS' ? [] : prisma.agendaEvent.findMany({ where: savedKeys ? { id: { in: savedIds('EVENT') } } : { startsOn: { gte: new Date().toISOString().slice(0, 10) } }, orderBy: { startsOn: 'asc' }, take: tab === 'EVENTS' ? take : 6 }),
   ])
   const authors = await authorsOf(posts.map((p) => p.authorUserId), viewer)
@@ -115,7 +116,8 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
   })
   // Order: followed authors' posts first, then by recency; agenda keeps its own order at its slot.
   const score = (i: FeedItem) => (i.author.following ? 1 : 0)
-  const dated = items.filter((i) => i.kind !== 'AGENDA').sort((x, y) => score(y) - score(x))
+  const stamp = new Map<string, number>([...posts.map((p) => [`P${p.id}`, p.createdAt.getTime()] as const), ...news.map((n) => [`N${n.id}`, n.publishedAt?.getTime() ?? 0] as const)])
+  const dated = items.filter((i) => i.kind !== 'AGENDA').sort((x, y) => score(y) - score(x) || (stamp.get(y.key) ?? 0) - (stamp.get(x.key) ?? 0))
   const ag = items.filter((i) => i.kind === 'AGENDA')
   if (tab === 'EVENTS' || tab === 'SAVED' || tab === 'NEWS') return [...dated, ...ag]
   const out: FeedItem[] = []
@@ -123,11 +125,20 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
   return [...out, ...ag]
 }
 
+/** A post image is only one the house serves: the public media route or the Blob store. */
+function isOwnImageUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return publicUrlHosts().includes(u.host) || /\.public\.blob\.vercel-storage\.com$/.test(u.host)
+  } catch { return false }
+}
+
 export async function createPost(userId: number, raw: Record<string, unknown>): Promise<{ id: number }> {
   const chk = checkPost(raw)
   if (!chk.ok) throw new ArtworkError('BAD_POST', chk.error, 422)
   const v = chk.value
   const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { memberId: true, tenantId: true } })
+  if (v.imageUrl && !isOwnImageUrl(v.imageUrl)) throw new ArtworkError('BAD_IMAGE', 'A foto do post precisa ser uma imagem enviada à HouseArt.', 422)
   if (v.artworkId) {
     const a = await prisma.artwork.findUnique({ where: { id: v.artworkId }, select: { memberId: true, status: true, publicId: true } })
     if (!a || !a.publicId || !['LISTED', 'AUTHENTICATED', 'SOLD'].includes(a.status)) throw new ArtworkError('ARTWORK', 'Só obras autenticadas entram num post.', 422)
@@ -157,12 +168,20 @@ export async function toggleReaction(userId: number, target: string, targetId: n
     const a = await prisma.artwork.findFirst({ where: { id: targetId, publicId: { not: null }, seal: 'GREEN' }, select: { id: true } })
     if (!a) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
   }
-  if (target === 'POST' && kind === 'RSVP') {
-    const p = await prisma.post.findFirst({ where: { id: targetId, hiddenAt: null }, select: { kind: true } })
-    if (p?.kind !== 'EVENT') throw new ArtworkError('BAD_REACTION', '"Eu vou" só vale para um evento.', 422)
+  let postAuthor: number | null = null
+  if (target === 'POST') {
+    const p = await prisma.post.findFirst({ where: { id: targetId, hiddenAt: null }, select: { kind: true, authorUserId: true } })
+    if (!p) throw new ArtworkError('NOT_FOUND', 'Post não encontrado.', 404)
+    if (kind === 'RSVP' && p.kind !== 'EVENT') throw new ArtworkError('BAD_REACTION', '"Eu vou" só vale para um evento.', 422)
+    postAuthor = p.authorUserId
   }
+  if (target === 'NEWS' && !(await prisma.newsArticle.findFirst({ where: { id: targetId, publishedAt: { not: null, lte: new Date() } }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Notícia não encontrada.', 404)
+  if (target === 'EVENT' && !(await prisma.agendaEvent.findUnique({ where: { id: targetId }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Evento não encontrado.', 404)
+  if (target === 'COMMENT' && !(await prisma.postComment.findFirst({ where: { id: targetId, hiddenAt: null }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Comentário não encontrado.', 404)
   const col = kind === 'LIKE' ? 'likeCount' : kind === 'SAVE' ? 'saveCount' : kind === 'RSVP' ? 'rsvpCount' : null
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
+    // Two taps in flight on the same reaction wait for each other (the unique index would 500 the second).
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`react:${userId}:${target}:${targetId}:${kind}`}))`
     const existing = await tx.reaction.findUnique({ where: { userId_targetKind_targetId_kind: { userId, targetKind: target, targetId, kind } } })
     let on: boolean
     if (existing) { await tx.reaction.delete({ where: { id: existing.id } }); on = false } else { await tx.reaction.create({ data: { userId, targetKind: target, targetId, kind: kind as ReactionKind } }); on = true }
@@ -170,12 +189,10 @@ export async function toggleReaction(userId: number, target: string, targetId: n
     if (target === 'POST' && col) await tx.post.updateMany({ where: { id: targetId }, data: { [col]: { increment: delta } } })
     if (target === 'COMMENT') await tx.postComment.updateMany({ where: { id: targetId }, data: { likeCount: { increment: delta } } })
     const count = await tx.reaction.count({ where: { targetKind: target, targetId, kind } })
-    if (on && target === 'POST' && kind === 'LIKE') {
-      const p = await tx.post.findUnique({ where: { id: targetId }, select: { authorUserId: true } })
-      if (p && p.authorUserId !== userId) await notify({ userId: p.authorUserId, kind: 'community.liked', title: 'Curtiram seu post', href: '/community' })
-    }
     return { on, count }
   })
+  if (result.on && target === 'POST' && kind === 'LIKE' && postAuthor != null && postAuthor !== userId) await notify({ userId: postAuthor, kind: 'community.liked', title: 'Curtiram seu post', href: '/community' })
+  return result
 }
 
 export interface CommentRow { id: number; author: FeedAuthor; body: string; when: string; likes: number; liked: boolean; mine: boolean }

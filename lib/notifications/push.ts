@@ -36,7 +36,8 @@ export async function pushToUser(userId: number, payload: { title: string; body?
       await prisma.pushSubscription.update({ where: { id: s.id }, data: { lastUsedAt: new Date() } })
     } catch (e) {
       const status = (e as { statusCode?: number }).statusCode
-      if (status === 404 || status === 410) await prisma.pushSubscription.delete({ where: { id: s.id } }).catch(() => undefined)
+      // gone (404/410) or rejected for this VAPID key (400/401/403): the row never works again
+      if (status === 400 || status === 401 || status === 403 || status === 404 || status === 410) await prisma.pushSubscription.delete({ where: { id: s.id } }).catch(() => undefined)
       else console.warn('[push] failed', status ?? (e as Error).name)
     }
   }

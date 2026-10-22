@@ -31,6 +31,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
     ] },
     { name: 'Coleção', items: [
       { kind: 'link', icon: 'account_balance_wallet', name: 'Carteira de escrituras', sub: 'As obras no seu nome', href: '/wallet' },
+      { kind: 'link', icon: 'add_photo_alternate', name: 'Cadastrar obra', sub: 'Uma obra que já é sua, para certificar e vender', href: '/wallet/register' },
       { kind: 'link', icon: 'favorite', name: 'Favoritos e curtidos', sub: `${plural(favorites.filter((f) => f.saved).length, 'favorito', 'favoritos')} · ${plural(favorites.filter((f) => f.liked).length, 'curtida', 'curtidas')}`, href: '/favorites' },
       { kind: 'link', icon: 'local_shipping', name: 'Compras', sub: 'Ofertas, pagamentos e entregas', href: '/purchases' },
     ] },

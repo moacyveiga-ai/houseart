@@ -24,8 +24,8 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
     'Explorar · feed': 'app/(panel)/explore/page.tsx', 'Explorar · descobrir': 'app/(panel)/explore/page.tsx', 'Página da obra': 'app/e/artwork/[publicId]/page.tsx', 'Fazer oferta': 'app/e/artwork/[publicId]/offer/page.tsx',
     'Comprar direto': 'app/e/artwork/[publicId]/buy/page.tsx', 'Contraproposta recebida': 'app/e/offer/[code]/page.tsx', Comunidade: 'app/(panel)/community/page.tsx', Comentários: 'components/community/CommentsSheet.tsx',
     Mensagens: 'app/(panel)/messages/page.tsx', 'Conversa com galeria': 'app/(panel)/messages/[id]/page.tsx', 'Minha coleção': 'app/(panel)/wallet/page.tsx', 'Favoritos e curtidos': 'app/(panel)/favorites/page.tsx',
-    'Vendas · oferta recebida': null, 'Vender uma obra': null, 'Carteira e cartões': 'app/(panel)/wallet/cards/page.tsx', 'Adicionar cartão': 'app/(panel)/wallet/cards/page.tsx',
-    'Cadastrar Pix para receber': 'app/(panel)/sales/payout/page.tsx', 'Cadastrar obra': null, 'Serviços para uma obra': null, 'Perfil · minha conta': 'app/(panel)/account/page.tsx',
+    'Vendas · oferta recebida': 'app/(panel)/sales/page.tsx', 'Vender uma obra': 'components/collector/SellSheet.tsx', 'Carteira e cartões': 'app/(panel)/wallet/cards/page.tsx', 'Adicionar cartão': 'app/(panel)/wallet/cards/page.tsx',
+    'Cadastrar Pix para receber': 'app/(panel)/sales/payout/page.tsx', 'Cadastrar obra': 'app/(panel)/wallet/register/page.tsx', 'Serviços para uma obra': 'components/collector/ServicesSheet.tsx', 'Perfil · minha conta': 'app/(panel)/account/page.tsx',
     'Instagram · conectar e postar': null, 'Compartilhar obra': 'components/public/ShareSheet.tsx', 'Ler notícia': 'app/e/news/[slug]/page.tsx', 'Guia de educação': 'app/e/guide/page.tsx', Busca: 'app/(panel)/search/page.tsx',
   },
   'HouseArt App Galeria': {

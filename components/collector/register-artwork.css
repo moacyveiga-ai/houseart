@@ -1,0 +1,52 @@
+/* Cadastrar obra do colecionador (handoff "HouseArt App Colecionador" › Cadastrar obra). Prefix ha-reg. */
+.ha-reg { display: flex; flex-direction: column; gap: var(--ha-space-3); max-width: 560px; }
+.ha-reg__bar { display: flex; align-items: center; gap: var(--ha-space-2); margin-left: -10px; height: 44px; }
+.ha-reg__x { width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: var(--ha-radius-md); }
+.ha-reg__x:hover { background: var(--ha-surface); }
+.ha-reg__x:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-reg__step { flex: 1; font-size: 13px; color: var(--ha-fg-muted); }
+.ha-reg__segs { display: flex; gap: var(--ha-space-1); }
+.ha-reg__seg { flex: 1; height: 3px; border-radius: var(--ha-radius-full); background: var(--ha-paper-200); }
+.ha-reg__seg--on { background: var(--ha-ink-900); }
+.ha-reg__h { font-family: var(--ha-font-display); font-size: 26px; line-height: 32px; font-weight: 400; color: var(--ha-fg); margin: 0; }
+.ha-reg__lead { font-size: 13px; line-height: 19px; color: var(--ha-fg-muted); }
+.ha-reg__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ha-space-3); padding-top: var(--ha-space-1); }
+.ha-reg__origin { display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; gap: var(--ha-space-3); align-items: center; padding: 14px; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-reg__origin--on { border-color: var(--ha-ink-900); background: var(--ha-paper-100); }
+.ha-reg__origin:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-reg__origin-i { width: 40px; height: 40px; border-radius: 50%; background: var(--ha-paper-100); display: flex; align-items: center; justify-content: center; }
+.ha-reg__origin--on .ha-reg__origin-i { background: var(--ha-bg); }
+.ha-reg__origin-n { font-size: 15px; font-weight: 600; }
+.ha-reg__origin-s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-reg__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-reg__field-k { display: flex; flex-wrap: wrap; gap: 4px; }
+.ha-reg__field-n { font-weight: 500; color: var(--ha-fg-muted); }
+.ha-reg__money { height: 52px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-bg); }
+.ha-reg__money:focus-within { border-color: var(--ha-ink-900); outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-reg__money-pre { font-weight: 400; color: var(--ha-fg-muted); }
+.ha-reg__money input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; font-size: 18px; font-weight: 600; color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-reg__search { position: relative; }
+.ha-reg__search .ha-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ha-fg-muted); pointer-events: none; }
+.ha-reg__search input { padding-left: 40px; }
+.ha-reg__sugg { display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); overflow: hidden; }
+.ha-reg__sugg-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; gap: var(--ha-space-3); align-items: center; padding: 10px 14px; border: 0; border-bottom: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-reg__sugg-row:last-child { border-bottom: 0; }
+.ha-reg__sugg-row:hover { background: var(--ha-surface); }
+.ha-reg__sugg-row--on { background: var(--ha-paper-100); }
+.ha-reg__sugg-row:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-reg__av { width: 40px; height: 40px; border-radius: 50%; background: var(--ha-paper-100); display: flex; align-items: center; justify-content: center; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); overflow: hidden; }
+.ha-reg__av img { width: 100%; height: 100%; object-fit: cover; }
+.ha-reg__sugg-n { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-reg__sugg-s { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-reg__free { display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; gap: var(--ha-space-3); align-items: center; padding: 12px 14px; border: var(--ha-border-w) dashed var(--ha-ink-300); border-radius: var(--ha-radius-md); background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-reg__free--on { border-style: solid; border-color: var(--ha-ink-900); }
+.ha-reg__free:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-reg__picked { display: flex; align-items: center; gap: var(--ha-space-2); padding: 10px 14px; border-radius: var(--ha-radius-md); background: var(--ha-verified-100); font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-reg__picked .ha-icon { color: var(--ha-verified-500); }
+.ha-reg__picked b { flex: 1; }
+.ha-reg__err { font-size: var(--ha-text-body-sm); color: var(--ha-alert-500); font-weight: 600; }
+.ha-reg__foot { padding-top: var(--ha-space-3); border-top: var(--ha-border-w) solid var(--ha-border); display: flex; gap: var(--ha-space-2); }
+.ha-reg__foot > * { flex: 1; }
+.ha-reg__cta { height: 50px; }
+.ha-reg__two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ha-space-2); }
+@media (max-width: 420px) { .ha-reg__two { grid-template-columns: 1fr; } }

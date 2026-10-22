@@ -1,0 +1,87 @@
+/* Sheets of the collector's wallet: "Vender uma obra" and "Serviços para uma obra" (handoff
+   "HouseArt App Colecionador"). Bottom sheet below 720 px, centred dialog above. Prefix ha-cs. */
+.ha-cs-scrim { align-items: flex-end; padding: 0; }
+@media (min-width: 720px) { .ha-cs-scrim { align-items: center; padding: var(--ha-space-6); } }
+.ha-cs { width: 100%; max-width: 560px; max-height: 92vh; display: flex; flex-direction: column; background: var(--ha-bg); border-radius: var(--ha-radius-lg) var(--ha-radius-lg) 0 0; box-shadow: var(--ha-shadow-lg); animation: ha-fade var(--ha-dur-panel) var(--ha-ease); }
+@media (min-width: 720px) { .ha-cs { border-radius: var(--ha-radius-lg); } }
+.ha-cs__grip { display: flex; justify-content: center; padding-top: var(--ha-space-2); }
+@media (min-width: 720px) { .ha-cs__grip { display: none; } }
+.ha-cs__grip span { width: 36px; height: 4px; border-radius: var(--ha-radius-full); background: var(--ha-ink-300); }
+.ha-cs__head { display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-1) var(--ha-space-2) var(--ha-space-2) var(--ha-space-4); }
+.ha-cs__head-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ha-cs__title { font-size: 17px; font-weight: 600; color: var(--ha-fg); }
+.ha-cs__step { font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
+.ha-cs__x { width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: var(--ha-radius-md); }
+.ha-cs__x:hover { background: var(--ha-surface); }
+.ha-cs__x:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-cs__segs { display: flex; gap: var(--ha-space-1); padding: 0 var(--ha-space-4) var(--ha-space-2); }
+.ha-cs__seg { flex: 1; height: 3px; border-radius: var(--ha-radius-full); background: var(--ha-paper-200); }
+.ha-cs__seg--on { background: var(--ha-ink-900); }
+.ha-cs__h { font-family: var(--ha-font-display); font-size: 26px; line-height: 32px; font-weight: 400; color: var(--ha-fg); margin: 0; padding: 0 var(--ha-space-4) var(--ha-space-3); }
+.ha-cs__body { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--ha-space-3); padding: var(--ha-space-1) var(--ha-space-4) var(--ha-space-6); }
+.ha-cs__foot { flex: none; padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-8); border-top: var(--ha-border-w) solid var(--ha-border); display: flex; flex-direction: column; gap: var(--ha-space-2); }
+@media (min-width: 720px) { .ha-cs__foot { padding-bottom: var(--ha-space-4); } }
+.ha-cs__cta { width: 100%; height: 50px; }
+.ha-cs__cta-row { display: flex; gap: var(--ha-space-2); }
+.ha-cs__cta-row > * { flex: 1; }
+.ha-cs__lead { font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-fg-muted); }
+.ha-cs__err { font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-alert-500); font-weight: 600; }
+/* the artwork line (wall · title · sub) */
+.ha-cs__work { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; }
+.ha-cs__work-t { font-family: var(--ha-font-display); font-style: italic; font-size: 17px; color: var(--ha-fg); }
+.ha-cs__work-s { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+/* the two mode cards and the three origin cards share the radio card of the DS; these are the sheet's own */
+.ha-cs__modes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ha-space-2); }
+.ha-cs__mode { display: flex; flex-direction: column; gap: var(--ha-space-1); padding: var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-cs__mode--on { border-color: var(--ha-ink-900); background: var(--ha-paper-100); }
+.ha-cs__mode:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-cs__mode-n { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-cs__mode-s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+/* money field: "R$" prefix + tabular input, 52 px */
+.ha-cs__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-cs__field-k { display: flex; flex-wrap: wrap; gap: 4px; }
+.ha-cs__field-n { font-weight: 500; color: var(--ha-fg-muted); }
+.ha-cs__money { height: 52px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-bg); }
+.ha-cs__money:focus-within { border-color: var(--ha-ink-900); outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-cs__money--error { border-color: var(--ha-alert-500); }
+.ha-cs__money-pre { font-weight: 400; color: var(--ha-fg-muted); }
+.ha-cs__money input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; font-size: 18px; font-weight: 600; color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-cs__money input::placeholder { color: var(--ha-ink-300); }
+.ha-cs__money--sm { height: 44px; max-width: 160px; }
+.ha-cs__money--sm input { font-size: 16px; }
+/* toggle row */
+.ha-cs__switch { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) 14px; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-cs__switch-n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-cs__switch-s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+.ha-cs__sub { display: flex; align-items: center; gap: var(--ha-space-3); padding-left: 14px; font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+/* review lines */
+.ha-cs__lines { display: flex; flex-direction: column; border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-cs__line { display: flex; justify-content: space-between; gap: var(--ha-space-3); padding: var(--ha-space-3) 0; border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
+.ha-cs__line-k { color: var(--ha-fg-muted); }
+.ha-cs__line-v { color: var(--ha-fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ha-cs__line--b .ha-cs__line-v, .ha-cs__line--b .ha-cs__line-k { font-weight: 600; color: var(--ha-fg); }
+.ha-cs__note { font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); }
+.ha-cs__note .ha-icon { color: var(--ha-fg); flex: none; vertical-align: -4px; margin-right: 4px; }
+.ha-cs__tip { display: flex; gap: var(--ha-space-2); padding: var(--ha-space-3) 14px; border-radius: var(--ha-radius-md); background: var(--ha-sand-100); font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-fg); }
+.ha-cs__tip .ha-icon { flex: none; }
+/* "Certifique primeiro" */
+.ha-cs__block { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--ha-space-3); padding: var(--ha-space-6) var(--ha-space-4); }
+.ha-cs__block-i { width: 56px; height: 56px; border-radius: 50%; background: var(--ha-pending-100); color: var(--ha-pending-500); display: flex; align-items: center; justify-content: center; }
+.ha-cs__block-t { font-family: var(--ha-font-display); font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); color: var(--ha-fg); }
+/* services list */
+.ha-cs__svc { display: block; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-bg); }
+.ha-cs__svc--on { border-color: var(--ha-ink-900); background: var(--ha-paper-100); }
+/* flex, not grid: a <button> laid out as a grid inside a column gets a wrong intrinsic height in Chromium and the card clipped its text */
+.ha-cs__svc-btn { display: flex; align-items: flex-start; gap: var(--ha-space-3); width: 100%; padding: var(--ha-space-3); border: 0; border-radius: var(--ha-radius-md); background: none; cursor: pointer; text-align: left; font: inherit; color: var(--ha-fg); }
+.ha-cs__svc-btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-cs__svc-i { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--ha-paper-100); display: flex; align-items: center; justify-content: center; color: var(--ha-fg); }
+.ha-cs__svc--on .ha-cs__svc-i { background: var(--ha-bg); }
+.ha-cs__svc-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ha-cs__svc-n { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-cs__svc-tag { padding: 0 6px; border-radius: var(--ha-radius-sm); background: var(--ha-paper-200); font-size: 10px; line-height: 16px; font-weight: 600; }
+.ha-cs__svc-tag--need { background: var(--ha-sand-100); }
+.ha-cs__svc-d { font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); text-wrap: pretty; }
+.ha-cs__svc-p { margin-top: 2px; font-size: var(--ha-text-caption); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ha-cs__svc-check { flex: none; color: var(--ha-fg); }
+.ha-cs__total { display: flex; justify-content: space-between; font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
+.ha-cs__total b { color: var(--ha-fg); font-variant-numeric: tabular-nums; }

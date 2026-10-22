@@ -55,12 +55,15 @@ const GALLERY: NavItem[] = [
 ]
 
 // Handoff "Web Colecionador": Explorar (feed · descobrir) opens the profile,
-// Favoritos e curtidos and Perfil · minha conta close it.
+// Favoritos e curtidos and Perfil · minha conta close it. "Vendas" (App
+// Colecionador › Vendas · oferta recebida) came with the collector as seller
+// (decision of 2026-10-22) and sits right after Compras.
 const COLLECTOR: NavItem[] = [
   { key: 'explore', label: 'Explorar', icon: 'explore', href: '/explore' },
   { key: 'wallet', label: 'Carteira de escrituras', icon: 'account_balance_wallet', href: '/wallet' },
   { key: 'cards', label: 'Carteira e cartões', icon: 'credit_card', href: '/wallet/cards' },
   { key: 'purchases', label: 'Compras', icon: 'local_shipping', href: '/purchases' },
+  { key: 'sales', label: 'Vendas', icon: 'handshake', href: '/sales' },
   { key: 'transfer', label: 'Transferir obra', icon: 'swap_horiz', href: '/transfer' },
   { key: 'marketplace', label: 'Marketplace', icon: 'storefront', href: '/marketplace' },
   { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },

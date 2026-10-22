@@ -8,7 +8,7 @@ import { HANDOFF_SCREENS, handoffPending } from './handoff-screens'
 import { ROOT } from './source-graph'
 
 const DIR = join(ROOT, 'houseart-design/handoff/designs')
-const PENDING_BASELINE = 11
+const PENDING_BASELINE = 7
 const NOT_SCREENS = ['HouseArt Design System', 'HouseArt Pitch']
 
 const shortcuts = (file: string) => {

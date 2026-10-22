@@ -2,13 +2,20 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ds/Badge'
+import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
+import { SellSheet } from '@/components/collector/SellSheet'
+import { ServicesSheet } from '@/components/collector/ServicesSheet'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { WalletItem } from '@/lib/collector-wallet/server'
 
-export function WalletScreen({ items, totalCents, holderName, transferOn }: { items: WalletItem[]; totalCents: string; holderName: string; transferOn: boolean }) {
+/** The deed plus what the seller sheets read: status, seal and the registered value (handoff App Colecionador › Vender uma obra / Serviços). */
+export type WalletScreenItem = WalletItem & { status: string; sealGreen: boolean; registeredCents: string | null }
+
+export function WalletScreen({ items, totalCents, holderName, transferOn }: { items: WalletScreenItem[]; totalCents: string; holderName: string; transferOn: boolean }) {
   const [sel, setSel] = useState(0)
   const [toast, setToast] = useState('')
+  const [sheet, setSheet] = useState<'sell' | 'services' | null>(null)
   const w = items[sel]
   async function requestAppraisal() {
     if (!w) return
@@ -26,11 +33,11 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
   return (
     <div className="ha-split">
       <section className="ha-stack">
-        <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></div>
+        <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><span className="ha-row"><Link href="/wallet/register" className="ha-btn ha-btn--ink ha-btn--xs"><Icon name="add_photo_alternate" size={18} />Cadastrar obra</Link><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></span></div>
         <h1 className="ha-h1">Carteira de escrituras</h1>
         <div className="ha-row"><span className="ha-muted">Valor registrado · {items.length} obra(s)</span><b className="ha-num">{formatBRL(BigInt(totalCents))}</b></div>
         <ul className="ha-list">
-          {items.length === 0 ? <li className="ha-muted">Nenhuma escritura ainda.</li> : null}
+          {items.length === 0 ? <li className="ha-muted">Nenhuma escritura ainda. Uma obra que já é sua entra pela opção Cadastrar obra; a que você comprar na HouseArt chega aqui depois da entrega.</li> : null}
           {items.map((it, i) => (
             <li key={it.artworkId}>
               <button type="button" className="ha-list__row ha-list__btn" style={{ gridTemplateColumns: '40px 1fr auto auto', width: '100%', borderColor: i === sel ? 'var(--ha-ink-900)' : undefined }} onClick={() => setSel(i)}>
@@ -38,7 +45,7 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
                 <span className="ha-wall ha-wall--40">{it.cover ? <img src={it.cover} alt="" /> : null}</span>
                 <span style={{ textAlign: 'left' }}><b>{it.title}</b><br /><span className="ha-muted ha-sm">{it.artist} · adquirida em {it.acquiredAt}</span></span>
                 <span className="ha-num">{it.priceLabel}</span>
-                <Badge tone={it.insured ? 'verified' : 'pending'}>{it.insured ? 'Segurada' : 'Sem seguro'}</Badge>
+                {it.status === 'LISTED' ? <Badge tone="verified">À venda</Badge> : <Badge tone={it.insured ? 'verified' : 'pending'}>{it.insured ? 'Segurada' : 'Sem seguro'}</Badge>}
               </button>
             </li>
           ))}
@@ -57,7 +64,8 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
           </div>
           <p className="ha-muted ha-sm">Carimbo do tempo ICP-Brasil · {w.acquiredAt} · versão {w.version}</p>
           <div className="ha-row" style={{ flexWrap: 'wrap' }}>
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setToast('Revenda pela carteira: em breve (mercado secundário, comissão 8% + 4%).')}>Vender</button>
+            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setSheet('sell')}>{w.status === 'LISTED' ? 'À venda' : 'Vender'}</button>
+            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setSheet('services')}>{w.sealGreen ? 'Serviços' : 'Certificar e outros serviços'}</button>
             {transferOn ? <Link href={`/transfer?artworkId=${w.artworkId}`} className="ha-btn ha-btn--outline ha-btn--sm">Transferir</Link> : null}
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={w.insured} onClick={insure}>Segurar</button>
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={requestAppraisal}>Pedir laudo</button>
@@ -65,6 +73,8 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
           </div>
         </section>
       ) : null}
+      {w && sheet === 'sell' ? <SellSheet key={`sell-${w.artworkId}`} open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} artwork={{ artworkId: w.artworkId, title: w.title, artist: w.artist, cover: w.cover, status: w.status, sealGreen: w.sealGreen, registeredCents: w.registeredCents }} /> : null}
+      {w && sheet === 'services' ? <ServicesSheet key={`svc-${w.artworkId}`} open onClose={() => setSheet(null)} onDone={setToast} artworkId={w.artworkId} title={w.title} sealGreen={w.sealGreen} /> : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </div>
   )

@@ -12,6 +12,11 @@
 // `?id=`. The server says the quality (blurry → retake), the similar works
 // (duplicate check) and what is missing to submit. After the submit, the
 // screen hands over to "Vincular etiqueta".
+//
+// `owner=collector` (Cadastrar obra do colecionador, App Colecionador): the
+// draft comes from POST /api/collector/artworks with `?id=`; after the submit
+// the artwork goes to certification and the screen returns to Minha coleção —
+// the tag is linked by the certification service, not by the owner.
 import { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -31,8 +36,13 @@ interface Shot { uri: string; quality: string | null }
 export function NewArtworkScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const params = useLocalSearchParams<{ id?: string }>()
+  const params = useLocalSearchParams<{ id?: string; owner?: string }>()
   const initialId = params.id && /^\d+$/.test(params.id) ? Number(params.id) : null
+  const collector = params.owner === 'collector'
+  const toCollection = useCallback((message?: string) => {
+    if (message) Alert.alert('Obra cadastrada', message)
+    router.navigate('/(tabs)/wallet' as never)
+  }, [router])
 
   const [phase, setPhase] = useState<Phase>(initialId ? 'loading' : 'capture')
   const [artworkId, setArtworkId] = useState<number | null>(initialId)
@@ -65,14 +75,17 @@ export function NewArtworkScreen() {
     let alive = true
     loadDraft(initialId).then((d) => {
       if (!alive) return
-      if (d.status !== 'DRAFT') { Alert.alert('Nova obra', 'Esta obra já foi enviada para certificação.'); router.replace({ pathname: '/certification/link/[artworkId]', params: { artworkId: String(initialId) } }); return }
+      if (d.status !== 'DRAFT') {
+        if (collector) { toCollection('Esta obra já foi enviada para certificação.'); return }
+        Alert.alert('Nova obra', 'Esta obra já foi enviada para certificação.'); router.replace({ pathname: '/certification/link/[artworkId]', params: { artworkId: String(initialId) } }); return
+      }
       const s = absorb(d)
       const missing = missingRequired(new Set(Object.keys(s)))
       if (missing.length === 0) setPhase('sheet')
       else { setIndex(CAPTURE_SLOTS.findIndex((x) => x.kind === missing[0]!.kind)); setPhase('capture') }
     }).catch((e: Error) => { if (alive) { Alert.alert('Nova obra', e.message); router.back() } })
     return () => { alive = false }
-  }, [initialId, absorb, router])
+  }, [initialId, absorb, router, collector, toCollection])
 
   async function ensureDraft(): Promise<number> {
     if (artworkId) return artworkId
@@ -129,7 +142,7 @@ export function NewArtworkScreen() {
 
   function close() {
     if (!artworkId) { router.back(); return }
-    Alert.alert('Sair da câmera', 'As fotos enviadas ficam salvas no rascunho. Você continua depois em Obras.', [
+    Alert.alert('Sair da câmera', collector ? 'As fotos enviadas ficam salvas no rascunho da obra.' : 'As fotos enviadas ficam salvas no rascunho. Você continua depois em Obras.', [
       { text: 'Continuar fotografando', style: 'cancel' },
       { text: 'Sair', onPress: () => router.back() },
     ])
@@ -165,6 +178,7 @@ export function NewArtworkScreen() {
     try {
       await patchDraft(artworkId, sheetPatch(sheet))
       await submitDraft(artworkId)
+      if (collector) { toCollection(`${sheet.title.trim() || 'Sua obra'} foi enviada para certificação. A escritura sai no seu nome quando a equipe concluir.`); return }
       router.replace({ pathname: '/certification/link/[artworkId]', params: { artworkId: String(artworkId) } })
     } catch (e) { setSheetError((e as Error).message) } finally { setBusy(null) }
   }
@@ -281,7 +295,7 @@ export function NewArtworkScreen() {
 
         <Text style={styles.note}>Você completa preço, histórico e condition report depois, no celular ou no computador.</Text>
         <ErrorText>{sheetError}</ErrorText>
-        <Button title="Enviar e vincular etiqueta" loading={busy === 'save'} disabled={!!busy && busy !== 'save'} onPress={() => void send()} />
+        <Button title={collector ? 'Enviar para certificação' : 'Enviar e vincular etiqueta'} loading={busy === 'save'} disabled={!!busy && busy !== 'save'} onPress={() => void send()} />
         {missingRequired(done).length ? <Text style={styles.note}>Faltam {missingRequired(done).length} de {REQUIRED_COUNT} fotos obrigatórias.</Text> : null}
       </ScrollView>
       <Toast message={toast} onDone={() => setToast('')} />

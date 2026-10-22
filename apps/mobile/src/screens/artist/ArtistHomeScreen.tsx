@@ -42,7 +42,7 @@ export function ArtistHomeScreen() {
             <Text style={styles.date}>{h.dateLabel}</Text>
             <Display size={28} line={36} numberOfLines={1}>{helloOf(h.name)}</Display>
           </View>
-          <IconButton name="contactless" label="Verificar obra" box={40} onPress={() => router.push({ pathname: '/web', params: { path: '/verify', title: 'Verificar obra' } })} />
+          <IconButton name="contactless" label="Verificar obra" box={40} onPress={() => router.push('/verify' as never)} />
           <Pressable accessibilityRole="button" accessibilityLabel="Perfil e configurações" onPress={() => router.push('/settings')} style={styles.avatar}><Text style={styles.avatarText}>{h.initials}</Text></Pressable>
         </View>
 

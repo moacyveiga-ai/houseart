@@ -71,6 +71,15 @@ export default function RootLayout() {
             <Stack.Screen name="gallery/team" />
             <Stack.Screen name="gallery/artists" />
             <Stack.Screen name="gallery/account" />
+            <Stack.Screen name="purchases/index" />
+            <Stack.Screen name="purchases/[id]/index" />
+            <Stack.Screen name="purchases/[id]/receive" options={{ contentStyle: { backgroundColor: colors.ink900 } }} />
+            <Stack.Screen name="sales/collector" />
+            <Stack.Screen name="sales/payout" />
+            <Stack.Screen name="wallet/register" />
+            <Stack.Screen name="wallet/cards" />
+            <Stack.Screen name="wallet/sell/[id]" />
+            <Stack.Screen name="verify" />
             <Stack.Screen name="settings" options={{ headerShown: true, title: 'Perfil', headerTintColor: theme.fg, headerStyle: { backgroundColor: theme.bg } }} />
           </Stack>
         </SessionProvider>

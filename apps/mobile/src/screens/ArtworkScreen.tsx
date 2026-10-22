@@ -109,7 +109,7 @@ export function ArtworkScreen({ publicId, mine }: { publicId: string; mine: bool
           <View style={styles.certHead}><Icon name="verified" size={20} color={theme.success} /><Text style={styles.certTitle}>Certificado HouseArt</Text></View>
           <Text style={styles.certBody}>{certText(a)}</Text>
           <Text style={styles.certId}>{a.publicId}</Text>
-          <Pressable accessibilityRole="link" onPress={() => web(`/verify/${a.publicId}`, 'Certificado público')}><Text style={styles.certLink}>Ver certificado público →</Text></Pressable>
+          <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/verify', params: { id: a.publicId } })}><Text style={styles.certLink}>Ver certificado público →</Text></Pressable>
         </View>
         <View style={styles.section}>
           <Text style={styles.h}>Proveniência</Text>
@@ -134,7 +134,7 @@ export function ArtworkScreen({ publicId, mine }: { publicId: string; mine: bool
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
         {mine ? (
-          <Pressable accessibilityRole="button" onPress={() => web('/wallet', 'Minha coleção')} style={styles.btnInk}><Text style={styles.btnInkText}>Vender esta obra</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/wallet/sell/[id]', params: { id: String(a.id) } })} style={styles.btnInk}><Text style={styles.btnInkText}>Vender esta obra</Text></Pressable>
         ) : listed ? (<>
           {a.acceptsOffers ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${a.publicId}/offer`)} style={styles.btnOutline}><Text style={styles.btnOutlineText}>Fazer oferta</Text></Pressable> : null}
           {a.priceCents !== null ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${a.publicId}/buy`)} style={styles.btnPrimary}><Text style={styles.btnPrimaryText}>Comprar agora</Text></Pressable> : null}

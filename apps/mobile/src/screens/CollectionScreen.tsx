@@ -1,8 +1,9 @@
 // Minha coleção (handoff "HouseArt App Colecionador" › Minha coleção): title and
-// summary, "+" (Cadastrar obra, web), the four KPIs, the tabs Obras · Favoritos ·
+// summary, the wallet and "+" (Cadastrar obra), the four KPIs, the tabs Obras · Favoritos ·
 // Curtidos · Compras · Vendas and the 2-column grid of the deeds (status line by
 // the artwork's state). Favoritos/Curtidos open the native Favoritos screen;
-// Compras and Vendas open the web journeys.
+// Compras (/purchases), Vendas (/sales/collector) and "+" (/wallet/register)
+// open their native screens; the wallet icon opens Carteira e cartões.
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -31,7 +32,6 @@ export function CollectionScreen() {
   const artists = new Set(items.map((o) => o.artistId ?? o.artist)).size
   const nSaved = (favs.data?.items ?? []).filter((f) => f.saved).length
   const nLiked = (favs.data?.items ?? []).filter((f) => f.liked).length
-  const web = (path: string, title: string) => router.push({ pathname: '/web', params: { path, title } })
 
   const kpis: { icon: IconName; v: string; k: string; onPress?: () => void }[] = [
     { icon: 'image', v: String(items.length), k: items.length === 1 ? 'obra' : 'obras' },
@@ -43,8 +43,8 @@ export function CollectionScreen() {
     { name: `Obras · ${items.length}`, on: true },
     { name: `Favoritos · ${nSaved}`, onPress: () => router.push({ pathname: '/favorites', params: { tab: 'saved' } }) },
     { name: `Curtidos · ${nLiked}`, onPress: () => router.push({ pathname: '/favorites', params: { tab: 'liked' } }) },
-    { name: 'Compras', onPress: () => web('/purchases', 'Compras') },
-    { name: 'Vendas', onPress: () => web('/sales', 'Vendas') },
+    { name: 'Compras', onPress: () => router.push('/purchases' as never) },
+    { name: 'Vendas', onPress: () => router.push('/sales/collector' as never) },
   ]
 
   return (
@@ -55,7 +55,8 @@ export function CollectionScreen() {
             <Display size={28} line={36}>Minha coleção</Display>
             <Text style={styles.summary}>{wallet.data ? `${items.length} ${items.length === 1 ? 'obra' : 'obras'} · ${brl(total)} registrados` : ' '}</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Adicionar nova obra" onPress={() => web('/wallet/register', 'Cadastrar obra')} style={styles.add}><Icon name="add" size={26} color={theme.bg} /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Carteira e cartões" onPress={() => router.push('/wallet/cards' as never)} style={styles.walletBtn}><Icon name="account-balance-wallet" size={22} /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Adicionar nova obra" onPress={() => router.push('/wallet/register' as never)} style={styles.add}><Icon name="add" size={26} color={theme.bg} /></Pressable>
         </View>
         <View style={styles.kpis}>
           {kpis.map((k) => (
@@ -100,6 +101,7 @@ const styles = StyleSheet.create({
   head: { paddingTop: 6, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: theme.border },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   summary: { fontSize: 13, color: theme.fgMuted },
+  walletBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center' },
   add: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.fg, alignItems: 'center', justifyContent: 'center' },
   kpis: { flexDirection: 'row', gap: 6, marginTop: 10 },
   kpi: { flex: 1, minWidth: 0, paddingHorizontal: 8, paddingTop: 8, paddingBottom: 9, borderRadius: theme.radiusMd, backgroundColor: theme.surface, gap: 1 },

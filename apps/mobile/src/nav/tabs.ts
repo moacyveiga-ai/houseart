@@ -57,7 +57,9 @@ export function tabsFor(kind: ProfileKind | null): TabKey[] {
 const NATIVE_FOR: Partial<Record<TabKey, readonly ProfileKind[]>> = {
   home: ['GALLERY', 'ADVISOR', 'ARTIST'],
   artworks: ['GALLERY', 'ADVISOR', 'ARTIST'],
-  sales: ['GALLERY', 'ADVISOR'],
+  // Negócios of the gallery; the collector's "Vendas" (no tab of its own — it opens from
+  // Minha coleção — but a deep link to the tab lands on the native screen too).
+  sales: ['GALLERY', 'ADVISOR', 'COLLECTOR'],
   // App Artista: Carteira de escrituras and Avisos.
   certification: ['ARTIST'],
   notifications: ['ARTIST'],

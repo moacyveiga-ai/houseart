@@ -14,7 +14,10 @@ embarcada. **App Galeria (feito):** Painel do dia, Acervo, Gestão do anúncio,
 Negócios (Ofertas recebidas · Vendas até o repasse · Regras de ofertas), a
 venda até o repasse, Equipe, Artistas representados e Conta da galeria. **App Artista (feito):** Início do artista, Obras, Nova obra ·
 câmera guiada (com `expo-image-picker`), Vincular etiqueta, Carteira de
-escrituras e Avisos — ver "O que é nativo" abaixo.
+escrituras e Avisos — ver "O que é nativo" abaixo. **Telas restantes (feitas):**
+Compras e Acompanhar compra, Confirmar recebimento, Vendas do colecionador,
+Cadastrar obra, Vender esta obra, Carteira e cartões, Pix para receber vendas e
+Verificar obra — ver "Telas restantes" abaixo.
 
 Pacote **independente** do root (não está em `workspaces`; o `npm install` do root
 não o instala; o `tsconfig.json` e o ESLint do root o excluem). Nada aqui importa
@@ -120,7 +123,7 @@ recusa o preço abaixo dele e o app só mostra a mensagem).
 | Regras de ofertas | aba `sales` (`?tab=rules`) · `/sales/rules` | `RulesSection.tsx`, `app/sales/rules.tsx` | `GET/PUT /api/gallery/rules` |
 | Equipe | `/gallery/team` | `src/screens/gallery/TeamScreen.tsx` | `GET/POST /api/gallery/team`, `PATCH/DELETE /api/gallery/team/[id]`, `DELETE /api/gallery/team/invites/[id]` |
 | Artistas representados | `/gallery/artists` | `src/screens/gallery/ArtistsScreen.tsx` | `GET/POST /api/gallery/artists` |
-| Conta, equipe e repasses | `/gallery/account` | `src/screens/gallery/AccountScreen.tsx` | `GET /api/gallery/team`, `GET /api/gallery/artists` (Pix, plano, cartões, senha e ajuda abrem o site) |
+| Conta, equipe e repasses | `/gallery/account` | `src/screens/gallery/AccountScreen.tsx` | `GET /api/gallery/team`, `GET /api/gallery/artists` (Pix e cartões abrem as telas nativas `/sales/payout` e `/wallet/cards`; plano, senha e ajuda abrem o site) |
 | Compartilhar obra | folha nativa (`Share`) em Gestão do anúncio ("Enviar a um cliente") | — | — |
 
 Chamadas em `src/api/gallery.ts`. Rotas novas no root para o app (finas, sobre
@@ -167,7 +170,7 @@ permissões no plugin do `app.json`).
 | Vincular etiqueta | `/certification/link/[artworkId]` | `src/screens/artist/LinkMarkerScreen.tsx`, `src/nfc/reader.ts` | `GET /api/artist/artworks/[id]/link`, `POST /api/markers/link`, `POST /api/certificates/[id]/sign` |
 | Carteira de escrituras | aba `certification` (título "Escrituras") | `src/screens/artist/DeedsScreen.tsx` | `GET /api/artist/certificates` |
 | Avisos | aba `notifications` | `src/screens/NotificationsScreen.tsx`, `src/push/usePushToggle.ts` | `GET/POST /api/notifications`, `POST /api/notifications/[id]/read`, `POST/DELETE /api/notifications/push` |
-| Verificar obra · Confirmar recebimento | WebView `/verify` · `/purchases` | — | — |
+| Verificar obra · Confirmar recebimento | `/verify` · `/purchases/[id]/receive` (nativas, ver "Telas restantes") | `src/screens/collector/{VerifyScreen,ReceiveScreen}.tsx` | — |
 | Onboarding | sem design utilizável no mapa — não feito | — | — |
 
 Rotas novas no root (finas, sobre `lib/dashboard`, `lib/certificates`,
@@ -225,19 +228,56 @@ build estático do Google Fonts; registrada por `useFonts` em `app/_layout.tsx`
 com os nomes de `fonts.display` de `src/theme.ts`; o serif do sistema fica
 como fallback enquanto carrega ou se falhar).
 
+### Telas restantes (Colecionador, e comuns aos três perfis)
+
+Fonte: `HouseArt App Colecionador.dc.html` (Minha coleção › Compras e Vendas,
+`compra`, `vender`, `cadobra`, `carteira`, sheet `pix`) e `HouseArt Verificar` /
+`Verificacao` para Verificar. Telas em `src/screens/collector/`, regras puras em
+`collector-core.ts`, chamadas em `src/api/collector.ts`. O Perfil (todos os
+perfis) ganhou os atalhos Compras · Carteira e cartões · Pix para receber vendas ·
+Verificar obra.
+
+| Tela (protótipo) | Rota do app | Fonte | API |
+| --- | --- | --- | --- |
+| Compras (compras + ofertas abertas) | `/purchases` (aba "Compras" da coleção) | `PurchasesScreen.tsx` | `GET /api/collector/purchases`, `GET /api/collector/offers` |
+| Acompanhar compra | `/purchases/[id]` | `PurchaseScreen.tsx` | `GET /api/collector/purchases`, `POST /api/deals/[id]/{escrow,sign}` |
+| Confirmar recebimento (leitor escuro) | `/purchases/[id]/receive` | `ReceiveScreen.tsx`, `src/nfc/reader.ts` | `POST /api/deals/[id]/confirm-delivery` (`{ uid, ctr, cmac }` ou `{}` simulado) |
+| Vendas do colecionador | `/sales/collector` (aba "Vendas" da coleção; a aba `sales` também, para o perfil colecionador) | `CollectorSalesScreen.tsx` + `gallery/OffersSection.tsx` (`beforeAccept` pede o Pix) | `GET /api/offers`, `GET /api/gallery/deals`, `POST /api/offers/[id]/{accept,refuse,counter}`, `GET /api/member/payout-account` |
+| Cadastrar obra | `/wallet/register` → `/artworks/new?id=…&owner=collector` | `RegisterArtworkScreen.tsx`, `artist/NewArtworkScreen.tsx` (modo colecionador: "Enviar para certificação" e volta à coleção) | `GET /api/public/search?q=`, `POST /api/collector/artworks` e as rotas da câmera |
+| Vender esta obra | `/wallet/sell/[id]` ("Vender esta obra" da página da obra) | `SellScreen.tsx` | `GET /api/collector/wallet`, `GET /api/collector/artworks/[id]/sell-estimate`, `POST /api/collector/artworks/[id]/{sell,services}`, `GET /api/member/payout-account` |
+| Carteira e cartões | `/wallet/cards` (ícone da coleção; Conta da galeria) | `WalletCardsScreen.tsx`, `src/ui/CardForm.tsx` | `GET/POST /api/collector/payment-methods`, `PATCH/DELETE /api/collector/payment-methods/[id]`, `GET /api/collector/purchases`, `GET /api/member/payout-account` |
+| Pix para receber vendas | `/sales/payout` (também "Pix para repasses" da galeria) | `PayoutScreen.tsx` | `GET/PUT/DELETE /api/member/payout-account` |
+| Verificar obra | `/verify` (`?id=HA-…` abre direto) | `VerifyScreen.tsx` | `GET /api/public/certificates?id=` ou `?artist=&title=&year=`, `GET /api/v1/certificates/[publicId]`, `POST /api/public/certificates/[publicId]/read` |
+
+Rotas novas no root (finas): `GET /api/collector/purchases` → `{ ok, deals:
+PurchaseDeal[] (o DealView do web SEM a repartição), simulateAllowed }` (401 sem
+sessão, 404 sem `FLAG_DEALS`, só os negócios em que a pessoa é a compradora);
+`GET /api/collector/artworks/[id]/sell-estimate?listPriceCents=` → `{ ok,
+estimate: { listCents, buyerFeeCents, buyerPaysCents, sellerFeeCents,
+royaltyCents, appreciationCents, netCents }, registeredCents }` (a
+`sellEstimate` do web; 404 para obra que a pessoa não tem; 400 sem preço);
+`GET /api/public/certificates?id=` ou `?artist=&title=&year=` → `{ ok, results:
+[{ publicId, title, year, artist, technique, cover, verdict }] }` (a busca
+pública do `/verify`); `POST /api/public/certificates/[publicId]/read` com `{
+uid, ctr, cmac, tt? }` → `{ ok, read: { authenticated, tamper } }` (a mesma
+gravação da visita a `/verify/[id]?uid…`; freio de 60 por hora por IP). Prova:
+`test/integration/mobile-api-2.integration.test.ts`.
+
+O mínimo de "Vender esta obra" é digitado e enviado em `POST …/sell`; nenhuma
+chamada o lê de volta e a tela o esquece ao publicar. Divergências em
+`docs/HANDOFF-2026-10-21.md` §5 ("telas restantes nativas"); a principal: o lado
+vendedor de um negócio do colecionador ("Assinar o termo", "Registrar envio")
+não funciona pela API de hoje (`dealContext` trata todo colecionador como
+comprador) — "Em andamento" é só leitura.
+
 **Continua em WebView** (`/web?path=…&title=…`, `app/web.tsx`, só caminhos do
-site): Cadastrar obra (`/wallet/register`), Vender esta obra (`/wallet`), Compras
-(`/purchases` — "Acompanhar a compra" depois da oferta aceita ou do pagamento),
-Vendas (`/sales`), perfil do artista e da galeria (`/e/artist/…`,
-`/e/gallery/…`), certificado público (`/verify/[id]`), notícia inteira
-(`/e/news/[slug]`, aberta pelo "Ler" da Comunidade), Minha conta (`/account`),
-no App Artista Verificar obra (`/verify`), Confirmar recebimento
-(`/purchases`), Vendas (`/sales`) e Emitir (`/certification`), a aba `wallet` dos perfis que não são o
-colecionador (a "Carteira" web) e, no App Galeria, Cadastrar obra
-(`/artworks/new`), Editar cadastro (`/artworks/[id]/edit`), Pix para repasses
-(`/sales/payout`), Plano e cobrança (`/billing`), Carteira e cartões
-(`/wallet/cards`), Alterar senha (`/recover-password`) e a página pública do
-artista (`/e/artist/[slug]`).
+site): perfil do artista e da galeria (`/e/artist/…`, `/e/gallery/…`), notícia
+inteira (`/e/news/[slug]`, aberta pelo "Ler" da Comunidade), Minha conta
+(`/account`), no App Artista Vendas (`/sales`) e Emitir (`/certification`), a
+aba `wallet` dos perfis que não são o colecionador (a "Carteira" web) e, no App
+Galeria, Cadastrar obra (`/artworks/new`), Editar cadastro
+(`/artworks/[id]/edit`), Plano e cobrança (`/billing`), Alterar senha
+(`/recover-password`) e a página pública do artista (`/e/artist/[slug]`).
 
 Decisões onde o protótipo não bate com a API: sem contador de curtidas nem
 comentários em obra (a API não conta); "Desenho" não existe no catálogo (Obra
@@ -273,8 +313,8 @@ e sem "Guia" escuro; "Seguindo" é o feed filtrado por quem a pessoa segue;
   notícia e Guia —, 9 Artista — 6 feitas; ficam Onboarding, Verificar obra e
   Confirmar recebimento): cada aba troca a WebView por tela nativa, por
   fase, sobre as mesmas rotas de `app/api/*`. Enquanto isso o app entrega as
-  jornadas do site. Próximas do Colecionador: Compras/Vendas, Cadastrar obra,
-  Vender uma obra, Carteira e cartões, Pix, Perfil completo, Ler notícia.
+  jornadas do site. Compras, Vendas, Cadastrar obra, Vender uma obra, Carteira e
+  cartões, Pix e Verificar já são nativas; próximas: Perfil completo, Ler notícia.
 - Leitura NFC da etiqueta no app do Artista (`react-native-nfc-manager` num dev
   build; o ponto de extensão é `src/nfc/reader.ts`; hoje cola-se a URL).
 - Biometria para reabrir o app (`expo-local-authentication`), deep links

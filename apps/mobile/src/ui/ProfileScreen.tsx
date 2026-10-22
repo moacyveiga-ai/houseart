@@ -1,5 +1,6 @@
-// The native "Perfil": who is signed in, push toggle (prepared), the web
-// account page, profile switch and sign out. Tab for the collector, pushed
+// The native "Perfil": who is signed in, push toggle (prepared), the native
+// shortcuts every profile shares (Compras, Carteira e cartões, Pix para receber
+// vendas, Verificar obra), the web account page, profile switch and sign out. Tab for the collector, pushed
 // screen (/settings) for the others.
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
@@ -44,6 +45,10 @@ export function ProfileScreen() {
       </View>
 
       <View style={styles.actions}>
+        <Button title="Compras" variant="ghost" onPress={() => router.push('/purchases' as never)} />
+        <Button title="Carteira e cartões" variant="ghost" onPress={() => router.push('/wallet/cards' as never)} />
+        <Button title="Pix para receber vendas" variant="ghost" onPress={() => router.push('/sales/payout' as never)} />
+        <Button title="Verificar obra" variant="ghost" onPress={() => router.push('/verify' as never)} />
         <Button title="Minha conta (site)" variant="ghost" onPress={() => router.push('/account-web')} />
         {profiles.length > 1 ? <Button title="Trocar de perfil" variant="ghost" onPress={() => router.push('/profiles')} /> : null}
         <Button title="Sair" variant="danger" onPress={confirmSignOut} />

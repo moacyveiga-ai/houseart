@@ -79,7 +79,7 @@ export function OfferStatusScreen({ code }: { code: string }) {
     setBusy('talk')
     try { const c = await api<{ ok: boolean; id: number }>('/api/messages', { body: { artworkId: artwork.id } }); router.push(`/messages/${c.id}`) } catch (e) { setActError((e as Error).message) } finally { setBusy(null) }
   }
-  const webPurchases = () => router.push({ pathname: '/web', params: { path: '/purchases', title: 'Compras' } })
+  const webPurchases = () => router.push('/purchases' as never)
 
   return (
     <View style={[styles.fill, { paddingTop: insets.top }]}>

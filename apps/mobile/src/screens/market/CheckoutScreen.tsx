@@ -43,7 +43,7 @@ function Checkout({ artwork: a }: { artwork: ArtworkPage }) {
   const [adding, setAdding] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<{ code: string; card: PaymentMethodView | null } | null>(null)
+  const [done, setDone] = useState<{ code: string; dealId: number | null; card: PaymentMethodView | null } | null>(null)
   const [toast, setToast] = useState('')
   const clearToast = useCallback(() => setToast(''), [])
 
@@ -64,7 +64,7 @@ function Checkout({ artwork: a }: { artwork: ArtworkPage }) {
     if (!card) { setAdding(true); return }
     if (blocked) { setError(blocked); return }
     setBusy(true); setError(null)
-    try { const r = await checkout({ publicId: a.publicId, paymentMethodId: card.id, deliveryCep: delivery === 'CARRIER' ? quote?.cep ?? null : null, insurance: delivery === 'CARRIER' && insurance }); setDone({ code: r.code, card }) }
+    try { const r = await checkout({ publicId: a.publicId, paymentMethodId: card.id, deliveryCep: delivery === 'CARRIER' ? quote?.cep ?? null : null, insurance: delivery === 'CARRIER' && insurance }); setDone({ code: r.code, dealId: r.dealId, card }) }
     catch (e) { setError((e as Error).message || 'Não foi possível confirmar o pedido.') } finally { setBusy(false) }
   }
   const back = () => (router.canGoBack() ? router.back() : router.replace(`/artwork/${a.publicId}`))
@@ -76,7 +76,7 @@ function Checkout({ artwork: a }: { artwork: ArtworkPage }) {
         <Text style={styles.doneTitle}>Pago em garantia</Text>
         <Text style={styles.doneLead}>{done.card ? `${done.card.label} · ` : ''}o vendedor só recebe na entrega.</Text>
         <Text style={styles.doneText}>O valor de {brl(totals.total)} fica retido na HouseArt. Quando a obra chegar, confirme a entrega com o toque na etiqueta: o pagamento é liberado ao vendedor e a escritura passa para o seu nome no mesmo instante.{done.code ? ` Pedido ${done.code}.` : ''}</Text>
-        <Button title="Acompanhar a compra" onPress={() => router.replace({ pathname: '/web', params: { path: '/purchases', title: 'Compras' } })} />
+        <Button title="Acompanhar a compra" onPress={() => router.replace(done.dealId ? { pathname: '/purchases/[id]', params: { id: String(done.dealId) } } : ('/purchases' as never))} />
         <Button title="Voltar para a obra" variant="ghost" onPress={() => router.replace(`/artwork/${a.publicId}`)} />
       </View>
     </View>

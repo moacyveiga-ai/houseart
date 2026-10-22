@@ -25,7 +25,7 @@ export function DeedsScreen() {
   const open = (i: CertItem) => {
     const t = certTarget(i)
     if (t.kind === 'link') router.push({ pathname: '/certification/link/[artworkId]', params: { artworkId: String(t.artworkId) } })
-    else if (t.kind === 'verify') router.push({ pathname: '/web', params: { path: `/verify/${t.publicId}`, title: 'Certificado' } })
+    else if (t.kind === 'verify') router.push({ pathname: '/verify', params: { id: t.publicId } })
     else if (t.kind === 'web') router.push({ pathname: '/web', params: { path: t.path, title: t.title } })
   }
 

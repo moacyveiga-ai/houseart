@@ -16,9 +16,13 @@ import { Button } from '@/ui/primitives'
 import { avatarTint, brl, initialsOf } from '@/ui/format'
 import { offerPct, offerResolved, offersSummary, otherOffersLine, priceCents, priceMask, sellerCanAnswer, sortOffers, suggestedCounterReais } from './gallery-core'
 
-interface Props { offers: OfferRow[]; onChanged: () => Promise<void>; onToast: (message: string) => void }
+interface Props {
+  offers: OfferRow[]; onChanged: () => Promise<void>; onToast: (message: string) => void
+  /** Asked before an accept (the collector's "Pix first"); false = the accept does not go out. */
+  beforeAccept?: () => Promise<boolean>
+}
 
-export function OffersSection({ offers, onChanged, onToast }: Props) {
+export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState<number | null>(null)
   const [counter, setCounter] = useState<OfferRow | null>(null)
@@ -29,6 +33,7 @@ export function OffersSection({ offers, onChanged, onToast }: Props) {
 
   async function act(o: OfferRow, action: 'accept' | 'refuse' | 'counter') {
     if (busy) return
+    if (action === 'accept' && beforeAccept && !(await beforeAccept())) return
     setBusy(o.id)
     try {
       if (action === 'accept') { await acceptOffer(o.id); onToast(`Oferta aceita · ${o.buyer} tem 24 h para pagar em garantia`) }

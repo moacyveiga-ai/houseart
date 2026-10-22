@@ -34,10 +34,10 @@ export function AccountScreen() {
       { icon: 'groups', name: 'Equipe', sub: team.data ? `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}` : 'Papéis e convites', go: () => router.push('/gallery/team') },
       { icon: 'palette', name: 'Artistas representados', sub: artists.data ? `${plural(list.length, 'artista', 'artistas')} · ${plural(list.filter((a) => a.contract).length, 'contrato ativo', 'contratos ativos')}` : 'Contratos e divisão das vendas', go: () => router.push('/gallery/artists') },
     ] },
-    { name: 'Recebimentos', items: [{ icon: 'account-balance', name: 'Pix para repasses', sub: 'A chave que recebe cada venda', go: web('/sales/payout', 'Pix para repasses') }] },
+    { name: 'Recebimentos', items: [{ icon: 'account-balance', name: 'Pix para repasses', sub: 'A chave que recebe cada venda', go: () => router.push('/sales/payout' as never) }] },
     { name: 'Plano e pagamentos', items: [
       { icon: 'workspace-premium', name: 'Plano e cobrança', sub: 'Plano, uso do mês e faturas', go: web('/billing', 'Plano e cobrança') },
-      { icon: 'account-balance-wallet', name: 'Carteira e cartões', sub: 'Cartão para plano e serviços', go: web('/wallet/cards', 'Carteira e cartões') },
+      { icon: 'account-balance-wallet', name: 'Carteira e cartões', sub: 'Cartão para plano e serviços', go: () => router.push('/wallet/cards' as never) },
     ] },
     { name: 'Segurança', items: [{ icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', go: web('/recover-password', 'Alterar senha') }] },
     { name: 'Ajuda', items: [{ icon: 'help', name: 'Central de ajuda', sub: 'Consignação, certificação, frete e repasses', go: web('/e/how-it-works', 'Como funciona') }] },

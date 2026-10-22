@@ -1,6 +1,10 @@
+import { CollectionScreen } from '@/screens/CollectionScreen'
 import { WebScreen } from '@/ui/WebScreen'
-import { TABS } from '@/nav/tabs'
+import { useSession } from '@/auth/session'
+import { isCollector } from '@/nav/tabs'
 
+/** Minha coleção is native for the collector; the other profiles keep their web "Carteira". */
 export default function Screen() {
-  return <WebScreen path={TABS.wallet.path ?? '/'} />
+  const { me } = useSession()
+  return isCollector(me?.activeProfileKind ?? null) ? <CollectionScreen /> : <WebScreen path="/wallet" />
 }

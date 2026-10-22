@@ -2,7 +2,7 @@ import { Tabs, useRouter } from 'expo-router'
 import { Pressable } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useSession } from '@/auth/session'
-import { TABS, labelFor, tabsFor, type TabKey } from '@/nav/tabs'
+import { TABS, iconFor, isCollector, labelFor, tabsFor, type TabKey } from '@/nav/tabs'
 import { theme } from '@/theme'
 
 const ALL: TabKey[] = ['explore', 'messages', 'community', 'wallet', 'profile', 'home', 'artworks', 'sales', 'certification', 'notifications']
@@ -42,6 +42,7 @@ export default function TabsLayout() {
       {ordered.map((key) => {
         const def = TABS[key]
         const shown = visible.includes(key)
+        const icon = iconFor(kind, key)
         return (
           <Tabs.Screen
             key={key}
@@ -49,7 +50,9 @@ export default function TabsLayout() {
             options={{
               href: shown ? undefined : null,
               title: labelFor(kind, key),
-              tabBarIcon: ({ color, size }) => <MaterialIcons name={def.icon} size={size} color={color} />,
+              // The native screens draw their own top (brand, search, title) as the prototype does.
+              headerShown: key === 'profile' || def.path !== null || (key === 'wallet' && !isCollector(kind)),
+              tabBarIcon: ({ color, size }) => <MaterialIcons name={icon} size={size} color={color} />,
             }}
           />
         )

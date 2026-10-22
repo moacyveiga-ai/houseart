@@ -1,6 +1,5 @@
-import { WebScreen } from '@/ui/WebScreen'
-import { TABS } from '@/nav/tabs'
+import { MessagesScreen } from '@/screens/MessagesScreen'
 
 export default function Screen() {
-  return <WebScreen path={TABS.messages.path ?? '/'} />
+  return <MessagesScreen />
 }

@@ -11,9 +11,14 @@ export const colors = {
   sand600: '#B9872F',
   sand100: '#F5E7C8',
   verified500: '#2E7D5B',
+  verified100: '#E3F0E9',
   pending500: '#C77A1E',
+  pending100: '#F7EAD9',
   alert500: '#B23A2F',
+  alert100: '#F5E1DE',
   info500: '#3A5F8A',
+  /** --ha-wall: the "parede" behind an artwork (light theme). */
+  wall: '#EEEAE3',
 } as const
 
 export const theme = {
@@ -29,7 +34,18 @@ export const theme = {
   accentSoft: colors.sand100,
   error: colors.alert500,
   success: colors.verified500,
-  radiusSm: 6,
-  radiusMd: 10,
+  wall: colors.wall,
+  radiusSm: 4,
+  radiusMd: 8,
   radiusLg: 16,
+  radiusFull: 999,
+} as const
+
+/**
+ * --ha-font-display is Fraunces (italic for artwork titles). The app bundles no
+ * font file (no new dependency in this phase), so the display face is the
+ * system serif — Georgia on iOS, "serif" on Android — until Fraunces ships.
+ */
+export const fonts = {
+  display: { ios: 'Georgia', android: 'serif', default: 'serif' } as const,
 } as const

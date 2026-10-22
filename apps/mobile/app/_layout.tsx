@@ -48,6 +48,11 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="profiles" options={{ headerShown: true, title: 'Escolher perfil', headerBackVisible: false }} />
             <Stack.Screen name="account-web" />
+            <Stack.Screen name="web" />
+            <Stack.Screen name="artwork/[publicId]" />
+            <Stack.Screen name="messages/[id]" />
+            <Stack.Screen name="favorites" />
+            <Stack.Screen name="search" />
             <Stack.Screen name="settings" options={{ headerShown: true, title: 'Perfil', headerTintColor: theme.fg, headerStyle: { backgroundColor: theme.bg } }} />
           </Stack>
         </SessionProvider>

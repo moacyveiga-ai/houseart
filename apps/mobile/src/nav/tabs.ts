@@ -4,20 +4,23 @@ import type { ProfileKind } from '@/auth/types'
 
 export type TabKey = 'explore' | 'messages' | 'community' | 'wallet' | 'profile' | 'home' | 'artworks' | 'sales' | 'certification' | 'notifications'
 
+export type TabIcon = 'explore' | 'chat' | 'forum' | 'account-balance-wallet' | 'collections' | 'person' | 'space-dashboard' | 'image' | 'handshake' | 'verified' | 'notifications'
+
 export interface TabDef {
   key: TabKey
   title: string
   /** Material icon name (@expo/vector-icons MaterialIcons). */
-  icon: 'explore' | 'chat' | 'forum' | 'account-balance-wallet' | 'person' | 'space-dashboard' | 'image' | 'handshake' | 'verified' | 'notifications'
-  /** Web route opened inside the WebView; null = native screen. */
+  icon: TabIcon
+  /** Web route opened inside the WebView; null = native screen (fase 1 do App Colecionador: Explorar, Coleção, Mensagens). */
   path: string | null
 }
 
 export const TABS: Record<TabKey, TabDef> = {
-  explore: { key: 'explore', title: 'Explorar', icon: 'explore', path: '/explore' },
-  messages: { key: 'messages', title: 'Mensagens', icon: 'chat', path: '/messages' },
+  explore: { key: 'explore', title: 'Explorar', icon: 'explore', path: null },
+  messages: { key: 'messages', title: 'Mensagens', icon: 'chat', path: null },
   community: { key: 'community', title: 'Comunidade', icon: 'forum', path: '/community' },
-  wallet: { key: 'wallet', title: 'Carteira', icon: 'account-balance-wallet', path: '/wallet' },
+  // Native "Minha coleção" for the collector; the web "Carteira" for the other profiles (see app/(tabs)/wallet.tsx).
+  wallet: { key: 'wallet', title: 'Carteira', icon: 'account-balance-wallet', path: null },
   profile: { key: 'profile', title: 'Perfil', icon: 'person', path: null },
   home: { key: 'home', title: 'Início', icon: 'space-dashboard', path: '/' },
   artworks: { key: 'artworks', title: 'Obras', icon: 'image', path: '/artworks' },
@@ -26,7 +29,8 @@ export const TABS: Record<TabKey, TabDef> = {
   notifications: { key: 'notifications', title: 'Avisos', icon: 'notifications', path: '/notifications' },
 }
 
-const COLLECTOR: TabKey[] = ['explore', 'messages', 'community', 'wallet', 'profile']
+// The order of the prototype's bottom bar: Explorar · Coleção · Comunidade · Mensagens · Perfil.
+const COLLECTOR: TabKey[] = ['explore', 'wallet', 'community', 'messages', 'profile']
 const GALLERY: TabKey[] = ['home', 'artworks', 'sales', 'messages', 'community']
 const ARTIST: TabKey[] = ['home', 'artworks', 'certification', 'messages', 'notifications']
 
@@ -46,5 +50,14 @@ export function tabsFor(kind: ProfileKind | null): TabKey[] {
 /** The web route that `Obras` means for this profile (`/artworks` is the same path for both). */
 export function labelFor(kind: ProfileKind | null, key: TabKey): string {
   if (key === 'artworks' && (kind === 'GALLERY' || kind === 'ADVISOR')) return 'Acervo'
+  if (key === 'wallet' && isCollector(kind)) return 'Coleção'
   return TABS[key].title
 }
+
+export function iconFor(kind: ProfileKind | null, key: TabKey): TabIcon {
+  if (key === 'wallet' && isCollector(kind)) return 'collections'
+  return TABS[key].icon
+}
+
+/** The collector set is also the default (no profile chosen yet). */
+export const isCollector = (kind: ProfileKind | null): boolean => kind === 'COLLECTOR' || kind === null

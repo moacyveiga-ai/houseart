@@ -5,7 +5,9 @@ perfil ativo da conta (`activeProfileKind` de `GET /api/auth/me`). **M0 = casca:
 login nativo, sessão por bearer no secure store, abas por perfil abrindo as
 jornadas web dentro de uma WebView com a sessão, sair, push preparado. As telas
 nativas dos protótipos (`houseart-design/handoff/designs/HouseArt App *.dc.html`)
-entram por fase, substituindo cada WebView.
+entram por fase, substituindo cada WebView. **Fase 1 do App Colecionador (feita):**
+Explorar (feed e descobrir), Página da obra, Minha coleção, Favoritos e curtidos,
+Mensagens e Conversa, Busca — ver "O que é nativo" abaixo.
 
 Pacote **independente** do root (não está em `workspaces`; o `npm install` do root
 não o instala; o `tsconfig.json` e o ESLint do root o excluem). Nada aqui importa
@@ -62,7 +64,7 @@ emitir o token de push.
 | Token | `src/auth/token-store.ts` | `expo-secure-store` (64 hex, validado) |
 | Cookie da WebView | `src/auth/cookies.ts` | `CookieManager.set` de `houseart_session=<token>` só para o host da API (`Secure` em https; `HttpOnly` não é possível no cliente — aceito) |
 | Sessão | `src/auth/session.tsx` | `SessionProvider`/`useSession`: login por senha, código por e-mail (`/api/auth/code/start` + `/verify`), `GET /api/auth/me`, `GET/POST /api/profiles`, sair |
-| Abas por perfil | `src/nav/tabs.ts`, `app/(tabs)/_layout.tsx` | Colecionador = Explorar · Mensagens · Comunidade · Carteira · Perfil; Galeria/Consultor = Início · Acervo · Vendas · Mensagens · Comunidade; Artista = Início · Obras · Certificação · Mensagens · Avisos. As abas fora do perfil recebem `href: null` |
+| Abas por perfil | `src/nav/tabs.ts`, `app/(tabs)/_layout.tsx` | Colecionador = Explorar · Coleção · Comunidade · Mensagens · Perfil (a ordem do protótipo; Explorar, Coleção e Mensagens nativas, `path: null`); Galeria/Consultor = Início · Acervo · Vendas · Mensagens · Comunidade; Artista = Início · Obras · Certificação · Mensagens · Avisos. As abas fora do perfil recebem `href: null`; aba nativa desenha o próprio topo (`headerShown: false`) |
 | WebView | `src/ui/WebScreen.tsx` | Abre a rota do site com `sharedCookiesEnabled`; injeta a classe `ha-shell--embedded` no `<html>` e um CSS que esconde `.ha-topbar`, `.ha-sidebar` e `.ha-ticker` **só no app** (o web não muda); `houseart://` vira navegação do app, link de outro host abre no navegador; cair em `/login` = sessão morta → sair |
 | Perfil nativo | `src/ui/ProfileScreen.tsx` | Dados da conta, toggle "Avisos no celular" (**Em breve**), "Minha conta (site)", trocar de perfil, Sair |
 | Push | `src/push/register.ts` | Registra o token do Expo; o envio ao servidor espera `PUSH_API_READY` |
@@ -75,12 +77,55 @@ token e várias contas de perfil sem uma ativa → `/profiles`; senão → `/(ta
 `POST /api/auth/logout` (bearer + o cookie do pote do app) e depois apaga o
 secure store e os cookies. A rota hoje só lê o cookie — ver "Ajustes de API".
 
-## O que falta (fora do M0)
+## O que é nativo e o que ainda é WebView
+
+Fonte das telas: `houseart-design/handoff/designs/HouseArt App Colecionador.dc.html`
+(textos em pt-BR como lá; cores só de `src/theme.ts`, que espelha `app/ds/tokens.css`).
+
+| Tela (protótipo) | Rota do app | Fonte | API |
+| --- | --- | --- | --- |
+| Explorar · feed / descobrir | aba `explore` | `src/screens/ExploreScreen.tsx`, `DiscoverDeck.tsx`, `explore-core.ts` | `GET /api/collector/explore`, `POST /api/community/reactions` |
+| Página da obra | `/artwork/[publicId]` (`?mine=1` quando vem da coleção) | `src/screens/ArtworkScreen.tsx` | `GET /api/public/artworks/[publicId]`, `POST /api/messages` (Conversar) |
+| Minha coleção | aba `wallet` (título "Coleção" para o colecionador) | `src/screens/CollectionScreen.tsx` | `GET /api/collector/wallet`, `GET /api/collector/favorites` |
+| Favoritos e curtidos | `/favorites?tab=saved\|liked` | `src/screens/FavoritesScreen.tsx` | `GET /api/collector/favorites`, `POST /api/community/reactions` |
+| Mensagens | aba `messages` | `src/screens/MessagesScreen.tsx` | `GET /api/messages?q=` |
+| Conversa com galeria | `/messages/[id]` | `src/screens/ConversationScreen.tsx` | `GET /api/messages/[id]?after=` (5 s), `POST /api/messages/[id]` |
+| Busca | `/search` | `src/screens/SearchScreen.tsx` | `GET /api/public/search?q=` |
+
+Peças comuns: `src/ui/kit.tsx` (ícone, parede, avatar, chip, barra do topo,
+loading/erro/toast), `src/ui/format.ts` (R$, parcela, ficha, iniciais, URL
+absoluta da mídia), `src/api/hooks.ts` (`useApi`), `src/api/reactions.ts`,
+`src/api/types.ts` (DTOs), `src/ui/share.ts` (Share nativo).
+
+**Continua em WebView** (`/web?path=…&title=…`, `app/web.tsx`, só caminhos do
+site): Fazer oferta (`/e/artwork/[id]/offer`), Comprar direto (`/e/artwork/[id]/buy`),
+Cadastrar obra (`/wallet/register`), Vender esta obra (`/wallet`), Compras
+(`/purchases`), Vendas (`/sales`), perfil do artista e da galeria (`/e/artist/…`,
+`/e/gallery/…`), certificado público (`/verify/[id]`), Comunidade (aba),
+Minha conta (`/account`) e todas as abas dos perfis Galeria/Consultor/Artista
+(a aba `wallet` desses perfis segue sendo a "Carteira" web).
+
+Decisões onde o protótipo não bate com a API: sem contador de curtidas nem
+comentários em obra (a API não conta); "Desenho" não existe no catálogo (Obra
+sobre papel no lugar); o deck não tem "Compartilhar" no cartão (fica no feed e
+na obra); a obra não tem zoom por ponto (toque alterna a parede cheia); sem
+"Denunciar" nem "Enviar foto" na conversa (sem API); respostas rápidas são as
+do lado comprador; a busca não tem sugestões de pessoas sem consulta (a API
+só responde com termo) e "Em alta" são as categorias; buscas recentes vivem só
+na sessão do app; KPI "valorização" fica "—" (sem estimativa na API); a fonte
+de exibição (Fraunces) não vem no pacote — serif do sistema até entrar
+(`src/theme.ts`, `fonts.display`); ícones por Material Icons do
+`@expo/vector-icons` no lugar dos Material Symbols; o badge de não lidas na
+aba Mensagens não existe ainda.
+
+## O que falta (fora do M0 e da fase 1)
 
 - **Push via Expo** (ver abaixo): o toggle existe, desligado, com "Em breve".
-- **Telas nativas** dos protótipos (29 Colecionador, 20 Galeria, 9 Artista):
-  cada aba troca a WebView por tela nativa, por fase, sobre as mesmas rotas de
-  `app/api/*`. Enquanto isso o app entrega as jornadas do site.
+- **Telas nativas** dos protótipos (29 Colecionador — 8 feitas na fase 1 —,
+  20 Galeria, 9 Artista): cada aba troca a WebView por tela nativa, por fase,
+  sobre as mesmas rotas de `app/api/*`. Enquanto isso o app entrega as
+  jornadas do site. Próximas do Colecionador: oferta em 5 etapas e compra
+  direta nativas, Comunidade, Compras/Vendas, Cadastrar obra, Perfil completo.
 - Leitura NFC da etiqueta no app do Artista (`react-native-nfc-manager`; hoje o
   web faz por Web NFC/URL em `/certification/link/[artworkId]`).
 - Biometria para reabrir o app (`expo-local-authentication`), deep links

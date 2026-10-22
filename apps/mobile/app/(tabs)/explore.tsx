@@ -1,6 +1,5 @@
-import { WebScreen } from '@/ui/WebScreen'
-import { TABS } from '@/nav/tabs'
+import { ExploreScreen } from '@/screens/ExploreScreen'
 
 export default function Screen() {
-  return <WebScreen path={TABS.explore.path ?? '/'} />
+  return <ExploreScreen />
 }

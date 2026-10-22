@@ -7,6 +7,7 @@ import { ArtworkError } from '@/lib/artworks/server'
 import { audit } from '@/lib/audit'
 import { rulesProblems, type OfferRulesView } from '@/lib/offers/rules-core'
 import { rulesOfMember } from '@/lib/offers/rules-server'
+import { RULES_ROLES, requireSellerRole } from '@/lib/offers/seller-role-server'
 
 function requireMember(scope: Scope): number {
   const memberId = memberOfScope(scope)
@@ -21,6 +22,7 @@ export async function rulesOf(scope: Scope): Promise<OfferRulesView> {
 
 export async function saveRules(scope: Scope, input: Partial<OfferRulesView>, actor: { userId: number }): Promise<OfferRulesView> {
   const memberId = requireMember(scope)
+  await requireSellerRole(scope, RULES_ROLES, 'Só o administrador da galeria muda as regras de ofertas.')
   const current = await rulesOf(scope)
   const next: OfferRulesView = { ...current, ...input }
   const problems = rulesProblems(next)

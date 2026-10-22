@@ -7,6 +7,9 @@ import { canView, type Scope } from '@/lib/scope/core'
 import { ArtworkError } from '@/lib/artworks/server'
 import { audit } from '@/lib/audit'
 import { OPEN_FOR_SELLER } from '@/lib/offers/domain'
+import { LISTING_ROLES, requireSellerRole } from '@/lib/offers/seller-role-server'
+
+const LISTING_FORBIDDEN = 'Seu papel na galeria não muda o anúncio.'
 import { diaNoFuso } from '@/lib/timezone'
 
 export interface ListingView {
@@ -40,6 +43,7 @@ export async function listingOf(scope: Scope, artworkId: number, now = new Date(
 /** Price change = new mandate version with the same floor (never below it); the previous is SUPERSEDED. */
 export async function changeListPrice(scope: Scope, artworkId: number, listPriceCents: bigint, actor: { userId: number }): Promise<ListingView> {
   const a = await reachable(scope, artworkId)
+  await requireSellerRole(scope, LISTING_ROLES, LISTING_FORBIDDEN)
   const m = await prisma.mandate.findFirst({ where: { artworkId, status: 'ACTIVE' } })
   if (!m) throw new ArtworkError('NOT_LISTED', 'A obra não está à venda.', 409)
   if (listPriceCents <= 0n) throw new ArtworkError('BAD_PRICE', 'Informe o preço.', 400)
@@ -56,6 +60,7 @@ export async function changeListPrice(scope: Scope, artworkId: number, listPrice
 
 export async function setAcceptsOffers(scope: Scope, artworkId: number, acceptsOffers: boolean, actor: { userId: number }): Promise<ListingView> {
   await reachable(scope, artworkId)
+  await requireSellerRole(scope, LISTING_ROLES, LISTING_FORBIDDEN)
   const m = await prisma.mandate.findFirst({ where: { artworkId, status: 'ACTIVE' } })
   if (!m) throw new ArtworkError('NOT_LISTED', 'A obra não está à venda.', 409)
   await prisma.$transaction([
@@ -69,6 +74,7 @@ export async function setAcceptsOffers(scope: Scope, artworkId: number, acceptsO
 /** Pause keeps status LISTED and the mandate; the marketplace hides it (listingPausedAt). */
 export async function setPaused(scope: Scope, artworkId: number, paused: boolean, actor: { userId: number }): Promise<ListingView> {
   const a = await reachable(scope, artworkId)
+  await requireSellerRole(scope, LISTING_ROLES, LISTING_FORBIDDEN)
   if (a.status !== 'LISTED') throw new ArtworkError('NOT_LISTED', 'A obra não está à venda.', 409)
   await prisma.artwork.update({ where: { id: artworkId }, data: { listingPausedAt: paused ? new Date() : null } })
   void audit.event({ entity: 'artwork', entityId: artworkId, action: paused ? 'pause_listing' : 'resume_listing', userId: actor.userId })

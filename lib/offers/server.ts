@@ -26,6 +26,7 @@ import { usableCard } from '@/lib/payment-methods/server'
 import { GUARANTEE_METHODS, VALIDITY_HOURS, type GuaranteeMethod } from '@/lib/payment-methods/domain'
 import { stripeMode } from '@/lib/stripe/door'
 import { rulesOfMember } from './rules-server'
+import { OFFER_ROLES, requireSellerRole } from './seller-role-server'
 import { belowRule, LOW_OFFER_MESSAGE } from './rules-core'
 import { assertTransition, statusAfterOtp } from './state'
 import { toBuyerView, toSellerRow, type BuyerOffer, type OfferRow } from './dto'
@@ -229,9 +230,16 @@ async function reachableOffer(scope: Scope, id: number) {
   return o
 }
 
+/** The seller's side of an answer: reachable AND, in a gallery team, a role that answers offers (Admin, Vendas). */
+async function answerableOffer(scope: Scope, id: number) {
+  const o = await reachableOffer(scope, id)
+  await requireSellerRole(scope, OFFER_ROLES, 'Seu papel na galeria não responde propostas.')
+  return o
+}
+
 /** Accept under an advisory lock per artwork: a second live offer on the same artwork is refused. */
 export async function acceptOffer(scope: Scope, id: number, actor: { userId: number }) {
-  const o = await reachableOffer(scope, id)
+  const o = await answerableOffer(scope, id)
   assertTransition(o.status as OfferStatus, 'ACCEPTED')
   const last = o.rounds[o.rounds.length - 1]
   const amount = last?.amountCents ?? o.offeredCents
@@ -251,7 +259,7 @@ export async function acceptOffer(scope: Scope, id: number, actor: { userId: num
 }
 
 export async function refuseOffer(scope: Scope, id: number, actor: { userId: number }, reason?: string) {
-  const o = await reachableOffer(scope, id)
+  const o = await answerableOffer(scope, id)
   assertTransition(o.status as OfferStatus, 'REFUSED')
   const r = await prisma.offer.updateMany({ where: { id, status: o.status }, data: { status: 'REFUSED' } })
   if (r.count === 0) throw new ArtworkError('CHANGED', 'A proposta acabou de mudar.', 409)
@@ -263,7 +271,7 @@ export async function refuseOffer(scope: Scope, id: number, actor: { userId: num
 
 /** Seller counter-offer: must be ≥ the floor (the message never says the number of the floor). */
 export async function counterOffer(scope: Scope, id: number, amountCents: bigint, actor: { userId: number }, message?: string) {
-  const o = await reachableOffer(scope, id)
+  const o = await answerableOffer(scope, id)
   // A counter while already NEGOTIATING is another round, not a transition.
   if (o.status !== 'NEGOTIATING') assertTransition(o.status as OfferStatus, 'NEGOTIATING')
   const mandate = await prisma.mandate.findFirst({ where: { artworkId: o.artworkId, status: 'ACTIVE' } })

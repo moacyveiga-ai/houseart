@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getArtwork } from '@/lib/artworks/server'
 import { listingOf } from '@/lib/gallery/listing-server'
-import { rulesOf } from '@/lib/gallery/rules-server'
+import { rulesOfMember } from '@/lib/offers/rules-server'
 import { artworkErrorResponse, idParam, json } from '@/app/api/artworks/_http'
 import { gallerySession, isResponse } from '../../_http'
 
@@ -22,7 +22,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     if (!a) return NextResponse.json({ ok: false, error: 'Obra não encontrada.' }, { status: 404 })
     const [listing, rules] = await Promise.all([
       listingOf(s.scope, a.id),
-      rulesOf(s.scope).then((r) => ({ refuseBelowBps: r.refuseBelowBps, responseHours: r.responseHours })).catch(() => null),
+      rulesOfMember(a.memberId).then((r) => ({ refuseBelowBps: r.refuseBelowBps, responseHours: r.responseHours })).catch(() => null),
     ])
     const cover = a.media.find((m) => m.kind === 'FRONT_COLOR_CARD')?.publicUrl ?? a.media[0]?.publicUrl ?? null
     return json({

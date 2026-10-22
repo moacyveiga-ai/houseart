@@ -254,7 +254,7 @@ export async function favoritesOf(userId: number, take = 100): Promise<FavoriteA
   return ids.flatMap((id) => {
     const a = byId.get(id); if (!a) return []
     const mine = rows.filter((r) => r.targetId === id)
-    return [{ id: a.id, publicId: a.publicId!, title: a.title, year: a.year, artist: a.artist.name, priceCents: a.saleMode === 'ON_REQUEST' ? null : a.listPriceCents, saleMode: a.saleMode, status: a.status, cover: a.media[0]?.publicUrl ?? null, liked: mine.some((r) => r.kind === 'LIKE'), saved: mine.some((r) => r.kind === 'SAVE'), at: mine[0]!.createdAt.toISOString() }]
+    return [{ id: a.id, publicId: a.publicId!, title: a.title, year: a.year, artist: a.artist.name, priceCents: a.status === 'LISTED' && a.saleMode !== 'ON_REQUEST' ? a.listPriceCents : null, saleMode: a.saleMode, status: a.status, cover: a.media[0]?.publicUrl ?? null, liked: mine.some((r) => r.kind === 'LIKE'), saved: mine.some((r) => r.kind === 'SAVE'), at: mine[0]!.createdAt.toISOString() }]
   })
 }
 

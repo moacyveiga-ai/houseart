@@ -18,6 +18,10 @@ import { syncOpportunityFromOffer } from '@/lib/crm/server'
 import { createDealFromOffer } from '@/lib/deals/server'
 import { LIVE_STATUSES, OFFER_VALIDITY_DAYS, offerCode, OTP_MAX_ATTEMPTS, OTP_TTL_MS, RETRACTION_WINDOW_MS, type OfferStatus } from './domain'
 import { evaluateOffer, mandateProblems } from './mandate-core'
+import { cheapest, insuranceCents, normalizeCep, quoteShipping, ufFromCep } from '@/lib/shipping/quote-core'
+import { usableCard } from '@/lib/payment-methods/server'
+import { GUARANTEE_METHODS, VALIDITY_HOURS, type GuaranteeMethod } from '@/lib/payment-methods/domain'
+import { stripeMode } from '@/lib/stripe/door'
 import { assertTransition, statusAfterOtp } from './state'
 import { toBuyerView, toSellerRow, type BuyerOffer, type OfferRow } from './dto'
 
@@ -62,9 +66,41 @@ export async function mandateOf(scope: Scope, artworkId: number) {
 }
 
 // ── public: start (OTP) ───────────────────────────────────────────────────
-export interface PublicOfferInput { publicId: string; buyerName: string; buyerEmail: string; buyerDocument: string; buyerCity?: string | null; offeredCents: bigint; message?: string | null; buyerKind?: 'COLLECTOR' | 'ADVISOR_FOR_CLIENT'; buyerUserId?: number | null }
+export interface PublicOfferInput {
+  publicId: string; buyerName: string; buyerEmail: string; buyerDocument: string; buyerCity?: string | null; offeredCents: bigint; message?: string | null; buyerKind?: 'COLLECTOR' | 'ADVISOR_FOR_CLIENT'; buyerUserId?: number | null
+  /** Phase 4: validity in hours (24/48/72; absent = 7 days), the guarantee and the saved card it uses, the delivery CEP for the frozen quote. */
+  validityHours?: number | null
+  guaranteeMethod?: string | null
+  paymentMethodId?: number | null
+  deliveryCep?: string | null
+}
 
-export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true; code: string } | { ok: false; error: string }> {
+/** The quote frozen at the offer/purchase: cheapest carrier for the CEP + transit insurance. */
+export async function quoteForArtwork(artworkId: number | { publicId: string }, cep: string | null, priceCents: bigint): Promise<{ shippingCents: bigint; insuranceCents: bigint; cep: string | null }> {
+  const norm = cep ? normalizeCep(cep) : null
+  if (!norm) return { shippingCents: 0n, insuranceCents: 0n, cep: null }
+  const a = await prisma.artwork.findUnique({ where: typeof artworkId === 'number' ? { id: artworkId } : { publicId: artworkId.publicId }, select: { heightMm: true, widthMm: true, depthMm: true, member: { select: { uf: true } } } })
+  if (!a) return { shippingCents: 0n, insuranceCents: 0n, cep: norm }
+  const quotes = quoteShipping({ fromUf: a.member.uf, toUf: ufFromCep(norm), size: { heightMm: a.heightMm, widthMm: a.widthMm, depthMm: a.depthMm } })
+  const shipping = quotes && quotes.length ? BigInt(cheapest(quotes).priceCents) : 0n
+  return { shippingCents: shipping, insuranceCents: BigInt(insuranceCents(Number(priceCents))), cep: norm }
+}
+
+/** Reserves the guarantee (mock: a mock_hold_ reference; live: Phase 5). Returns the method stored and its ref. */
+async function reserveGuarantee(method: string | null | undefined, buyerUserId: number | null, paymentMethodId: number | null | undefined, amountCents: bigint): Promise<{ ok: true; method: GuaranteeMethod; ref: string | null; paymentMethodId: number | null } | { ok: false; error: string }> {
+  const m = (method && (GUARANTEE_METHODS as readonly string[]).includes(method) ? method : 'NONE') as GuaranteeMethod
+  if (m === 'NONE' || m === 'TRANSFER_ON_ACCEPT') return { ok: true, method: m, ref: null, paymentMethodId: null }
+  if (!buyerUserId) return { ok: false, error: 'Entre na sua conta para reservar a garantia.' }
+  if (stripeMode() === 'live') return { ok: false, error: 'Garantia por cartão ainda não disponível.' }
+  if (m === 'CARD_HOLD') {
+    const card = await usableCard(buyerUserId, paymentMethodId ?? null)
+    if (!card) return { ok: false, error: 'Cadastre um cartão na carteira para reservar o valor.' }
+    return { ok: true, method: m, ref: `mock_hold_${card.id}_${amountCents}_${Date.now()}`, paymentMethodId: card.id }
+  }
+  return { ok: true, method: m, ref: `mock_pixres_${buyerUserId}_${amountCents}_${Date.now()}`, paymentMethodId: null }
+}
+
+export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true; code: string; confirmed: boolean; retractionToken?: string } | { ok: false; error: string }> {
   return totalScope('offers:public-start', async () => {
     const email = normalizeEmail(i.buyerEmail)
     if (!email) return { ok: false, error: 'Informe um e-mail válido.' }
@@ -75,20 +111,34 @@ export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true;
     if (!a || a.status !== 'LISTED' || a.seal !== 'GREEN') return { ok: false, error: 'Esta obra não está aceitando propostas.' }
     const mandate = a.mandates[0]
     if (mandate?.fixedPrice && i.offeredCents !== mandate.listPriceCents) return { ok: false, error: 'Esta obra é vendida a preço fixo.' }
+    const validityHours = i.validityHours && (VALIDITY_HOURS as readonly number[]).includes(i.validityHours) ? i.validityHours : OFFER_VALIDITY_DAYS * 24
+    const quote = await quoteForArtwork(a.id, i.deliveryCep ?? null, i.offeredCents)
+    const guarantee = await reserveGuarantee(i.guaranteeMethod, i.buyerUserId ?? null, i.paymentMethodId, i.offeredCents)
+    if (!guarantee.ok) return guarantee
     const year = new Date().getUTCFullYear()
     const seq = await prisma.offer.count({ where: { code: { startsWith: `OFR-${year}-` } } })
     const otp = String(randomInt(0, 1_000_000)).padStart(6, '0')
+    // A logged buyer who already proved this e-mail (signup code, social login) skips the second code.
+    const verifiedUser = i.buyerUserId ? await prisma.user.findUnique({ where: { id: i.buyerUserId }, select: { email: true, emailVerifiedAt: true } }) : null
+    const skipOtp = !!verifiedUser && !!verifiedUser.emailVerifiedAt && verifiedUser.email === email
     const offer = await prisma.offer.create({
       data: {
         code: offerCode(year, seq + 1), artworkId: a.id, mandateId: mandate?.id ?? null, sellerMemberId: a.memberId, memberId: a.memberId,
         buyerUserId: i.buyerUserId ?? null, buyerName: i.buyerName.trim().slice(0, 120), buyerEmail: email, buyerDocumentHash: doc.hash, buyerDocumentEnc: doc.enc, buyerDocumentMask: doc.mask,
         buyerKind: i.buyerKind ?? 'COLLECTOR', buyerCity: i.buyerCity?.trim().slice(0, 80) || null, offeredCents: i.offeredCents, message: i.message?.trim().slice(0, 500) || null,
-        status: 'AWAITING_OTP', expiresAt: new Date(Date.now() + OFFER_VALIDITY_DAYS * 86_400_000), otpHash: sha256(otp), otpExpiresAt: new Date(Date.now() + OTP_TTL_MS),
-        events: { create: { kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: i.offeredCents.toString() }) } },
+        status: 'AWAITING_OTP', expiresAt: new Date(Date.now() + validityHours * 3_600_000), otpHash: skipOtp ? null : sha256(otp), otpExpiresAt: skipOtp ? null : new Date(Date.now() + OTP_TTL_MS),
+        validityHours, guaranteeMethod: guarantee.method, guaranteeRef: guarantee.ref, paymentMethodId: guarantee.paymentMethodId, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: quote.insuranceCents,
+        events: { create: { kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: i.offeredCents.toString(), guaranteeMethod: guarantee.method, validityHours }) } },
       },
     })
+    if (skipOtp) {
+      // The logged buyer already proved the e-mail at signup: no second code.
+      const r = await finalizeOffer(offer.id)
+      if (!r.ok) return r
+      return { ok: true, code: offer.code, confirmed: true, retractionToken: r.retractionToken }
+    }
     await afterResponseOrNow('offer:otp', () => sendEmail({ to: email, subject: 'Confirme sua proposta na HouseArt', text: `Seu código para confirmar a proposta ${offer.code} é ${otp}. Ele vale por 15 minutos.`, redactedPreview: 'OTP da proposta' }))
-    return { ok: true, code: offer.code }
+    return { ok: true, code: offer.code, confirmed: false }
   })
 }
 
@@ -100,6 +150,15 @@ export async function confirmPublicOffer(code: string, otp: string): Promise<{ o
     const bumped = await prisma.offer.update({ where: { id: o.id }, data: { otpAttempts: { increment: 1 } } })
     if (bumped.otpAttempts > OTP_MAX_ATTEMPTS) { await prisma.offer.updateMany({ where: { id: o.id, status: 'AWAITING_OTP' }, data: { status: 'CANCELLED' } }); return { ok: false, error: 'Código inválido. A proposta foi cancelada; envie outra.' } }
     if (!o.otpExpiresAt || o.otpExpiresAt < new Date() || sha256(otp.replace(/\D/g, '')) !== o.otpHash) return { ok: false, error: 'Código inválido ou expirado.' }
+    return finalizeOffer(o.id)
+  })
+}
+
+/** After the e-mail is proven (OTP, or verified account): routes the status, runs the negotiator, notifies, syncs the CRM, opens the deal. */
+async function finalizeOffer(offerId: number): Promise<{ ok: true; retractionToken: string } | { ok: false; error: string }> {
+  return totalScope('offers:finalize', async () => {
+    const o = await prisma.offer.findUnique({ where: { id: offerId }, include: { mandate: true, artwork: { select: { title: true, year: true, listPriceCents: true, member: { select: { userId: true, user: { select: { email: true } } } } } } } })
+    if (!o || o.status !== 'AWAITING_OTP') return { ok: false, error: 'Proposta não encontrada ou já confirmada.' }
     const engine = o.mandate ? evaluateOffer(o.mandate, o.offeredCents) : { verdict: 'ABOVE_RESERVE' as const, reachesReserve: true }
     const next: OfferStatus = engine.verdict === 'AUTO_ACCEPT' ? 'ACCEPTED' : statusAfterOtp(engine.reachesReserve)
     const retractionToken = randomBytes(24).toString('base64url')
@@ -191,19 +250,26 @@ export async function counterOffer(scope: Scope, id: number, amountCents: bigint
   await syncOpportunityFromOffer(id)
 }
 
-// ── buyer by token ───────────────────────────────────────────────────────
-export async function buyerOffer(code: string, token: string | null, now = new Date()): Promise<BuyerOffer | null> {
+// ── buyer by token or by session ─────────────────────────────────────────
+/** The buyer's key: the one-time retraction token (e-mail flow) or the logged owner (Phase 4). */
+export type BuyerAuth = string | null | { userId: number }
+function ownsOffer(o: { retractionTokenHash: string | null; buyerUserId: number | null }, auth: BuyerAuth): boolean {
+  if (auth && typeof auth === 'object') return o.buyerUserId !== null && o.buyerUserId === auth.userId
+  return !!auth && !!o.retractionTokenHash && sha256(auth) === o.retractionTokenHash
+}
+
+export async function buyerOffer(code: string, token: BuyerAuth, now = new Date()): Promise<BuyerOffer | null> {
   return totalScope('offers:buyer', async () => {
-    const o = await prisma.offer.findUnique({ where: { code }, include: { rounds: { orderBy: { number: 'asc' } }, artwork: { select: { title: true, year: true, listPriceCents: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } } } })
-    if (!o || o.status === 'AWAITING_OTP' || !token || !o.retractionTokenHash || sha256(token) !== o.retractionTokenHash) return null
+    const o = await prisma.offer.findUnique({ where: { code }, include: { rounds: { orderBy: { number: 'asc' } }, artwork: { select: { title: true, year: true, publicId: true, listPriceCents: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } } } })
+    if (!o || o.status === 'AWAITING_OTP' || !ownsOffer(o, token)) return null
     return toBuyerView(o, now)
   })
 }
 
-export async function retractOffer(code: string, token: string): Promise<boolean> {
+export async function retractOffer(code: string, token: BuyerAuth): Promise<boolean> {
   return totalScope('offers:retract', async () => {
     const o = await prisma.offer.findUnique({ where: { code } })
-    if (!o || !o.retractionTokenHash || sha256(token) !== o.retractionTokenHash || !o.retractionIssuedAt) return false
+    if (!o || !ownsOffer(o, token) || !o.retractionIssuedAt) return false
     if (Date.now() - o.retractionIssuedAt.getTime() > RETRACTION_WINDOW_MS) return false
     if (!['RECEIVED', 'BELOW_RESERVE', 'NEGOTIATING'].includes(o.status)) return false
     const r = await prisma.offer.updateMany({ where: { id: o.id, status: o.status }, data: { status: 'RETRACTED' } })
@@ -215,10 +281,10 @@ export async function retractOffer(code: string, token: string): Promise<boolean
 }
 
 /** Buyer replies to a counter-offer: accepts the seller's number (→ ACCEPTED at that amount) or counters again. */
-export async function buyerReply(code: string, token: string, reply: { accept: true } | { accept: false; amountCents: bigint; message?: string }): Promise<boolean> {
+export async function buyerReply(code: string, token: BuyerAuth, reply: { accept: true } | { accept: false; amountCents: bigint; message?: string }): Promise<boolean> {
   return totalScope('offers:buyer-reply', async () => {
     const o = await prisma.offer.findUnique({ where: { code }, include: { rounds: { orderBy: { number: 'asc' } } } })
-    if (!o || !o.retractionTokenHash || sha256(token) !== o.retractionTokenHash || o.status !== 'NEGOTIATING') return false
+    if (!o || !ownsOffer(o, token) || o.status !== 'NEGOTIATING') return false
     const last = o.rounds[o.rounds.length - 1]
     if (!last || last.author === 'BUYER') return false
     const number = last.number + 1
@@ -245,6 +311,65 @@ export async function buyerReply(code: string, token: string, reply: { accept: t
     if (reply.accept) await createDealFromOffer(o.id)
     return true
   })
+}
+
+
+// ── direct purchase ("Comprar direto") ────────────────────────────────────
+export interface BuyNowInput { publicId: string; buyerUserId: number; buyerName: string; buyerEmail: string; buyerDocument: string | null; buyerCity?: string | null; paymentMethodId: number | null; deliveryCep: string | null; insurance: boolean }
+
+/**
+ * Buys at the list price: the offer is born ACCEPTED (the list price always
+ * reaches the floor), the deal opens and, with a usable card, the escrow is
+ * captured on the spot (mock). The artwork is locked under the same advisory
+ * lock as the seller's accept.
+ */
+export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; dealId: number | null } | { ok: false; error: string }> {
+  return totalScope('offers:buy-now', async () => {
+    const email = normalizeEmail(i.buyerEmail)
+    if (!email) return { ok: false, error: 'Informe um e-mail válido.' }
+    let doc: { hash: string; enc: string; mask: string } | null = null
+    if (i.buyerDocument) { try { doc = protectDocument(i.buyerDocument) } catch { return { ok: false, error: 'CPF/CNPJ inválido.' } } }
+    const a = await prisma.artwork.findUnique({ where: { publicId: i.publicId }, select: { id: true, memberId: true, status: true, seal: true, listPriceCents: true, mandates: { where: { status: 'ACTIVE' }, select: { id: true, listPriceCents: true } } } })
+    if (!a || a.status !== 'LISTED' || a.seal !== 'GREEN') return { ok: false, error: 'Esta obra não está à venda.' }
+    const mandate = a.mandates[0]
+    const price = mandate?.listPriceCents ?? a.listPriceCents
+    if (!price || price <= 0n) return { ok: false, error: 'Esta obra é vendida sob consulta.' }
+    const card = await usableCard(i.buyerUserId, i.paymentMethodId)
+    if (!card) return { ok: false, error: 'Cadastre um cartão na carteira para comprar.' }
+    if (stripeMode() === 'live') return { ok: false, error: 'Pagamento real ainda não disponível.' }
+    const quote = await quoteForArtwork(a.id, i.deliveryCep, price)
+    const year = new Date().getUTCFullYear()
+    const seq = await prisma.offer.count({ where: { code: { startsWith: `OFR-${year}-` } } })
+    const ref = `mock_capture_${card.id}_${price}_${Date.now()}`
+    const offer = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${1_000_000 + a.id})`
+      const live = await tx.offer.count({ where: { artworkId: a.id, status: { in: [...LIVE_STATUSES] } } })
+      if (live > 0) throw new ArtworkError('ARTWORK_LOCKED', 'Esta obra acabou de ser reservada por outra pessoa.', 409)
+      return tx.offer.create({
+        data: {
+          code: offerCode(year, seq + 1), artworkId: a.id, mandateId: mandate?.id ?? null, sellerMemberId: a.memberId, memberId: a.memberId,
+          buyerUserId: i.buyerUserId, buyerName: i.buyerName.trim().slice(0, 120), buyerEmail: email, buyerDocumentHash: doc?.hash ?? null, buyerDocumentEnc: doc?.enc ?? null, buyerDocumentMask: doc?.mask ?? null,
+          buyerKind: 'COLLECTOR', buyerCity: i.buyerCity?.trim().slice(0, 80) || null, offeredCents: price, acceptedCents: price, status: 'ACCEPTED', expiresAt: new Date(Date.now() + 86_400_000),
+          validityHours: 24, guaranteeMethod: 'CARD_HOLD', guaranteeRef: ref, paymentMethodId: card.id, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: i.insurance ? quote.insuranceCents : 0n,
+          retractionTokenHash: null, retractionIssuedAt: new Date(),
+          rounds: { create: { number: 1, author: 'BUYER', amountCents: price, message: 'Compra direta ao preço pedido.' } },
+          events: { create: [{ kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: price.toString(), direct: true }) }, { kind: 'CONFIRMED', actorKind: 'BUYER' }, { kind: 'ACCEPTED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ amountCents: price.toString(), reason: 'list_price' }) }] },
+        },
+      })
+    })
+    const seller = await prisma.member.findUnique({ where: { id: a.memberId }, select: { userId: true, user: { select: { email: true } } } })
+    await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.auto_accepted', title: `Compra direta · ${offer.code}`, body: 'A obra foi comprada ao preço pedido e o valor está em garantia.', href: '/sales?tab=deals', emailSubject: 'Sua obra foi comprada' })
+    await syncOpportunityFromOffer(offer.id)
+    const deal = await createDealFromOffer(offer.id)
+    void audit.event({ entity: 'offer', entityId: offer.id, action: 'buy_now', userId: i.buyerUserId, after: { code: offer.code } })
+    return { ok: true, code: offer.code, dealId: deal?.id ?? null }
+  })
+}
+
+/** The logged buyer's offers (Compras › Ofertas): never the floor, never the document. */
+export async function offersOfUser(userId: number, now = new Date()): Promise<BuyerOffer[]> {
+  const rows = await prisma.offer.findMany({ where: { buyerUserId: userId, status: { not: 'AWAITING_OTP' } }, include: { rounds: { orderBy: { number: 'asc' } }, artwork: { select: { title: true, year: true, publicId: true, listPriceCents: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } } }, orderBy: { createdAt: 'desc' }, take: 50 })
+  return rows.map((o) => toBuyerView(o, now))
 }
 
 /** Expires what passed its validity (cron). */

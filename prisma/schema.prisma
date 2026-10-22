@@ -555,6 +555,14 @@ model Offer {
   retractionIssuedAt  DateTime?
   origin              String        @default("MARKETPLACE") // MARKETPLACE | LINK | PANEL
   message             String?
+  // Phase 4 (handoff): validity chosen by the buyer, guarantee method and the quote frozen at the offer.
+  validityHours       Int           @default(168)
+  guaranteeMethod     String        @default("NONE") // GUARANTEE_METHODS (lib/payment-methods/domain.ts)
+  guaranteeRef        String? // provider reference of the hold/reserve (mock_hold_… in mock)
+  paymentMethodId     Int?
+  deliveryCep         String?
+  shippingCents       BigInt        @default(0)
+  insuranceCents      BigInt        @default(0)
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   rounds              OfferRound[]
@@ -1136,4 +1144,42 @@ model UserIdentity {
 
   @@unique([provider, providerUserId])
   @@index([userId])
+}
+
+/// A saved card of a buyer (Phase 4). Only brand/last4/expiry live here; the PAN never
+/// touches the server beyond the tokenization call (mock: a mock_pm_ reference).
+model PaymentMethod {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  kind        String    @default("CARD") // CARD
+  brand       String // visa | mastercard | amex | elo | hipercard | other
+  last4       String
+  holderName  String
+  expMonth    Int
+  expYear     Int
+  billingCep  String?
+  providerRef String // provider token (Stripe pm_… in live; mock_pm_… in mock)
+  isDefault   Boolean   @default(false)
+  status      String    @default("ACTIVE") // ACTIVE | REMOVED
+  createdAt   DateTime  @default(now())
+  removedAt   DateTime?
+
+  @@index([userId, status])
+}
+
+/// Where a seller (member) receives sales: a Pix key confirmed in the holder's name. One per member.
+model PayoutAccount {
+  id          Int      @id @default(autoincrement())
+  memberId    Int      @unique
+  tenantId    Int?
+  kind        String   @default("PIX") // PIX
+  pixKeyType  String // CPF | CNPJ | EMAIL | PHONE | RANDOM
+  pixKeyEnc   String
+  pixKeyMask  String
+  holderName  String
+  status      String   @default("ACTIVE") // ACTIVE | REMOVED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
 }

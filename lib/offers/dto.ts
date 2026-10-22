@@ -14,8 +14,10 @@ export interface OfferRow {
 type Row = {
   id: number; code: string; artworkId: number; offeredCents: bigint; acceptedCents: bigint | null; status: string; expiresAt: Date; createdAt: Date
   buyerKind: string; buyerCity: string | null; buyerName: string; buyerUserId: number | null
-  artwork: { title: string; year: number | null; listPriceCents: bigint | null; media: { publicUrl: string | null }[] }
+  artwork: { title: string; year: number | null; listPriceCents: bigint | null; media: { publicUrl: string | null }[]; publicId?: string | null; artist?: { name: string } | null }
   rounds: { number: number; author: string; amountCents: bigint; message: string | null; createdAt: Date }[]
+  // Phase 4 (optional for the seller's row; the buyer's view reads them)
+  validityHours?: number; guaranteeMethod?: string; shippingCents?: bigint; insuranceCents?: bigint; deliveryCep?: string | null; message?: string | null
 }
 
 export function toSellerRow(o: Row, now: Date): OfferRow {
@@ -35,19 +37,29 @@ export function toSellerRow(o: Row, now: Date): OfferRow {
 }
 
 export interface BuyerOffer {
-  code: string; artworkTitle: string; offeredCents: bigint; currentCents: bigint; status: OfferStatus; statusLabel: string; expiresAt: string
+  code: string; artworkTitle: string; artworkPublicId: string | null; artistName: string | null; artworkCover: string | null; listPriceCents: bigint | null
+  offeredCents: bigint; currentCents: bigint; status: OfferStatus; statusLabel: string; expiresAt: string; createdAt: string
   rounds: { number: number; author: string; amountCents: bigint; message: string | null; at: string }[]
   canRetract: boolean; canReply: boolean
+  /** Phase 4: what the buyer chose at the offer; the quote frozen then */
+  validityHours: number; guaranteeMethod: string; shippingCents: bigint; insuranceCents: bigint; deliveryCep: string | null; message: string | null
+  /** the seller's last counter, when the ball is with the buyer */
+  counterCents: bigint | null; counterMessage: string | null
 }
 
 export function toBuyerView(o: Row & { retractionIssuedAt: Date | null }, now: Date): BuyerOffer {
   const status = buyerFacingStatus(o.status as OfferStatus)
   const last = o.rounds[o.rounds.length - 1]
   const retractOpen = ['RECEIVED', 'BELOW_RESERVE', 'NEGOTIATING'].includes(o.status) && now.getTime() - o.createdAt.getTime() <= 24 * 3_600_000
+  const canReply = o.status === 'NEGOTIATING' && last?.author !== 'BUYER'
   return {
-    code: o.code, artworkTitle: `${o.artwork.title}${o.artwork.year ? `, ${o.artwork.year}` : ''}`, offeredCents: o.offeredCents, currentCents: o.acceptedCents ?? last?.amountCents ?? o.offeredCents,
-    status, statusLabel: OFFER_STATUS_LABELS[status], expiresAt: o.expiresAt.toISOString(),
+    code: o.code, artworkTitle: `${o.artwork.title}${o.artwork.year ? `, ${o.artwork.year}` : ''}`, artworkPublicId: o.artwork.publicId ?? null, artistName: o.artwork.artist?.name ?? null,
+    artworkCover: o.artwork.media[0]?.publicUrl ?? null, listPriceCents: o.artwork.listPriceCents,
+    offeredCents: o.offeredCents, currentCents: o.acceptedCents ?? last?.amountCents ?? o.offeredCents,
+    status, statusLabel: OFFER_STATUS_LABELS[status], expiresAt: o.expiresAt.toISOString(), createdAt: o.createdAt.toISOString(),
     rounds: o.rounds.map((r) => ({ number: r.number, author: r.author, amountCents: r.amountCents, message: r.message, at: r.createdAt.toISOString() })),
-    canRetract: retractOpen, canReply: o.status === 'NEGOTIATING' && last?.author !== 'BUYER',
+    canRetract: retractOpen, canReply,
+    validityHours: o.validityHours ?? 168, guaranteeMethod: o.guaranteeMethod ?? 'NONE', shippingCents: o.shippingCents ?? 0n, insuranceCents: o.insuranceCents ?? 0n, deliveryCep: o.deliveryCep ?? null, message: o.message ?? null,
+    counterCents: canReply && last ? last.amountCents : null, counterMessage: canReply && last ? last.message : null,
   }
 }

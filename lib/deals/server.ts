@@ -59,8 +59,14 @@ export async function createDealFromOffer(offerId: number): Promise<{ id: number
       if (royaltyCents > 0n) await tx.royaltyPayment.create({ data: { artworkId: o.artworkId, artistId: o.artwork.artistId, dealId: d.id, saleCents: amount, previousSaleCents: previous, appreciationCents: amount - previous, royaltyCents, status: 'HELD' } })
       return d
     })
-    await notify({ userId: buyer.id, email: buyer.email, kind: 'deal.created', title: `Compra em andamento · ${o.artwork.title}`, body: 'Você tem 24 h para pagar em garantia.', href: '/purchases', emailSubject: 'Sua compra na HouseArt começou' })
-    void audit.event({ entity: 'deal', entityId: deal.id, action: 'create', after: { code: deal.code, amountCents: amount.toString() } })
+    // Phase 4: a guarantee reserved at the offer (card hold / Pix reserve) is captured now — the binding offer.
+    const guaranteed = (o.guaranteeMethod === 'CARD_HOLD' || o.guaranteeMethod === 'PIX_RESERVE') && !!o.guaranteeRef
+    if (guaranteed) {
+      await prisma.deal.update({ where: { id: deal.id }, data: { shippingCents: o.shippingCents, insuranceCents: o.insuranceCents } })
+      await payEscrow(buyer.id, deal.id, `${o.guaranteeRef}:captured`)
+    }
+    await notify({ userId: buyer.id, email: buyer.email, kind: 'deal.created', title: `Compra em andamento · ${o.artwork.title}`, body: guaranteed ? 'O valor reservado foi para a garantia. O vendedor já prepara o envio.' : 'Você tem 24 h para pagar em garantia.', href: '/purchases', emailSubject: 'Sua compra na HouseArt começou' })
+    void audit.event({ entity: 'deal', entityId: deal.id, action: 'create', after: { code: deal.code, amountCents: amount.toString(), guaranteed } })
     return { id: deal.id, code: deal.code }
   })
 }

@@ -9,7 +9,7 @@ import { audit } from '@/lib/audit'
 import { ArtworkError } from '@/lib/artworks/server'
 import { memberFilter, type Scope } from '@/lib/scope/core'
 import { totalScope } from '@/lib/scope/context'
-import { chargeNow } from '@/lib/stripe/door'
+import { chargeNow, stripeMode } from '@/lib/stripe/door'
 import { isServiceCode, orderCode, type PayerKind, type ServiceCode } from './domain'
 
 export interface PlaceOrderInput {
@@ -28,7 +28,7 @@ export interface PlaceOrderInput {
   transferId?: number | null
 }
 
-/** Creates and pays (mock) an order; returns null when FLAG_ORDERS is off (callers go on without a charge). */
+/** Creates and pays (mock, or Stripe in test/live) an order; returns null when FLAG_ORDERS is off (callers go on without a charge). */
 export async function placeOrder(i: PlaceOrderInput): Promise<{ id: number; code: string; amountCents: bigint; paymentRef: string } | null> {
   if (!flagOn('FLAG_ORDERS')) return null
   if (!isServiceCode(i.serviceCode)) throw new ArtworkError('BAD_SERVICE', 'Serviço desconhecido.', 400)
@@ -38,7 +38,10 @@ export async function placeOrder(i: PlaceOrderInput): Promise<{ id: number; code
   const amount = i.amountCents ?? item.priceCents * BigInt(quantity)
   if (amount <= 0n) throw new ArtworkError('QUOTE_REQUIRED', 'Este serviço é cotado à parte.', 409)
   const description = i.description ?? `${item.name}${quantity > 1 ? ` × ${quantity}` : ''}`
-  const payment = await chargeNow({ amountCents: amount, description })
+  // test/live: the payer is the person, else the member's login; the key is the natural one when the order has a unique origin.
+  const payerUserId = stripeMode() === 'mock' ? null : i.userId ?? (i.memberId ? (await prisma.member.findUnique({ where: { id: i.memberId }, select: { userId: true } }))?.userId ?? null : null)
+  const origin = i.appraisalRequestId ? `appraisal:${i.appraisalRequestId}` : i.transferId ? `transfer:${i.transferId}` : null
+  const payment = await chargeNow({ amountCents: amount, description, payerUserId, idempotencyKey: origin ? `order:${i.serviceCode}:${origin}` : undefined, metadata: { kind: 'order', serviceCode: i.serviceCode } })
   const year = new Date().getUTCFullYear()
   const order = await totalScope('orders:place', () => prisma.$transaction(async (tx) => {
     const seq = await tx.order.count({ where: { code: { startsWith: `ORD-${year}-` } } })

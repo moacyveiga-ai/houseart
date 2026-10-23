@@ -229,6 +229,13 @@
 @media (max-width: 720px) { .ha-login__art { min-height: 0; padding: var(--ha-space-6); } .ha-login__stage { display: none; } .ha-login__claim { font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); } }
 /* `claim` panel of the handoff (Entrar / Cadastro): brand on top, headline + tagline at the bottom, darkened wall. */
 .ha-login--claim .ha-login__art { justify-content: space-between; gap: var(--ha-space-10); background: linear-gradient(180deg, var(--ha-ink-700), var(--ha-ink-900) 65%); min-height: 320px; }
+/* a real artwork behind the claim: the photo covers the panel, a gradient keeps the brand and the headline readable */
+.ha-login__art--wall { position: relative; isolation: isolate; overflow: hidden; }
+.ha-login__art--wall::before { content: ''; position: absolute; inset: 0; z-index: -2; background: var(--ha-login-wall, none) center / cover no-repeat; }
+.ha-login__credit { margin: var(--ha-space-2) 0 0; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-paper-200); opacity: .85; }
+.ha-login__art--wall::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, color-mix(in srgb, var(--ha-ink-900) 45%, transparent) 0%, color-mix(in srgb, var(--ha-ink-900) 15%, transparent) 35%, color-mix(in srgb, var(--ha-ink-900) 74%, transparent) 100%); }
+.ha-login__art--wall .ha-login__brand, .ha-login__art--wall .ha-login__hero { position: relative; }
+@media (max-width: 720px) { .ha-login__art--wall { min-height: 300px; } }
 .ha-login__hero { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 460px; }
 .ha-login__headline { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: clamp(36px, 4vw, 56px); line-height: 1.05; color: var(--ha-paper-50); }
 .ha-login__tagline { margin: 0; color: var(--ha-paper-200); text-wrap: pretty; }
@@ -248,6 +255,7 @@
 .ha-bars__bar--on { background: var(--ha-sand-500); }
 /* Two-column page split (dashboard, carteira de escrituras, fila de laudos); the split BAR is .ha-split-summary__bar. */
 .ha-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ha-space-6); align-items: start; }
+.ha-split--one { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 900px) { .ha-split { grid-template-columns: 1fr; } }
 .ha-media-slot { aspect-ratio: 1 / 1; background: var(--ha-bg); border: var(--ha-border-w) dashed var(--ha-ink-300); display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--ha-fg-muted); cursor: pointer; }
 .ha-media-slot--has { background: var(--ha-wall); border-style: solid; }

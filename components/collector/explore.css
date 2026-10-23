@@ -1,18 +1,26 @@
 /* Explorar · feed e descobrir (handoff "HouseArt App Colecionador" › Explorar). Prefix ha-explore- / ha-xp- / ha-deck. */
-.ha-explore { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 600px; }
+.ha-explore { display: flex; flex-direction: column; gap: var(--ha-space-4); }
 .ha-explore__head { display: flex; flex-direction: column; gap: var(--ha-space-3); padding-bottom: var(--ha-space-3); border-bottom: var(--ha-border-w) solid var(--ha-border); }
 .ha-explore__top { display: flex; align-items: center; gap: var(--ha-space-2); }
 .ha-explore__top .ha-h1 { margin-right: auto; }
 .ha-explore__ic { width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: var(--ha-radius-md); color: var(--ha-fg); }
 .ha-explore__ic:hover { background: var(--ha-surface); }
 .ha-explore__ic:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
-.ha-explore__seg { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; background: var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-explore__seg { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; background: var(--ha-paper-200); border-radius: var(--ha-radius-md); max-width: 420px; }
 .ha-explore__seg-b { height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--ha-ink-900); font-size: var(--ha-text-body-sm); font-weight: 600; text-decoration: none; }
 .ha-explore__seg-b--on { background: var(--ha-paper-50); box-shadow: var(--ha-shadow-sm); }
 .ha-explore__seg-b:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .ha-explore__chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
 .ha-explore__chips .ha-chip { flex: none; height: 32px; display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; text-decoration: none; }
 .ha-explore__feed { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+/* desktop: the feed takes the whole width as a grid of cards (the phone column stays below 720px) */
+@media (min-width: 720px) {
+  .ha-explore__feed { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--ha-space-5); }
+  .ha-xp-post { padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-lg); background: var(--ha-bg); }
+  .ha-xp-post__wall { padding: var(--ha-space-6); }
+  .ha-explore__empty, .ha-explore__foot { grid-column: 1 / -1; }
+}
+@media (min-width: 1200px) { .ha-explore__feed { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .ha-explore__empty { padding: var(--ha-space-10) var(--ha-space-6); text-align: center; font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
 .ha-explore__foot { padding: var(--ha-space-6) 0 var(--ha-space-8); text-align: center; font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
 
@@ -45,8 +53,9 @@
 .ha-xp-post__v { font-size: 18px; line-height: 24px; font-weight: 600; color: var(--ha-fg); font-variant-numeric: tabular-nums; }
 .ha-xp-post__inst { font-size: 11px; line-height: 14px; color: var(--ha-fg-muted); }
 
-.ha-deck { display: flex; flex-direction: column; gap: 14px; max-width: 420px; }
+.ha-deck { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 560px; margin: 0 auto; }
 .ha-deck__stage { position: relative; min-height: 560px; }
+@media (min-width: 720px) { .ha-deck__stage { min-height: 680px; } }
 .ha-deck__card { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--ha-bg); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-lg); overflow: hidden; box-shadow: var(--ha-shadow-sm); touch-action: none; cursor: grab; user-select: none; }
 .ha-deck__card:active { cursor: grabbing; }
 .ha-deck__wall { flex: 1; min-height: 0; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-8); position: relative; }

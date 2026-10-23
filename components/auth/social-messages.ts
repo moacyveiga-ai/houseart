@@ -20,9 +20,8 @@ export function socialMessage(code: string | null | undefined): string | null {
 export const SOCIAL_BUTTONS = [
   { slug: 'google', key: 'GOOGLE', label: 'Continuar com Google' },
   { slug: 'apple', key: 'APPLE', label: 'Continuar com Apple' },
-  { slug: 'facebook', key: 'FACEBOOK', label: 'Continuar com Facebook' },
-  { slug: 'linkedin', key: 'LINKEDIN', label: 'Continuar com LinkedIn' },
 ] as const
+// Facebook and LinkedIn left the screens on 2026-10-23 (Moacy); the OAuth routes stay for a future decision.
 
 /** Href of the start route for a provider, carrying the purpose and the safe `next`. */
 export function socialStartHref(slug: string, purpose: 'login' | 'signup', next: string | null): string {

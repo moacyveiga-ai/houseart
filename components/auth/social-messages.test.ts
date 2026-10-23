@@ -20,6 +20,6 @@ describe('social login messages and links', () => {
   })
 
   it('lists the four providers of the handoff, in order', () => {
-    expect(SOCIAL_BUTTONS.map((b) => b.slug)).toEqual(['google', 'apple', 'facebook', 'linkedin'])
+    expect(SOCIAL_BUTTONS.map((b) => b.slug)).toEqual(['google', 'apple'])
   })
 })

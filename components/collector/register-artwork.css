@@ -1,5 +1,5 @@
 /* Cadastrar obra do colecionador (handoff "HouseArt App Colecionador" › Cadastrar obra). Prefix ha-reg. */
-.ha-reg { display: flex; flex-direction: column; gap: var(--ha-space-3); max-width: 560px; }
+.ha-reg { display: flex; flex-direction: column; gap: var(--ha-space-3); max-width: 960px; }
 .ha-reg__bar { display: flex; align-items: center; gap: var(--ha-space-2); margin-left: -10px; height: 44px; }
 .ha-reg__x { width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: var(--ha-radius-md); }
 .ha-reg__x:hover { background: var(--ha-surface); }

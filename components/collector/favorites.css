@@ -1,6 +1,7 @@
 /* Favoritos e curtidos (handoff "HouseArt App Colecionador" › Coleção › Favoritos · Curtidos). Prefix ha-fav. */
-.ha-fav { display: flex; flex-direction: column; gap: var(--ha-space-4); max-width: 640px; }
+.ha-fav { display: flex; flex-direction: column; gap: var(--ha-space-4); }
 .ha-fav__list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ha-space-3); }
+@media (min-width: 720px) { .ha-fav__list { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); column-gap: var(--ha-space-6); } .ha-fav__empty { grid-column: 1 / -1; } }
 .ha-fav-row { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; padding-bottom: var(--ha-space-3); border-bottom: var(--ha-border-w) solid var(--ha-border); }
 .ha-fav-row__wall { height: 80px; padding: 10px; }
 .ha-fav-row__wall img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: none; }
@@ -17,6 +18,7 @@
 .ha-fav__liked { display: flex; flex-direction: column; gap: var(--ha-space-3); }
 .ha-fav__note { font-size: 13px; color: var(--ha-fg-muted); }
 .ha-fav__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+@media (min-width: 720px) { .ha-fav__grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--ha-space-3); } }
 .ha-fav-tile { position: relative; }
 .ha-fav-tile__wall { aspect-ratio: 1 / 1; padding: 10px; }
 .ha-fav-tile__wall img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: none; }

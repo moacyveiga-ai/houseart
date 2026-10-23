@@ -30,7 +30,7 @@ beforeAll(() => {
   process.env.STRIPE_ENV = 'mock'; process.env.FLAG_ORDERS = '1'; process.env.FLAG_PLANS = '1'; process.env.FLAG_APPRAISAL = '1'; process.env.FLAG_BILLING = '1'
 })
 afterAll(() => { process.chdir(cwd); rmSync(dir, { recursive: true, force: true }) })
-beforeEach(async () => { s = await createScenario(); await truncateTables(['PlanSubscription', 'Order', 'Invoice', 'AppraisalRequest', 'AppraisalComparable', 'MarkerOrder', 'Notification']) })
+beforeEach(async () => { s = await createScenario(); await truncateTables(['PlanSubscription', 'Order', 'Invoice', 'AppraisalRequest', 'AppraisalComparable', 'MarkerOrder', 'MarkerBatch', 'Notification']) })
 
 const json = (v: unknown) => JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? x.toString() : x))
 

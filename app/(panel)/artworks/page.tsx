@@ -5,7 +5,7 @@ import { ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimension
 import { Chip } from '@/components/ds/Chip'
 import { Icon } from '@/components/ds/Icon'
 import { Badge } from '@/components/ds/Badge'
-import { listingOf } from '@/lib/gallery/listing-server'
+import { listingsOf } from '@/lib/gallery/listing-server'
 import { InventoryList } from '@/components/gallery/InventoryList'
 import { chipCounts, chipKey, filterInventory, type InventoryItem } from '@/components/gallery/inventory-core'
 
@@ -14,10 +14,10 @@ export const metadata = { title: 'Minhas obras — HouseArt' }
 /** "Acervo" of the gallery: the whole inventory loaded once, chips and search applied here (listArtworks has no q). */
 async function GalleryInventory({ scope, chip, q }: { scope: Parameters<typeof listArtworks>[0]; chip: string; q: string }) {
   const { items } = await listArtworks(scope, { filter: 'all' })
-  const listings = await Promise.all(items.map((a) => (a.status === 'LISTED' ? listingOf(scope, a.id).catch(() => null) : Promise.resolve(null))))
+  const listings = await listingsOf(scope, items.filter((a) => a.status === 'LISTED').map((a) => a.id))
   const all: InventoryItem[] = []
-  items.forEach((a, i) => {
-    const listing = listings[i]
+  items.forEach((a) => {
+    const listing = a.status === 'LISTED' ? listings.get(a.id) ?? null : null
     all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused } : null })
   })
   return <InventoryList title="Acervo" all={all} items={filterInventory(all, chip, q)} chip={chip} q={q} counts={chipCounts(all)} />

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ds/Badge'
 import { homeOf } from '@/lib/profiles/nav'
 import { redirect } from 'next/navigation'
 import { dayPanel } from '@/lib/gallery/panel-server'
-import { listingOf } from '@/lib/gallery/listing-server'
+import { listingsOf } from '@/lib/gallery/listing-server'
 import { initialsOf } from '@/lib/profiles/core'
 import { DayPanel, type TopViewed } from '@/components/gallery/DayPanel'
 
@@ -20,9 +20,9 @@ export const metadata = { title: 'Início — HouseArt' }
 async function GalleryDay({ scope, userName, now }: { scope: Parameters<typeof dayPanel>[0]; userName: string; now: Date }) {
   const [data, listed] = await Promise.all([dayPanel(scope, now), listArtworks(scope, { filter: 'listed' })])
   const ls = listed.items.filter((a) => a.status === 'LISTED')
-  const stats = await Promise.all(ls.map((a) => listingOf(scope, a.id, now).catch(() => null)))
+  const stats = await listingsOf(scope, ls.map((a) => a.id), now)
   const top: TopViewed[] = []
-  ls.forEach((a, i) => { const l = stats[i]; if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers }) })
+  ls.forEach((a) => { const l = stats.get(a.id); if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers }) })
   top.sort((x, y) => y.views7d - x.views7d)
   return <DayPanel data={data} who={{ initials: initialsOf(userName), name: userName, dateLabel: dateLabel(now) }} top={top.slice(0, 3)} />
 }

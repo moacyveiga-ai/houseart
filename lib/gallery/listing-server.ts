@@ -18,26 +18,73 @@ export interface ListingView {
   rules: { autoNegotiatorOn: boolean; autoAcceptMinBps: number }
 }
 
+const ARTWORK_SELECT = { id: true, memberId: true, tenantId: true, title: true, status: true, listingPausedAt: true, saleMode: true } as const
+
 async function reachable(scope: Scope, artworkId: number) {
-  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { id: true, memberId: true, tenantId: true, title: true, status: true, listingPausedAt: true, saleMode: true } })
+  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: ARTWORK_SELECT })
   if (!a || !canView(scope, a)) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
   return a
 }
 
 function dayKey(d: Date): string { return diaNoFuso(d) ?? d.toISOString().slice(0, 10) }
+const fromDay = (days: number, now: Date) => dayKey(new Date(now.getTime() - days * 86_400_000))
 
-export async function viewsSince(artworkId: number, days: number, now = new Date()): Promise<number> {
-  const from = dayKey(new Date(now.getTime() - days * 86_400_000))
-  const r = await prisma.artworkViewDay.aggregate({ where: { artworkId, day: { gte: from } }, _sum: { count: true } })
-  return r._sum.count ?? 0
+/** Views since `days` ago for many artworks in ONE query (absent = 0). No scope: the caller already recorded the ids. */
+export async function viewsSinceMany(artworkIds: readonly number[], days: number, now = new Date()): Promise<Map<number, number>> {
+  const ids = [...new Set(artworkIds)]
+  if (ids.length === 0) return new Map()
+  const rows = await prisma.artworkViewDay.groupBy({ by: ['artworkId'], where: { artworkId: { in: ids }, day: { gte: fromDay(days, now) } }, _sum: { count: true } })
+  return new Map(rows.map((r) => [r.artworkId, r._sum.count ?? 0]))
 }
 
+/**
+ * The listing of many artworks at a constant cost (the Acervo and the day
+ * panel used to call `listingOf` once per work, ~5 queries each): one query
+ * for the artworks, one for the ACTIVE mandates, one `groupBy` per view window
+ * and one for the open offers. Works out of the scope (canView) or without an
+ * ACTIVE mandate are absent from the map. Never carries the floor.
+ */
+export async function listingsOf(scope: Scope, artworkIds: readonly number[], now = new Date()): Promise<Map<number, ListingView>> {
+  return (await loadListings(scope, artworkIds, now)).listings
+}
+
+async function loadListings(scope: Scope, artworkIds: readonly number[], now: Date): Promise<{ visible: Set<number>; listings: Map<number, ListingView> }> {
+  const ids = [...new Set(artworkIds)].filter((id) => Number.isInteger(id) && id > 0)
+  const out = new Map<number, ListingView>()
+  if (ids.length === 0) return { visible: new Set(), listings: out }
+  const artworks = (await prisma.artwork.findMany({ where: { id: { in: ids } }, select: ARTWORK_SELECT })).filter((a) => canView(scope, a))
+  const visible = artworks.map((a) => a.id)
+  if (visible.length === 0) return { visible: new Set(), listings: out }
+  const [mandates, views7d, views30d, offers] = await Promise.all([
+    prisma.mandate.findMany({
+      where: { artworkId: { in: visible }, status: 'ACTIVE' },
+      select: { artworkId: true, listPriceCents: true, fixedPrice: true, autoNegotiatorOn: true, autoAcceptMinBps: true },
+      orderBy: [{ version: 'desc' }, { id: 'desc' }],
+    }),
+    viewsSinceMany(visible, 7, now),
+    viewsSinceMany(visible, 30, now),
+    prisma.offer.groupBy({ by: ['artworkId'], where: { artworkId: { in: visible }, status: { in: [...OPEN_FOR_SELLER] } }, _count: { _all: true } }),
+  ])
+  const mandateOf = new Map<number, (typeof mandates)[number]>()
+  for (const m of mandates) if (!mandateOf.has(m.artworkId)) mandateOf.set(m.artworkId, m)
+  const offersOf = new Map(offers.map((o) => [o.artworkId, o._count._all]))
+  for (const a of artworks) {
+    const m = mandateOf.get(a.id)
+    if (!m) continue
+    out.set(a.id, {
+      artworkId: a.id, title: a.title, status: a.status, paused: !!a.listingPausedAt, listPriceCents: m.listPriceCents, acceptsOffers: !m.fixedPrice, fixedPrice: m.fixedPrice,
+      stats: { views7d: views7d.get(a.id) ?? 0, views30d: views30d.get(a.id) ?? 0, openOffers: offersOf.get(a.id) ?? 0 },
+      rules: { autoNegotiatorOn: m.autoNegotiatorOn, autoAcceptMinBps: m.autoAcceptMinBps },
+    })
+  }
+  return { visible: new Set(visible), listings: out }
+}
+
+/** One artwork: 404 out of the scope, null when it has no ACTIVE mandate; the same reader as the batch. */
 export async function listingOf(scope: Scope, artworkId: number, now = new Date()): Promise<ListingView | null> {
-  const a = await reachable(scope, artworkId)
-  const m = await prisma.mandate.findFirst({ where: { artworkId, status: 'ACTIVE' } })
-  if (!m) return null
-  const [views7d, views30d, openOffers] = await Promise.all([viewsSince(artworkId, 7, now), viewsSince(artworkId, 30, now), prisma.offer.count({ where: { artworkId, status: { in: [...OPEN_FOR_SELLER] } } })])
-  return { artworkId, title: a.title, status: a.status, paused: !!a.listingPausedAt, listPriceCents: m.listPriceCents, acceptsOffers: !m.fixedPrice, fixedPrice: m.fixedPrice, stats: { views7d, views30d, openOffers }, rules: { autoNegotiatorOn: m.autoNegotiatorOn, autoAcceptMinBps: m.autoAcceptMinBps } }
+  const { visible, listings } = await loadListings(scope, [artworkId], now)
+  if (!visible.has(artworkId)) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
+  return listings.get(artworkId) ?? null
 }
 
 /** Price change = new mandate version with the same floor (never below it); the previous is SUPERSEDED. */

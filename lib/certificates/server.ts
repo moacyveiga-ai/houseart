@@ -111,6 +111,24 @@ export async function certificateOfArtwork(scope: Scope, artworkId: number) {
   return c
 }
 
+/**
+ * The number of the latest version of the certificate of many artworks in ONE
+ * query (the "Carteira de escrituras" used to call `certificateOfArtwork` per
+ * work). Same rule as `certificateOfArtwork(...).versions[0]?.version`: out of
+ * the scope or without a certificate = absent; a certificate without version = null.
+ */
+export async function currentCertificateVersionsOf(scope: Scope, artworkIds: readonly number[]): Promise<Map<number, number | null>> {
+  const ids = [...new Set(artworkIds)].filter((id) => Number.isInteger(id) && id > 0)
+  const out = new Map<number, number | null>()
+  if (ids.length === 0) return out
+  const rows = await prisma.certificate.findMany({
+    where: { artworkId: { in: ids } },
+    select: { artworkId: true, artwork: { select: { memberId: true, tenantId: true } }, versions: { orderBy: { version: 'desc' }, take: 1, select: { version: true } } },
+  })
+  for (const c of rows) if (canView(scope, c.artwork)) out.set(c.artworkId, c.versions[0]?.version ?? null)
+  return out
+}
+
 // ── public verification ──────────────────────────────────────────────────
 /** The three states of the public verification page (Verificação): what the
  *  certificate and the artwork say together. STOLEN wins over a contestation. */

@@ -7,7 +7,7 @@ import { sellerOffers } from '@/lib/offers/server'
 import { sellerDeals } from '@/lib/deals/server'
 import { flagOn } from '@/lib/flags'
 import { panelKpis, type PanelKpi } from './domain'
-import { viewsSince } from './listing-server'
+import { viewsSinceMany } from './listing-server'
 
 export interface PanelAction { icon: string; title: string; sub: string; tag: string; tone: 'pending' | 'alert' | 'neutral'; href: string }
 export interface DayPanel { kpis: PanelKpi[]; actions: PanelAction[]; monthName: string }
@@ -30,7 +30,7 @@ export async function dayPanel(scope: Scope, now = new Date()): Promise<DayPanel
   const escrow = deals.filter((d) => d.escrowPaid && d.phase !== 'COMPLETED').reduce((a, d) => a + d.amountCents, 0n)
   const artworkIds = await prisma.artwork.findMany({ where: { ...memberFilter(scope), status: 'LISTED' }, select: { id: true } })
   let views7d = 0
-  for (const a of artworkIds) views7d += await viewsSince(a.id, 7, now)
+  for (const v of (await viewsSinceMany(artworkIds.map((a) => a.id), 7, now)).values()) views7d += v
   const kpis = panelKpis({ monthSalesCents: monthDeals.reduce((a, d) => a + d.amountCents, 0n), monthSalesCount: monthDeals.length, openOffers: open.length, biggestOpenOfferCents: open.length ? open.reduce((m, o) => (o.currentCents > m ? o.currentCents : m), 0n) : null, escrowCents: escrow, views7d }, monthName)
   const actions: PanelAction[] = []
   for (const o of open) actions.push({ icon: 'request_quote', title: `Oferta de ${brl(o.currentCents)}`, sub: `${o.artworkTitle} · ${o.buyer}${o.differenceLabel ? ` · ${o.differenceLabel}` : ''}`, tag: `expira em ${o.expiresIn}`, tone: 'pending', href: '/sales' })

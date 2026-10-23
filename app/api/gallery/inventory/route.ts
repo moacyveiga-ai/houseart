@@ -1,5 +1,5 @@
 import { listArtworks } from '@/lib/artworks/server'
-import { listingOf } from '@/lib/gallery/listing-server'
+import { listingsOf } from '@/lib/gallery/listing-server'
 import { chipCounts, summaryLine, type InventoryItem } from '@/components/gallery/inventory-core'
 import { artworkErrorResponse, json } from '@/app/api/artworks/_http'
 import { gallerySession, isResponse } from '../_http'
@@ -16,9 +16,9 @@ export async function GET() {
   const s = await gallerySession(); if (isResponse(s)) return s
   try {
     const { items } = await listArtworks(s.scope, { filter: 'all' })
-    const listings = await Promise.all(items.map((a) => (a.status === 'LISTED' ? listingOf(s.scope, a.id).catch(() => null) : Promise.resolve(null))))
-    const all: InventoryItem[] = items.map((a, i) => {
-      const l = listings[i]
+    const listings = await listingsOf(s.scope, items.filter((a) => a.status === 'LISTED').map((a) => a.id))
+    const all: InventoryItem[] = items.map((a) => {
+      const l = a.status === 'LISTED' ? listings.get(a.id) : undefined
       return { id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: l ? { views7d: l.stats.views7d, openOffers: l.stats.openOffers, paused: l.paused } : null }
     })
     return json({ ok: true, items: all, counts: chipCounts(all), summary: summaryLine(all) }, { headers: { 'cache-control': 'no-store' } })

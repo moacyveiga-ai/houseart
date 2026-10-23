@@ -5,19 +5,40 @@
 // and the reconciliation commit together: a failure answers 500 and Stripe
 // retries; a repeated event answers 200 without touching anything.
 // Decisions (which status an event leads to) live in mode-core.ts.
+// Connect: `account.updated` (the seller's Express account — delivered by a
+// Connect endpoint, "events on connected accounts", which has its OWN signing
+// secret: STRIPE_CONNECT_WEBHOOK_SECRET; the same URL serves both) and
+// `transfer.reversed` (a platform event, the normal endpoint) — connect-server.ts.
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { isHandledEvent, nextGuaranteeStatus, nextOrderStatus, stripeModeOf, verifyStripeSignature, type HandledEvent } from './mode-core'
+import { isConnectEvent, requirementCodesOf } from './connect-core'
+import { markTransferReversed, syncConnectAccountFromEvent } from './connect-server'
+import type { GwAccount } from './gateway-server'
 
 export interface WebhookResult { status: number; body: { ok: boolean; duplicate?: boolean; ignored?: string; error?: string } }
 
-interface EventShape { id?: unknown; type?: unknown; livemode?: unknown; data?: { object?: { id?: unknown; object?: unknown } } }
+type EventObject = { id?: unknown; object?: unknown } & Record<string, unknown>
+interface EventShape { id?: unknown; type?: unknown; livemode?: unknown; data?: { object?: EventObject } }
+
+/** The account as the event carries it → the gateway's shape (only what the decisions read; nothing else is kept). */
+function accountOfEvent(o: Record<string, unknown>): GwAccount | null {
+  if (typeof o.id !== 'string') return null
+  const req = (o.requirements ?? {}) as Record<string, unknown>
+  const caps = (o.capabilities ?? {}) as Record<string, unknown>
+  return {
+    id: o.id, details_submitted: o.details_submitted === true, charges_enabled: o.charges_enabled === true, payouts_enabled: o.payouts_enabled === true,
+    requirements: { currently_due: requirementCodesOf(req.currently_due), past_due: requirementCodesOf(req.past_due), disabled_reason: typeof req.disabled_reason === 'string' ? req.disabled_reason : null },
+    transfersCapability: typeof caps.transfers === 'string' ? caps.transfers : null,
+  }
+}
 
 export async function handleStripeWebhook(rawBody: string, signature: string | null, nowMs = Date.now()): Promise<WebhookResult> {
-  const secret = (process.env.STRIPE_WEBHOOK_SECRET ?? '').trim()
-  if (!secret) return { status: 503, body: { ok: false, error: 'Webhook da Stripe não configurado.' } }
-  if (!verifyStripeSignature(rawBody, signature, secret, Math.floor(nowMs / 1000))) return { status: 400, body: { ok: false, error: 'Assinatura inválida.' } }
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].map((v) => (v ?? '').trim()).filter(Boolean)
+  if (secrets.length === 0) return { status: 503, body: { ok: false, error: 'Webhook da Stripe não configurado.' } }
+  const nowSec = Math.floor(nowMs / 1000)
+  if (!secrets.some((secret) => verifyStripeSignature(rawBody, signature, secret, nowSec))) return { status: 400, body: { ok: false, error: 'Assinatura inválida.' } }
   let ev: EventShape
   try { ev = JSON.parse(rawBody) as EventShape } catch { return { status: 400, body: { ok: false, error: 'Corpo inválido.' } } }
   const id = typeof ev.id === 'string' ? ev.id : null
@@ -27,6 +48,7 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   const mode = stripeModeOf(process.env)
   // an event of the other mode (a test event reaching live, or anything in mock) is acknowledged and ignored
   if (mode === 'mock' || (ev.livemode === true) !== (mode === 'live')) return { status: 200, body: { ok: true, ignored: 'mode' } }
+  if (isConnectEvent(type)) return connectEvent(id, type, ev.livemode === true, obj, mode)
   if (!isHandledEvent(type) || !obj || obj.object !== 'payment_intent' || typeof obj.id !== 'string') return { status: 200, body: { ok: true, ignored: 'type' } }
   const piId = obj.id
   try {
@@ -34,6 +56,28 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
       await tx.stripeEvent.create({ data: { eventId: id, type, livemode: ev.livemode === true, objectId: piId } })
       await reconcile(tx, piId, type)
     }))
+  } catch (e) {
+    if ((e as { code?: string })?.code === 'P2002') return { status: 200, body: { ok: true, duplicate: true } }
+    console.error('[stripe] webhook falhou', type, (e as { code?: string })?.code ?? (e as Error)?.name)
+    return { status: 500, body: { ok: false, error: 'Falha ao processar.' } }
+  }
+  return { status: 200, body: { ok: true } }
+}
+
+/** account.updated → the row of that account; transfer.reversed → the split line back to RELEASED. Idempotent by event id, like the rest. */
+async function connectEvent(id: string, type: 'account.updated' | 'transfer.reversed', livemode: boolean, obj: EventObject | undefined, mode: 'test' | 'live'): Promise<WebhookResult> {
+  if (!obj || typeof obj.id !== 'string') return { status: 200, body: { ok: true, ignored: 'type' } }
+  const objectId = obj.id
+  try {
+    await totalScope('stripe:webhook', async () => {
+      await prisma.stripeEvent.create({ data: { eventId: id, type, livemode, objectId } })
+      if (type === 'account.updated') {
+        const a = obj.object === 'account' ? accountOfEvent(obj) : null
+        if (a) await syncConnectAccountFromEvent(a, mode)
+      } else if (obj.object === 'transfer' && obj.reversed === true) {
+        await markTransferReversed(objectId)
+      }
+    })
   } catch (e) {
     if ((e as { code?: string })?.code === 'P2002') return { status: 200, body: { ok: true, duplicate: true } }
     console.error('[stripe] webhook falhou', type, (e as { code?: string })?.code ?? (e as Error)?.name)

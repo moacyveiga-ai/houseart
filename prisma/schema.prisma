@@ -738,9 +738,16 @@ model DealSplit {
   bps         Int
   amountCents BigInt
   status      String  @default("HELD") // HELD | RELEASED | PAID
+  /// The Stripe transfer (tr_…) that paid the line — the column reserved for it since Phase 4 (no separate transferRef).
   payoutRef   String?
+  transferredAt DateTime?
+  /// The last Stripe error code when the transfer failed (never a message, never PII); cleared when it pays.
+  payoutError String?
+  /// Recorded failures: versions the idempotency key (Stripe replays a saved failure for 24 h under the same key).
+  payoutAttempts Int    @default(0)
 
   @@index([dealId])
+  @@index([status, party])
 }
 
 /// Change of holder: on-platform (dealId) or off-platform (fee R$ 199).
@@ -1194,6 +1201,29 @@ model PayoutAccount {
   updatedAt   DateTime @updatedAt
 
   @@index([tenantId])
+}
+
+/// Stripe Connect Express account of a seller member (one per member; `mode` says which Stripe it lives in —
+/// a test account is useless live, so a mode change creates a new one and overwrites the row).
+model StripeConnectAccount {
+  id               Int       @id @default(autoincrement())
+  memberId         Int       @unique
+  tenantId         Int?
+  accountId        String    @unique // acct_…
+  mode             String // test | live
+  status           String    @default("PENDING") // CONNECT_ACCOUNT_STATUSES: PENDING | ONBOARDING | RESTRICTED | ENABLED | DISABLED
+  chargesEnabled   Boolean   @default(false)
+  payoutsEnabled   Boolean   @default(false)
+  detailsSubmitted Boolean   @default(false)
+  /// The requirement codes Stripe says are currently due (JSON array of strings, no PII).
+  requirementsJson String    @default("[]")
+  disabledReason   String?
+  lastSyncedAt     DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([status, mode])
 }
 
 /// Gallery-wide offer rules (Phase 6, "Regras de ofertas"): defaults for every mandate of the member/tenant.

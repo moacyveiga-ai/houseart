@@ -48,3 +48,22 @@
 .ha-payout-card__holder { display: flex; align-items: center; gap: 6px; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-body); }
 .ha-payout-card__holder .ha-icon { color: var(--ha-verified-500); }
 .ha-payout-card__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
+
+/* Receber pela Stripe (Connect Express) — the card above the Pix key. Prefix ha-connect. */
+.ha-connect { display: flex; flex-direction: column; gap: var(--ha-space-3); min-width: 0; }
+.ha-connect__head { display: flex; align-items: center; gap: var(--ha-space-3); }
+.ha-connect__ic { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--ha-radius-md); background: var(--ha-surface); color: var(--ha-fg); flex: none; }
+.ha-connect__ic--verified { background: var(--ha-verified-100); color: var(--ha-verified-500); }
+.ha-connect__ic--pending { background: var(--ha-pending-100); color: var(--ha-ink-900); }
+.ha-connect__ic--alert { background: var(--ha-alert-100); color: var(--ha-alert-500); }
+.ha-connect__k { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-connect__v { font-size: var(--ha-text-body); font-weight: 600; color: var(--ha-fg); }
+.ha-connect__sub { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); text-wrap: pretty; }
+.ha-connect-req { display: flex; flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-connect-req__t { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-connect-req__l { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.ha-connect-req__l li { display: flex; align-items: center; gap: 4px; font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-connect-req__l .ha-icon { color: var(--ha-fg-muted); }
+.ha-connect__foot { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); padding-top: var(--ha-space-3); border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-connect__note { display: flex; gap: 6px; font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-fg-muted); }
+.ha-connect__note .ha-icon { color: var(--ha-fg); flex: none; }

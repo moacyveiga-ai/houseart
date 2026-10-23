@@ -12,6 +12,20 @@ export interface GwPaymentMethod { id: string; customer: string | null; card: Gw
 export interface GwPaymentIntent { id: string; status: string; amount: number; amount_capturable: number; amount_received: number; customer: string | null; metadata: Record<string, string> }
 export interface GwEvent { id: string; type: string; livemode: boolean; data: { object: GwPaymentIntent } }
 
+// ── Connect ───────────────────────────────────────────────────────────────
+export interface GwAccount {
+  id: string
+  details_submitted: boolean
+  charges_enabled: boolean
+  payouts_enabled: boolean
+  requirements: { currently_due: string[]; past_due: string[]; disabled_reason: string | null }
+  /** `capabilities.transfers` ('active' | 'inactive' | 'pending'), null when Stripe did not send it. */
+  transfersCapability: string | null
+}
+export interface GwTransfer { id: string; amount: number; destination: string; transfer_group: string | null; reversed: boolean; amount_reversed: number; metadata: Record<string, string> }
+export interface AccountInput { email: string; business_type: 'individual' | 'company'; metadata: Record<string, string> }
+export interface TransferInput { amount: number; currency: 'brl'; destination: string; transfer_group: string; metadata: Record<string, string> }
+
 export interface PaymentIntentInput {
   amount: number
   currency: 'brl'
@@ -33,12 +47,31 @@ export interface StripeGateway {
   capturePaymentIntent(id: string, amountToCapture: number, idempotencyKey: string): Promise<GwPaymentIntent>
   cancelPaymentIntent(id: string, idempotencyKey: string): Promise<GwPaymentIntent>
   retrievePaymentIntent(id: string): Promise<GwPaymentIntent>
+  // Connect (Express, Brazil): the seller's account, its onboarding link, its state, the transfers that pay the split.
+  createAccount(p: AccountInput, idempotencyKey: string): Promise<GwAccount>
+  createAccountLink(p: { account: string; refresh_url: string; return_url: string }): Promise<{ url: string }>
+  retrieveAccount(id: string): Promise<GwAccount>
+  /** A plain transfer from the platform balance (no source_transaction): the escrow PaymentIntent already funded it. */
+  createTransfer(p: TransferInput, idempotencyKey: string): Promise<GwTransfer>
+  /** The transfers of a group (a deal code): the lookup that keeps a line at ONE transfer when our write after a success was lost. */
+  listTransfers(transferGroup: string): Promise<GwTransfer[]>
+  createLoginLink(account: string): Promise<{ url: string }>
 }
 
 const idOf = (v: unknown): string | null => (typeof v === 'string' ? v : v && typeof v === 'object' && 'id' in v ? String((v as { id: string }).id) : null)
 
 function toPi(pi: Stripe.PaymentIntent): GwPaymentIntent {
   return { id: pi.id, status: pi.status, amount: pi.amount, amount_capturable: pi.amount_capturable, amount_received: pi.amount_received, customer: idOf(pi.customer), metadata: { ...(pi.metadata ?? {}) } }
+}
+export function toAccount(a: Stripe.Account): GwAccount {
+  return {
+    id: a.id, details_submitted: !!a.details_submitted, charges_enabled: !!a.charges_enabled, payouts_enabled: !!a.payouts_enabled,
+    requirements: { currently_due: [...(a.requirements?.currently_due ?? [])], past_due: [...(a.requirements?.past_due ?? [])], disabled_reason: a.requirements?.disabled_reason ?? null },
+    transfersCapability: a.capabilities?.transfers ?? null,
+  }
+}
+function toTransfer(t: Stripe.Transfer): GwTransfer {
+  return { id: t.id, amount: t.amount, destination: idOf(t.destination) ?? '', transfer_group: t.transfer_group ?? null, reversed: !!t.reversed, amount_reversed: t.amount_reversed, metadata: { ...(t.metadata ?? {}) } }
 }
 function toSi(si: Stripe.SetupIntent): GwSetupIntent {
   return { id: si.id, client_secret: si.client_secret, status: si.status, customer: idOf(si.customer), payment_method: idOf(si.payment_method) }
@@ -66,6 +99,14 @@ export function realGateway(secretKey: string): StripeGateway {
     async capturePaymentIntent(id, amountToCapture, idempotencyKey) { return toPi(await s.paymentIntents.capture(id, { amount_to_capture: amountToCapture }, { idempotencyKey })) },
     async cancelPaymentIntent(id, idempotencyKey) { return toPi(await s.paymentIntents.cancel(id, {}, { idempotencyKey })) },
     async retrievePaymentIntent(id) { return toPi(await s.paymentIntents.retrieve(id)) },
+    async createAccount(p, idempotencyKey) {
+      return toAccount(await s.accounts.create({ type: 'express', country: 'BR', email: p.email, business_type: p.business_type, capabilities: { transfers: { requested: true } }, metadata: p.metadata }, { idempotencyKey }))
+    },
+    async createAccountLink(p) { const l = await s.accountLinks.create({ account: p.account, refresh_url: p.refresh_url, return_url: p.return_url, type: 'account_onboarding' }); return { url: l.url } },
+    async retrieveAccount(id) { return toAccount(await s.accounts.retrieve(id)) },
+    async createTransfer(p, idempotencyKey) { return toTransfer(await s.transfers.create(p, { idempotencyKey })) },
+    async listTransfers(transferGroup) { const l = await s.transfers.list({ transfer_group: transferGroup, limit: 100 }); return l.data.map(toTransfer) },
+    async createLoginLink(account) { const l = await s.accounts.createLoginLink(account); return { url: l.url } },
   }
 }
 

@@ -53,7 +53,7 @@ export interface DealView {
   id: number; code: string; phase: DealPhase; progressPct: number; artworkTitle: string; artist: string; sellerName: string; cover: string | null
   amountCents: string; shippingCents: string; insuranceCents: string; market: string; buyerName: string
   steps: { phase: DealPhase; title: string; icon: string; description: string; date: string | null; state: 'done' | 'on' | 'todo' }[]
-  split: { party: string; label: string; amountCents: string; status: string }[]
+  split: { party: string; label: string; amountCents: string; status: string; payoutState?: string; payoutLabel?: string }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
 }

@@ -78,6 +78,17 @@ export async function createDraft(scope: Scope, opt: { artistId?: number | null;
   return artwork
 }
 
+/** "Nova obra" by the web page: a GET, so it must not pile up drafts — reopens the member's newest
+ *  untouched draft (default title, no photo) before creating another. */
+export async function openBlankDraft(scope: Scope) {
+  const memberId = memberOfScope(scope)
+  if (memberId) {
+    const blank = await prisma.artwork.findFirst({ where: { memberId, status: 'DRAFT', title: 'Nova obra', media: { none: {} } }, orderBy: { id: 'desc' } })
+    if (blank) return blank
+  }
+  return createDraft(scope)
+}
+
 export async function getArtwork(scope: Scope, id: number) {
   const a = await prisma.artwork.findUnique({
     where: { id },

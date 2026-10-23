@@ -117,7 +117,7 @@ o total do checkout, grava a proposta sob a trava da obra e captura), pagamento 
 negócio e a taxa de transferência fora da plataforma (cartão padrão do pagador). Webhook idempotente
 por id do evento (tabela `StripeEvent`).
 
-#### 9.1 Connect — repasse automático aos vendedores (código pronto, 2026-10-23; ligar na Stripe)
+#### 9.1 Connect — repasse automático aos vendedores (NO AR em 2026-10-23, modo teste; ligar na Stripe)
 O vendedor (artista, galeria pelo ADMIN, colecionador que revende) conecta uma conta **Express** em
 `/sales/payout` ("Receber pela Stripe", acima do Pix). Quando o negócio conclui (toque do comprador na
 etiqueta), a parte de cada linha do split vai por **Transfer do saldo da plataforma** para a conta

@@ -14,6 +14,7 @@ const PUBLIC_EXACT = new Set<string>([
   '/signup',                     // member signup (artist, gallery, advisor) by e-mail code
   '/collector/access',           // collector entry by e-mail code
   '/api/version',                // deploy probe
+  '/api/stripe/webhook',         // signed by Stripe (Stripe-Signature over the raw body, checked in lib/stripe/webhook-server.ts)
   '/privacy',
   '/terms',
   '/robots.txt',
@@ -30,7 +31,6 @@ const PUBLIC_PREFIXES = [
   '/api/collector/access/',     // start/verify/resend of the collector code — NARROW prefix: /api/collector/* stays logged
   '/api/jobs/',
   '/api/cron/',
-  '/api/billing/webhook/stripe', // signed by Stripe (Stripe-Signature over the raw body)
   '/api/kyc/webhook/',           // signed by the KYC provider
   '/api/whatsapp-evolution/webhook/',
   '/api/whatsapp-business/webhook/',

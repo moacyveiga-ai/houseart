@@ -117,10 +117,54 @@ o total do checkout, grava a proposta sob a trava da obra e captura), pagamento 
 negócio e a taxa de transferência fora da plataforma (cartão padrão do pagador). Webhook idempotente
 por id do evento (tabela `StripeEvent`).
 
+#### 9.1 Connect — repasse automático aos vendedores (código pronto, 2026-10-23; ligar na Stripe)
+O vendedor (artista, galeria pelo ADMIN, colecionador que revende) conecta uma conta **Express** em
+`/sales/payout` ("Receber pela Stripe", acima do Pix). Quando o negócio conclui (toque do comprador na
+etiqueta), a parte de cada linha do split vai por **Transfer do saldo da plataforma** para a conta
+ENABLED do beneficiário: a parte do vendedor (`ARTIST` numa venda do artista, `GALLERY` numa venda da
+galeria ou revenda do colecionador), a parte do artista numa venda da galeria (quando o artista tem
+conta) e o direito de sequência (`ARTIST_ROYALTY`). `PLATFORM`, `SHIPPING` e `INSURANCE` nunca saem.
+Linha sem conta ENABLED fica `RELEASED` (repasse manual por Pix, como hoje); quem conecta DEPOIS do
+negócio é pago pelo cron **`/api/cron/connect-payouts`** (de hora em hora, `40 * * * *`, `CRON_SECRET`
++ `JobLease`). Recusa da Stripe fica na linha (`DealSplit.payoutError`, só o código) e o cron tenta de
+novo com chave nova (`payoutAttempts`); a conclusão do negócio nunca falha por causa do repasse.
+Linha paga: `status=PAID`, `payoutRef=tr_…`, `transferredAt`. `transfer.reversed` devolve a linha a
+`RELEASED` com `transfer_reversed` e o cron NÃO transfere de novo sozinho (decisão manual). Modo mock:
+tudo 409, a tela do Pix é a de antes. Provas: `test/integration/stripe-connect.integration.test.ts`
+(Stripe falso injetado), `lib/stripe/connect-core.test.ts`.
+
+**Ligar na Stripe (modo Test)**:
+1. Painel da Stripe › **Settings › Connect › Get started** (ou *Connect › Overview*): tipo de
+   integração "Express"; país da plataforma Brasil. Em *Settings › Connect › Branding* pôr nome, ícone
+   e cor — o onboarding hospedado e o painel Express mostram a marca da HouseArt.
+2. *Settings › Connect › Express* (ou *Onboarding options*): país permitido **Brasil**; capacidade
+   pedida pelo código: só `transfers` (recebedor). Nada a configurar além do que vem por padrão.
+3. **Webhook de Connect**: *Developers › Webhooks › Add endpoint* → **mesma URL**
+   `https://houseart-housemapp.vercel.app/api/stripe/webhook` → em "Listen to" marcar
+   **"Events on Connected accounts"** (não "Events on your account") → evento `account.updated` →
+   copiar o *Signing secret* desse endpoint em **`STRIPE_CONNECT_WEBHOOK_SECRET`** (é outro secret: o
+   código aceita a assinatura de qualquer um dos dois). No endpoint de sempre ("Events on your
+   account") acrescentar **`transfer.reversed`** (a Transfer é da plataforma; `transfer.failed` não
+   existe na Stripe). Sem o webhook de Connect a tela ainda funciona: a volta do onboarding
+   (`?connect=return`) e "Atualizar situação" releem a conta.
+4. Redeploy (migration `20261023200000_stripe_connect`, aditiva).
+5. **Saldo**: a Transfer sai do saldo da plataforma. Em teste, o pagamento em garantia do negócio
+   (PaymentIntent com cartão 4242) já credita o saldo de teste; se faltar, "Add to balance" no painel
+   (modo Test) ou `balance_insufficient` fica na linha e o cron paga na hora seguinte.
+6. Onboarding de teste: a Stripe aceita dados fictícios no modo Test (CPF 000.000.001-91, qualquer
+   endereço, conta bancária de teste que o próprio formulário oferece, "Skip this step" onde houver).
+7. Conferir: `/sales/payout` → "Conectar conta" → formulário hospedado → volta com "Ativa"; concluir um
+   negócio → a linha diz "pago pela Stripe"; a Transfer aparece em *Connect › Transfers*.
+
+Para live: as mesmas chaves live (§9), **a conta Connect da plataforma ativada em live** (termos e
+dados da empresa na Stripe) e os dois webhooks live. `STRIPE_CONNECT_WEBHOOK_SECRET` é opcional: sem
+ela, só a assinatura do endpoint de sempre vale.
+
 **Ainda NÃO** (pendências):
-- **Connect / repasse aos vendedores**: o dinheiro fica na conta da plataforma; o repasse ao artista,
-  à galeria e o direito de sequência seguem como hoje (Pix cadastrado, fora da Stripe). Próxima fase:
-  contas Connect Express, `transfer_data`/transfers no split.
+- **Connect**: ligar na Stripe (acima); estorno de Transfer (reversal) por tela; repasse manual
+  (Pix) continua fora da Stripe; o consultor (`ADVISOR`) não tem membro no negócio — nenhuma linha
+  é gerada hoje, e quando houver vai pelo mesmo caminho; a galeria recebe na conta do ADMIN do
+  tenant (uma conta por membro, não por tenant).
 - Reserva por Pix na proposta (`PIX_RESERVE`) é recusada em test/live — não há provedor.
 - Estorno (refund) e disputa: não há tela; se a gravação falhar depois de uma cobrança com sucesso
   (plano, pedido), o estorno é manual no painel da Stripe.
@@ -132,6 +176,6 @@ por id do evento (tabela `StripeEvent`).
   pessoa cadastra de novo ao trocar de modo.
 
 ## Depois do MVP (produto)
-Stripe live (`STRIPE_ENV=live` com `sk_live_`/`pk_live_`, webhook live; tirar `STRIPE_TEST_ALLOWED`) e Connect, KYC real,
+Stripe live (`STRIPE_ENV=live` com `sk_live_`/`pk_live_`, webhooks live; tirar `STRIPE_TEST_ALLOWED`), Connect live (§9.1), KYC real,
 etiquetas NTAG 424 reais (`MARKER_VENDOR=ntag424` + master key), carimbo do tempo, âncora,
 frete/seguro, telas do pacote de design que não vieram (site público, galeria, colecionador, app).

@@ -4,7 +4,7 @@
 // a saved card gives `succeeded` (or `requires_capture` with manual capture),
 // a card marked as declining throws a StripeCardError, capture ≤ capturable,
 // cancel only before success. Nothing here talks to the network.
-import type { GwPaymentIntent, GwPaymentMethod, GwSetupIntent, PaymentIntentInput, StripeGateway } from '@/lib/stripe/gateway-server'
+import type { AccountInput, GwAccount, GwPaymentIntent, GwPaymentMethod, GwSetupIntent, GwTransfer, PaymentIntentInput, StripeGateway, TransferInput } from '@/lib/stripe/gateway-server'
 
 export interface FakeCard { brand: string; last4: string; exp_month: number; exp_year: number; declines?: 'card_declined' | 'authentication_required' }
 
@@ -15,6 +15,10 @@ export class FakeStripe implements StripeGateway {
   paymentMethods = new Map<string, GwPaymentMethod & { declines?: FakeCard['declines'] }>()
   intents = new Map<string, GwPaymentIntent & { capture_method: string; payment_method: string }>()
   detached: string[] = []
+  accounts = new Map<string, GwAccount & { email: string; business_type: string }>()
+  transfers = new Map<string, GwTransfer>()
+  /** When set, every createTransfer throws this Stripe-shaped error (balance_insufficient, account restricted…). */
+  transferFailure: { type: string; code: string } | null = null
   calls: { op: string; key?: string; params?: unknown }[] = []
   private idem = new Map<string, unknown>()
 
@@ -93,6 +97,59 @@ export class FakeStripe implements StripeGateway {
       pi.status = 'canceled'; pi.amount_capturable = 0
       return { ...pi }
     })
+  }
+
+  // ── Connect ──────────────────────────────────────────────────────────────
+  async createAccount(p: AccountInput, idempotencyKey: string) {
+    this.calls.push({ op: 'account', key: idempotencyKey, params: p })
+    return this.once(idempotencyKey, () => {
+      const id = this.id('acct')
+      const a = { id, details_submitted: false, charges_enabled: false, payouts_enabled: false, requirements: { currently_due: ['external_account', 'individual.id_number', 'tos_acceptance.date'], past_due: [], disabled_reason: 'requirements.past_due' }, transfersCapability: 'inactive', email: p.email, business_type: p.business_type }
+      this.accounts.set(id, a)
+      return this.snapshot(id)
+    })
+  }
+  async createAccountLink(p: { account: string; refresh_url: string; return_url: string }) {
+    this.calls.push({ op: 'account_link', params: p })
+    if (!this.accounts.has(p.account)) throw Object.assign(new Error('No such account'), { type: 'StripeInvalidRequestError', code: 'resource_missing' })
+    return { url: `https://connect.stripe.com/setup/e/${p.account}/fake` }
+  }
+  async retrieveAccount(id: string) {
+    if (!this.accounts.has(id)) throw Object.assign(new Error('No such account'), { type: 'StripeInvalidRequestError', code: 'resource_missing' })
+    return this.snapshot(id)
+  }
+  async createLoginLink(account: string) {
+    this.calls.push({ op: 'login_link', params: { account } })
+    return { url: `https://connect.stripe.com/express/${account}/fake` }
+  }
+  async createTransfer(p: TransferInput, idempotencyKey: string) {
+    this.calls.push({ op: 'transfer', key: idempotencyKey, params: p })
+    return this.once(idempotencyKey, () => {
+      if (this.transferFailure) throw Object.assign(new Error('transfer refused'), this.transferFailure)
+      const a = this.accounts.get(p.destination)
+      if (!a) throw Object.assign(new Error('No such destination'), { type: 'StripeInvalidRequestError', code: 'resource_missing' })
+      if (a.transfersCapability !== 'active') throw Object.assign(new Error('capability inactive'), { type: 'StripeInvalidRequestError', code: 'account_invalid' })
+      const t: GwTransfer = { id: this.id('tr'), amount: p.amount, destination: p.destination, transfer_group: p.transfer_group, reversed: false, amount_reversed: 0 }
+      this.transfers.set(t.id, t)
+      return { ...t }
+    })
+  }
+  /** What the person does on Stripe's hosted onboarding: everything submitted and verified (or only submitted, still pending). */
+  completeOnboarding(accountId: string, verified = true) {
+    const a = this.accounts.get(accountId)!
+    a.details_submitted = true
+    a.requirements = verified ? { currently_due: [], past_due: [], disabled_reason: null } : { currently_due: ['individual.verification.document'], past_due: [], disabled_reason: 'requirements.pending_verification' }
+    a.charges_enabled = verified; a.payouts_enabled = verified; a.transfersCapability = verified ? 'active' : 'pending'
+  }
+  /** The account as Stripe sends it in `account.updated` (data.object) and in retrieve. */
+  snapshot(accountId: string): GwAccount {
+    const a = this.accounts.get(accountId)!
+    return { id: a.id, details_submitted: a.details_submitted, charges_enabled: a.charges_enabled, payouts_enabled: a.payouts_enabled, requirements: { ...a.requirements, currently_due: [...a.requirements.currently_due], past_due: [...a.requirements.past_due] }, transfersCapability: a.transfersCapability }
+  }
+  /** The raw `data.object` of an account.updated event, as the webhook parses it. */
+  accountEventObject(accountId: string) {
+    const a = this.snapshot(accountId)
+    return { object: 'account', id: a.id, details_submitted: a.details_submitted, charges_enabled: a.charges_enabled, payouts_enabled: a.payouts_enabled, requirements: a.requirements, capabilities: { transfers: a.transfersCapability } }
   }
 }
 

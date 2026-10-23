@@ -10,6 +10,9 @@ import { flagOn } from '@/lib/flags'
 import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
 import { chargeNow, stripeMode } from '@/lib/stripe/door'
+import { payDealSplits } from '@/lib/stripe/connect-server'
+import { SPLIT_PAYOUT_LABELS, splitPayoutState, type ConnectAccountStatus, type SplitPayoutState } from '@/lib/stripe/connect-core'
+import { afterResponseOrNow } from '@/lib/after'
 import { moveArtworkToHolder } from '@/lib/tenant/member-server'
 import { ensureCollectorUser } from '@/lib/accounts/collector-server'
 import { computeSplit, SPLIT_PARTY_LABELS, type SplitLine } from '@/lib/commission/split-core'
@@ -89,13 +92,20 @@ export interface DealView {
   id: number; code: string; phase: DealPhase; progressPct: number; artworkTitle: string; artist: string; sellerName: string; cover: string | null
   amountCents: bigint; shippingCents: bigint; insuranceCents: bigint; market: string; buyerName: string
   steps: { phase: DealPhase; title: string; icon: string; description: string; date: string | null; state: 'done' | 'on' | 'todo' }[]
-  split: { party: string; label: string; amountCents: bigint; status: string }[]
+  split: { party: string; label: string; amountCents: bigint; status: string; payoutState: SplitPayoutState; payoutLabel: string }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
 }
 
 function toView(d: Awaited<ReturnType<typeof loadDeal>>): DealView {
   const idx = phaseIndex(d.phase as DealPhase)
+  // the Connect account behind each payable line (seller member; the artist's own member for ARTIST of a gallery sale and the royalty)
+  const sellerIsArtist = d.artwork.member.kind === 'ARTIST'
+  const accountOf = (party: string): ConnectAccountStatus | null => {
+    const memberId = party === 'GALLERY' || (party === 'ARTIST' && sellerIsArtist) ? d.sellerMemberId : party === 'ARTIST' || party === 'ARTIST_ROYALTY' ? d.artwork.artist.memberId : null
+    const a = memberId === null ? null : d.connectAccounts.find((x) => x.memberId === memberId)
+    return a ? (a.status as ConnectAccountStatus) : null
+  }
   const events = new Map(d.phaseEvents.map((e) => [e.phase, e]))
   const steps = PHASE_STEPS.map((s, i) => {
     const e = events.get(s.phase) ?? (s.phase === 'TRANSFER' ? events.get('COMPLETED') : undefined)
@@ -105,14 +115,17 @@ function toView(d: Awaited<ReturnType<typeof loadDeal>>): DealView {
   return {
     id: d.id, code: d.code, phase: d.phase as DealPhase, progressPct: Math.round(((idx + 1) / 7) * 100), artworkTitle: `${d.artwork.title}${d.artwork.year ? `, ${d.artwork.year}` : ''}`, artist: d.artwork.artist.name,
     sellerName: d.artwork.member.displayName, cover: d.artwork.media[0]?.publicUrl ?? null, amountCents: d.amountCents, shippingCents: d.shippingCents, insuranceCents: d.insuranceCents, market: d.market, buyerName: d.offer.buyerName,
-    steps, split: d.splits.map((s) => ({ party: s.party, label: SPLIT_PARTY_LABELS[s.party as keyof typeof SPLIT_PARTY_LABELS] ?? s.party, amountCents: s.amountCents, status: s.status })),
+    steps, split: d.splits.map((s) => { const payoutState = splitPayoutState(s, accountOf(s.party)); return { party: s.party, label: SPLIT_PARTY_LABELS[s.party as keyof typeof SPLIT_PARTY_LABELS] ?? s.party, amountCents: s.amountCents, status: s.status, payoutState, payoutLabel: SPLIT_PAYOUT_LABELS[payoutState] } }),
     shipping: d.carrierName ? { carrier: d.carrierName, tracking: d.trackingCode, insurer: d.insurerName } : null,
     sellerSigned: !!d.sellerSignedAt, buyerSigned: !!d.buyerSignedAt, escrowPaid: !!d.escrowPaidAt, completedAt: d.completedAt?.toISOString() ?? null,
   }
 }
 
 async function loadDeal(id: number) {
-  return prisma.deal.findUniqueOrThrow({ where: { id }, include: { artwork: { include: { artist: true, member: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 } } }, offer: true, phaseEvents: { orderBy: { occurredAt: 'asc' } }, splits: true } })
+  const d = await prisma.deal.findUniqueOrThrow({ where: { id }, include: { artwork: { include: { artist: true, member: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 } } }, offer: true, phaseEvents: { orderBy: { occurredAt: 'asc' } }, splits: { orderBy: { id: 'asc' } } } })
+  const members = [d.sellerMemberId, d.artwork.artist.memberId].filter((m): m is number => m !== null)
+  const connectAccounts = stripeMode() === 'mock' ? [] : await prisma.stripeConnectAccount.findMany({ where: { memberId: { in: members }, mode: stripeMode() }, select: { memberId: true, status: true } })
+  return { ...d, connectAccounts }
 }
 
 export async function sellerDeals(scope: Scope): Promise<DealView[]> {
@@ -234,5 +247,17 @@ async function completeTransfer(dealId: number) {
     })
     await recordEvent(d.artworkId, 'TRANSFERRED', { dealCode: d.code, version: prev.version + 1 }, buyer.id)
     await notify({ userId: buyer.id, email: buyer.email, kind: 'certificate.transferred', title: 'Escritura emitida em seu nome', body: 'A obra entrou na sua carteira.', href: '/wallet', emailSubject: 'Escritura emitida em seu nome' })
+    // The seller's money: Transfers from the platform balance to the ENABLED Connect accounts, after the commit and
+    // after the response. A line without an account stays RELEASED (manual Pix); a Stripe refusal is written on the
+    // line and the hourly cron tries again — the completion itself never fails because of the payout.
+    await afterResponseOrNow('connect:payout', () => payDealSplits(d.id))
   })
+}
+
+/** "Tentar de novo" (team or the seller): pays the RELEASED lines of a completed deal now. */
+export async function retryDealPayout(dealId: number) {
+  const d = await prisma.deal.findUnique({ where: { id: dealId }, select: { phase: true } })
+  if (!d) throw new ArtworkError('NOT_FOUND', 'Negócio não encontrado.', 404)
+  if (d.phase !== 'COMPLETED') throw new ArtworkError('WRONG_PHASE', 'O repasse sai depois que o negócio é concluído.', 409)
+  return payDealSplits(dealId)
 }

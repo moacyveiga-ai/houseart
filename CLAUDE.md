@@ -217,7 +217,7 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
    `Housemap/houseart` quando a org liberar.
 3. Login por "Entrar com e-mail" (código) exige SMTP (`SMTP_*`) — sem ele só e-mail/senha funciona
    em produção.
-4. Stripe: o modo de teste está pronto na branch `stripe-test-mode` (faltam as chaves, `docs/PRODUCAO-PENDENCIAS.md` §9); faltam live, Connect (repasse aos vendedores), estorno, assinatura
+4. Stripe: modo de TESTE ligado em produção e provado ponta a ponta em 2026-10-23 (`docs/PRODUCAO-PENDENCIAS.md` §9); faltam live, Connect (repasse aos vendedores), estorno, assinatura
    de plano via Stripe subscription; nota fiscal.
 5. Provedores reais: KYC (Didit), NTAG 424 (master key em HSM, `MARKER_VENDOR=ntag424`),
    carimbo do tempo ICP-Brasil, âncora (OpenTimestamps), frete/seguro, Art Loss Register.

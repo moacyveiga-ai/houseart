@@ -60,10 +60,19 @@ Criar `Housemap/houseart` vazio (2026-10-22: a conta do agente segue sem admin n
 - Chaves VAPID geradas e gravadas na Vercel (`WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` sensível, `WEB_PUSH_SUBJECT` = URL da Vercel). Ao ter domínio próprio, trocar o `WEB_PUSH_SUBJECT` pelo `mailto:` ou URL do domínio (não exige gerar chaves novas).
 - O push só chega em HTTPS com permissão do navegador; o toggle fica em `/notifications`.
 
-### 9. Stripe em modo de teste (branch `stripe-test-mode`, 2026-10-23)
-O caminho real da Stripe está pronto e foi provado com um cliente falso injetado nos testes
-(`test/integration/stripe-test-mode.integration.test.ts`). Nenhuma chamada real foi feita: as chaves
-ainda não existem. Sem chave nada muda — tudo segue no mock como hoje.
+### 9. Stripe em modo de teste — LIGADO em produção (2026-10-23)
+Envs gravadas na Vercel (Production): `STRIPE_ENV=test`, `STRIPE_TEST_ALLOWED=1`, `STRIPE_SECRET_KEY`
+(`sk_test_`, sensível), `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (`pk_test_`) e `STRIPE_WEBHOOK_SECRET` do
+endpoint `https://houseart-housemapp.vercel.app/api/stripe/webhook` (4 eventos `payment_intent.*`).
+**Provado ponta a ponta em produção** (sandbox da Vercel, como o navegador faria): SetupIntent pela nossa
+API → cartão 4242 confirmado na Stripe só com a chave publicável → cartão salvo (`providerMode=test`, só
+marca/últimos 4/`pm_`) → compra direta de "Estudo em vermelho" (R$ 9.800 + frete + seguro) autorizada e
+capturada → `Offer` 7 `IN_DEAL`/`CAPTURED`, `Deal` 5 em `ESCROW` → os dois eventos do webhook
+(`amount_capturable_updated`, `succeeded`) chegaram e foram gravados em `StripeEvent`. A cobrança aparece
+no Dashboard da Stripe (modo Test). Para ir a live: trocar as três chaves por `sk_live_`/`pk_live_`/
+`whsec_` do endpoint live, `STRIPE_ENV=live`, remover `STRIPE_TEST_ALLOWED` e `STRIPE_MOCK_ALLOWED`.
+Antes disso o código foi provado com um cliente falso injetado nos testes
+(`test/integration/stripe-test-mode.integration.test.ts`). Sem chave nada muda — tudo segue no mock.
 
 **Modos** (`lib/stripe/mode-core.ts`): `mock` (sem chave) · `test` (`STRIPE_ENV=test` + `sk_test_…`) ·
 `live` (`STRIPE_ENV=live` + `sk_live_…`). Na produção de verdade (`VERCEL_ENV=production`) o mock só

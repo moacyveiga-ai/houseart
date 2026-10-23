@@ -46,7 +46,10 @@ function assertConnect(): StripeMode {
 
 function stripeFailure(e: unknown): ArtworkError {
   if (e instanceof ArtworkError) return e
-  const f = failureOfError(e as { type?: string; code?: string })
+  const err = e as { type?: string; code?: string }
+  const f = failureOfError(err)
+  // only the Stripe type and code (never the message: it can name the account or the person)
+  console.warn('[stripe] connect recusou', err?.type ?? 'unknown', err?.code ?? '')
   // a Connect call that fails is never a card problem: say so in the seller's words
   return new ArtworkError(f.status === 503 ? 'PAYMENT_UNAVAILABLE' : 'CONNECT_FAILED', f.status === 503 ? f.message : 'A Stripe não aceitou a operação. Tente de novo em instantes.', f.status === 503 ? 503 : 502)
 }

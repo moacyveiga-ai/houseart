@@ -72,7 +72,7 @@ export async function registrationGate(scope: Scope): Promise<{ ok: true } | { o
   return artworkRegistrationGate(count, plan.limits.ARTWORKS ?? null)
 }
 
-/** "Mudar de plano": cancels the live subscription, opens the new one and charges the first month (mock). */
+/** "Mudar de plano": cancels the live subscription, opens the new one and charges the first month (mock, or Stripe in test/live). */
 export async function changePlan(scope: Scope, code: string, actor: { userId: number }) {
   if (!flagOn('FLAG_PLANS')) throw new ArtworkError('OFF', 'Planos não estão ligados.', 404)
   if (!isPlanCode(code)) throw new ArtworkError('BAD_PLAN', 'Plano desconhecido.', 400)
@@ -82,7 +82,8 @@ export async function changePlan(scope: Scope, code: string, actor: { userId: nu
   if (!plan || !plan.active || plan.audience !== m.audience) throw new ArtworkError('BAD_PLAN', 'Este plano não é do seu perfil.', 400)
   const current = await currentPlan(m.tenantId, m.audience)
   if (current.code === code) throw new ArtworkError('SAME_PLAN', 'Você já está neste plano.', 409)
-  const payment = plan.priceCents > 0n ? await chargeNow({ amountCents: plan.priceCents, description: `Plano ${plan.name}` }) : null
+  // test/live: the actor's default card, off_session; the key ties the charge to THIS change (from the current subscription to this plan).
+  const payment = plan.priceCents > 0n ? await chargeNow({ amountCents: plan.priceCents, description: `Plano ${plan.name}`, payerUserId: actor.userId, idempotencyKey: `plan:${m.tenantId}:${current.subscriptionId ?? 'default'}:${code}`, metadata: { kind: 'plan', tenantId: String(m.tenantId), plan: code } }) : null
   const periodEnd = new Date(Date.now() + 30 * 86_400_000)
   const sub = await prisma.$transaction(async (tx) => {
     await tx.planSubscription.updateMany({ where: { tenantId: m.tenantId, status: { in: ['ACTIVE', 'PAST_DUE'] } }, data: { status: 'CANCELLED', endedAt: new Date() } })

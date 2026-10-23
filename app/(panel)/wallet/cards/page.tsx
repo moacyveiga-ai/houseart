@@ -1,5 +1,5 @@
 import { requirePanelPage } from '../../_session'
-import { listPaymentMethods, payoutAccountOf } from '@/lib/payment-methods/server'
+import { cardFormConfig, listPaymentMethods, payoutAccountOf } from '@/lib/payment-methods/server'
 import { CardsScreen } from '@/components/wallet/CardsScreen'
 import '@/components/wallet/cards.css'
 
@@ -13,7 +13,7 @@ export default async function WalletCardsPage() {
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Carteira e cartões</h1></div>
-      <CardsScreen methods={methods} holderName={user.name} payout={payout} />
+      <CardsScreen methods={methods} holderName={user.name} payout={payout} stripe={cardFormConfig()} />
     </div>
   )
 }

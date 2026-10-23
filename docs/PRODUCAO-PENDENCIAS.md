@@ -60,7 +60,69 @@ Criar `Housemap/houseart` vazio (2026-10-22: a conta do agente segue sem admin n
 - Chaves VAPID geradas e gravadas na Vercel (`WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` sensível, `WEB_PUSH_SUBJECT` = URL da Vercel). Ao ter domínio próprio, trocar o `WEB_PUSH_SUBJECT` pelo `mailto:` ou URL do domínio (não exige gerar chaves novas).
 - O push só chega em HTTPS com permissão do navegador; o toggle fica em `/notifications`.
 
+### 9. Stripe em modo de teste (branch `stripe-test-mode`, 2026-10-23)
+O caminho real da Stripe está pronto e foi provado com um cliente falso injetado nos testes
+(`test/integration/stripe-test-mode.integration.test.ts`). Nenhuma chamada real foi feita: as chaves
+ainda não existem. Sem chave nada muda — tudo segue no mock como hoje.
+
+**Modos** (`lib/stripe/mode-core.ts`): `mock` (sem chave) · `test` (`STRIPE_ENV=test` + `sk_test_…`) ·
+`live` (`STRIPE_ENV=live` + `sk_live_…`). Na produção de verdade (`VERCEL_ENV=production`) o mock só
+roda com `STRIPE_MOCK_ALLOWED=1` e o teste só com `STRIPE_TEST_ALLOWED=1`; sem elas, toda cobrança
+responde 409.
+
+**Ligar o modo de teste na Vercel** (Production):
+1. No painel da Stripe, modo **Test**: Developers › API keys → copiar a secret `sk_test_…` e a
+   publishable `pk_test_…`.
+2. Developers › Webhooks › Add endpoint:
+   - URL: `https://houseart-housemapp.vercel.app/api/stripe/webhook`
+   - Eventos: `payment_intent.succeeded`, `payment_intent.payment_failed`,
+     `payment_intent.canceled`, `payment_intent.amount_capturable_updated`
+   - Copiar o *Signing secret* `whsec_…`.
+3. Envs (marcar `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` como sensíveis):
+   - `STRIPE_ENV=test`
+   - `STRIPE_SECRET_KEY=sk_test_…`
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_…` (lida no servidor e entregue às telas; só vale
+     se casar com o modo: `pk_test_` com `sk_test_`)
+   - `STRIPE_WEBHOOK_SECRET=whsec_…`
+   - `STRIPE_TEST_ALLOWED=1`
+   - pode tirar `STRIPE_MOCK_ALLOWED` (só vale em modo mock).
+4. Redeploy. O build aplica a migration `20261023100000_stripe_test_mode` (aditiva).
+5. Conferir: `/wallet/cards` → "Adicionar cartão" mostra o campo da Stripe (iframe do
+   `js.stripe.com`); no painel da Stripe aparecem o Customer e o SetupIntent.
+
+**Cartões de teste** (qualquer validade futura, qualquer CVC, qualquer CEP):
+- `4242 4242 4242 4242` — aprova (Visa);
+- `5555 5555 5555 4444` — aprova (Mastercard);
+- `4000 0000 0000 0002` — recusado (`card_declined`);
+- `4000 0000 0000 9995` — sem saldo (`insufficient_funds`);
+- `4000 0025 0000 3155` — pede 3-D Secure no cadastro (o SetupIntent abre o desafio no navegador);
+  a cobrança fora da sessão depois pode pedir confirmação de novo e aparece como "o banco pediu
+  uma confirmação extra".
+
+**O que passa pela Stripe**: cartão salvo (Customer + SetupIntent; o número nunca chega à HouseArt,
+fica só bandeira, 4 últimos, validade e o `pm_…`; remover faz *detach*), plano (`changePlan`), pedidos
+de serviço (`placeOrder`), garantia da proposta (PaymentIntent com `capture_method=manual`: autoriza
+no envio, captura no aceite, cancela na recusa, expiração e retratação; se o aceite for maior que
+o autorizado a garantia é liberada e o negócio pede o pagamento em garantia), compra direta (autoriza
+o total do checkout, grava a proposta sob a trava da obra e captura), pagamento em garantia do
+negócio e a taxa de transferência fora da plataforma (cartão padrão do pagador). Webhook idempotente
+por id do evento (tabela `StripeEvent`).
+
+**Ainda NÃO** (pendências):
+- **Connect / repasse aos vendedores**: o dinheiro fica na conta da plataforma; o repasse ao artista,
+  à galeria e o direito de sequência seguem como hoje (Pix cadastrado, fora da Stripe). Próxima fase:
+  contas Connect Express, `transfer_data`/transfers no split.
+- Reserva por Pix na proposta (`PIX_RESERVE`) é recusada em test/live — não há provedor.
+- Estorno (refund) e disputa: não há tela; se a gravação falhar depois de uma cobrança com sucesso
+  (plano, pedido), o estorno é manual no painel da Stripe.
+- Mensalidade recorrente (Stripe Billing/subscription) e nota fiscal: o plano cobra o 1.º mês avulso.
+- App mobile (`apps/mobile`): a tela nativa de cartões manda o número ao servidor (formulário do mock) e
+  em test/live é recusada com a orientação de cadastrar pelo site (`/wallet/cards`). Para cadastrar no
+  app: `@stripe/stripe-react-native` (exige dev build) ou abrir `/wallet/cards` em WebView.
+- Cartões salvos em modo mock não servem no modo teste (e os de teste não servem no live): cada
+  pessoa cadastra de novo ao trocar de modo.
+
 ## Depois do MVP (produto)
-Stripe real (`STRIPE_ENV=live`, chaves e webhook; remover `STRIPE_MOCK_ALLOWED`), KYC real,
+Stripe live (`STRIPE_ENV=live` com `sk_live_`/`pk_live_`, webhook live; tirar `STRIPE_TEST_ALLOWED`) e Connect, KYC real,
 etiquetas NTAG 424 reais (`MARKER_VENDOR=ntag424` + master key), carimbo do tempo, âncora,
 frete/seguro, telas do pacote de design que não vieram (site público, galeria, colecionador, app).

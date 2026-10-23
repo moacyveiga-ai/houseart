@@ -9,6 +9,7 @@ import { audit } from '@/lib/audit'
 import { flagOn } from '@/lib/flags'
 import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
+import { chargeNow, stripeMode } from '@/lib/stripe/door'
 import { moveArtworkToHolder } from '@/lib/tenant/member-server'
 import { ensureCollectorUser } from '@/lib/accounts/collector-server'
 import { computeSplit, SPLIT_PARTY_LABELS, type SplitLine } from '@/lib/commission/split-core'
@@ -61,7 +62,8 @@ export async function createDealFromOffer(offerId: number): Promise<{ id: number
       return d
     })
     // Phase 4: a guarantee reserved at the offer (card hold / Pix reserve) is captured now — the binding offer.
-    const guaranteed = (o.guaranteeMethod === 'CARD_HOLD' || o.guaranteeMethod === 'PIX_RESERVE') && !!o.guaranteeRef
+    // test/live: only a hold Stripe really captured counts (null status = the mock reference of before).
+    const guaranteed = (o.guaranteeMethod === 'CARD_HOLD' || o.guaranteeMethod === 'PIX_RESERVE') && !!o.guaranteeRef && (o.guaranteeStatus === null || o.guaranteeStatus === 'CAPTURED')
     if (guaranteed) {
       await prisma.deal.update({ where: { id: deal.id }, data: { shippingCents: o.shippingCents, insuranceCents: o.insuranceCents } })
       await payEscrow(buyer.id, deal.id, `${o.guaranteeRef}:captured`)
@@ -149,11 +151,15 @@ async function buyerDeal(userId: number, id: number) {
 }
 
 // ── phases ───────────────────────────────────────────────────────────────
-/** Escrow payment. STRIPE_ENV=mock (dev/tests) marks it paid; the real PaymentIntent is Phase 5 (lib/escrow). */
+/** Escrow payment. Mock (dev/tests) marks it paid; test/live charge the buyer's default card (PaymentIntent, one per deal by the idempotency key). */
 export async function payEscrow(userId: number, dealId: number, paymentRef: string | null = null) {
   const d = await buyerDeal(userId, dealId)
   if (d.phase !== 'OFFER_ACCEPTED') throw new ArtworkError('WRONG_PHASE', 'O pagamento em garantia já foi feito.', 409)
-  const ref = paymentRef ?? (process.env.STRIPE_ENV === 'live' ? null : `mock_pi_${dealId}_${Date.now()}`)
+  let ref = paymentRef
+  if (!ref && stripeMode() !== 'mock') {
+    ref = (await chargeNow({ amountCents: d.amountCents + d.shippingCents + d.insuranceCents, description: `Garantia do negócio ${d.code}`, payerUserId: userId, idempotencyKey: `deal-escrow:${dealId}`, metadata: { kind: 'deal_escrow', dealId: String(dealId) } })).ref
+  }
+  ref ??= process.env.STRIPE_ENV === 'live' ? null : `mock_pi_${dealId}_${Date.now()}`
   if (!ref) throw new ArtworkError('PAYMENT_REQUIRED', 'Pagamento real ainda não disponível.', 503)
   await prisma.deal.update({ where: { id: dealId }, data: { escrowPaidAt: new Date(), escrowPaymentRef: ref } })
   await advance(dealId, 'OFFER_ACCEPTED', 'Pagamento em garantia', 'Pix confirmado · valor retido na HouseArt', 'BUYER')

@@ -1,6 +1,6 @@
 // Off-platform ownership transfer ("Vendeu fora da HouseArt? Registre a nova
 // titularidade"): Comprador → Valor → Assinaturas → Toque do comprador.
-// Fee R$ 199 (STRIPE_ENV=mock marks paid; real Stripe is Phase 5).
+// Fee R$ 199 (mock marks paid; test/live charge the seller's card by Stripe).
 import 'server-only'
 import { createHash, randomBytes } from 'node:crypto'
 import { prisma } from '@/lib/prisma'
@@ -20,6 +20,7 @@ import { contentHashOf, sha256Hex } from '@/lib/certificates/core'
 import { publicBaseUrl } from '@/lib/public-url'
 import { mockMasterKey, verifySun } from '@/lib/physical-markers/sun-core'
 import { placeOrder } from '@/lib/orders/server'
+import { chargeNow, stripeMode } from '@/lib/stripe/door'
 
 export const TRANSFER_FEE_CENTS = 19900n
 const sha = (v: string) => createHash('sha256').update(v).digest('hex')
@@ -130,7 +131,10 @@ export async function payTransferFee(userId: number, id: number, paymentRef: str
   const t = await transferOf(userId, id)
   if (t.status !== 'SIGNED') throw new ArtworkError('NOT_SIGNED', 'As duas assinaturas vêm antes da taxa.', 409)
   const order = await placeOrder({ serviceCode: 'OFFPLATFORM_TRANSFER', payerKind: 'SELLER', userId, artworkId: t.artworkId, transferId: id })
-  const ref = order?.paymentRef ?? paymentRef ?? (process.env.STRIPE_ENV === 'live' ? null : `mock_fee_${id}_${Date.now()}`)
+  // test/live without FLAG_ORDERS: the seller's default card pays the fee (one charge per transfer).
+  const ref = order?.paymentRef ?? paymentRef
+    ?? (stripeMode() !== 'mock' ? (await chargeNow({ amountCents: TRANSFER_FEE_CENTS, description: 'Taxa de transferência de titularidade', payerUserId: userId, idempotencyKey: `transfer-fee:${id}`, metadata: { kind: 'transfer_fee', transferId: String(id) } })).ref : null)
+    ?? (process.env.STRIPE_ENV === 'live' ? null : `mock_fee_${id}_${Date.now()}`)
   if (!ref) throw new ArtworkError('PAYMENT_REQUIRED', 'Pagamento real ainda não disponível.', 503)
   const r = await prisma.ownershipTransfer.updateMany({ where: { id, status: 'SIGNED' }, data: { status: 'AWAITING_TAP', feePaidAt: new Date(), feePaymentRef: ref } })
   if (r.count === 0) throw new ArtworkError('CHANGED', 'A transferência acabou de mudar.', 409)

@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '@/components/ds/Button'
 import { Field } from '@/components/ds/Field'
 import { formatBRL } from '@/lib/artworks/domain'
 import { GUARANTEE_LABELS, brandOf, checkCard, CARD_BRAND_LABELS, type GuaranteeMethod, type PaymentMethodView } from '@/lib/payment-methods/domain'
+import { StripeCardForm } from '@/components/wallet/StripeCardForm'
 import { formatCep, insuranceCents, normalizeCep, ufFromCep } from '@/lib/shipping/quote-core'
 import type { IdentityView } from '@/lib/accounts/identity-server'
 import { OfferAside, type OfferArtwork } from './OfferFrame'
@@ -75,6 +76,7 @@ function Wizard({ artwork, viewer, identity: initialIdentity, draft }: Props & {
   const [cpfDigits, setCpfDigits] = useState(viewer?.cpf ?? '')
   const [guarantee, setGuarantee] = useState<GuaranteeMethod>(draft?.guarantee ?? 'CARD_HOLD')
   const [cards, setCards] = useState<PaymentMethodView[] | null>(null)
+  const [stripeCfg, setStripeCfg] = useState<{ publishableKey: string } | null>(null)
   const [cardId, setCardId] = useState<number | null>(null)
   const [cep, setCep] = useState(draft?.cep ?? '')
   const [shipping, setShipping] = useState<{ cep: string; shippingCents: number } | null>(null)
@@ -91,8 +93,9 @@ function Wizard({ artwork, viewer, identity: initialIdentity, draft }: Props & {
   // Saved cards, once the viewer reaches the guarantee.
   useEffect(() => {
     if (!viewer || step !== 3 || cards !== null) return
-    call<{ methods: PaymentMethodView[] }>('/api/collector/payment-methods').then(({ ok, data }) => {
+    call<{ methods: PaymentMethodView[]; stripe?: { publishableKey: string } | null }>('/api/collector/payment-methods').then(({ ok, data }) => {
       const list = ok ? data.methods ?? [] : []
+      setStripeCfg(ok ? data.stripe ?? null : null)
       setCards(list)
       setCardId((cur) => cur ?? (list.find((m) => m.isDefault) ?? list[0])?.id ?? null)
     })
@@ -243,7 +246,7 @@ function Wizard({ artwork, viewer, identity: initialIdentity, draft }: Props & {
                 )
               })}
             </div>
-            {guarantee === 'CARD_HOLD' ? <CardPicker cards={cards} cardId={cardId} onPick={setCardId} onAdded={(m) => { setCards((cs) => [...(cs ?? []), m]); setCardId(m.id) }} /> : null}
+            {guarantee === 'CARD_HOLD' ? <CardPicker cards={cards} cardId={cardId} onPick={setCardId} stripe={stripeCfg} holderDefault={viewer?.name ?? ''} onAdded={(m) => { setCards((cs) => [...(cs ?? []).filter((c) => c.id !== m.id), m]); setCardId(m.id) }} /> : null}
             <div className="hp-offer__group">
               <span className="hp-offer__group-title">Entrega</span>
               <div className="hp-offer__cep">
@@ -383,7 +386,7 @@ function IdentityChecks({ identity, viewer, onIdentity, onCpf }: { identity: Ide
 }
 
 // ── step 3: the saved card or a new one ──────────────────────────────────────
-function CardPicker({ cards, cardId, onPick, onAdded }: { cards: PaymentMethodView[] | null; cardId: number | null; onPick: (id: number) => void; onAdded: (m: PaymentMethodView) => void }) {
+function CardPicker({ cards, cardId, onPick, onAdded, stripe = null, holderDefault = '' }: { cards: PaymentMethodView[] | null; cardId: number | null; onPick: (id: number) => void; onAdded: (m: PaymentMethodView) => void; stripe?: { publishableKey: string } | null; holderDefault?: string }) {
   const [addingState, setAdding] = useState(false)
   const [form, setForm] = useState({ number: '', exp: '', cvc: '', holder: '', cep: '' })
   const [busy, setBusy] = useState(false)
@@ -417,7 +420,9 @@ function CardPicker({ cards, cardId, onPick, onAdded }: { cards: PaymentMethodVi
           {!adding ? <button type="button" className="hp-offer__edit" onClick={() => setAdding(true)}>Adicionar cartão</button> : null}
         </div>
       ) : <span className="ha-sm">Nenhum cartão guardado. Adicione um para reservar o valor — nada é cobrado agora.</span>}
-      {adding ? (
+      {adding && stripe ? (
+        <StripeCardForm publishableKey={stripe.publishableKey} holderDefault={holderDefault} firstCard={!cards.length} onSaved={(m) => { onAdded(m); setAdding(false) }} onCancel={cards.length ? () => setAdding(false) : null} />
+      ) : adding ? (
         <form className="hp-offer__card-grid" onSubmit={save}>
           <Field label={<>Número do cartão{brand ? <small className="ha-muted"> · {brand}</small> : null}</>} inputMode="numeric" autoComplete="cc-number" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value.replace(/[^\d ]/g, '').slice(0, 23) })} />
           <Field label="Validade (MM/AA)" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/AA" value={form.exp} onChange={(e) => setForm({ ...form, exp: e.target.value.replace(/[^\d/]/g, '').slice(0, 5) })} />

@@ -9,6 +9,7 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { brandOf, checkCard, CARD_BRAND_LABELS, type CardBrand, type PaymentMethodView } from '@/lib/payment-methods/domain'
 import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
+import { StripeCardForm } from './StripeCardForm'
 import { brandMark, cardPreviewNumber, EMPTY_CARD_FORM, expiresSoon, expiryForApi, formatCardNumber, formatCep, formatCvc, formatExpiry, maskedNumber, type NewCardForm } from './cards-core'
 
 const MARKS: CardBrand[] = ['visa', 'mastercard', 'amex', 'elo']
@@ -44,7 +45,8 @@ function CardFace({ brand, number, holder, exp, tag, small }: { brand: CardBrand
   )
 }
 
-export function CardsScreen({ methods: initial, holderName, payout }: { methods: PaymentMethodView[]; holderName: string; payout: { href: string; registered: boolean } | null }) {
+/** `stripe` (test/live): the sheet is Stripe Elements; null keeps the mock form of the prototype. */
+export function CardsScreen({ methods: initial, holderName, payout, stripe = null }: { methods: PaymentMethodView[]; holderName: string; payout: { href: string; registered: boolean } | null; stripe?: { publishableKey: string } | null }) {
   const [methods, setMethods] = useState(initial)
   const [open, setOpen] = useState<number | null>(null)
   const [sheet, setSheet] = useState(false)
@@ -75,8 +77,11 @@ export function CardsScreen({ methods: initial, holderName, payout }: { methods:
     const data = await res.json().catch(() => ({})) as { method?: PaymentMethodView; error?: string }
     setSaving(false)
     if (!res.ok || !data.method) { setError(data.error ?? 'Não foi possível salvar o cartão.'); return }
-    const novo = data.method
-    setMethods((ms) => [...(novo.isDefault ? ms.map((m) => ({ ...m, isDefault: false })) : ms), novo].sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.id - b.id))
+    added(data.method)
+  }
+
+  function added(novo: PaymentMethodView) {
+    setMethods((ms0) => { const ms = ms0.filter((m) => m.id !== novo.id); return [...(novo.isDefault ? ms.map((m) => ({ ...m, isDefault: false })) : ms), novo].sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.id - b.id) })
     setSheet(false)
     setToast(`${novo.label} salvo na carteira`)
   }
@@ -157,6 +162,11 @@ export function CardsScreen({ methods: initial, holderName, payout }: { methods:
         </div>
       </section>
 
+      {stripe ? (
+        <Modal open={sheet} title="Adicionar cartão" onClose={() => setSheet(false)}>
+          {sheet ? <StripeCardForm publishableKey={stripe.publishableKey} holderDefault={holderName} firstCard={methods.length === 0} onSaved={added} /> : null}
+        </Modal>
+      ) : (
       <Modal open={sheet} title="Adicionar cartão" onClose={() => (saving ? null : setSheet(false))} footer={
         <div className="ha-cards-foot">
           <button type="button" className="ha-btn ha-btn--ink ha-btn--md" disabled={saving} onClick={save}><Icon name="lock" size={18} />{saving ? 'Validando com o banco…' : 'Salvar cartão'}</button>
@@ -194,6 +204,7 @@ export function CardsScreen({ methods: initial, holderName, payout }: { methods:
           <p className="ha-cards-fine">Ao salvar, você autoriza a HouseArt a cobrar este cartão nas compras que confirmar, conforme os termos. Faremos uma pré-autorização de R$ 1,00, estornada na hora.</p>
         </div>
       </Modal>
+      )}
       <Toast message={toast} onDone={clearToast} />
     </div>
   )

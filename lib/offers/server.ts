@@ -24,7 +24,8 @@ import { evaluateOffer, mandateProblems } from './mandate-core'
 import { cheapest, insuranceCents, normalizeCep, quoteShipping, ufFromCep } from '@/lib/shipping/quote-core'
 import { usableCard } from '@/lib/payment-methods/server'
 import { GUARANTEE_METHODS, VALIDITY_HOURS, type GuaranteeMethod } from '@/lib/payment-methods/domain'
-import { stripeMode } from '@/lib/stripe/door'
+import { authorizeHold, cancelHold, captureHold, stripeMode } from '@/lib/stripe/door'
+import { holdSettlement, isStripeRef } from '@/lib/stripe/mode-core'
 import { rulesOfMember } from './rules-server'
 import { OFFER_ROLES, requireSellerRole } from './seller-role-server'
 import { belowRule, LOW_OFFER_MESSAGE } from './rules-core'
@@ -94,18 +95,60 @@ export async function quoteForArtwork(artworkId: number | { publicId: string }, 
   return { shippingCents: shipping, insuranceCents: BigInt(insuranceCents(Number(priceCents))), cep: norm }
 }
 
-/** Reserves the guarantee (mock: a mock_hold_ reference; live: Phase 5). Returns the method stored and its ref. */
-async function reserveGuarantee(method: string | null | undefined, buyerUserId: number | null, paymentMethodId: number | null | undefined, amountCents: bigint): Promise<{ ok: true; method: GuaranteeMethod; ref: string | null; paymentMethodId: number | null } | { ok: false; error: string }> {
+type Reserved = { ok: true; method: GuaranteeMethod; ref: string | null; paymentMethodId: number | null; status: 'AUTHORIZED' | null }
+
+/**
+ * Reserves the guarantee. Mock: a mock_hold_ reference (as before). Test/live:
+ * a PaymentIntent with capture_method=manual AUTHORIZED on the saved card —
+ * captured on accept, cancelled on refuse/expire/retract (`settleHold`). The
+ * Pix reserve has no real provider yet (refused in test/live).
+ */
+async function reserveGuarantee(method: string | null | undefined, buyerUserId: number | null, paymentMethodId: number | null | undefined, amountCents: bigint, artworkId: number): Promise<Reserved | { ok: false; error: string }> {
   const m = (method && (GUARANTEE_METHODS as readonly string[]).includes(method) ? method : 'NONE') as GuaranteeMethod
-  if (m === 'NONE' || m === 'TRANSFER_ON_ACCEPT') return { ok: true, method: m, ref: null, paymentMethodId: null }
+  if (m === 'NONE' || m === 'TRANSFER_ON_ACCEPT') return { ok: true, method: m, ref: null, paymentMethodId: null, status: null }
   if (!buyerUserId) return { ok: false, error: 'Entre na sua conta para reservar a garantia.' }
-  if (stripeMode() === 'live') return { ok: false, error: 'Garantia por cartão ainda não disponível.' }
+  if (stripeMode() !== 'mock') {
+    if (m !== 'CARD_HOLD') return { ok: false, error: 'A reserva por Pix ainda não está disponível. Escolha o cartão ou a transferência na aceitação.' }
+    const card = await usableCard(buyerUserId, paymentMethodId ?? null)
+    if (!card) return { ok: false, error: 'Cadastre um cartão na carteira para reservar o valor.' }
+    try {
+      const h = await authorizeHold({ amountCents, description: 'Garantia de proposta · HouseArt', payerUserId: buyerUserId, paymentMethodId: card.id, idempotencyKey: `offer-hold:${artworkId}:${buyerUserId}:${randomBytes(9).toString('base64url')}`, metadata: { kind: 'offer_guarantee', artworkId: String(artworkId) } })
+      return { ok: true, method: m, ref: h.ref, paymentMethodId: h.paymentMethodId, status: 'AUTHORIZED' }
+    } catch (e) {
+      if (e instanceof ArtworkError) return { ok: false, error: e.message }
+      throw e
+    }
+  }
   if (m === 'CARD_HOLD') {
     const card = await usableCard(buyerUserId, paymentMethodId ?? null)
     if (!card) return { ok: false, error: 'Cadastre um cartão na carteira para reservar o valor.' }
-    return { ok: true, method: m, ref: `mock_hold_${card.id}_${amountCents}_${Date.now()}`, paymentMethodId: card.id }
+    return { ok: true, method: m, ref: `mock_hold_${card.id}_${amountCents}_${Date.now()}`, paymentMethodId: card.id, status: null }
   }
-  return { ok: true, method: m, ref: `mock_pixres_${buyerUserId}_${amountCents}_${Date.now()}`, paymentMethodId: null }
+  return { ok: true, method: m, ref: `mock_pixres_${buyerUserId}_${amountCents}_${Date.now()}`, paymentMethodId: null, status: null }
+}
+
+/**
+ * Settles the Stripe card hold of an offer (test/live): `accepted` captures the
+ * accepted amount (a hold smaller than it is released — `holdSettlement`),
+ * `released` cancels it. Mock references and offers without a hold are a no-op.
+ * Never throws: the decision on the offer stands; a Stripe failure is written
+ * on the offer (guaranteeStatus FAILED + event) and the deal asks the escrow
+ * payment as usual. Runs BEFORE createDealFromOffer (it reads the status).
+ */
+async function settleHold(offerId: number, outcome: 'accepted' | 'released'): Promise<void> {
+  const o = await prisma.offer.findUnique({ where: { id: offerId }, select: { guaranteeRef: true, guaranteeStatus: true, offeredCents: true, acceptedCents: true } })
+  if (!o || !isStripeRef(o.guaranteeRef) || o.guaranteeStatus !== 'AUTHORIZED') return
+  const plan = outcome === 'accepted' ? holdSettlement(o.offeredCents, o.acceptedCents ?? o.offeredCents) : { action: 'release' as const }
+  let to: 'CAPTURED' | 'CANCELLED' | 'FAILED'
+  try {
+    if (plan.action === 'capture') { await captureHold(o.guaranteeRef, plan.amountCents); to = 'CAPTURED' }
+    else { to = await cancelHold(o.guaranteeRef) }
+  } catch (e) {
+    to = 'FAILED'
+    console.warn('[stripe] garantia da proposta', offerId, (e as { code?: string })?.code ?? (e as Error)?.name)
+  }
+  const r = await prisma.offer.updateMany({ where: { id: offerId, guaranteeStatus: 'AUTHORIZED' }, data: { guaranteeStatus: to } })
+  if (r.count) await prisma.offerEvent.create({ data: { offerId, kind: to === 'CAPTURED' ? 'GUARANTEE_CAPTURED' : to === 'CANCELLED' ? 'GUARANTEE_RELEASED' : 'GUARANTEE_FAILED', actorKind: 'SYSTEM' } })
 }
 
 export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true; code: string; confirmed: boolean; retractionToken?: string } | { ok: false; error: string }> {
@@ -121,8 +164,10 @@ export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true;
     if (mandate?.fixedPrice && i.offeredCents !== mandate.listPriceCents) return { ok: false, error: 'Esta obra é vendida a preço fixo.' }
     const validityHours = i.validityHours && (VALIDITY_HOURS as readonly number[]).includes(i.validityHours) ? i.validityHours : OFFER_VALIDITY_DAYS * 24
     const quote = await quoteForArtwork(a.id, i.deliveryCep ?? null, i.offeredCents)
-    const guarantee = await reserveGuarantee(i.guaranteeMethod, i.buyerUserId ?? null, i.paymentMethodId, i.offeredCents)
+    const guarantee = await reserveGuarantee(i.guaranteeMethod, i.buyerUserId ?? null, i.paymentMethodId, i.offeredCents, a.id)
     if (!guarantee.ok) return guarantee
+    // An authorized hold never outlives an offer that failed to be written.
+    const releaseOnFailure = async (e: unknown): Promise<never> => { if (isStripeRef(guarantee.ref)) await cancelHold(guarantee.ref).catch(() => null); throw e }
     const year = new Date().getUTCFullYear()
     const seq = await prisma.offer.count({ where: { code: { startsWith: `OFR-${year}-` } } })
     const otp = String(randomInt(0, 1_000_000)).padStart(6, '0')
@@ -135,10 +180,10 @@ export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true;
         buyerUserId: i.buyerUserId ?? null, buyerName: i.buyerName.trim().slice(0, 120), buyerEmail: email, buyerDocumentHash: doc.hash, buyerDocumentEnc: doc.enc, buyerDocumentMask: doc.mask,
         buyerKind: i.buyerKind ?? 'COLLECTOR', buyerCity: i.buyerCity?.trim().slice(0, 80) || null, offeredCents: i.offeredCents, message: i.message?.trim().slice(0, 500) || null,
         status: 'AWAITING_OTP', expiresAt: new Date(Date.now() + validityHours * 3_600_000), otpHash: skipOtp ? null : sha256(otp), otpExpiresAt: skipOtp ? null : new Date(Date.now() + OTP_TTL_MS),
-        validityHours, guaranteeMethod: guarantee.method, guaranteeRef: guarantee.ref, paymentMethodId: guarantee.paymentMethodId, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: quote.insuranceCents,
+        validityHours, guaranteeMethod: guarantee.method, guaranteeRef: guarantee.ref, guaranteeStatus: guarantee.status, paymentMethodId: guarantee.paymentMethodId, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: quote.insuranceCents,
         events: { create: { kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: i.offeredCents.toString(), guaranteeMethod: guarantee.method, validityHours }) } },
       },
-    })
+    }).catch(releaseOnFailure)
     if (skipOtp) {
       // The logged buyer already proved the e-mail at signup: no second code.
       const r = await finalizeOffer(offer.id)
@@ -179,6 +224,7 @@ async function finalizeOffer(offerId: number): Promise<{ ok: true; retractionTok
         await tx.offerEvent.create({ data: { offerId: o.id, kind: 'CONFIRMED', actorKind: 'BUYER' } })
         await tx.offerEvent.create({ data: { offerId: o.id, kind: 'REFUSED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ reason: 'BELOW_GALLERY_RULE' }) } })
       })
+      await settleHold(o.id, 'released')
       await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.refused', title: `Proposta ${o.code} não aceita`, body: LOW_OFFER_MESSAGE, href: `/e/offer/${o.code}`, emailSubject: 'Resposta à sua proposta' })
       return { ok: true, retractionToken }
     }
@@ -209,7 +255,7 @@ async function finalizeOffer(offerId: number): Promise<{ ok: true; retractionTok
     if (next !== 'ACCEPTED' && engine.counterCents) await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'COUNTER', offerId: o.id, body: `Contraproposta do vendedor: ${formatBRL(engine.counterCents)}.` })
     await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.confirmed', title: `Proposta ${o.code} enviada`, body: next === 'ACCEPTED' ? 'Sua proposta foi aceita.' : engine.counterCents ? 'O vendedor respondeu com uma contraproposta.' : 'Sua proposta foi recebida.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi registrada' })
     await syncOpportunityFromOffer(o.id)
-    if (next === 'ACCEPTED') await createDealFromOffer(o.id)
+    if (next === 'ACCEPTED') { await settleHold(o.id, 'accepted'); await createDealFromOffer(o.id) }
     return { ok: true, retractionToken }
   })
 }
@@ -254,6 +300,7 @@ export async function acceptOffer(scope: Scope, id: number, actor: { userId: num
   await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'SYSTEM', offerId: id, body: `Proposta de ${formatBRL(amount)} aceita. Você tem 24 h para pagar em garantia.` })
   await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.accepted', title: `Proposta ${o.code} aceita`, body: 'Você tem 24 h para pagar em garantia.', href: `/e/offer/${o.code}`, emailSubject: 'Sua proposta foi aceita' })
   await syncOpportunityFromOffer(id)
+  await settleHold(id, 'accepted')
   await createDealFromOffer(id)
   void audit.event({ entity: 'offer', entityId: id, action: 'accept', userId: actor.userId })
 }
@@ -264,6 +311,7 @@ export async function refuseOffer(scope: Scope, id: number, actor: { userId: num
   const r = await prisma.offer.updateMany({ where: { id, status: o.status }, data: { status: 'REFUSED' } })
   if (r.count === 0) throw new ArtworkError('CHANGED', 'A proposta acabou de mudar.', 409)
   await prisma.offerEvent.create({ data: { offerId: id, kind: 'REFUSED', actorKind: 'SELLER', actorUserId: actor.userId, payloadJson: JSON.stringify({ reason: reason?.slice(0, 200) ?? null }) } })
+  await settleHold(id, 'released')
   await systemLine({ buyerUserId: o.buyerUserId, artworkId: o.artworkId, kind: 'SYSTEM', offerId: id, body: 'O vendedor não aceitou a proposta.' })
   await notify({ userId: o.buyerUserId, email: o.buyerEmail, kind: 'offer.refused', title: `Proposta ${o.code} recusada`, href: `/e/offer/${o.code}`, emailSubject: 'Resposta à sua proposta' })
   await syncOpportunityFromOffer(id)
@@ -314,6 +362,7 @@ export async function retractOffer(code: string, token: BuyerAuth): Promise<bool
     const r = await prisma.offer.updateMany({ where: { id: o.id, status: o.status }, data: { status: 'RETRACTED' } })
     if (r.count === 0) return false
     await prisma.offerEvent.create({ data: { offerId: o.id, kind: 'RETRACTED', actorKind: 'BUYER' } })
+    await settleHold(o.id, 'released')
     await syncOpportunityFromOffer(o.id)
     return true
   })
@@ -347,7 +396,7 @@ export async function buyerReply(code: string, token: BuyerAuth, reply: { accept
     const seller = await prisma.member.findUnique({ where: { id: o.sellerMemberId }, select: { userId: true, user: { select: { email: true } } } })
     await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.buyer_replied', title: `Resposta do comprador em ${o.code}`, href: '/sales', emailSubject: 'O comprador respondeu' })
     await syncOpportunityFromOffer(o.id)
-    if (reply.accept) await createDealFromOffer(o.id)
+    if (reply.accept) { await settleHold(o.id, 'accepted'); await createDealFromOffer(o.id) }
     return true
   })
 }
@@ -359,7 +408,7 @@ export interface BuyNowInput { publicId: string; buyerUserId: number; buyerName:
 /**
  * Buys at the list price: the offer is born ACCEPTED (the list price always
  * reaches the floor), the deal opens and, with a usable card, the escrow is
- * captured on the spot (mock). The artwork is locked under the same advisory
+ * captured on the spot (mock; in test/live the total is authorized, then captured after the offer is written). The artwork is locked under the same advisory
  * lock as the seller's accept.
  */
 export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; dealId: number | null } | { ok: false; error: string }> {
@@ -375,11 +424,24 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     if (!price || price <= 0n) return { ok: false, error: 'Esta obra é vendida sob consulta.' }
     const card = await usableCard(i.buyerUserId, i.paymentMethodId)
     if (!card) return { ok: false, error: 'Cadastre um cartão na carteira para comprar.' }
-    if (stripeMode() === 'live') return { ok: false, error: 'Pagamento real ainda não disponível.' }
     const quote = await quoteForArtwork(a.id, i.deliveryCep, price)
+    const insurance = i.insurance ? quote.insuranceCents : 0n
     const year = new Date().getUTCFullYear()
     const seq = await prisma.offer.count({ where: { code: { startsWith: `OFR-${year}-` } } })
-    const ref = `mock_capture_${card.id}_${price}_${Date.now()}`
+    // test/live: the total the checkout shows (work + shipping + insurance) is AUTHORIZED first and captured
+    // only after the offer is written under the artwork lock — a lost race releases it, nobody is charged twice.
+    let ref = `mock_capture_${card.id}_${price}_${Date.now()}`
+    let status: 'AUTHORIZED' | null = null
+    const total = price + quote.shippingCents + insurance
+    if (stripeMode() !== 'mock') {
+      try {
+        const h = await authorizeHold({ amountCents: total, description: 'Compra direta · HouseArt', payerUserId: i.buyerUserId, paymentMethodId: card.id, idempotencyKey: `buy-now:${a.id}:${i.buyerUserId}:${randomBytes(9).toString('base64url')}`, metadata: { kind: 'buy_now', artworkId: String(a.id) } })
+        ref = h.ref; status = 'AUTHORIZED'
+      } catch (e) {
+        if (e instanceof ArtworkError) return { ok: false, error: e.message }
+        throw e
+      }
+    }
     const offer = await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${1_000_000 + a.id})`
       const live = await tx.offer.count({ where: { artworkId: a.id, status: { in: [...LIVE_STATUSES] } } })
@@ -389,13 +451,20 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
           code: offerCode(year, seq + 1), artworkId: a.id, mandateId: mandate?.id ?? null, sellerMemberId: a.memberId, memberId: a.memberId,
           buyerUserId: i.buyerUserId, buyerName: i.buyerName.trim().slice(0, 120), buyerEmail: email, buyerDocumentHash: doc?.hash ?? null, buyerDocumentEnc: doc?.enc ?? null, buyerDocumentMask: doc?.mask ?? null,
           buyerKind: 'COLLECTOR', buyerCity: i.buyerCity?.trim().slice(0, 80) || null, offeredCents: price, acceptedCents: price, status: 'ACCEPTED', expiresAt: new Date(Date.now() + 86_400_000),
-          validityHours: 24, guaranteeMethod: 'CARD_HOLD', guaranteeRef: ref, paymentMethodId: card.id, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: i.insurance ? quote.insuranceCents : 0n,
+          validityHours: 24, guaranteeMethod: 'CARD_HOLD', guaranteeRef: ref, guaranteeStatus: status, paymentMethodId: card.id, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: insurance,
           retractionTokenHash: null, retractionIssuedAt: new Date(),
           rounds: { create: { number: 1, author: 'BUYER', amountCents: price, message: 'Compra direta ao preço pedido.' } },
           events: { create: [{ kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: price.toString(), direct: true }) }, { kind: 'CONFIRMED', actorKind: 'BUYER' }, { kind: 'ACCEPTED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ amountCents: price.toString(), reason: 'list_price' }) }] },
         },
       })
-    })
+    }).catch(async (e: unknown) => { if (isStripeRef(status ? ref : null)) await cancelHold(ref).catch(() => null); throw e })
+    if (status) {
+      // capture the whole authorized total (not `holdSettlement`, which is about the offer amount)
+      let to: 'CAPTURED' | 'FAILED' = 'CAPTURED'
+      try { await captureHold(ref, total) } catch (e) { to = 'FAILED'; console.warn('[stripe] compra direta', offer.id, (e as { code?: string })?.code ?? (e as Error)?.name) }
+      await prisma.offer.updateMany({ where: { id: offer.id, guaranteeStatus: 'AUTHORIZED' }, data: { guaranteeStatus: to } })
+      await prisma.offerEvent.create({ data: { offerId: offer.id, kind: to === 'CAPTURED' ? 'GUARANTEE_CAPTURED' : 'GUARANTEE_FAILED', actorKind: 'SYSTEM' } })
+    }
     const seller = await prisma.member.findUnique({ where: { id: a.memberId }, select: { userId: true, user: { select: { email: true } } } })
     await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.auto_accepted', title: `Compra direta · ${offer.code}`, body: 'A obra foi comprada ao preço pedido e o valor está em garantia.', href: '/sales?tab=deals', emailSubject: 'Sua obra foi comprada' })
     await syncOpportunityFromOffer(offer.id)
@@ -417,7 +486,10 @@ export async function expireOffers(now = new Date()): Promise<number> {
   let n = 0
   for (const r of rows) {
     const u = await prisma.offer.updateMany({ where: { id: r.id, status: r.status }, data: { status: 'EXPIRED' } })
-    if (u.count) { n++; await prisma.offerEvent.create({ data: { offerId: r.id, kind: 'EXPIRED', actorKind: 'SYSTEM' } }); await syncOpportunityFromOffer(r.id) }
+    if (u.count) { n++; await prisma.offerEvent.create({ data: { offerId: r.id, kind: 'EXPIRED', actorKind: 'SYSTEM' } }); await settleHold(r.id, 'released'); await syncOpportunityFromOffer(r.id) }
   }
+  // A Stripe hold of an offer whose e-mail code was never confirmed is released once the code expired (the offer itself stays as it is).
+  const unconfirmed = await prisma.offer.findMany({ where: { status: 'AWAITING_OTP', guaranteeStatus: 'AUTHORIZED', otpExpiresAt: { lt: now } }, select: { id: true } })
+  for (const r of unconfirmed) await settleHold(r.id, 'released')
   return n
 }

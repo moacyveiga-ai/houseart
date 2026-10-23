@@ -9,6 +9,7 @@ import { Icon } from '@/components/ds/Icon'
 import { Toggle } from '@/components/ds/Toggle'
 import { formatBRL } from '@/lib/artworks/domain'
 import { brandOf, checkCard, CARD_BRAND_LABELS, type PaymentMethodView } from '@/lib/payment-methods/domain'
+import { StripeCardForm } from '@/components/wallet/StripeCardForm'
 import { normalizeCep } from '@/lib/shipping/quote-core'
 import { blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, previewCardNumber, summaryLines, type DeliveryMode } from './checkout-core'
 
@@ -30,6 +31,7 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [insurance, setInsurance] = useState(true)
   const [cards, setCards] = useState<PaymentMethodView[] | null>(null)
+  const [stripeCfg, setStripeCfg] = useState<{ publishableKey: string } | null>(null)
   const [cardId, setCardId] = useState<number | null>(null)
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,9 +41,10 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
   // Saved cards (GET /api/collector/payment-methods); the default one selected.
   useEffect(() => {
     let alive = true
-    fetch('/api/collector/payment-methods', { cache: 'no-store' }).then((r) => r.json()).then((d: { methods?: PaymentMethodView[] }) => {
+    fetch('/api/collector/payment-methods', { cache: 'no-store' }).then((r) => r.json()).then((d: { methods?: PaymentMethodView[]; stripe?: { publishableKey: string } | null }) => {
       if (!alive) return
       const list = d.methods ?? []
+      setStripeCfg(d.stripe ?? null)
       setCards(list)
       setCardId(list.find((m) => m.isDefault)?.id ?? list[0]?.id ?? null)
       if (list.length === 0) setAdding(true)
@@ -171,7 +174,9 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
               </div>
             ) : null}
             {cards && !adding ? <button type="button" className="hc-add-card" onClick={() => setAdding(true)}><Icon name="add_card" size={20} />Adicionar cartão</button> : null}
-            {adding ? <NewCardForm holderDefault={buyerName} firstCard={!cards || cards.length === 0} onSaved={onCardAdded} onCancel={cards && cards.length ? () => setAdding(false) : null} /> : null}
+            {adding ? (stripeCfg
+              ? <StripeCardForm publishableKey={stripeCfg.publishableKey} holderDefault={buyerName} firstCard={!cards || cards.length === 0} onSaved={onCardAdded} onCancel={cards && cards.length ? () => setAdding(false) : null} />
+              : <NewCardForm holderDefault={buyerName} firstCard={!cards || cards.length === 0} onSaved={onCardAdded} onCancel={cards && cards.length ? () => setAdding(false) : null} />) : null}
           </div>
 
           {/* Resumo */}

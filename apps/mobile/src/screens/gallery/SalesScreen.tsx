@@ -14,6 +14,8 @@ import { brl } from '@/ui/format'
 import { OffersSection } from './OffersSection'
 import { RulesSection } from './RulesSection'
 import { dealAction, dealSegments, dealStageTitle } from './gallery-core'
+import { useSession } from '@/auth/session'
+import { rolePermissions, salesTabs } from './role-core'
 
 type Tab = 'offers' | 'deals' | 'rules'
 const asTab = (v: string | undefined): Tab => (v === 'deals' || v === 'rules' ? v : 'offers')
@@ -22,8 +24,11 @@ export function SalesScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const params = useLocalSearchParams<{ tab?: string }>()
-  const [tab, setTab] = useState<Tab>(asTab(params.tab))
-  useEffect(() => { if (params.tab) setTab(asTab(params.tab)) }, [params.tab])
+  // Regras only for who changes them (the gallery's Admin); Vendas and Acervo see Ofertas and Vendas.
+  const allowed = salesTabs(rolePermissions(useSession().me?.teamRole))
+  const pick = (v: string | undefined): Tab => { const t = asTab(v); return allowed.includes(t) ? t : 'offers' }
+  const [tab, setTab] = useState<Tab>(pick(params.tab))
+  useEffect(() => { if (params.tab) setTab(pick(params.tab)) }, [params.tab]) // eslint-disable-line react-hooks/exhaustive-deps
   const offers = useApi<OfferRow[]>('/api/offers')
   const deals = useApi<{ ok: boolean; deals: DealView[] }>('/api/gallery/deals')
   const reloadAll = useCallback(async () => { await Promise.all([offers.reload(), deals.reload()]) }, [offers.reload, deals.reload]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -35,7 +40,7 @@ export function SalesScreen() {
   // Without FLAG_DEALS the route is 404: the tab reads as empty, not as an error.
   const dealRows = deals.data?.deals ?? []
   const live = dealRows.filter((d) => d.phase !== 'COMPLETED').length
-  const tabs: { key: Tab; name: string }[] = [{ key: 'offers', name: `Ofertas · ${open}` }, { key: 'deals', name: `Vendas · ${live}` }, { key: 'rules', name: 'Regras' }]
+  const tabs = ([{ key: 'offers', name: `Ofertas · ${open}` }, { key: 'deals', name: `Vendas · ${live}` }, { key: 'rules', name: 'Regras' }] as { key: Tab; name: string }[]).filter((t) => allowed.includes(t.key))
   const loading = tab === 'offers' ? offers.loading && !offers.data : tab === 'deals' ? deals.loading && !deals.data : false
   const error = tab === 'offers' ? (offers.error && !offers.data ? offers.error : null) : null
 
@@ -68,7 +73,7 @@ export function SalesScreen() {
               </Pressable>
             )
           })) : null}
-          {tab === 'rules' ? <RulesSection onToast={setToast} /> : null}
+          {tab === 'rules' && allowed.includes('rules') ? <RulesSection onToast={setToast} /> : null}
         </ScrollView>
       )}
       <Toast message={toast} onDone={clearToast} />

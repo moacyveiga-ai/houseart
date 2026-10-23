@@ -6,6 +6,8 @@ import { listingOf } from '@/lib/gallery/listing-server'
 import { rulesOf } from '@/lib/gallery/rules-server'
 import { Icon } from '@/components/ds/Icon'
 import { ListingManager } from '@/components/gallery/ListingManager'
+import { galleryRoleOf } from '@/lib/offers/seller-role-server'
+import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
 
 export const metadata = { title: 'Gestão do anúncio — HouseArt' }
 
@@ -16,6 +18,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   const a = Number.isInteger(id) && id > 0 ? await getArtwork(scope, id) : null
   if (!a) notFound()
   const listing = await listingOf(scope, a.id)
+  // Acervo reads the listing; price, offers and pause are for Vendas and Admin (the API refuses the rest).
+  const canManage = sellerPermissions(await galleryRoleOf(scope)).manageListing
   const rules = await rulesOf(scope).then((r) => ({ refuseBelowBps: r.refuseBelowBps, responseHours: r.responseHours })).catch(() => null)
   return (
     <div className="ha-page">
@@ -28,7 +32,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         <Link href={`/artworks/${a.id}/edit`} className="ha-btn ha-btn--outline ha-btn--sm"><Icon name="edit" size={18} />Editar cadastro</Link>
       </div>
       {listing ? (
-        <ListingManager artworkId={a.id} title={a.title} artistName={a.artist.name} publicId={a.publicId} rules={rules}
+        <ListingManager canManage={canManage} blockedReason={ROLE_REASONS.listing} artworkId={a.id} title={a.title} artistName={a.artist.name} publicId={a.publicId} rules={rules}
           initial={{ listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers } }} />
       ) : (
         <div className="ha-callout ha-callout--warn"><Icon name="info" size={20} /><span>A obra não está à venda. <Link href={`/artworks/${a.id}/edit`} className="ha-link">Abra o cadastro</Link> para listar no marketplace.</span></div>

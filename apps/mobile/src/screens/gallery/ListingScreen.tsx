@@ -15,6 +15,8 @@ import { API_URL } from '@/config'
 import { colors, theme } from '@/theme'
 import { Toggle } from '@/ui/forms'
 import { Display, ErrorState, Icon, Loading, Toast, TopBar, Wall, type IconName } from '@/ui/kit'
+import { useSession } from '@/auth/session'
+import { ROLE_REASONS, rolePermissions } from './role-core'
 import { acceptsOffersSub, listingStats, pauseToggledMessage, pausedSub, priceCents, priceChanged, priceMask, priceSavedMessage } from './gallery-core'
 
 export function ListingScreen() {
@@ -22,6 +24,8 @@ export function ListingScreen() {
   const insets = useSafeAreaInsets()
   const { id } = useLocalSearchParams<{ id: string }>()
   const artworkId = Number(id)
+  // The gallery's Acervo role reads the listing; price, offers and pause are for Vendas and Admin.
+  const canManage = rolePermissions(useSession().me?.teamRole).manageListing
   const { data, error, loading, reload } = useApi<ListingDetail>(Number.isInteger(artworkId) && artworkId > 0 ? `/api/gallery/artworks/${artworkId}` : null)
   const [state, setState] = useState<ListingState | null>(null)
   const [price, setPrice] = useState('')
@@ -34,6 +38,7 @@ export function ListingScreen() {
   const changed = state ? priceChanged(price, state.listPriceCents) : false
 
   async function patch(body: Parameters<typeof patchListing>[1], what: 'price' | 'offers' | 'pause'): Promise<ListingState | null> {
+    if (!canManage) return null
     setBusy(what)
     try { const next = await patchListing(artworkId, body); setState(next); return next } catch (e) { setToast((e as Error).message || 'Não foi possível salvar.'); return null } finally { setBusy(null) }
   }
@@ -81,19 +86,20 @@ export function ListingScreen() {
                   <Text style={styles.label}>Preço pedido</Text>
                   <View style={styles.priceField}>
                     <Text style={styles.currency}>R$</Text>
-                    <TextInput value={price} onChangeText={(v) => setPrice(priceMask(v))} inputMode="numeric" keyboardType="number-pad" style={styles.priceInput} accessibilityLabel="Preço pedido em reais" onSubmitEditing={() => void savePrice()} />
+                    <TextInput value={price} editable={canManage} onChangeText={(v) => setPrice(priceMask(v))} inputMode="numeric" keyboardType="number-pad" style={styles.priceInput} accessibilityLabel="Preço pedido em reais" onSubmitEditing={() => void savePrice()} />
                   </View>
                 </View>
-                <Pressable accessibilityRole="button" accessibilityState={{ disabled: !changed || busy === 'price' }} disabled={!changed || busy === 'price'} onPress={() => void savePrice()} style={[styles.save, { backgroundColor: changed ? theme.accent : theme.border }]}><Text style={styles.saveText}>Salvar</Text></Pressable>
+                <Pressable accessibilityRole="button" accessibilityState={{ disabled: !canManage || !changed || busy === 'price' }} disabled={!canManage || !changed || busy === 'price'} onPress={() => void savePrice()} style={[styles.save, { backgroundColor: changed && canManage ? theme.accent : theme.border }]}><Text style={styles.saveText}>Salvar</Text></Pressable>
               </View>
               <View style={styles.toggleRow}>
                 <View style={{ flex: 1 }}><Text style={styles.toggleName}>Aceita ofertas</Text><Text style={styles.toggleSub}>{acceptsOffersSub(state.acceptsOffers, data?.rules ?? null)}</Text></View>
-                <Toggle on={state.acceptsOffers} label="Aceita ofertas" onPress={() => { if (busy) return; void patch({ acceptsOffers: !state.acceptsOffers }, 'offers') }} />
+                <View style={!canManage ? styles.off : undefined}><Toggle on={state.acceptsOffers} label="Aceita ofertas" onPress={() => { if (busy || !canManage) return; void patch({ acceptsOffers: !state.acceptsOffers }, 'offers') }} /></View>
               </View>
               <View style={styles.toggleRow}>
                 <View style={{ flex: 1 }}><Text style={styles.toggleName}>Pausar anúncio</Text><Text style={styles.toggleSub}>{pausedSub(state.paused)}</Text></View>
-                <Toggle on={state.paused} label="Pausar anúncio" onPress={() => { if (busy) return; void patch({ paused: !state.paused }, 'pause').then((n) => { if (n) setToast(pauseToggledMessage(n.paused)) }) }} />
+                <View style={!canManage ? styles.off : undefined}><Toggle on={state.paused} label="Pausar anúncio" onPress={() => { if (busy || !canManage) return; void patch({ paused: !state.paused }, 'pause').then((n) => { if (n) setToast(pauseToggledMessage(n.paused)) }) }} /></View>
               </View>
+              {!canManage ? <View style={styles.blocked}><Icon name="lock" size={18} /><Text style={styles.blockedText}>{ROLE_REASONS.listing}</Text></View> : null}
               <View style={styles.btns}>
                 {buttons.map((b) => <Pressable key={b.t} accessibilityRole="button" onPress={b.go} style={styles.btn}><Icon name={b.icon} size={16} /><Text style={styles.btnText}>{b.t}</Text></Pressable>)}
               </View>
@@ -135,6 +141,9 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   toggleName: { fontSize: 14, fontWeight: '600', color: theme.fg },
   toggleSub: { fontSize: 12, lineHeight: 16, color: theme.fgMuted },
+  off: { opacity: 0.45 },
+  blocked: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: theme.radiusSm, backgroundColor: theme.surface },
+  blockedText: { flex: 1, fontSize: 12, lineHeight: 17, color: theme.fgBody },
   btns: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   btn: { height: 36, paddingHorizontal: 12, borderRadius: theme.radiusFull, borderWidth: 1, borderColor: theme.fgDisabled, flexDirection: 'row', alignItems: 'center', gap: 4 },
   btnText: { fontSize: 12, fontWeight: '600', color: theme.fg },

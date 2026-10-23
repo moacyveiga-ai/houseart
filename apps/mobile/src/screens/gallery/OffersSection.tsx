@@ -14,6 +14,8 @@ import { BottomSheet } from '@/ui/forms'
 import { Avatar, Display, Icon, Wall } from '@/ui/kit'
 import { Button } from '@/ui/primitives'
 import { avatarTint, brl, initialsOf } from '@/ui/format'
+import { useSession } from '@/auth/session'
+import { ROLE_REASONS, rolePermissions } from './role-core'
 import { offerPct, offerResolved, offersSummary, otherOffersLine, priceCents, priceMask, sellerCanAnswer, sortOffers, suggestedCounterReais } from './gallery-core'
 
 interface Props {
@@ -24,6 +26,8 @@ interface Props {
 
 export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Props) {
   const router = useRouter()
+  // The gallery's Acervo role does not answer proposals: no buttons, the reason instead (the server refuses it too).
+  const mayAnswer = rolePermissions(useSession().me?.teamRole).answerOffers
   const [busy, setBusy] = useState<number | null>(null)
   const [counter, setCounter] = useState<OfferRow | null>(null)
   const [amount, setAmount] = useState('')
@@ -32,7 +36,7 @@ export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Prop
   const summary = offersSummary(offers)
 
   async function act(o: OfferRow, action: 'accept' | 'refuse' | 'counter') {
-    if (busy) return
+    if (busy || !mayAnswer) return
     if (action === 'accept' && beforeAccept && !(await beforeAccept())) return
     setBusy(o.id)
     try {
@@ -46,6 +50,7 @@ export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Prop
 
   return (
     <View style={styles.wrap}>
+      {!mayAnswer ? <View style={styles.blocked}><Icon name="lock" size={18} /><Text style={styles.blockedText}>{ROLE_REASONS.offers}</Text></View> : null}
       {summary ? <View style={styles.summary}><Icon name="insights" size={20} /><Text style={styles.summaryText}>{summary}</Text></View> : null}
       {rows.length === 0 ? <Text style={styles.empty}>Nenhuma oferta aberta agora.</Text> : rows.map((o) => {
         const pct = offerPct(o)
@@ -69,7 +74,7 @@ export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Prop
             </View>
             {message ? <Text style={styles.message}>“{message}”</Text> : null}
             {others ? <View style={styles.others}><Icon name="stacked-line-chart" size={16} color={theme.accentStrong} /><Text style={styles.othersText}>{others}</Text></View> : null}
-            {o.open ? (
+            {o.open && mayAnswer ? (
               <View style={styles.actions}>
                 <Pressable accessibilityRole="button" disabled={!canAnswer || busy === o.id} onPress={() => void act(o, 'accept')} style={[styles.act, styles.actAccept, (!canAnswer || busy === o.id) && styles.off]}><Text style={styles.actText}>Aceitar</Text></Pressable>
                 <Pressable accessibilityRole="button" disabled={!canAnswer || busy === o.id} onPress={() => openCounter(o)} style={[styles.act, styles.actCounter, (!canAnswer || busy === o.id) && styles.off]}><Text style={styles.actText}>Contrapropor</Text></Pressable>
@@ -77,7 +82,7 @@ export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Prop
               </View>
             ) : null}
             {resolved ? <View style={[styles.resolved, { backgroundColor: resolved.bg }]}><Text style={styles.resolvedText}>{resolved.label}</Text></View> : null}
-            {o.open && !canAnswer ? <Text style={styles.muted}>Contraproposta enviada · aguardando {o.buyer}</Text> : null}
+            {o.open && mayAnswer && !canAnswer ? <Text style={styles.muted}>Contraproposta enviada · aguardando {o.buyer}</Text> : null}
           </View>
         )
       })}
@@ -100,6 +105,8 @@ export function OffersSection({ offers, onChanged, onToast, beforeAccept }: Prop
 
 const styles = StyleSheet.create({
   wrap: { gap: 12 },
+  blocked: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: theme.radiusMd, backgroundColor: theme.surface },
+  blockedText: { flex: 1, fontSize: 13, lineHeight: 18, color: theme.fgBody },
   summary: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: theme.radiusMd, backgroundColor: colors.sand100 },
   summaryText: { flex: 1, fontSize: 13, lineHeight: 18, color: theme.fg },
   empty: { paddingVertical: 24, fontSize: 14, color: theme.fgMuted },

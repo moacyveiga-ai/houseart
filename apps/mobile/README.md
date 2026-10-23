@@ -126,6 +126,18 @@ recusa o preço abaixo dele e o app só mostra a mensagem).
 | Conta, equipe e repasses | `/gallery/account` | `src/screens/gallery/AccountScreen.tsx` | `GET /api/gallery/team`, `GET /api/gallery/artists` (Pix e cartões abrem as telas nativas `/sales/payout` e `/wallet/cards`; plano, senha e ajuda abrem o site) |
 | Compartilhar obra | folha nativa (`Share`) em Gestão do anúncio ("Enviar a um cliente") | — | — |
 
+**Papel na equipe da galeria.** `GET /api/auth/me` devolve `teamRole`
+(`ADMIN` · `SALES` · `INVENTORY`, `null` fora de uma equipe de galeria), guardado
+em `me.teamRole` (`src/auth/session.tsx`). `src/screens/gallery/role-core.ts`
+(puro, as mesmas listas de `lib/offers/seller-role-core.ts` do root) decide o
+que aparece: **Acervo** não vê Aceitar · Contrapropor · Recusar (`OffersSection`
+mostra o motivo), não muda preço, "Aceita ofertas" nem "Pausar" (`ListingScreen`
+desabilita e explica), não tem a aba Regras nem Equipe; **Vendas** responde e
+gere o anúncio, mas sem Regras e sem Equipe. `/sales/rules` aberto por link
+mostra só o motivo; `/gallery/team` vira só leitura (sem convidar nem abrir a
+pessoa); o atalho Equipe do painel e a linha Equipe da Conta somem. O servidor
+segue a autoridade: um 403 ainda aparece como mensagem.
+
 Chamadas em `src/api/gallery.ts`. Rotas novas no root para o app (finas, sobre
 `lib/gallery`, `lib/artworks`, `lib/deals`): `GET /api/gallery/panel`
 (`{ panel: { dateLabel, name, initials, kpis, actions, top } }`),
@@ -242,7 +254,7 @@ Verificar obra.
 | Compras (compras + ofertas abertas) | `/purchases` (aba "Compras" da coleção) | `PurchasesScreen.tsx` | `GET /api/collector/purchases`, `GET /api/collector/offers` |
 | Acompanhar compra | `/purchases/[id]` | `PurchaseScreen.tsx` | `GET /api/collector/purchases`, `POST /api/deals/[id]/{escrow,sign}` |
 | Confirmar recebimento (leitor escuro) | `/purchases/[id]/receive` | `ReceiveScreen.tsx`, `src/nfc/reader.ts` | `POST /api/deals/[id]/confirm-delivery` (`{ uid, ctr, cmac }` ou `{}` simulado) |
-| Vendas do colecionador | `/sales/collector` (aba "Vendas" da coleção; a aba `sales` também, para o perfil colecionador) | `CollectorSalesScreen.tsx` + `gallery/OffersSection.tsx` (`beforeAccept` pede o Pix) | `GET /api/offers`, `GET /api/gallery/deals`, `POST /api/offers/[id]/{accept,refuse,counter}`, `GET /api/member/payout-account` |
+| Vendas do colecionador | `/sales/collector` (aba "Vendas" da coleção; a aba `sales` também, para o perfil colecionador); "Em andamento" abre `/deal/[id]?as=collector` (a `DealScreen` da galeria: assinar o termo em ESCROW, registrar envio em DOCUMENTS) | `CollectorSalesScreen.tsx` + `gallery/OffersSection.tsx` (`beforeAccept` pede o Pix) + `gallery/DealScreen.tsx` | `GET /api/offers`, `GET /api/collector/sales`, `POST /api/offers/[id]/{accept,refuse,counter}`, `POST /api/deals/[id]/{sign,shipping}`, `GET /api/member/payout-account` |
 | Cadastrar obra | `/wallet/register` → `/artworks/new?id=…&owner=collector` | `RegisterArtworkScreen.tsx`, `artist/NewArtworkScreen.tsx` (modo colecionador: "Enviar para certificação" e volta à coleção) | `GET /api/public/search?q=`, `POST /api/collector/artworks` e as rotas da câmera |
 | Vender esta obra | `/wallet/sell/[id]` ("Vender esta obra" da página da obra) | `SellScreen.tsx` | `GET /api/collector/wallet`, `GET /api/collector/artworks/[id]/sell-estimate`, `POST /api/collector/artworks/[id]/{sell,services}`, `GET /api/member/payout-account` |
 | Carteira e cartões | `/wallet/cards` (ícone da coleção; Conta da galeria) | `WalletCardsScreen.tsx`, `src/ui/CardForm.tsx` | `GET/POST /api/collector/payment-methods`, `PATCH/DELETE /api/collector/payment-methods/[id]`, `GET /api/collector/purchases`, `GET /api/member/payout-account` |

@@ -5,8 +5,10 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import type { Scope } from '@/lib/scope/core'
 import { ArtworkError } from '@/lib/artworks/server'
+import type { SellerRole } from './seller-role-core'
 
-export type SellerRole = 'ADMIN' | 'SALES' | 'INVENTORY'
+export type { SellerRole } from './seller-role-core'
+export { OFFER_ROLES, LISTING_ROLES, RULES_ROLES } from './seller-role-core'
 
 /** The effective team role of the person behind the scope, or null when the scope is not a gallery team member. */
 export async function galleryRoleOf(scope: Scope): Promise<SellerRole | null> {
@@ -22,7 +24,3 @@ export async function requireSellerRole(scope: Scope, allowed: readonly SellerRo
   const role = await galleryRoleOf(scope)
   if (role && !allowed.includes(role)) throw new ArtworkError('FORBIDDEN', message, 403)
 }
-
-export const OFFER_ROLES: readonly SellerRole[] = ['ADMIN', 'SALES']
-export const LISTING_ROLES: readonly SellerRole[] = ['ADMIN', 'SALES']
-export const RULES_ROLES: readonly SellerRole[] = ['ADMIN']

@@ -7,7 +7,8 @@ import { formatBRL } from '@/lib/artworks/domain'
 
 export interface OfferRowView { id: number; code: string; artworkTitle: string; artworkCover: string | null; listPriceCents: string | null; currentCents: string; status: string; statusLabel: string; buyer: string; expiresIn: string; differenceLabel: string; open: boolean; lastAuthor: string | null }
 
-export function OffersTable({ offers: initial, negotiatorLine }: { offers: OfferRowView[]; negotiatorLine: string }) {
+/** `canAnswer` false (the gallery's Acervo role): no Aceitar · Contrapropor · Recusar, and `blockedReason` says why. */
+export function OffersTable({ offers: initial, negotiatorLine, canAnswer = true, blockedReason }: { offers: OfferRowView[]; negotiatorLine: string; canAnswer?: boolean; blockedReason?: string }) {
   const [offers, setOffers] = useState(initial)
   const [counter, setCounter] = useState<OfferRowView | null>(null)
   const [amount, setAmount] = useState('')
@@ -32,15 +33,16 @@ export function OffersTable({ offers: initial, negotiatorLine }: { offers: Offer
             <span><b>{o.artworkTitle}</b><br /><span className="ha-muted ha-sm">{o.buyer} · expira em {o.expiresIn} · {o.code}</span></span>
             <span><b className="ha-num">{formatBRL(BigInt(o.currentCents))}</b><br /><span className="ha-muted ha-sm">pedido {o.listPriceCents ? formatBRL(BigInt(o.listPriceCents)) : '—'} · {o.differenceLabel}</span></span>
             <span className="ha-row">
-              {o.open ? (<>
+              {o.open && canAnswer ? (<>
                 <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => act(o, 'refuse')}>Recusar</button>
                 <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => { setCounter(o); setAmount('') }}>Contrapropor</button>
                 <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" disabled={o.status === 'NEGOTIATING' && o.lastAuthor !== 'BUYER'} onClick={() => act(o, 'accept')}>Aceitar</button>
-              </>) : <Badge tone={o.status === 'ACCEPTED' || o.status === 'IN_DEAL' || o.status === 'CONVERTED' ? 'verified' : 'neutral'}>{o.statusLabel}</Badge>}
+              </>) : o.open ? <Badge tone="neutral">{o.statusLabel}</Badge> : <Badge tone={o.status === 'ACCEPTED' || o.status === 'IN_DEAL' || o.status === 'CONVERTED' ? 'verified' : 'neutral'}>{o.statusLabel}</Badge>}
             </span>
           </li>
         ))}
       </ul>
+      {!canAnswer && blockedReason ? <p className="ha-callout ha-sm">{blockedReason}</p> : null}
       <p className="ha-muted ha-sm">{negotiatorLine}</p>
       <Modal open={!!counter} title="Contrapropor" onClose={() => setCounter(null)} footer={<button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={!amount} onClick={() => counter && act(counter, 'counter')}>Enviar contraproposta</button>}>
         <p className="ha-muted ha-sm">{counter?.artworkTitle} · proposta atual {counter ? formatBRL(BigInt(counter.currentCents)) : ''}</p>

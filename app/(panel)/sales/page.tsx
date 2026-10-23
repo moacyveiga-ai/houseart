@@ -9,6 +9,8 @@ import { serializeDeal } from '@/components/deals/deal-view'
 import { flagOn } from '@/lib/flags'
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
+import { galleryRoleOf } from '@/lib/offers/seller-role-server'
+import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
 
 export const metadata = { title: 'Vendas e ofertas — HouseArt' }
 
@@ -30,13 +32,15 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const deals = tab === 'deals' && flagOn('FLAG_DEALS') ? await sellerDeals(scope) : []
   const mandate = await negotiatorOf(scope)
   const open = offers.filter((o) => o.open).length
+  // The gallery team role: Acervo does not answer proposals, only Admin changes the rules (the API refuses the rest).
+  const can = sellerPermissions(await galleryRoleOf(scope))
   const live = flagOn('FLAG_DEALS') ? (await sellerDeals(scope)).filter((d) => d.phase !== 'COMPLETED').length : offers.filter((o) => o.status === 'ACCEPTED' || o.status === 'IN_DEAL').length
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">{collector ? 'Vendas' : 'Vendas e ofertas'}</h1></div>
-      <Tabs active={tab} items={[{ key: 'offers', label: 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
+      <Tabs active={tab} items={[{ key: 'offers', label: 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
       {tab === 'offers' ? (
-        <OffersTable negotiatorLine={mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'} offers={offers.map((o) => ({
+        <OffersTable canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'} offers={offers.map((o) => ({
           id: o.id, code: o.code, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),
           status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, expiresIn: o.expiresIn, differenceLabel: o.differenceLabel, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null,
         }))} />

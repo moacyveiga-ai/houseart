@@ -15,12 +15,16 @@ import { BottomSheet, Input, Label, OptionCard } from '@/ui/forms'
 import { Avatar, ErrorState, Icon, Loading, Toast, TopBar } from '@/ui/kit'
 import { Button } from '@/ui/primitives'
 import { initialsOf } from '@/ui/format'
+import { useSession } from '@/auth/session'
+import { ROLE_REASONS, rolePermissions } from './role-core'
 
 const roleTint = (p: TeamPerson): { bg: string; fg: string } => (p.kind === 'INVITE' ? { bg: colors.paper100, fg: colors.ink500 } : p.role === 'ADMIN' ? { bg: colors.ink900, fg: colors.paper50 } : { bg: colors.paper200, fg: colors.ink900 })
 const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 
 export function TeamScreen() {
   const insets = useSafeAreaInsets()
+  // Only the gallery's Admin manages the team: Vendas and Acervo read the list (the API refuses the rest).
+  const canManage = rolePermissions(useSession().me?.teamRole).manageTeam
   const { data, error, loading, reload } = useApi<{ ok: boolean; people: TeamPerson[] }>('/api/gallery/team')
   const [people, setPeople] = useState<TeamPerson[]>([])
   useEffect(() => { if (data) setPeople(data.people) }, [data])
@@ -43,11 +47,11 @@ export function TeamScreen() {
       <TopBar title="Equipe" />
       {loading && !data ? <Loading /> : error && !data ? <ErrorState message={error} onRetry={reload} /> : (
         <ScrollView contentContainerStyle={styles.body}>
-          <Text style={styles.intro}>Cada pessoa vê só o que o papel permite.</Text>
+          <Text style={styles.intro}>{canManage ? 'Cada pessoa vê só o que o papel permite.' : ROLE_REASONS.team}</Text>
           {people.map((p) => {
             const tint = roleTint(p)
             return (
-              <Pressable key={`${p.kind}-${p.id}`} accessibilityRole="button" accessibilityLabel={p.name} onPress={() => { setPicked(p); setRole(p.role); setSheet('person') }} style={styles.row}>
+              <Pressable key={`${p.kind}-${p.id}`} accessibilityRole="button" accessibilityLabel={p.name} disabled={!canManage} onPress={() => { setPicked(p); setRole(p.role); setSheet('person') }} style={styles.row}>
                 <Avatar initials={p.kind === 'INVITE' ? initialsOf(p.name.replace(/@.*/, '').replace(/[._-]/g, ' ')) : initialsOf(p.name)} bg={tint.bg} fg={tint.fg} size={44} />
                 <View style={{ flex: 1, minWidth: 0 }}><Text style={styles.name} numberOfLines={1}>{p.name}{p.isSelf ? ' · você' : ''}</Text><Text style={styles.sub} numberOfLines={1}>{p.sub}</Text></View>
                 <View style={[styles.pill, { backgroundColor: p.kind === 'INVITE' ? colors.pending100 : colors.paper200 }]}><Text style={styles.pillText}>{p.roleLabel}</Text></View>
@@ -57,9 +61,9 @@ export function TeamScreen() {
           {people.length === 0 ? <Text style={styles.sub}>Só você por enquanto. Convide a equipe da galeria.</Text> : null}
         </ScrollView>
       )}
-      <View style={[styles.foot, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+      {canManage ? <View style={[styles.foot, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Pressable accessibilityRole="button" onPress={() => { setEmail(''); setRole('SALES'); setSheet('invite') }} style={styles.cta}><Icon name="add" size={20} color={theme.bg} /><Text style={styles.ctaText}>Convidar pessoa</Text></Pressable>
-      </View>
+      </View> : null}
 
       <BottomSheet open={sheet === 'invite'} title="Convidar pessoa" onClose={() => setSheet(null)} height="70%"
         footer={<Button title="Enviar convite" loading={busy} disabled={!validEmail(email)} onPress={() => void run(() => inviteToTeam(email.trim(), role), 'Convite enviado por e-mail')} />}>

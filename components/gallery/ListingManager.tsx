@@ -11,9 +11,10 @@ import { acceptsOffersSub, listingStats, pauseToggledMessage, pausedSub, priceCe
 import './listing-manager.css'
 
 export interface ListingState { listPriceCents: string; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number } }
-interface Props { artworkId: number; title: string; artistName: string; publicId: string | null; initial: ListingState; rules: ToggleRules | null }
+/** `canManage` false (the gallery's Acervo role): the listing is shown, nothing changes and `blockedReason` says why. */
+interface Props { artworkId: number; title: string; artistName: string; publicId: string | null; initial: ListingState; rules: ToggleRules | null; canManage?: boolean; blockedReason?: string }
 
-export function ListingManager({ artworkId, title, artistName, publicId, initial, rules }: Props) {
+export function ListingManager({ artworkId, title, artistName, publicId, initial, rules, canManage = true, blockedReason }: Props) {
   const [state, setState] = useState<ListingState>(initial)
   const [price, setPrice] = useState(priceMask(Number(BigInt(initial.listPriceCents) / 100n)))
   const [busy, setBusy] = useState<'price' | 'offers' | 'pause' | null>(null)
@@ -21,6 +22,7 @@ export function ListingManager({ artworkId, title, artistName, publicId, initial
   const changed = priceChanged(price, state.listPriceCents)
 
   async function patch(body: Record<string, unknown>, what: 'price' | 'offers' | 'pause'): Promise<ListingState | null> {
+    if (!canManage) return null
     setBusy(what)
     try {
       const res = await fetch(`/api/artworks/${artworkId}/listing`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
@@ -53,18 +55,19 @@ export function ListingManager({ artworkId, title, artistName, publicId, initial
       </div>
       <form className="ha-lm__price" onSubmit={(e) => { e.preventDefault(); void savePrice() }}>
         <label className="ha-lm__label">Preço pedido
-          <span className="ha-lm__field"><span className="ha-lm__currency">R$</span><input className="ha-lm__input" inputMode="numeric" value={price} onChange={(e) => setPrice(priceMask(e.target.value))} aria-label="Preço pedido em reais" /></span>
+          <span className="ha-lm__field"><span className="ha-lm__currency">R$</span><input className="ha-lm__input" inputMode="numeric" value={price} readOnly={!canManage} onChange={(e) => setPrice(priceMask(e.target.value))} aria-label="Preço pedido em reais" /></span>
         </label>
-        <button type="submit" className={`ha-lm__save${changed ? ' ha-lm__save--on' : ''}`} disabled={!changed || busy === 'price'} aria-busy={busy === 'price' || undefined}>Salvar</button>
+        <button type="submit" className={`ha-lm__save${changed ? ' ha-lm__save--on' : ''}`} disabled={!canManage || !changed || busy === 'price'} aria-busy={busy === 'price' || undefined}>Salvar</button>
       </form>
       <div className="ha-lm__toggle">
         <span className="ha-lm__toggle-text"><span className="ha-lm__toggle-name">Aceita ofertas</span><span className="ha-lm__toggle-sub">{acceptsOffersSub(state.acceptsOffers, rules)}</span></span>
-        <Toggle on={state.acceptsOffers} label="Aceita ofertas" disabled={busy !== null} onChange={(on) => { void patch({ acceptsOffers: on }, 'offers') }} />
+        <Toggle on={state.acceptsOffers} label="Aceita ofertas" disabled={!canManage || busy !== null} onChange={(on) => { void patch({ acceptsOffers: on }, 'offers') }} />
       </div>
       <div className="ha-lm__toggle">
         <span className="ha-lm__toggle-text"><span className="ha-lm__toggle-name">Pausar anúncio</span><span className="ha-lm__toggle-sub">{pausedSub(state.paused)}</span></span>
-        <Toggle on={state.paused} label="Pausar anúncio" disabled={busy !== null} onChange={async (on) => { const next = await patch({ paused: on }, 'pause'); if (next) setToast(pauseToggledMessage(next.paused)) }} />
+        <Toggle on={state.paused} label="Pausar anúncio" disabled={!canManage || busy !== null} onChange={async (on) => { const next = await patch({ paused: on }, 'pause'); if (next) setToast(pauseToggledMessage(next.paused)) }} />
       </div>
+      {!canManage && blockedReason ? <p className="ha-callout ha-sm">{blockedReason}</p> : null}
       <div className="ha-lm__btns">
         <Link href="/sales" className="ha-lm__btn"><Icon name="request_quote" size={16} />Ofertas desta obra</Link>
         <button type="button" className="ha-lm__btn" onClick={() => { void share() }} disabled={!publicId}><Icon name="share" size={16} />Enviar a um cliente</button>

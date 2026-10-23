@@ -2,7 +2,9 @@
 // the buyer, the current stage and its text, the six steps, the split of the
 // values and the action of the stage — sign the transfer agreement (ESCROW) or
 // register the shipping (DOCUMENTS, carrier · tracking · insurer). Data: the
-// deal of GET /api/gallery/deals by id; writes: POST /api/deals/[id]/{sign,shipping}.
+// deal of GET /api/gallery/deals by id — or of GET /api/collector/sales with
+// `?as=collector` (the collector who sells, App Colecionador › Vendas); writes:
+// POST /api/deals/[id]/{sign,shipping} (the server decides the side by the deal).
 import { useCallback, useState } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -19,9 +21,9 @@ import { dealStageTitle, marketShare, symbolIcon } from './gallery-core'
 export function DealScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, as } = useLocalSearchParams<{ id: string; as?: string }>()
   const dealId = Number(id)
-  const { data, error, loading, reload } = useApi<{ ok: boolean; deals: DealView[] }>('/api/gallery/deals')
+  const { data, error, loading, reload } = useApi<{ ok: boolean; deals: DealView[] }>(as === 'collector' ? '/api/collector/sales' : '/api/gallery/deals')
   const d = data?.deals.find((x) => x.id === dealId) ?? null
   const [ship, setShip] = useState({ carrier: '', tracking: '', insurer: '' })
   const [busy, setBusy] = useState(false)

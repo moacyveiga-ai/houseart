@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { api, ApiError } from '@/api/client'
 import { clearSessionCookies, setSessionCookie } from './cookies'
 import { clearToken, readToken, writeToken } from './token-store'
-import { isProfileKind, type Me, type ProfileCard, type ProfileKind } from './types'
+import { isProfileKind, isTeamRole, type Me, type ProfileCard, type ProfileKind } from './types'
 
 type Status = 'loading' | 'signed-out' | 'signed-in'
 
@@ -26,7 +26,7 @@ const Ctx = createContext<SessionState | null>(null)
 interface LoginBody { ok: boolean; token?: string; user?: Partial<Me>; error?: string }
 
 function normalizeMe(raw: Me): Me {
-  return { ...raw, activeProfileKind: isProfileKind(raw.activeProfileKind) ? raw.activeProfileKind : null }
+  return { ...raw, activeProfileKind: isProfileKind(raw.activeProfileKind) ? raw.activeProfileKind : null, teamRole: isTeamRole(raw.teamRole) ? raw.teamRole : null }
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {

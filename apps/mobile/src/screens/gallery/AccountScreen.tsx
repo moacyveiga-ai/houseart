@@ -13,6 +13,7 @@ import { theme } from '@/theme'
 import { Avatar, Icon, TopBar, type IconName } from '@/ui/kit'
 import { avatarTint, initialsOf } from '@/ui/format'
 import { plural } from './gallery-core'
+import { rolePermissions } from './role-core'
 
 interface Item { icon: IconName; name: string; sub: string; go: () => void }
 
@@ -20,7 +21,8 @@ export function AccountScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { me } = useSession()
-  const team = useApi<{ ok: boolean; people: TeamPerson[] }>('/api/gallery/team')
+  const can = rolePermissions(me?.teamRole)
+  const team = useApi<{ ok: boolean; people: TeamPerson[] }>(can.manageTeam ? '/api/gallery/team' : null)
   const artists = useApi<{ ok: boolean; artists: RepresentedArtist[] }>('/api/gallery/artists')
   const people = team.data?.people ?? []
   const members = people.filter((p) => p.kind === 'MEMBER').length
@@ -31,7 +33,7 @@ export function AccountScreen() {
   const sections: { name: string; items: Item[] }[] = [
     { name: 'Galeria', items: [
       { icon: 'person', name: 'Perfil', sub: me ? `${me.name} · ${me.email}` : 'Dados da conta e perfis', go: () => router.push('/settings') },
-      { icon: 'groups', name: 'Equipe', sub: team.data ? `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}` : 'Papéis e convites', go: () => router.push('/gallery/team') },
+      ...(!can.manageTeam ? [] : [{ icon: 'groups' as IconName, name: 'Equipe', sub: team.data ? `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}` : 'Papéis e convites', go: () => router.push('/gallery/team') }]),
       { icon: 'palette', name: 'Artistas representados', sub: artists.data ? `${plural(list.length, 'artista', 'artistas')} · ${plural(list.filter((a) => a.contract).length, 'contrato ativo', 'contratos ativos')}` : 'Contratos e divisão das vendas', go: () => router.push('/gallery/artists') },
     ] },
     { name: 'Recebimentos', items: [{ icon: 'account-balance', name: 'Pix para repasses', sub: 'A chave que recebe cada venda', go: () => router.push('/sales/payout' as never) }] },

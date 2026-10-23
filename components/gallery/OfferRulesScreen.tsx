@@ -9,13 +9,15 @@ import { REFUSE_BELOW_OPTIONS, RESPONSE_HOURS_OPTIONS, type OfferRulesView } fro
 
 const pct = (bps: number) => `${Math.round(bps / 100)}%`
 
-export function OfferRulesScreen({ rules: initial }: { rules: OfferRulesView }) {
+/** `readOnly` (the gallery team without the Admin role): the rules are shown, nothing changes. */
+export function OfferRulesScreen({ rules: initial, readOnly = false }: { rules: OfferRulesView; readOnly?: boolean }) {
   const [rules, setRules] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState('')
   const clearToast = useCallback(() => setToast(''), [])
 
   async function save(patch: Partial<OfferRulesView>, done: string) {
+    if (readOnly) return
     const before = rules
     setRules({ ...rules, ...patch })
     setBusy(true)
@@ -57,12 +59,12 @@ export function OfferRulesScreen({ rules: initial }: { rules: OfferRulesView }) 
               <span id={`rule-${it.key}`} className="ha-rules-item__n">{it.name}</span>
               <span className="ha-rules-item__s">{it.sub}</span>
             </span>
-            <Toggle on={it.on} disabled={busy || it.locked} label={it.name} onChange={() => it.toggle?.()} />
+            <Toggle on={it.on} disabled={busy || it.locked || readOnly} label={it.name} onChange={() => it.toggle?.()} />
           </div>
           {it.ops ? (
             <div className="ha-rules-item__ops" role="radiogroup" aria-label={it.name}>
               {it.ops.map((o) => (
-                <button key={o.label} type="button" role="radio" aria-checked={o.on} disabled={busy} className={`ha-chip${o.on ? ' ha-chip--on' : ''}`} onClick={o.go}>{o.label}</button>
+                <button key={o.label} type="button" role="radio" aria-checked={o.on} disabled={busy || readOnly} className={`ha-chip${o.on ? ' ha-chip--on' : ''}`} onClick={o.go}>{o.label}</button>
               ))}
             </div>
           ) : null}

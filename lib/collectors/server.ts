@@ -10,6 +10,8 @@ import { scopeOfUser, type Scope } from '@/lib/scope/core'
 import { ACQUISITION_KINDS, type AcquisitionKind } from '@/lib/artworks/domain'
 import { listArtworkForSale } from '@/lib/offers/server'
 import { catalog, placeOrder } from '@/lib/orders/server'
+import { sellerDeals, type DealView } from '@/lib/deals/server'
+import { withScope } from '@/lib/scope/context'
 
 export { ensureCollectorMember }
 
@@ -33,6 +35,19 @@ export async function collectorScope(userId: number): Promise<Scope | null> {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { memberId: true, tenantId: true } })
   if (!u?.memberId) return null
   return scopeOfUser({ profile: 'collector', memberId: u.memberId, tenantId: u.tenantId, tenantRole: 'ADMIN' }, () => false)
+}
+
+/**
+ * "Vendas · Em andamento" of the collector: the deals where their OWN collector
+ * member is the seller (secondary market). Empty while they own nothing; a
+ * user whose member is not a collector (artist, gallery) sells from the panel.
+ */
+export async function collectorSales(userId: number): Promise<DealView[]> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { member: { select: { kind: true } } } })
+  if (u?.member?.kind !== 'COLLECTOR') return []
+  const scope = await collectorScope(userId)
+  if (!scope) return []
+  return withScope(scope, 'collector:sales', () => sellerDeals(scope))
 }
 
 /** "Vender" from the wallet: the artwork must be the holder's (its member) and authenticated. */

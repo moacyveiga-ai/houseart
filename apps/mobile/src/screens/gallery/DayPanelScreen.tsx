@@ -9,6 +9,8 @@ import { useApi, useReloadOnFocus } from '@/api/hooks'
 import type { DayPanel } from '@/api/gallery'
 import { colors, theme } from '@/theme'
 import { Display, ErrorState, Icon, IconButton, Loading, Wall, type IconName } from '@/ui/kit'
+import { useSession } from '@/auth/session'
+import { rolePermissions } from './role-core'
 import { actionTone, kpiColors, panelTarget, plural, symbolIcon, type PanelTarget } from './gallery-core'
 
 export function DayPanelScreen() {
@@ -17,6 +19,7 @@ export function DayPanelScreen() {
   const { data, error, loading, reload } = useApi<{ ok: boolean; panel: DayPanel }>('/api/gallery/panel')
   useReloadOnFocus(reload)
   const p = data?.panel
+  const can = rolePermissions(useSession().me?.teamRole)
 
   const go = (t: PanelTarget) => {
     if (t.kind === 'listing') { router.push({ pathname: '/artworks/[id]/listing', params: { id: String(t.id) } }); return }
@@ -28,7 +31,8 @@ export function DayPanelScreen() {
   const shortcuts: { t: string; icon: IconName; go: () => void }[] = [
     { t: 'Nova obra', icon: 'add-photo-alternate', go: () => web('/artworks/new', 'Cadastrar obra') },
     { t: 'Publicar post', icon: 'edit-square', go: () => go({ kind: 'tab', tab: 'community' }) },
-    { t: 'Equipe', icon: 'badge', go: () => router.push('/gallery/team') },
+    // Equipe is the Admin's; Vendas and Acervo get the marketplace in its place.
+    ...(can.manageTeam ? [{ t: 'Equipe', icon: 'badge' as IconName, go: () => router.push('/gallery/team') }] : []),
     { t: 'Ver marketplace', icon: 'storefront', go: () => web('/e/marketplace', 'Marketplace') },
   ]
 

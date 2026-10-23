@@ -29,8 +29,11 @@ servida em `/api/public/media/...`). O que ficou torto, e vale arrumar com calma
   quando não precisar mais.
 
 ### 3. E-mail (código de login, OTP de proposta, convites)
-Envs de Production: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
-(ex.: Resend/SES/Google Workspace). Sem elas, só login por senha funciona. Redeploy.
+Env de Production: `SMTP_URL` (`smtp://usuario:senha@host:porta`, usuário e senha com URL-encode) e
+`SMTP_FROM`. **2026-10-23 — TEMPORÁRIO:** gravadas com o Gmail do Moacy (senha de app), o mesmo
+SMTP da Housebroker (tirado do `ConfigCanal` dela), só para teste — o Gmail reescreve o remetente
+para o endereço autenticado e limita a ~500 envios/dia. Trocar por um SMTP próprio
+(Resend/SES/Google Workspace com domínio do HouseArt) e revogar a senha de app quando trocar.
 
 ### 4. Senhas geradas nesta sessão (trocar)
 - Admin `moacyveiga@gmail.com`: senha redefinida em 2026-10-22 a pedido do Moacy (enviada no chat); trocar em Perfil.

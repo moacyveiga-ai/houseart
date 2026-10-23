@@ -40,11 +40,19 @@ function next(req: NextRequest): NextResponse {
   return NextResponse.next({ request: { headers: requestHeaders } })
 }
 
+function hasBearer(req: NextRequest): boolean {
+  const auth = req.headers.get('authorization') ?? ''
+  return /^Bearer [0-9a-f]{64}$/.test(auth.trim())
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   if (isPublicRoute(pathname)) return withAttributionCookie(req, next(req))
   const has = !!req.cookies.get(COOKIE_NAME)?.value
   if (has) return next(req)
+  // The mobile apps (apps/mobile) send the session token as a bearer instead of the cookie; only on
+  // the API. Presence only, like the cookie: getSession() validates the token in the route.
+  if (pathname.startsWith('/api/') && hasBearer(req)) return next(req)
   return noSession(req)
 }
 

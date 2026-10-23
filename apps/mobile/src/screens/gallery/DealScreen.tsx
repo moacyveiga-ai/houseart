@@ -81,7 +81,7 @@ export function DealScreen() {
           <View style={styles.fin}>
             <View style={styles.finRow}><Text style={styles.finK}>Valor da venda</Text><Text style={[styles.finV, { fontWeight: '600' }]}>{brl(d.amountCents)}</Text></View>
             {d.split.map((s) => (
-              <View key={s.party} style={styles.finRow}><Text style={styles.finK}>{s.label}{s.party === 'PLATFORM' ? ` · ${marketShare(d.market)}` : ''}</Text><Text style={styles.finV}>{brl(s.amountCents)} · {s.status === 'RELEASED' ? 'liberado' : 'em garantia'}</Text></View>
+              <View key={s.party} style={styles.finRow}><Text style={styles.finK}>{s.label}{s.party === 'PLATFORM' ? ` · ${marketShare(d.market)}` : ''}</Text><Text style={styles.finV}>{brl(s.amountCents)}{s.payoutLabel ? ` · ${s.payoutLabel}` : s.status === 'RELEASED' ? ' · liberado' : s.status === 'PAID' ? ' · pago' : ' · em garantia'}</Text></View>
             ))}
           </View>
 

@@ -45,7 +45,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
       {side === 'seller' ? (
         <div className="ha-stack">
           <h3 className="ha-h3">Repartição dos valores</h3>
-          <div className="ha-kv">{deal.split.map((s) => [<span key={`k${s.party}`}>{s.label}{s.party === 'PLATFORM' ? ` · ${deal.market === 'PRIMARY' ? '12%' : '4%'}` : ''}</span>, <span key={`v${s.party}`} className="ha-num">{formatBRL(BigInt(s.amountCents))} · {s.status === 'RELEASED' ? 'liberado' : 'em garantia'}</span>])}</div>
+          <div className="ha-kv">{deal.split.map((s) => [<span key={`k${s.party}`}>{s.label}{s.party === 'PLATFORM' ? ` · ${deal.market === 'PRIMARY' ? '12%' : '4%'}` : ''}</span>, <span key={`v${s.party}`} className="ha-num">{formatBRL(BigInt(s.amountCents))}{s.payoutLabel ? ` · ${s.payoutLabel}` : s.status === 'RELEASED' ? ' · liberado' : ''}</span>])}</div>
           {deal.shipping ? <p className="ha-muted ha-sm">Transporte {deal.shipping.carrier} · rastreio {deal.shipping.tracking}{deal.shipping.insurer ? ` · seguro de trânsito ${deal.shipping.insurer}` : ''}</p> : null}
           {deal.phase === 'ESCROW' && !deal.sellerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'DOCUMENTS' ? (

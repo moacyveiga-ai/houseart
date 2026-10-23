@@ -59,6 +59,8 @@ model User {
   collectorVerifiedAt  DateTime?
   deletionRequestedAt  DateTime?
   lastLoginAt          DateTime?
+  stripeCustomerId     String? // Stripe Customer (cus_…) of the payer; created on the first saved card (test/live)
+  stripeCustomerMode   String? // test | live — a customer of one mode does not exist in the other
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   sessions             Session[]
@@ -566,7 +568,8 @@ model Offer {
   // Phase 4 (handoff): validity chosen by the buyer, guarantee method and the quote frozen at the offer.
   validityHours       Int           @default(168)
   guaranteeMethod     String        @default("NONE") // GUARANTEE_METHODS (lib/payment-methods/domain.ts)
-  guaranteeRef        String? // provider reference of the hold/reserve (mock_hold_… in mock)
+  guaranteeRef        String? // provider reference of the hold/reserve (mock_hold_… in mock; pi_… in test/live)
+  guaranteeStatus     String? // GUARANTEE_STATUSES of lib/stripe/mode-core.ts; null = mock or no hold
   paymentMethodId     Int?
   deliveryCep         String?
   shippingCents       BigInt        @default(0)
@@ -602,7 +605,7 @@ model OfferEvent {
   id          Int      @id @default(autoincrement())
   offerId     Int
   offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  kind        String // CREATED | CONFIRMED | ACCEPTED | REFUSED | COUNTERED | BUYER_REPLIED | NEGOTIATOR_ACCEPTED | EXPIRED | RETRACTED
+  kind        String // CREATED | CONFIRMED | ACCEPTED | REFUSED | COUNTERED | BUYER_REPLIED | NEGOTIATOR_ACCEPTED | EXPIRED | RETRACTED | GUARANTEE_AUTHORIZED | GUARANTEE_CAPTURED | GUARANTEE_RELEASED | GUARANTEE_FAILED
   actorKind   String // BUYER | SELLER | NEGOTIATOR | STAFF | SYSTEM
   actorUserId Int?
   payloadJson String   @default("{}")
@@ -1166,7 +1169,8 @@ model PaymentMethod {
   expMonth    Int
   expYear     Int
   billingCep  String?
-  providerRef String // provider token (Stripe pm_… in live; mock_pm_… in mock)
+  providerRef String // provider token (Stripe pm_… in test/live; mock_pm_… in mock)
+  providerMode String   @default("mock") // mock | test | live (STRIPE_MODES of lib/stripe/mode-core.ts): only cards of the current mode are usable
   isDefault   Boolean   @default(false)
   status      String    @default("ACTIVE") // ACTIVE | REMOVED
   createdAt   DateTime  @default(now())
@@ -1375,4 +1379,14 @@ model PushSubscription {
   lastUsedAt DateTime?
 
   @@index([userId])
+}
+
+/// A Stripe webhook event already processed (idempotency by the event id). Stores no payload.
+model StripeEvent {
+  id          Int      @id @default(autoincrement())
+  eventId     String   @unique
+  type        String
+  livemode    Boolean  @default(false)
+  objectId    String? // the PaymentIntent the event was about
+  processedAt DateTime @default(now())
 }

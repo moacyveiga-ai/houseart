@@ -71,7 +71,8 @@ describe('detach só no ramo catch do after()', () => {
   it('ninguém mais chama detach', () => {
     const chamam = sourceFiles('app', 'lib', 'components')
       .filter((f) => !/\.test\.tsx?$/.test(f))
-      .filter((f) => /\bdetach\(/.test(read(f)))
+      // the bare `detach(` of lib/after.ts; a method of another object (`paymentMethods.detach(` of Stripe) is not it
+      .filter((f) => /(?<![.\w])detach\(/.test(read(f)))
     expect(chamam.sort()).toEqual([...QUEM_SOLTA].sort())
   }, 30_000)
 })

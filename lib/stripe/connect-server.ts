@@ -12,7 +12,7 @@ import { audit } from '@/lib/audit'
 import { ArtworkError } from '@/lib/artworks/server'
 import { publicBaseUrl } from '@/lib/public-url'
 import { BLOCKED_MESSAGES, blockedReason, failureOfError, stripeModeOf, type StripeMode } from './mode-core'
-import { stripeGateway, type GwAccount } from './gateway-server'
+import { stripeGateway, type GwAccount, type GwTransfer } from './gateway-server'
 import { CONNECT_STATUS_LABELS, connectStatusOf, isPayableParty, payeeMemberOf, payoutErrorOf, requirementCodesOf, requirementLabels, transferAmountOf, transferIdempotencyKey, type ConnectAccountStatus } from './connect-core'
 
 export interface ConnectAccountView {
@@ -183,16 +183,28 @@ async function paySplit(split: SplitRow, m: StripeMode): Promise<'paid' | 'skipp
   if (!payee) return 'skipped'
   const amount = transferAmountOf(split.amountCents)
   if (amount === null) { await prisma.dealSplit.updateMany({ where: { id: split.id, status: 'RELEASED', payoutError: null }, data: { payoutError: 'amount_out_of_range' } }); return 'failed' }
+  // Money first, with two guards against paying twice: a transfer of this line that already
+  // exists at Stripe (our write after a success was lost; the key may have rotated or expired)
+  // is reused, never recreated; and only a STRIPE refusal rotates the idempotency key — a
+  // database failure after a successful transfer leaves the key alone for the next run.
+  let t: GwTransfer
   try {
-    const t = await stripeGateway().createTransfer({ amount, currency: 'brl', destination: payee.accountId, transfer_group: deal.code, metadata: { dealId: String(deal.id), dealSplitId: String(split.id), party: split.party, memberId: String(payee.memberId) } }, transferIdempotencyKey(split.id, split.payoutAttempts))
+    const existing = (await stripeGateway().listTransfers(deal.code)).find((x) => x.metadata.dealSplitId === String(split.id) && !x.reversed)
+    t = existing ?? await stripeGateway().createTransfer({ amount, currency: 'brl', destination: payee.accountId, transfer_group: deal.code, metadata: { dealId: String(deal.id), dealSplitId: String(split.id), party: split.party, memberId: String(payee.memberId) } }, transferIdempotencyKey(split.id, split.payoutAttempts))
+  } catch (e) {
+    const code = payoutErrorOf(e)
+    console.warn('[stripe] transfer falhou', deal.code, split.party, code)
+    await prisma.dealSplit.updateMany({ where: { id: split.id, status: 'RELEASED' }, data: { payoutError: code, payoutAttempts: { increment: 1 } } }).catch(() => null)
+    return 'failed'
+  }
+  try {
     const r = await prisma.dealSplit.updateMany({ where: { id: split.id, status: 'RELEASED' }, data: { status: 'PAID', payoutRef: t.id, transferredAt: new Date(), payoutError: null } })
     if (r.count && split.party === 'ARTIST_ROYALTY') await prisma.royaltyPayment.updateMany({ where: { dealId: deal.id, status: { in: ['PENDING', 'HELD'] } }, data: { status: 'PAID', paidAt: new Date(), receiptRef: t.id } })
     void audit.event({ entity: 'deal_split', entityId: split.id, action: 'transfer', after: { dealCode: deal.code, party: split.party, amountCents: split.amountCents.toString(), transfer: t.id, memberId: payee.memberId } })
     return 'paid'
   } catch (e) {
-    const code = payoutErrorOf(e)
-    console.warn('[stripe] transfer falhou', deal.code, split.party, code)
-    await prisma.dealSplit.updateMany({ where: { id: split.id, status: 'RELEASED' }, data: { payoutError: code, payoutAttempts: { increment: 1 } } }).catch(() => null)
+    // the transfer exists at Stripe; the lookup above reconciles it on the next run — never a new key here
+    console.error('[stripe] transfer feita, gravação falhou', deal.code, split.party, (e as Error)?.name)
     return 'failed'
   }
 }

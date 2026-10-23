@@ -118,6 +118,10 @@ export class FakeStripe implements StripeGateway {
     if (!this.accounts.has(id)) throw Object.assign(new Error('No such account'), { type: 'StripeInvalidRequestError', code: 'resource_missing' })
     return this.snapshot(id)
   }
+  async listTransfers(transferGroup: string) {
+    this.calls.push({ op: 'transfers_list', params: { transferGroup } })
+    return [...this.transfers.values()].filter((t) => t.transfer_group === transferGroup).map((t) => ({ ...t }))
+  }
   async createLoginLink(account: string) {
     this.calls.push({ op: 'login_link', params: { account } })
     return { url: `https://connect.stripe.com/express/${account}/fake` }
@@ -129,7 +133,7 @@ export class FakeStripe implements StripeGateway {
       const a = this.accounts.get(p.destination)
       if (!a) throw Object.assign(new Error('No such destination'), { type: 'StripeInvalidRequestError', code: 'resource_missing' })
       if (a.transfersCapability !== 'active') throw Object.assign(new Error('capability inactive'), { type: 'StripeInvalidRequestError', code: 'account_invalid' })
-      const t: GwTransfer = { id: this.id('tr'), amount: p.amount, destination: p.destination, transfer_group: p.transfer_group, reversed: false, amount_reversed: 0 }
+      const t: GwTransfer = { id: this.id('tr'), amount: p.amount, destination: p.destination, transfer_group: p.transfer_group, reversed: false, amount_reversed: 0, metadata: { ...p.metadata } }
       this.transfers.set(t.id, t)
       return { ...t }
     })

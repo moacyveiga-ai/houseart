@@ -171,6 +171,20 @@ describe('payout at completion', () => {
     expect(fake.transfers.size).toBe(1)
   })
 
+  it('a Transfer that Stripe already made for the line (the write failed after it) is reused by its metadata, never duplicated', async () => {
+    const acct = await enableAccount(s.b.memberId)
+    const deal = await dealReadyForDelivery({ artworkId: s.b.artworkId, sellerMemberId: s.b.memberId, market: 'PRIMARY', seller: 'ARTIST' })
+    const artist = (await splitsOf(deal.id)).find((l) => l.party === 'ARTIST')!
+    // what the previous run left at Stripe before our database refused the write
+    fake.transfers.set('tr_left_behind', { id: 'tr_left_behind', amount: 3_872_000, destination: acct, transfer_group: deal.code, reversed: false, amount_reversed: 0, metadata: { dealSplitId: String(artist.id) } })
+    await confirmDelivery(buyerId, deal.id, null)
+    const paid = (await splitsOf(deal.id)).find((l) => l.party === 'ARTIST')!
+    expect(paid).toMatchObject({ status: 'PAID', payoutRef: 'tr_left_behind', payoutError: null, payoutAttempts: 0 })
+    expect(fake.transfers.size).toBe(1)
+    expect(fake.calls.filter((c) => c.op === 'transfer')).toHaveLength(0)
+    expect(fake.calls.filter((c) => c.op === 'transfers_list')).toHaveLength(1)
+  })
+
   it('a seller without an ENABLED account stays RELEASED (manual Pix); after onboarding the cron pays — and a Stripe refusal is written on the line and retried', async () => {
     const deal = await dealReadyForDelivery({ artworkId: s.b.artworkId, sellerMemberId: s.b.memberId, market: 'PRIMARY', seller: 'ARTIST' })
     await confirmDelivery(buyerId, deal.id, null)

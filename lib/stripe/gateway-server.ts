@@ -22,7 +22,7 @@ export interface GwAccount {
   /** `capabilities.transfers` ('active' | 'inactive' | 'pending'), null when Stripe did not send it. */
   transfersCapability: string | null
 }
-export interface GwTransfer { id: string; amount: number; destination: string; transfer_group: string | null; reversed: boolean; amount_reversed: number }
+export interface GwTransfer { id: string; amount: number; destination: string; transfer_group: string | null; reversed: boolean; amount_reversed: number; metadata: Record<string, string> }
 export interface AccountInput { email: string; business_type: 'individual' | 'company'; metadata: Record<string, string> }
 export interface TransferInput { amount: number; currency: 'brl'; destination: string; transfer_group: string; metadata: Record<string, string> }
 
@@ -53,6 +53,8 @@ export interface StripeGateway {
   retrieveAccount(id: string): Promise<GwAccount>
   /** A plain transfer from the platform balance (no source_transaction): the escrow PaymentIntent already funded it. */
   createTransfer(p: TransferInput, idempotencyKey: string): Promise<GwTransfer>
+  /** The transfers of a group (a deal code): the lookup that keeps a line at ONE transfer when our write after a success was lost. */
+  listTransfers(transferGroup: string): Promise<GwTransfer[]>
   createLoginLink(account: string): Promise<{ url: string }>
 }
 
@@ -69,7 +71,7 @@ export function toAccount(a: Stripe.Account): GwAccount {
   }
 }
 function toTransfer(t: Stripe.Transfer): GwTransfer {
-  return { id: t.id, amount: t.amount, destination: idOf(t.destination) ?? '', transfer_group: t.transfer_group ?? null, reversed: !!t.reversed, amount_reversed: t.amount_reversed }
+  return { id: t.id, amount: t.amount, destination: idOf(t.destination) ?? '', transfer_group: t.transfer_group ?? null, reversed: !!t.reversed, amount_reversed: t.amount_reversed, metadata: { ...(t.metadata ?? {}) } }
 }
 function toSi(si: Stripe.SetupIntent): GwSetupIntent {
   return { id: si.id, client_secret: si.client_secret, status: si.status, customer: idOf(si.customer), payment_method: idOf(si.payment_method) }
@@ -103,6 +105,7 @@ export function realGateway(secretKey: string): StripeGateway {
     async createAccountLink(p) { const l = await s.accountLinks.create({ account: p.account, refresh_url: p.refresh_url, return_url: p.return_url, type: 'account_onboarding' }); return { url: l.url } },
     async retrieveAccount(id) { return toAccount(await s.accounts.retrieve(id)) },
     async createTransfer(p, idempotencyKey) { return toTransfer(await s.transfers.create(p, { idempotencyKey })) },
+    async listTransfers(transferGroup) { const l = await s.transfers.list({ transfer_group: transferGroup, limit: 100 }); return l.data.map(toTransfer) },
     async createLoginLink(account) { const l = await s.accounts.createLoginLink(account); return { url: l.url } },
   }
 }

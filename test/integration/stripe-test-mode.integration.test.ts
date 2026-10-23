@@ -111,7 +111,7 @@ describe('charges (plans and orders)', () => {
     const pi = fake.intents.get(sub.stripeSubscriptionId!)!
     expect(pi).toMatchObject({ status: 'succeeded', capture_method: 'automatic', metadata: { kind: 'plan', plan: 'ARTIST_STUDIO' } })
     const call = fake.calls.find((c) => c.op === 'pi' && c.key?.startsWith('plan:'))
-    expect(call?.key).toBe(`plan:${s.b.tenantId}:default:ARTIST_STUDIO`)
+    expect(call?.key).toMatch(new RegExp(`^plan:${s.b.tenantId}:default:ARTIST_STUDIO:pm\\d+$`))
     expect(await prisma.invoice.count({ where: { tenantId: s.b.tenantId, kind: 'PLAN', status: 'PAID' } })).toBe(1)
   })
 
@@ -164,6 +164,35 @@ describe('offer guarantee (card hold)', () => {
     const other = await prisma.user.create({ data: { email: 'recusado@col.test', name: 'Recusado', profile: 'collector', active: true, emailVerifiedAt: new Date() } })
     await saveCard(other.id, DECLINED)
     expect(await offer({ buyerUserId: other.id, buyerEmail: 'recusado@col.test' })).toMatchObject({ ok: false, error: 'O cartão foi recusado. Tente outro cartão.' })
+  })
+})
+
+describe('revisão adversarial: retentativa e corrida da garantia', () => {
+  it('a card declined once does not block paying the same deal with another card (key per card)', async () => {
+    const { payEscrow } = await import('@/lib/deals/server')
+    await saveCard(buyerId, DECLINED)
+    const o = await startPublicOffer({ publicId: PUBLIC_ID, buyerName: 'Mariana Barreto', buyerEmail: 'mariana@col.test', buyerDocument: '52998224725', offeredCents: 3_400_000n, validityHours: 48, guaranteeMethod: 'NONE', deliveryCep: '40140-180', buyerUserId: buyerId })
+    if (!o.ok) throw new Error('offer')
+    const row = await prisma.offer.findUniqueOrThrow({ where: { code: o.code } })
+    await asPanel(s.b.userId, async ({ scope, user }) => { await acceptOffer(scope, row.id, { userId: user.id }) }, 'ARTIST')
+    const deal = await prisma.deal.findUniqueOrThrow({ where: { offerId: row.id } })
+    await expect(payEscrow(buyerId, deal.id)).rejects.toMatchObject({ code: 'CARD_DECLINED' })
+    await saveCard(buyerId, VISA)
+    await payEscrow(buyerId, deal.id)
+    expect((await prisma.deal.findUniqueOrThrow({ where: { id: deal.id } })).phase).toBe('ESCROW')
+    expect(fake.calls.filter((c) => c.op === 'pi').length).toBe(2)
+  })
+
+  it('a release that loses to a capture reports CAPTURED, never CANCELLED', async () => {
+    await saveCard(buyerId)
+    const o = await startPublicOffer({ publicId: PUBLIC_ID, buyerName: 'Mariana Barreto', buyerEmail: 'mariana@col.test', buyerDocument: '52998224725', offeredCents: 3_400_000n, validityHours: 48, guaranteeMethod: 'CARD_HOLD', deliveryCep: '40140-180', buyerUserId: buyerId })
+    if (!o.ok) throw new Error('offer')
+    const row = await prisma.offer.findUniqueOrThrow({ where: { code: o.code } })
+    // the capture happened at Stripe (say, the accept of another path) before our release ran
+    await fake.capturePaymentIntent(row.guaranteeRef!, 3_400_000, 'race')
+    await prisma.offer.update({ where: { id: row.id }, data: { expiresAt: new Date(Date.now() - 1000) } })
+    await totalScope('test:cron', () => expireOffers())
+    expect((await prisma.offer.findUniqueOrThrow({ where: { id: row.id } })).guaranteeStatus).toBe('CAPTURED')
   })
 })
 

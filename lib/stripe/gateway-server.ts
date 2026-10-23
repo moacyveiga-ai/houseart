@@ -32,6 +32,7 @@ export interface StripeGateway {
   createPaymentIntent(p: PaymentIntentInput, idempotencyKey: string): Promise<GwPaymentIntent>
   capturePaymentIntent(id: string, amountToCapture: number, idempotencyKey: string): Promise<GwPaymentIntent>
   cancelPaymentIntent(id: string, idempotencyKey: string): Promise<GwPaymentIntent>
+  retrievePaymentIntent(id: string): Promise<GwPaymentIntent>
 }
 
 const idOf = (v: unknown): string | null => (typeof v === 'string' ? v : v && typeof v === 'object' && 'id' in v ? String((v as { id: string }).id) : null)
@@ -64,6 +65,7 @@ export function realGateway(secretKey: string): StripeGateway {
     },
     async capturePaymentIntent(id, amountToCapture, idempotencyKey) { return toPi(await s.paymentIntents.capture(id, { amount_to_capture: amountToCapture }, { idempotencyKey })) },
     async cancelPaymentIntent(id, idempotencyKey) { return toPi(await s.paymentIntents.cancel(id, {}, { idempotencyKey })) },
+    async retrievePaymentIntent(id) { return toPi(await s.paymentIntents.retrieve(id)) },
   }
 }
 

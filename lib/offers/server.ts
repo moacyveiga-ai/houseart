@@ -142,7 +142,7 @@ async function settleHold(offerId: number, outcome: 'accepted' | 'released'): Pr
   let to: 'CAPTURED' | 'CANCELLED' | 'FAILED'
   try {
     if (plan.action === 'capture') { await captureHold(o.guaranteeRef, plan.amountCents); to = 'CAPTURED' }
-    else { await cancelHold(o.guaranteeRef); to = 'CANCELLED' }
+    else { to = await cancelHold(o.guaranteeRef) }
   } catch (e) {
     to = 'FAILED'
     console.warn('[stripe] garantia da proposta', offerId, (e as { code?: string })?.code ?? (e as Error)?.name)

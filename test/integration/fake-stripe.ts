@@ -20,10 +20,10 @@ export class FakeStripe implements StripeGateway {
 
   private id(prefix: string) { this.seq += 1; return `${prefix}_fake${this.seq}` }
   private once<T>(key: string | undefined, fn: () => T): T {
-    if (key && this.idem.has(key)) return this.idem.get(key) as T
-    const r = fn()
-    if (key) this.idem.set(key, r)
-    return r
+    if (key && this.idem.has(key)) { const prev = this.idem.get(key) as { error?: unknown; value?: T }; if ('error' in prev) throw prev.error; return prev.value as T }
+    // like Stripe: a request that ran (including a card decline) is stored under its key and replayed
+    try { const value = fn(); if (key) this.idem.set(key, { value }); return value }
+    catch (error) { if (key) this.idem.set(key, { error }); throw error }
   }
 
   async createCustomer(p: { email: string; name: string }, idempotencyKey: string) {
@@ -79,6 +79,11 @@ export class FakeStripe implements StripeGateway {
       pi.status = 'succeeded'; pi.amount_received = amountToCapture; pi.amount_capturable = 0
       return { ...pi }
     })
+  }
+  async retrievePaymentIntent(id: string) {
+    const pi = this.intents.get(id)
+    if (!pi) throw Object.assign(new Error('no such payment_intent'), { type: 'StripeInvalidRequestError', code: 'resource_missing' })
+    return { ...pi }
   }
   async cancelPaymentIntent(id: string, idempotencyKey: string) {
     this.calls.push({ op: 'cancel', key: idempotencyKey, params: { id } })

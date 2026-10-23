@@ -123,7 +123,9 @@ async function confirmIntent(i: { amountCents: bigint; description: string; paye
   const customer = await customerOf(i.payerUserId)
   let pi: GwPaymentIntent
   try {
-    pi = await stripeGateway().createPaymentIntent({ amount: toCents(i.amountCents), currency: 'brl', customer, payment_method: card.providerRef, description: i.description.slice(0, 200), capture_method: i.capture, metadata: { ...i.metadata, userId: String(i.payerUserId) } }, i.idempotencyKey)
+    // The key carries the card: Stripe replays a stored decline for the same key for 24 h, so paying
+    // again with ANOTHER card must be a new request; the same card stays one charge (double clicks, retries).
+    pi = await stripeGateway().createPaymentIntent({ amount: toCents(i.amountCents), currency: 'brl', customer, payment_method: card.providerRef, description: i.description.slice(0, 200), capture_method: i.capture, metadata: { ...i.metadata, userId: String(i.payerUserId) } }, `${i.idempotencyKey}:pm${card.id}`)
   } catch (e) { throw stripeFailure(e) }
   const f = failureOfStatus(pi.status, i.capture === 'manual' ? 'requires_capture' : 'succeeded')
   if (f) {
@@ -179,12 +181,19 @@ export async function captureHold(ref: string, amountCents: bigint): Promise<voi
   catch (e) { throw stripeFailure(e) }
 }
 
-/** Releases an authorized hold. A PI that is already canceled counts as released. */
-export async function cancelHold(ref: string): Promise<void> {
-  try { await stripeGateway().cancelPaymentIntent(ref, `cancel:${ref}`) }
+/**
+ * Releases an authorized hold and says what the PaymentIntent really ended as. A cancel refused
+ * because the PI already moved is NOT assumed released: a concurrent capture (OTP auto-accept ×
+ * expiry cron) may have won, and calling that "CANCELLED" would make the deal charge the escrow again.
+ */
+export async function cancelHold(ref: string): Promise<'CANCELLED' | 'CAPTURED'> {
+  try { await stripeGateway().cancelPaymentIntent(ref, `cancel:${ref}`); return 'CANCELLED' }
   catch (e) {
-    const code = (e as { code?: string })?.code
-    if (code === 'payment_intent_unexpected_state') return
+    if ((e as { code?: string })?.code !== 'payment_intent_unexpected_state') throw stripeFailure(e)
+    let pi: GwPaymentIntent
+    try { pi = await stripeGateway().retrievePaymentIntent(ref) } catch (e2) { throw stripeFailure(e2) }
+    if (pi.status === 'canceled') return 'CANCELLED'
+    if (pi.status === 'succeeded') return 'CAPTURED'
     throw stripeFailure(e)
   }
 }

@@ -1,4 +1,4 @@
-// Product profiles (screen "Escolha de perfil"). Pure.
+// Product profiles (the switcher in the panel topbar). Pure.
 import type { ProfileKind } from './nav'
 
 export const PROFILE_KINDS = ['ARTIST', 'GALLERY', 'ADVISOR', 'COLLECTOR', 'APPRAISER', 'STAFF'] as const
@@ -27,6 +27,16 @@ export function navProfileOf(kind: string): ProfileKind {
     case 'STAFF': return 'admin'
     default: return 'artist'
   }
+}
+
+/**
+ * The profile a session opens in when it has not picked one: the account's
+ * default (UserProfile.isDefault) when it is still available, else the first
+ * card in the design's order. null only for an account with no profile.
+ */
+export function defaultProfileKind(cards: readonly ProfileCard[], defaultKind: string | null): ProfileKindKey | null {
+  if (defaultKind && cards.some((c) => c.kind === defaultKind)) return defaultKind as ProfileKindKey
+  return cards[0]?.kind ?? null
 }
 
 /** Which cards a user may pick: own profiles only; STAFF and APPRAISER are granted by the house. */

@@ -48,7 +48,7 @@ export function LoginForm({ next, providers, social }: LoginFormProps) {
     setBusy('Entrando…'); setError(null); setSocialError(null)
     const { res, data } = await post('/api/auth/login', { credential: credential.trim(), password, next, remember })
     if (!res.ok) { setBusy(false); setError(data.error ?? 'Não foi possível entrar.'); return }
-    window.location.assign(data.next ?? '/profiles')
+    window.location.assign(data.next ?? '/')
   }
 
   async function startCode(e: React.FormEvent) {
@@ -65,7 +65,7 @@ export function LoginForm({ next, providers, social }: LoginFormProps) {
     e.preventDefault(); setBusy('Entrando…'); setError(null)
     const { res, data } = await post('/api/auth/code/verify', { token, code, next })
     if (!res.ok) { setBusy(false); setError(data.error ?? 'Código inválido.'); return }
-    window.location.assign(data.next ?? '/profiles')
+    window.location.assign(data.next ?? '/')
   }
 
   function goTo(s: Stage) { setStage(s); setError(null) }

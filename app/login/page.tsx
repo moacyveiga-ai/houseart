@@ -17,7 +17,7 @@ const LOGIN_WALL = { src: '/api/public/media/content/news/1792772349313-1i5ga4ci
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; social?: string }> }) {
   const sp = await searchParams
   const next = safeNext(sp.next)
-  if (await getSession()) redirect(next ?? '/profiles')
+  if (await getSession()) redirect(next ?? '/')
   const social = sp.social && SOCIAL_CODE.test(sp.social) ? sp.social : null
   return (
     <AuthShell variant="claim" brandHeight={56} className="ha-login--entrar" wall={LOGIN_WALL}>

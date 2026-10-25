@@ -1,5 +1,6 @@
-// The panel pages' session: redirect to /login without session, to
-// /profiles without an active profile. Called by every page under (panel)
+// The panel pages' session: redirect to /login without session; an account
+// with no profile at all goes to the public site (there is no profile screen:
+// the topbar switcher changes profile). Called by every page under (panel)
 // (the layout is not an authorization boundary in Next 16).
 import { redirect } from 'next/navigation'
 import { panelSession, type PanelSession } from '@/lib/auth/panel'
@@ -12,6 +13,6 @@ export async function requirePanelPage(next: string): Promise<PanelPage> {
   const s = await panelSession()
   if (!s) redirect(`/login?next=${encodeURIComponent(next)}`)
   const nav = await activeNavProfile(s.user)
-  if (!nav) redirect(`/profiles?next=${encodeURIComponent(next)}`)
+  if (!nav) redirect('/e')
   return { ...s, nav }
 }

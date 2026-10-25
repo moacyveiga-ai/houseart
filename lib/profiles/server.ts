@@ -1,10 +1,10 @@
-// Profile choice and switch (screen "Escolha de perfil").
+// Profile switch (the switcher in the panel topbar).
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 /** The slice of the session this module reads (structural: lib/profiles never imports lib/auth). */
 export interface ProfileSession { id: number; profile: string; activeProfileKind: string | null; sessionId: number | null }
 
-import { availableCards, navProfileOf, type ProfileCard, type ProfileKindKey } from './core'
+import { availableCards, defaultProfileKind, navProfileOf, type ProfileCard, type ProfileKindKey } from './core'
 import type { ProfileKind } from './nav'
 
 export async function profilesOf(user: ProfileSession): Promise<ProfileCard[]> {
@@ -23,10 +23,16 @@ export async function switchProfile(user: ProfileSession, kind: ProfileKindKey):
   return { ok: true, nav: navProfileOf(kind) }
 }
 
-/** The NAV profile of the session: chosen kind, or the single/default one; null = must choose. */
+/**
+ * The NAV profile of the session: the kind picked in the switcher, else the
+ * account's default profile (or the first one). null only for an account with
+ * no profile at all — there is no "choose a profile" screen any more.
+ */
 export async function activeNavProfile(user: ProfileSession): Promise<ProfileKind | null> {
   if (user.activeProfileKind) return navProfileOf(user.activeProfileKind)
   const cards = await profilesOf(user)
-  if (cards.length === 1) return navProfileOf(cards[0].kind)
-  return null
+  if (cards.length <= 1) return cards[0] ? navProfileOf(cards[0].kind) : null
+  const def = await prisma.userProfile.findFirst({ where: { userId: user.id, isDefault: true }, select: { kind: true } })
+  const kind = defaultProfileKind(cards, def?.kind ?? null)
+  return kind ? navProfileOf(kind) : null
 }

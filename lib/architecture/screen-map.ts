@@ -3,7 +3,8 @@
 // design-screens.test.ts only lets this list SHRINK). Paths are repo-relative.
 export const SCREEN_MAP: Record<string, string | null> = {
   'Login': 'app/login/page.tsx',
-  'Escolha de perfil': 'app/profiles/page.tsx',
+  // The design's profile screen became the topbar switcher (Moacy, 2026-10-25).
+  'Escolha de perfil': 'components/layout/ProfileSwitcher.tsx',
   'Dashboard': 'app/(panel)/page.tsx',
   'Minhas obras': 'app/(panel)/artworks/page.tsx',
   'Cadastro de obra': 'app/(panel)/artworks/[id]/edit/page.tsx',

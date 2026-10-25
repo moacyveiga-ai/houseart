@@ -34,7 +34,7 @@ async function handle(req: Request, providerSlug: string, params: URLSearchParam
   if (out.kind === 'inactive') return landing('/login', { social: 'inactive' })
   if (!out.result.ok) return landing(back, { ...carry, social: 'failed' })
   void recordAudit({ entity: 'auth', entityId: out.result.user.id, action: out.created ? 'signup_social' : 'login_social', userId: out.result.user.id, userName: out.result.user.name, ip: ctx.ip, userAgent: ctx.userAgent, origin: 'api' })
-  const target = out.created ? `/signup/welcome${state.plan ? `?plan=${encodeURIComponent(state.plan)}` : ''}` : (out.next ?? '/profiles')
+  const target = out.created ? `/signup/welcome${state.plan ? `?plan=${encodeURIComponent(state.plan)}` : ''}` : (out.next ?? '/')
   const res = NextResponse.redirect(new URL(target, publicBaseUrl()).toString(), 302)
   res.cookies.set(COOKIE_NAME, out.result.token, sessionCookieOptions())
   return res

@@ -83,7 +83,7 @@ export async function loginWithPassword(opt: { credential: string; password: str
 export async function openSession(user: UserRow & { active?: boolean }, ctx: { ip?: string; userAgent?: string }): Promise<LoginResult> {
   const defaultProfile = await prisma.userProfile.findFirst({ where: { userId: user.id }, orderBy: [{ isDefault: 'desc' }, { id: 'asc' }] })
   const profiles = await prisma.userProfile.count({ where: { userId: user.id } })
-  // One profile → it is the active one; several → the person chooses (/profiles).
+  // One profile → it is the active one; several → the default one, changed in the topbar switcher.
   const activeProfileKind = profiles === 1 && defaultProfile ? defaultProfile.kind : null
   const token = await createLocalSession(user.id, { ...ctx, activeProfileKind })
   afterResponse('auth: last login', () => prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }))

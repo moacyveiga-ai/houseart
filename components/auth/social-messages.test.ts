@@ -16,7 +16,7 @@ describe('social login messages and links', () => {
 
   it('builds the start link with purpose and next', () => {
     expect(socialStartHref('google', 'login', null)).toBe('/api/auth/oauth/google/start?purpose=login')
-    expect(socialStartHref('apple', 'login', '/profiles')).toBe('/api/auth/oauth/apple/start?purpose=login&next=%2Fprofiles')
+    expect(socialStartHref('apple', 'login', '/explore')).toBe('/api/auth/oauth/apple/start?purpose=login&next=%2Fexplore')
   })
 
   it('lists the four providers of the handoff, in order', () => {

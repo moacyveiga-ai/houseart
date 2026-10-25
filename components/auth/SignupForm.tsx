@@ -4,6 +4,7 @@
 // HouseArt App Colecionador.dc.html — e-mail code → phone code by SMS →
 // how you will use it / interests / city / newsletter → "Conta criada".
 // `startAt` = 3 is the continuation of a social signup (/signup/welcome).
+import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Button, Icon, Toggle } from '@/components/ds'
 import { ProviderMark } from './ProviderMark'
@@ -351,7 +352,7 @@ export function SignupForm({ providers, startAt = 1, social, socialProvider, acc
             <Row k="Celular" v={`${phoneMask ?? '—'} · verificado`} />
             <Row k="Interesses" v={interests.map((i) => INTEREST_LABELS[i as keyof typeof INTEREST_LABELS]).join(', ') || '—'} />
           </dl>
-          <a className="ha-btn ha-btn--primary ha-btn--md ha-signup__cta" href="/profiles">Começar a explorar</a>
+          <Link className="ha-btn ha-btn--primary ha-btn--md ha-signup__cta" href="/">Começar a explorar</Link>
         </div>
       ) : null}
     </div>

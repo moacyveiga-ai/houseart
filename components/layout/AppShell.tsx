@@ -3,19 +3,23 @@ import type { ReactNode } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { HouseArtLogo } from './HouseArtLogo'
 import { NAV, PROFILE_LABELS, type ProfileKind } from '@/lib/profiles/nav'
+import { ProfileSwitcher, type SwitcherProfile } from './ProfileSwitcher'
 
 export interface ShellUser { initials: string; profile: ProfileKind; name?: string }
+export type { SwitcherProfile }
 import { IndexTicker, type TickerItem } from '@/components/ds/IndexTicker'
 export type { TickerItem }
 
 /**
  * The shell of the design: ticker (indices) → topbar 64px (logo 192px, search,
- * bell, profile button with initials + label + swap_horiz) → sidebar 240px with
+ * bell, profile switcher: initials + label + swap_horiz, a menu of the account's profiles) → sidebar 240px with
  * NAV[profile] and footer (links + Sair) → main with max-width var(--ha-max).
  * Badges per item come from the server (`badges`), never from the NAV.
  */
-export function AppShell({ user, activeKey, badges = {}, bell = 0, ticker = [], children }: {
+export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0, ticker = [], children }: {
   user: ShellUser
+  /** The account's profiles for the switcher (the active one marked). */
+  profiles?: SwitcherProfile[]
   activeKey: string | null
   badges?: Record<string, number>
   /** Unread notifications (the dot on the bell); from the server. */
@@ -35,11 +39,7 @@ export function AppShell({ user, activeKey, badges = {}, bell = 0, ticker = [], 
         </form>
         <div className="ha-topbar__right">
           <Link href="/notifications" className="ha-btn ha-btn--ghost ha-btn--xs ha-bell" aria-label={bell ? `Notificações, ${bell} não lidas` : 'Notificações'}><Icon name="notifications" />{bell ? <span className="ha-bell__dot" /> : null}</Link>
-          <Link href="/profiles" className="ha-profilebtn" aria-label="Trocar de perfil">
-            <span className="ha-avatar">{user.initials}</span>
-            <span className="ha-profilebtn__name">{PROFILE_LABELS[user.profile]}</span>
-            <Icon name="swap_horiz" size={18} />
-          </Link>
+          <ProfileSwitcher initials={user.initials} label={PROFILE_LABELS[user.profile]} name={user.name} profiles={profiles} />
         </div>
       </header>
       <div className="ha-body">

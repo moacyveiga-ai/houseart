@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { requireAuth, AuthError } from '@/lib/auth'
 import { acceptInvite, inviteByToken } from '@/lib/gallery/team-server'
+import { switchProfile } from '@/lib/profiles/server'
+import { homeOf } from '@/lib/profiles/nav'
 import { artworkErrorResponse } from '@/app/api/artworks/_http'
 
 /** GET ?token= → what the invite is (gallery, role, e-mail); POST {token} → the logged user joins. */
@@ -18,6 +20,8 @@ export async function POST(req: Request) {
   try {
     const r = await acceptInvite(String(body.token ?? ''), { id: u.id, email: u.email, name: u.name })
     if (!r.ok) return NextResponse.json(r, { status: 400 })
-    return NextResponse.json({ ok: true, href: '/profiles' })
+    // the session opens in the gallery it just joined (the topbar switcher goes back)
+    const sw = await switchProfile(u, 'GALLERY')
+    return NextResponse.json({ ok: true, href: sw.ok ? homeOf(sw.nav) : '/' })
   } catch (e) { return artworkErrorResponse(e) }
 }

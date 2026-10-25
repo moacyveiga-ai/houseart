@@ -181,6 +181,19 @@
 .ha-profilebtn:hover { border-color: var(--ha-ink-900); }
 .ha-profilebtn__name { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); white-space: nowrap; }
 .ha-profilebtn .ha-icon { font-size: 18px; color: var(--ha-fg-muted); }
+.ha-profilebtn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-switcher { position: relative; }
+.ha-switcher__menu { position: absolute; right: 0; top: calc(100% + var(--ha-space-2)); z-index: 40; min-width: 260px; display: flex; flex-direction: column; gap: var(--ha-space-1); padding: var(--ha-space-2); background: var(--ha-bg); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); box-shadow: var(--ha-shadow-lg); animation: ha-fade var(--ha-dur-fast) var(--ha-ease) both; }
+.ha-switcher__who { margin: 0; padding: var(--ha-space-2) var(--ha-space-3); font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-switcher__label { margin: 0; padding: var(--ha-space-1) var(--ha-space-3); font-size: var(--ha-text-caption); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ha-fg-muted); }
+.ha-switcher__item { display: flex; align-items: center; gap: var(--ha-space-3); width: 100%; min-height: 40px; padding: var(--ha-space-2) var(--ha-space-3); border: 0; border-radius: var(--ha-radius-sm); background: transparent; color: var(--ha-fg-body); font: inherit; font-size: var(--ha-text-body-sm); text-align: left; text-decoration: none; cursor: pointer; transition: background var(--ha-dur-fast); }
+.ha-switcher__item > span { flex: 1; }
+.ha-switcher__item:hover { background: var(--ha-paper-100); }
+.ha-switcher__item:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-switcher__item:disabled { color: var(--ha-fg-disabled); cursor: default; }
+.ha-switcher__item--on { color: var(--ha-fg); font-weight: 600; background: var(--ha-paper-100); }
+.ha-switcher__item .ha-icon { color: var(--ha-fg-muted); }
+.ha-switcher__sep { height: var(--ha-border-w); margin: var(--ha-space-1) 0; background: var(--ha-border); }
 .ha-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--ha-paper-200); display: inline-flex; align-items: center; justify-content: center; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-900); flex: none; }
 .ha-body { flex: 1; display: flex; min-height: 0; }
 .ha-sidebar { width: 240px; flex: none; border-right: var(--ha-border-w) solid var(--ha-border); padding: var(--ha-space-4) var(--ha-space-3); display: flex; flex-direction: column; gap: var(--ha-space-1); position: sticky; top: 64px; align-self: flex-start; height: calc(100vh - 88px); overflow-y: auto; }
@@ -241,9 +254,6 @@
 .ha-login__tagline { margin: 0; color: var(--ha-paper-200); text-wrap: pretty; }
 .ha-login__head { display: flex; flex-direction: column; gap: var(--ha-space-2); }
 @media (max-width: 720px) { .ha-login--claim .ha-login__art { min-height: 0; gap: var(--ha-space-6); } .ha-login__headline { font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); } }
-.ha-profile-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ha-space-3); text-align: left; padding: var(--ha-space-6); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); cursor: pointer; transition: box-shadow var(--ha-dur-fast), border-color var(--ha-dur-fast); text-decoration: none; color: inherit; }
-.ha-profile-card:hover { border-color: var(--ha-ink-900); box-shadow: var(--ha-shadow-sm); }
-.ha-profile-card:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .ha-deed { background: var(--ha-bg); border: var(--ha-border-w) solid var(--ha-border); box-shadow: var(--ha-shadow-sm); padding: var(--ha-space-8); display: flex; flex-direction: column; gap: var(--ha-space-4); }
 .ha-qr { width: 56px; height: 56px; flex: none; background: repeating-conic-gradient(var(--ha-ink-900) 0 25%, var(--ha-paper-50) 0 50%) 0 0 / 8px 8px; border: 3px solid var(--ha-ink-900); }
 .ha-kanban { display: grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: var(--ha-space-4); overflow-x: auto; padding-bottom: var(--ha-space-2); }

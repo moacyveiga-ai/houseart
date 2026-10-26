@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
 import { listConversations, openConversation, readConversation, sendMessage, unreadMessages } from '@/lib/messaging/server'
-import { addComment, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
+import { addComment, artworkCounts, artworkSignals, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
 import { isExpoEndpoint, pushConfig, savePushSubscription } from '@/lib/notifications/push'
 import { createScenario, type Scenario } from './fixtures'
 import { asPanel } from './session'
@@ -116,3 +116,24 @@ describe('artwork favorites and search', () => {
     expect((await search('')).total).toBe(0)
   })
 })
+
+describe('comments on an artwork', () => {
+  it('a public artwork takes comments, counts them, tells the seller; a private one does not', async () => {
+    const c = await addComment(buyerId, 'ARTWORK', s.a1.artworkId, 'Que cor linda ao vivo.')
+    expect(c.id).toBeGreaterThan(0)
+    const rows = await commentsOf(buyerId, 'ARTWORK', s.a1.artworkId)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ body: 'Que cor linda ao vivo.', mine: true })
+    await toggleReaction(buyerId, 'ARTWORK', s.a1.artworkId, 'LIKE')
+    expect((await artworkCounts([s.a1.artworkId])).get(s.a1.artworkId)).toEqual({ likes: 1, comments: 1 })
+    expect(await artworkSignals(buyerId, s.a1.artworkId)).toMatchObject({ likes: 1, liked: true, comments: 1 })
+    // the seller (the member holding it) gets the notice
+    expect(await prisma.notification.count({ where: { userId: s.a1.userId, kind: 'community.commented' } })).toBe(1)
+    // the artwork of b has no public page: no comment, nothing to read
+    await expect(addComment(buyerId, 'ARTWORK', s.b.artworkId, 'oi')).rejects.toMatchObject({ status: 404 })
+    expect(await commentsOf(buyerId, 'ARTWORK', s.b.artworkId)).toEqual([])
+    await deleteComment(buyerId, c.id)
+    expect((await artworkCounts([s.a1.artworkId])).get(s.a1.artworkId)).toEqual({ likes: 1, comments: 0 })
+  }, 60_000)
+})
+

@@ -4,6 +4,7 @@ import { FavoritesScreen, type FavoritesTab } from '@/components/collector/Favor
 import { collectionSummary } from '@/lib/collector-wallet/collection-server'
 import { CollectionHeader } from '@/components/collector/CollectionHeader'
 import { collectorPanel } from '@/lib/collector-wallet/panel-server'
+import { initialsOf } from '@/lib/profiles/core'
 import { CollectorArtworkPanel } from '@/components/collector/CollectorArtworkPanel'
 
 export const metadata = { title: 'Favoritos e curtidos — HouseArt' }
@@ -15,5 +16,5 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
   const panel = sp.work ? await collectorPanel(user, { work: sp.work }) : null
   const rows = (await favoritesOf(user.id)).map((r) => ({ ...r, priceCents: r.priceCents === null ? null : r.priceCents.toString(), at: undefined }))
   const summary = nav === 'collector' ? await collectionSummary(user) : null
-  return <div className="ha-page">{summary ? <CollectionHeader s={summary} active={tab === 'liked' ? 'liked' : 'saved'} /> : null}<FavoritesScreen key={tab} rows={rows.map(({ at: _at, ...r }) => r)} tab={tab} bare={!!summary} />{panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref={tab === 'liked' ? '/favorites?tab=liked' : '/favorites'} /> : null}</div>
+  return <div className="ha-page">{summary ? <CollectionHeader s={summary} active={tab === 'liked' ? 'liked' : 'saved'} /> : null}<FavoritesScreen key={tab} rows={rows.map(({ at: _at, ...r }) => r)} tab={tab} bare={!!summary} />{panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref={tab === 'liked' ? '/favorites?tab=liked' : '/favorites'} /> : null}</div>
 }

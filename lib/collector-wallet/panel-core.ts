@@ -4,7 +4,7 @@ export interface CollectorPanelData {
   id: number; publicId: string | null; title: string; artist: string; artistSlug: string | null; ficha: string
   images: { url: string; label: string }[]
   priceLabel: string; price: string; priceSub: string
-  signals: { likes: number; liked: boolean; saved: boolean } | null
+  signals: { likes: number; liked: boolean; saved: boolean; comments: number } | null
   certificate: { code: string | null; text: string; ok: boolean }
   provenance: { k: string; v: string }[]
   seller: { name: string; initials: string; sub: string } | null

@@ -7,19 +7,23 @@ import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { hasContactLeak } from '@/lib/messaging/core'
 import type { CommentRow, FeedItem } from '@/lib/community/server'
+import type { CommentTarget } from '@/lib/community/domain'
 
 export const COMMENT_GUARD = 'Telefones, e-mails e links não podem ser publicados. Negocie pelas mensagens da HouseArt.'
 
-const target = (item: FeedItem): 'POST' | 'NEWS' => (item.kind === 'NEWS' ? 'NEWS' : 'POST')
+/** What can be commented: a feed item (post, news) or a public artwork (target ARTWORK, author = who sells it). */
+export interface CommentSubject { key: string; id: number; kind?: FeedItem['kind']; target?: CommentTarget; author: { memberId: number | null; name: string } }
 
-async function fetchComments(it: FeedItem): Promise<CommentRow[]> {
+const target = (item: CommentSubject): CommentTarget => item.target ?? (item.kind === 'NEWS' ? 'NEWS' : 'POST')
+
+async function fetchComments(it: CommentSubject): Promise<CommentRow[]> {
   const res = await fetch(`/api/public/community/comments?target=${target(it)}&targetId=${it.id}`)
   const data = (await res.json().catch(() => ({}))) as { items?: CommentRow[] }
   return res.ok && data.items ? data.items : []
 }
 
 export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
-  item: FeedItem | null
+  item: CommentSubject | null
   me: { initials: string }
   onClose: () => void
   /** The feed card keeps its counter in step with the sheet. */

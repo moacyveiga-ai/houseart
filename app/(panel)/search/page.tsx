@@ -4,6 +4,7 @@ import { listPublicArtists } from '@/lib/public-content/server'
 import { normalizeQuery } from '@/lib/search/core'
 import { SearchScreen } from '@/components/search/SearchScreen'
 import { collectorPanel } from '@/lib/collector-wallet/panel-server'
+import { initialsOf } from '@/lib/profiles/core'
 import { CollectorArtworkPanel } from '@/components/collector/CollectorArtworkPanel'
 
 export const metadata = { title: 'Busca — HouseArt' }
@@ -21,7 +22,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Busca</h1></div>
       <SearchScreen result={result} featured={featured} workPrefix={`${base}${q ? '&' : '?'}work=`} />
-      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref={base} /> : null}
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref={base} /> : null}
     </div>
   )
 }

@@ -43,3 +43,9 @@
 .ha-cp__on { color: var(--ha-ink-900); }
 .ha-cp__liked { color: var(--ha-alert-500); }
 .ha-sd__btn--ink { background: var(--ha-ink-900); color: var(--ha-paper-50); border: 0; }
+
+/* ♥ and 💬 of the price block (prototype `obLikes` / `obComents`): the comments open the sheet */
+.ha-cp__social { gap: 12px; }
+.ha-cp__comments { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 0; color: var(--ha-ink-500); font: inherit; font-size: var(--ha-text-caption); cursor: pointer; }
+.ha-cp__comments:hover { color: var(--ha-ink-900); }
+.ha-cp__comments:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; border-radius: var(--ha-radius-sm); }

@@ -198,6 +198,8 @@ export async function toggleReaction(userId: number, target: string, targetId: n
 export interface CommentRow { id: number; author: FeedAuthor; body: string; when: string; likes: number; liked: boolean; mine: boolean }
 
 export async function commentsOf(viewer: number | null, target: CommentTarget, targetId: number): Promise<CommentRow[]> {
+  // an artwork's comments are read only while its page is public
+  if (target === 'ARTWORK' && !(await publicArtworkOwner(targetId))) return []
   const rows = await prisma.postComment.findMany({ where: { targetKind: target, targetId, hiddenAt: null }, orderBy: { id: 'asc' }, take: 200 })
   const authors = await authorsOf(rows.map((r) => r.userId), viewer)
   const mine = await myReactions(viewer, rows.map((r) => ({ kind: 'COMMENT' as const, id: r.id })))
@@ -205,18 +207,21 @@ export async function commentsOf(viewer: number | null, target: CommentTarget, t
 }
 
 export async function addComment(userId: number, target: string, targetId: number, raw: unknown): Promise<{ id: number }> {
-  if (target !== 'POST' && target !== 'NEWS') throw new ArtworkError('BAD_TARGET', 'Alvo inválido.', 422)
+  if (target !== 'POST' && target !== 'NEWS' && target !== 'ARTWORK') throw new ArtworkError('BAD_TARGET', 'Alvo inválido.', 422)
   const chk = checkComment(raw)
   if (!chk.ok) throw new ArtworkError('BAD_COMMENT', chk.error, 422)
   const post = target === 'POST' ? await prisma.post.findFirst({ where: { id: targetId, hiddenAt: null }, select: { id: true, authorUserId: true } }) : null
   if (target === 'POST' && !post) throw new ArtworkError('NOT_FOUND', 'Post não encontrado.', 404)
   if (target === 'NEWS' && !(await prisma.newsArticle.findUnique({ where: { id: targetId }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Notícia não encontrada.', 404)
+  const artwork = target === 'ARTWORK' ? await publicArtworkOwner(targetId) : null
+  if (target === 'ARTWORK' && !artwork) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
   const c = await prisma.$transaction(async (tx) => {
     const row = await tx.postComment.create({ data: { targetKind: target, targetId, postId: post?.id ?? null, userId, body: chk.body } })
     if (post) await tx.post.update({ where: { id: post.id }, data: { commentCount: { increment: 1 } } })
     return row
   })
   if (post && post.authorUserId !== userId) await notify({ userId: post.authorUserId, kind: 'community.commented', title: 'Comentaram no seu post', body: chk.body.slice(0, 120), href: '/community' })
+  if (artwork && artwork.ownerUserId && artwork.ownerUserId !== userId) await notify({ userId: artwork.ownerUserId, kind: 'community.commented', title: `Comentaram em ${artwork.title}`, body: chk.body.slice(0, 120), href: `/e/artwork/${artwork.publicId}` })
   return { id: c.id }
 }
 
@@ -273,10 +278,22 @@ export async function newsSignals(viewer: number | null, newsId: number): Promis
   return { likes: counts.get(`${newsId}:LIKE`) ?? 0, liked: mine.has(`NEWS:${newsId}:LIKE`), saved: mine.has(`NEWS:${newsId}:SAVE`), comments: comments.get(newsId) ?? 0 }
 }
 
-/** The like count and the viewer's like/save of one artwork (the collector's artwork panel). */
-export async function artworkSignals(viewer: number | null, artworkId: number): Promise<{ likes: number; liked: boolean; saved: boolean }> {
-  const [counts, mine] = await Promise.all([countsOf('ARTWORK', [artworkId]), myReactions(viewer, [{ kind: 'ARTWORK', id: artworkId }])])
-  return { likes: counts.get(`${artworkId}:LIKE`) ?? 0, liked: mine.has(`ARTWORK:${artworkId}:LIKE`), saved: mine.has(`ARTWORK:${artworkId}:SAVE`) }
+/** The like and comment counts and the viewer's like/save of one artwork (the collector's artwork panel). */
+export async function artworkSignals(viewer: number | null, artworkId: number): Promise<{ likes: number; liked: boolean; saved: boolean; comments: number }> {
+  const [counts, mine, comments] = await Promise.all([countsOf('ARTWORK', [artworkId]), myReactions(viewer, [{ kind: 'ARTWORK', id: artworkId }]), commentCounts('ARTWORK', [artworkId])])
+  return { likes: counts.get(`${artworkId}:LIKE`) ?? 0, liked: mine.has(`ARTWORK:${artworkId}:LIKE`), saved: mine.has(`ARTWORK:${artworkId}:SAVE`), comments: comments.get(artworkId) ?? 0 }
+}
+
+/** Like and comment counts of many artworks at once (Explorar, Anúncios ativos): two grouped queries. */
+export async function artworkCounts(artworkIds: number[]): Promise<Map<number, { likes: number; comments: number }>> {
+  const [likes, comments] = await Promise.all([countsOf('ARTWORK', artworkIds), commentCounts('ARTWORK', artworkIds)])
+  return new Map(artworkIds.map((id) => [id, { likes: likes.get(`${id}:LIKE`) ?? 0, comments: comments.get(id) ?? 0 }]))
+}
+
+/** A commentable artwork: public page with the green seal; who to tell is the user of the member that holds it. */
+async function publicArtworkOwner(artworkId: number): Promise<{ title: string; publicId: string; ownerUserId: number | null } | null> {
+  const a = await prisma.artwork.findFirst({ where: { id: artworkId, publicId: { not: null }, seal: 'GREEN' }, select: { title: true, publicId: true, member: { select: { userId: true } } } })
+  return a ? { title: a.title, publicId: a.publicId!, ownerUserId: a.member.userId } : null
 }
 
 /** Which of `ids` the viewer already reacted to with `kind` (public pages: "Seguindo", "Salvo"). */

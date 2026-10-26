@@ -11,6 +11,7 @@ import { protectDocument } from '@/lib/crypto/cipher'
 import { normalizeEmail } from '@/lib/auth/credential'
 import { sendEmail } from '@/lib/email/send'
 import { afterResponseOrNow } from '@/lib/after'
+import { flagOn } from '@/lib/flags'
 import { ArtworkError } from '@/lib/artworks/server'
 import { canTransition as artworkCanTransition } from '@/lib/artworks/state-machine'
 import { notify } from '@/lib/notifications/server'
@@ -18,7 +19,8 @@ import { systemLine, openConversationWith } from '@/lib/messaging/server'
 import { formatBRL as formatReais } from '@/lib/format'
 const formatBRL = (c: bigint) => formatReais(Number(c) / 100, { casas: 0 })
 import { syncOpportunityFromOffer } from '@/lib/crm/server'
-import { createDealFromOffer } from '@/lib/deals/server'
+import { cancelUnpaidDeal, createDealFromOffer, startEscrowPayment } from '@/lib/deals/server'
+import { boletoBillingProblem, type BoletoBilling, type EscrowMethod, type PaymentInstructions } from '@/lib/payments/async-core'
 import { LIVE_STATUSES, OFFER_VALIDITY_DAYS, offerCode, OTP_MAX_ATTEMPTS, OTP_TTL_MS, RETRACTION_WINDOW_MS, type OfferStatus } from './domain'
 import { evaluateOffer, mandateProblems } from './mandate-core'
 import { cheapest, insuranceCents, normalizeCep, quoteShipping, ufFromCep } from '@/lib/shipping/quote-core'
@@ -411,7 +413,9 @@ export async function buyerReply(code: string, token: BuyerAuth, reply: { accept
 
 
 // ── direct purchase ("Comprar direto") ────────────────────────────────────
-export interface BuyNowInput { publicId: string; buyerUserId: number; buyerName: string; buyerEmail: string; buyerDocument: string | null; buyerCity?: string | null; paymentMethodId: number | null; deliveryCep: string | null; insurance: boolean }
+export interface BuyNowInput { publicId: string; buyerUserId: number; buyerName: string; buyerEmail: string; buyerDocument: string | null; buyerCity?: string | null; paymentMethodId: number | null; deliveryCep: string | null; insurance: boolean
+  /** How the escrow is paid: CARD (default — captured now), PIX or BOLETO (instructions; paid when the bank confirms). */
+  method?: EscrowMethod; billing?: BoletoBilling | null }
 
 /**
  * Buys at the list price: the offer is born ACCEPTED (the list price always
@@ -419,7 +423,7 @@ export interface BuyNowInput { publicId: string; buyerUserId: number; buyerName:
  * captured on the spot (mock; in test/live the total is authorized, then captured after the offer is written). The artwork is locked under the same advisory
  * lock as the seller's accept.
  */
-export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; dealId: number | null } | { ok: false; error: string }> {
+export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; dealId: number | null; instructions?: PaymentInstructions | null } | { ok: false; error: string }> {
   return totalScope('offers:buy-now', async () => {
     const email = normalizeEmail(i.buyerEmail)
     if (!email) return { ok: false, error: 'Informe um e-mail válido.' }
@@ -430,6 +434,9 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     const mandate = a.mandates[0]
     const price = mandate?.listPriceCents ?? a.listPriceCents
     if (!price || price <= 0n) return { ok: false, error: 'Esta obra é vendida sob consulta.' }
+    const method: EscrowMethod = i.method ?? 'CARD'
+    if (method === 'BOLETO') { const problem = boletoBillingProblem(i.billing ?? {}); if (problem) return { ok: false, error: problem } }
+    if (method !== 'CARD') return buyNowAsync(i, method, a, mandate?.id ?? null, price, email, doc)
     const card = await usableCard(i.buyerUserId, i.paymentMethodId)
     if (!card) return { ok: false, error: 'Cadastre um cartão na carteira para comprar.' }
     const quote = await quoteForArtwork(a.id, i.deliveryCep, price)
@@ -480,6 +487,49 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     void audit.event({ entity: 'offer', entityId: offer.id, action: 'buy_now', userId: i.buyerUserId, after: { code: offer.code } })
     return { ok: true, code: offer.code, dealId: deal?.id ?? null }
   })
+}
+
+/**
+ * Buy now with Pix or boleto: the offer is born ACCEPTED and the deal opens (the artwork reserved, as
+ * with the card), then the Pix / boleto is generated. If that fails, the reservation is undone at once.
+ * The escrow is paid only when the bank confirms (webhook); unpaid by the deadline, the cron cancels.
+ */
+async function buyNowAsync(i: BuyNowInput, method: 'PIX' | 'BOLETO', a: { id: number; memberId: number }, mandateId: number | null, price: bigint, email: string, doc: { hash: string; enc: string; mask: string } | null): Promise<{ ok: true; code: string; dealId: number | null; instructions: PaymentInstructions | null } | { ok: false; error: string }> {
+  if (!flagOn('FLAG_DEALS')) return { ok: false, error: 'Pix e boleto ainda não estão disponíveis.' }
+  const quote = await quoteForArtwork(a.id, i.deliveryCep, price)
+  const insurance = i.insurance ? quote.insuranceCents : 0n
+  const year = new Date().getUTCFullYear()
+  const seq = await prisma.offer.count({ where: { code: { startsWith: `OFR-${year}-` } } })
+  const offer = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${1_000_000 + a.id})`
+    const live = await tx.offer.count({ where: { artworkId: a.id, status: { in: [...LIVE_STATUSES] } } })
+    if (live > 0) throw new ArtworkError('ARTWORK_LOCKED', 'Esta obra acabou de ser reservada por outra pessoa.', 409)
+    return tx.offer.create({
+      data: {
+        code: offerCode(year, seq + 1), artworkId: a.id, mandateId, sellerMemberId: a.memberId, memberId: a.memberId,
+        buyerUserId: i.buyerUserId, buyerName: i.buyerName.trim().slice(0, 120), buyerEmail: email, buyerDocumentHash: doc?.hash ?? null, buyerDocumentEnc: doc?.enc ?? null, buyerDocumentMask: doc?.mask ?? null,
+        buyerKind: 'COLLECTOR', buyerCity: i.buyerCity?.trim().slice(0, 80) || null, offeredCents: price, acceptedCents: price, status: 'ACCEPTED', expiresAt: new Date(Date.now() + 86_400_000),
+        validityHours: 24, guaranteeMethod: 'NONE', deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: insurance,
+        retractionTokenHash: null, retractionIssuedAt: new Date(),
+        rounds: { create: { number: 1, author: 'BUYER', amountCents: price, message: `Compra direta ao preço pedido · ${method === 'PIX' ? 'Pix' : 'boleto'}.` } },
+        events: { create: [{ kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: price.toString(), direct: true, method }) }, { kind: 'CONFIRMED', actorKind: 'BUYER' }, { kind: 'ACCEPTED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ amountCents: price.toString(), reason: 'list_price' }) }] },
+      },
+    })
+  })
+  await syncOpportunityFromOffer(offer.id)
+  // quiet: the buyer is told only once the Pix/boleto exists — a failure below undoes the deal without any message
+  const deal = await createDealFromOffer(offer.id, { quiet: true })
+  if (!deal) return { ok: false, error: 'Não foi possível abrir o negócio.' }
+  await prisma.deal.update({ where: { id: deal.id }, data: { shippingCents: quote.shippingCents, insuranceCents: insurance } })
+  let started: Awaited<ReturnType<typeof startEscrowPayment>>
+  try { started = await startEscrowPayment(i.buyerUserId, deal.id, method, i.billing ?? null) }
+  catch (e) { await cancelUnpaidDeal(deal.id, `Não foi possível gerar o ${method === 'PIX' ? 'Pix' : 'boleto'}`, null, { silent: true }); throw e }
+  const buyer = await prisma.user.findUnique({ where: { id: i.buyerUserId }, select: { email: true } })
+  await notify({ userId: i.buyerUserId, email: buyer?.email, kind: 'deal.created', title: `Compra em andamento · ${deal.code}`, body: method === 'PIX' ? 'Pague o Pix em até 24 h para garantir a obra.' : 'Pague o boleto até o vencimento para garantir a obra.', href: '/purchases', emailSubject: 'Sua compra na HouseArt começou' })
+  const seller = await prisma.member.findUnique({ where: { id: a.memberId }, select: { userId: true, user: { select: { email: true } } } })
+  await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.auto_accepted', title: `Compra direta · ${offer.code}`, body: `A obra foi reservada ao preço pedido; o comprador paga por ${method === 'PIX' ? 'Pix' : 'boleto'}.`, href: '/sales?tab=deals', emailSubject: 'Sua obra foi comprada' })
+  void audit.event({ entity: 'offer', entityId: offer.id, action: 'buy_now', userId: i.buyerUserId, after: { code: offer.code, method } })
+  return { ok: true, code: offer.code, dealId: deal.id, instructions: started.instructions }
 }
 
 /** The logged buyer's offers (Compras › Ofertas): never the floor, never the document. */

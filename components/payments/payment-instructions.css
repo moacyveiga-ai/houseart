@@ -1,0 +1,7 @@
+.ha-pay { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); }
+.ha-pay__head { display: flex; align-items: center; gap: 10px; }
+.ha-pay__muted { font-size: 13px; line-height: 19px; color: var(--ha-ink-500); margin: 0; }
+.ha-pay__qr { align-self: center; width: 220px; height: 220px; border-radius: var(--ha-radius-sm); background: var(--ha-paper-50); image-rendering: pixelated; }
+.ha-pay__code { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ha-pay__code code { width: 100%; padding: 10px 12px; border-radius: var(--ha-radius-sm); background: var(--ha-paper-100); font-size: 12px; line-height: 18px; word-break: break-all; color: var(--ha-ink-900); }
+.ha-pay__links { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }

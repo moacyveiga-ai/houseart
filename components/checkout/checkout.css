@@ -147,3 +147,11 @@
 .hc-gate__text { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-ink-500); }
 .hc-gate__actions { display: flex; gap: var(--ha-space-3); flex-wrap: wrap; }
 .hc-gate__actions .ha-btn { flex: 1 1 160px; justify-content: center; }
+
+/* Forma de pagamento: Pix · Cartão · Boleto (prototype `ckPags`) */
+.hc-methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.hc-method { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); color: var(--ha-ink-900); cursor: pointer; text-align: left; }
+.hc-method--on { border-color: var(--ha-ink-900); box-shadow: inset 0 0 0 1px var(--ha-ink-900); }
+.hc-billing { display: flex; flex-direction: column; gap: 10px; }
+.hc-billing__row { display: grid; grid-template-columns: minmax(0, 2fr) 72px minmax(0, 1.2fr); gap: 8px; }
+@media (max-width: 520px) { .hc-billing__row { grid-template-columns: minmax(0, 1fr) 72px; } }

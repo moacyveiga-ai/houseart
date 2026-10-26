@@ -11,7 +11,9 @@ import { formatBRL } from '@/lib/artworks/domain'
 import { brandOf, checkCard, CARD_BRAND_LABELS, type PaymentMethodView } from '@/lib/payment-methods/domain'
 import { StripeCardForm } from '@/components/wallet/StripeCardForm'
 import { normalizeCep } from '@/lib/shipping/quote-core'
-import { blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, previewCardNumber, summaryLines, type DeliveryMode } from './checkout-core'
+import { blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, PAY_METHODS, previewCardNumber, summaryLines, type DeliveryMode, type PayMethod } from './checkout-core'
+import { boletoBillingProblem, type PaymentInstructions } from '@/lib/payments/async-core'
+import { PaymentInstructionsCard } from '@/components/payments/PaymentInstructionsCard'
 
 export interface CheckoutArtwork {
   publicId: string; title: string; year: number | null; artist: string; technique: string | null; dimensions: string; cover: string | null
@@ -36,7 +38,9 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [done, setDone] = useState<{ code: string; card: PaymentMethodView | null } | null>(null)
+  const [done, setDone] = useState<{ code: string; card: PaymentMethodView | null; dealId: number | null; instructions: PaymentInstructions | null; paid: boolean } | null>(null)
+  const [method, setMethod] = useState<PayMethod>('PIX')
+  const [bill, setBill] = useState({ taxId: '', line1: '', city: '', state: '', postalCode: '' })
 
   // Saved cards (GET /api/collector/payment-methods); the default one selected.
   useEffect(() => {
@@ -71,7 +75,9 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
   const totals = useMemo(() => checkoutTotals({ priceCents: price, delivery, shippingCents: quote?.shippingCents ?? 0, insuranceCents: quote?.insuranceCents ?? 0, insurance }), [price, delivery, quote, insurance])
   const lines = summaryLines(totals, brl)
   const card = cards?.find((c) => c.id === cardId) ?? null
-  const blocked = blockedReason({ delivery, cepValid: !!quote, hasCard: !!card })
+  const boletoBill = { ...bill, postalCode: bill.postalCode || (quote?.cep ?? '') }
+  const boletoProblem = method === 'BOLETO' ? boletoBillingProblem(boletoBill) : null
+  const blocked = blockedReason({ delivery, cepValid: !!quote, hasCard: !!card, method, boletoProblem })
 
   const onCardAdded = useCallback((m: PaymentMethodView) => {
     setCards((prev) => [...(prev ?? []).map((c) => (m.isDefault ? { ...c, isDefault: false } : c)), m])
@@ -81,14 +87,14 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
   }, [])
 
   async function confirm() {
-    if (!card) { setAdding(true); return }
+    if (method === 'CARD' && !card) { setAdding(true); return }
     if (blocked) { setError(blocked); return }
     setBusy(true); setError(null)
-    const res = await fetch('/api/public/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ publicId: artwork.publicId, paymentMethodId: card.id, deliveryCep: delivery === 'CARRIER' ? quote?.cep ?? null : null, insurance: delivery === 'CARRIER' && insurance }) })
-    const data = await res.json().catch(() => ({})) as { ok?: boolean; code?: string; error?: string }
+    const res = await fetch('/api/public/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ publicId: artwork.publicId, method, paymentMethodId: method === 'CARD' ? card?.id ?? null : null, billing: method === 'BOLETO' ? { ...boletoBill, postalCode: boletoBill.postalCode.replace(/\D/g, '') } : undefined, deliveryCep: delivery === 'CARRIER' ? quote?.cep ?? null : null, insurance: delivery === 'CARRIER' && insurance }) })
+    const data = await res.json().catch(() => ({})) as { ok?: boolean; code?: string; dealId?: number | null; instructions?: PaymentInstructions | null; error?: string }
     setBusy(false)
     if (!res.ok || !data.ok) { setError(data.error ?? 'Não foi possível confirmar o pedido.'); return }
-    setDone({ code: data.code ?? '', card })
+    setDone({ code: data.code ?? '', card: method === 'CARD' ? card : null, dealId: data.dealId ?? null, instructions: data.instructions ?? null, paid: method === 'CARD' })
   }
 
   const subtitle = `${artwork.artist} · ${artwork.seller.name}`
@@ -98,6 +104,15 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
     return (
       <div className="hc">
         <div className="hc-layout">
+          {done.instructions && done.dealId && !done.paid ? (
+            <section className="hc-main hc-done" aria-live="polite">
+              <span className="hc-done__icon"><Icon name={done.instructions.method === 'PIX' ? 'qr_code_2' : 'receipt_long'} size={28} /></span>
+              <h1 className="hc-done__title">Obra reservada para você</h1>
+              <p className="hc-done__text">Pague {done.instructions.method === 'PIX' ? 'o Pix' : 'o boleto'} para garantir a compra{done.code ? <> · pedido <span className="hc-num">{done.code}</span></> : null}.</p>
+              <PaymentInstructionsCard dealId={done.dealId} i={done.instructions} onPaid={() => setDone({ ...done, paid: true })} />
+              <a href="/purchases" className="ha-link">Ver em Compras</a>
+            </section>
+          ) : (
           <section className="hc-main hc-done" aria-live="polite">
             <span className="hc-done__icon"><Icon name="lock" size={28} /></span>
             <h1 className="hc-done__title">Pago em garantia</h1>
@@ -106,6 +121,7 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
             <a href="/purchases" className="ha-btn ha-btn--primary ha-btn--md hc-cta"><Icon name="local_shipping" size={18} />Acompanhar a compra</a>
             <a href={`/e/artwork/${artwork.publicId}`} className="ha-link ha-link--quiet">Voltar para a obra</a>
           </section>
+          )}
           <ArtworkAside artwork={artwork} lines={lines} total={totals.total} />
         </div>
       </div>
@@ -160,7 +176,27 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
           {/* Pagamento */}
           <div className="hc-block">
             <span className="hc-block__label">Pagamento</span>
-            <div className="hc-pay-kind"><Icon name="credit_card" size={22} /><span className="hc-option__name">Cartão</span><span className="hc-option__sub">cobrado só agora, em garantia</span></div>
+            <div role="radiogroup" aria-label="Forma de pagamento" className="hc-methods">
+              {PAY_METHODS.map((m) => (
+                <button key={m.key} type="button" role="radio" aria-checked={method === m.key} className={`hc-method${method === m.key ? ' hc-method--on' : ''}`} onClick={() => { setMethod(m.key); setError(null) }}>
+                  <Icon name={m.icon} size={24} /><span className="hc-option__name">{m.name}</span><span className="hc-option__sub">{m.sub}</span>
+                </button>
+              ))}
+            </div>
+            {method === 'PIX' ? <p className="hc-muted">O código Pix aparece na próxima tela. A obra fica reservada para você enquanto ele vale (24 h).</p> : null}
+            {method === 'BOLETO' ? (
+              <div className="hc-billing">
+                <p className="hc-muted">O boleto vence em 3 dias e compensa em até 1 dia útil. A obra fica reservada até lá. Dados impressos no boleto:</p>
+                <label className="hc-address__field"><span>CPF ou CNPJ de quem paga</span><input className="ha-input" inputMode="numeric" autoComplete="off" value={bill.taxId} onChange={(e) => setBill({ ...bill, taxId: e.target.value.replace(/[^\d./-]/g, '').slice(0, 18) })} /></label>
+                <label className="hc-address__field"><span>Endereço (rua e número)</span><input className="ha-input" autoComplete="address-line1" value={bill.line1} onChange={(e) => setBill({ ...bill, line1: e.target.value.slice(0, 200) })} /></label>
+                <div className="hc-billing__row">
+                  <label className="hc-address__field"><span>Cidade</span><input className="ha-input" autoComplete="address-level2" value={bill.city} onChange={(e) => setBill({ ...bill, city: e.target.value.slice(0, 80) })} /></label>
+                  <label className="hc-address__field hc-billing__uf"><span>UF</span><input className="ha-input" autoComplete="address-level1" maxLength={2} value={bill.state} onChange={(e) => setBill({ ...bill, state: e.target.value.replace(/[^a-z]/gi, '').toUpperCase().slice(0, 2) })} /></label>
+                  <label className="hc-address__field"><span>CEP</span><input className="ha-input" inputMode="numeric" autoComplete="postal-code" placeholder={quote?.cep ? maskCep(quote.cep) : '00000-000'} value={bill.postalCode} onChange={(e) => setBill({ ...bill, postalCode: maskCep(e.target.value) })} /></label>
+                </div>
+              </div>
+            ) : null}
+            {method !== 'CARD' ? null : <>
             {cards === null ? <span className="hc-muted">Carregando seus cartões…</span> : null}
             {cards && cards.length ? (
               <div role="radiogroup" aria-label="Cartão" className="hc-options">
@@ -177,6 +213,7 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
             {adding ? (stripeCfg
               ? <StripeCardForm publishableKey={stripeCfg.publishableKey} holderDefault={buyerName} firstCard={!cards || cards.length === 0} onSaved={onCardAdded} onCancel={cards && cards.length ? () => setAdding(false) : null} />
               : <NewCardForm holderDefault={buyerName} firstCard={!cards || cards.length === 0} onSaved={onCardAdded} onCancel={cards && cards.length ? () => setAdding(false) : null} />) : null}
+            </>}
           </div>
 
           {/* Resumo */}
@@ -193,7 +230,7 @@ export function CheckoutScreen({ artwork, buyerName }: Props) {
           {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
           <div className="hc-foot">
             <span className="hc-foot__lock"><Icon name="lock" size={14} />Em garantia até você confirmar a entrega</span>
-            <button type="button" className="ha-btn ha-btn--primary ha-btn--md hc-cta" disabled={busy || (!!card && !!blocked)} aria-busy={busy || undefined} onClick={confirm}>{busy ? 'Confirmando…' : ctaLabel({ hasCard: !!card, total: totals.total }, brl)}</button>
+            <button type="button" className="ha-btn ha-btn--primary ha-btn--md hc-cta" disabled={busy || ((method !== 'CARD' || !!card) && !!blocked)} aria-busy={busy || undefined} onClick={confirm}>{busy ? 'Confirmando…' : ctaLabel({ hasCard: !!card, total: totals.total, method }, brl)}</button>
           </div>
         </section>
         <ArtworkAside artwork={artwork} lines={lines} total={totals.total} />

@@ -4,6 +4,7 @@ import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { SerializableDeal as Serializable } from './deal-view'
+import { EscrowPay } from '@/components/payments/EscrowPay'
 
 type Side = 'seller' | 'buyer'
 
@@ -66,7 +67,8 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
             <span>Seguro</span><span className="ha-num">{insurance ? formatBRL(insurance) : '—'}</span>
             <span><b>{deal.escrowPaid || done ? 'Pago em garantia' : 'A pagar em garantia'}</b></span><span className="ha-num"><b>{formatBRL(amount + extras)}</b></span>
           </div>
-          {deal.phase === 'OFFER_ACCEPTED' ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('escrow')}>Pagar em garantia · {formatBRL(amount + extras)}</button> : null}
+          {deal.phase === 'OFFER_ACCEPTED' && !deal.exception ? <EscrowPay dealId={deal.id} totalCents={(amount + extras).toString()} pending={deal.escrowPending} /> : null}
+          {deal.exception === 'CANCELLED' ? <p className="ha-muted">Negócio cancelado: o pagamento não foi identificado no prazo e a reserva da obra foi desfeita.</p> : null}
           {deal.phase === 'ESCROW' && !deal.buyerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'ESCROW' && deal.buyerSigned && !deal.sellerSigned ? <p className="ha-muted">Aguardando a assinatura do vendedor.</p> : null}
           {deal.phase === 'SHIPPING' || done ? (

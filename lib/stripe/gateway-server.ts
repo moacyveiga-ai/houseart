@@ -36,6 +36,20 @@ export interface PaymentIntentInput {
   metadata: Record<string, string>
 }
 
+/** Pix or boleto: an async PaymentIntent confirmed at once; the buyer pays outside (QR / voucher) and the webhook says when. */
+export interface AsyncIntentInput {
+  amount: number
+  customer: string
+  method: 'pix' | 'boleto'
+  description: string
+  metadata: Record<string, string>
+  /** boleto: who pays and where (printed on the voucher). */
+  billing?: { name: string; email: string; taxId: string; line1: string; city: string; state: string; postalCode: string }
+  pixExpiresAfterSeconds?: number
+  boletoExpiresAfterDays?: number
+}
+export interface GwAsyncIntent { id: string; status: string; nextAction: unknown }
+
 export interface StripeGateway {
   createCustomer(p: { email: string; name: string; metadata: Record<string, string> }, idempotencyKey: string): Promise<GwCustomer>
   createSetupIntent(p: { customer: string; metadata: Record<string, string> }): Promise<GwSetupIntent>
@@ -47,6 +61,9 @@ export interface StripeGateway {
   capturePaymentIntent(id: string, amountToCapture: number, idempotencyKey: string): Promise<GwPaymentIntent>
   cancelPaymentIntent(id: string, idempotencyKey: string): Promise<GwPaymentIntent>
   retrievePaymentIntent(id: string): Promise<GwPaymentIntent>
+  createAsyncPaymentIntent(p: AsyncIntentInput, idempotencyKey: string): Promise<GwAsyncIntent>
+  /** Refunds a paid PaymentIntent in full (a Pix/boleto paid after its deal was settled or cancelled). */
+  refundPaymentIntent(id: string, idempotencyKey: string): Promise<{ id: string }>
   // Connect (Express, Brazil): the seller's account, its onboarding link, its state, the transfers that pay the split.
   createAccount(p: AccountInput, idempotencyKey: string): Promise<GwAccount>
   createAccountLink(p: { account: string; refresh_url: string; return_url: string }): Promise<{ url: string }>
@@ -99,6 +116,16 @@ export function realGateway(secretKey: string): StripeGateway {
     async capturePaymentIntent(id, amountToCapture, idempotencyKey) { return toPi(await s.paymentIntents.capture(id, { amount_to_capture: amountToCapture }, { idempotencyKey })) },
     async cancelPaymentIntent(id, idempotencyKey) { return toPi(await s.paymentIntents.cancel(id, {}, { idempotencyKey })) },
     async retrievePaymentIntent(id) { return toPi(await s.paymentIntents.retrieve(id)) },
+    async createAsyncPaymentIntent(p, idempotencyKey) {
+      const billing = p.billing ? { name: p.billing.name, email: p.billing.email, address: { line1: p.billing.line1, city: p.billing.city, state: p.billing.state, postal_code: p.billing.postalCode, country: 'BR' } } : undefined
+      const pi = await s.paymentIntents.create({
+        amount: p.amount, currency: 'brl', customer: p.customer, description: p.description, metadata: p.metadata, payment_method_types: [p.method], confirm: true,
+        payment_method_data: p.method === 'boleto' ? { type: 'boleto', boleto: { tax_id: (p.billing?.taxId ?? '').replace(/\D/g, '') }, billing_details: billing } : { type: 'pix' },
+        payment_method_options: p.method === 'boleto' ? { boleto: { expires_after_days: p.boletoExpiresAfterDays ?? 3 } } : { pix: { expires_after_seconds: p.pixExpiresAfterSeconds ?? 86_400 } },
+      }, { idempotencyKey })
+      return { id: pi.id, status: pi.status, nextAction: pi.next_action }
+    },
+    async refundPaymentIntent(id, idempotencyKey) { const r = await s.refunds.create({ payment_intent: id }, { idempotencyKey }); return { id: r.id } },
     async createAccount(p, idempotencyKey) {
       return toAccount(await s.accounts.create({ type: 'express', country: 'BR', email: p.email, business_type: p.business_type, capabilities: { transfers: { requested: true } }, metadata: p.metadata }, { idempotencyKey }))
     },

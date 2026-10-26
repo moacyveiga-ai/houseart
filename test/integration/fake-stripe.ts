@@ -4,7 +4,7 @@
 // a saved card gives `succeeded` (or `requires_capture` with manual capture),
 // a card marked as declining throws a StripeCardError, capture ≤ capturable,
 // cancel only before success. Nothing here talks to the network.
-import type { AccountInput, GwAccount, GwPaymentIntent, GwPaymentMethod, GwSetupIntent, GwTransfer, PaymentIntentInput, StripeGateway, TransferInput } from '@/lib/stripe/gateway-server'
+import type { AccountInput, AsyncIntentInput, GwAccount, GwPaymentIntent, GwPaymentMethod, GwSetupIntent, GwTransfer, PaymentIntentInput, StripeGateway, TransferInput } from '@/lib/stripe/gateway-server'
 
 export interface FakeCard { brand: string; last4: string; exp_month: number; exp_year: number; declines?: 'card_declined' | 'authentication_required' }
 
@@ -93,7 +93,7 @@ export class FakeStripe implements StripeGateway {
     this.calls.push({ op: 'cancel', key: idempotencyKey, params: { id } })
     return this.once(idempotencyKey, () => {
       const pi = this.intents.get(id)!
-      if (pi.status === 'succeeded' || pi.status === 'canceled') throw Object.assign(new Error('unexpected state'), { type: 'StripeInvalidRequestError', code: 'payment_intent_unexpected_state' })
+      if (pi.status === 'succeeded' || pi.status === 'canceled' || pi.status === 'processing') throw Object.assign(new Error('unexpected state'), { type: 'StripeInvalidRequestError', code: 'payment_intent_unexpected_state' })
       pi.status = 'canceled'; pi.amount_capturable = 0
       return { ...pi }
     })
@@ -122,6 +122,26 @@ export class FakeStripe implements StripeGateway {
     this.calls.push({ op: 'transfers_list', params: { transferGroup } })
     return [...this.transfers.values()].filter((t) => t.transfer_group === transferGroup).map((t) => ({ ...t }))
   }
+  async createAsyncPaymentIntent(p: AsyncIntentInput, idempotencyKey: string) {
+    this.calls.push({ op: 'async_intent', key: idempotencyKey, params: p })
+    return this.once(idempotencyKey, () => {
+      const id = this.id('pi')
+      this.intents.set(id, { id, status: 'requires_action', amount: p.amount, amount_capturable: 0, amount_received: 0, customer: p.customer, metadata: { ...p.metadata }, capture_method: 'automatic', payment_method: p.method })
+      const exp = Math.floor(Date.now() / 1000) + (p.method === 'pix' ? (p.pixExpiresAfterSeconds ?? 86_400) : (p.boletoExpiresAfterDays ?? 3) * 86_400)
+      const nextAction = p.method === 'pix'
+        ? { pix_display_qr_code: { data: `000201FAKEPIX${id}`, image_url_png: `https://qr.stripe.test/${id}.png`, expires_at: exp, hosted_instructions_url: `https://payments.stripe.test/${id}` } }
+        : { boleto_display_details: { number: '00190000090000000000000000000000000000000000000', pdf: `https://payments.stripe.test/${id}.pdf`, hosted_voucher_url: `https://payments.stripe.test/${id}`, expires_at: exp } }
+      return { id, status: 'requires_action', nextAction }
+    })
+  }
+  async refundPaymentIntent(id: string, idempotencyKey: string) {
+    this.calls.push({ op: 'refund', key: idempotencyKey, params: { id } })
+    return this.once(idempotencyKey, () => ({ id: this.id('re') }))
+  }
+  /** What the bank is doing: the boleto was paid and is clearing. */
+  processAsync(id: string) { this.intents.get(id)!.status = 'processing' }
+  /** What the bank does: the Pix/boleto was paid (the test then sends payment_intent.succeeded). */
+  payAsync(id: string) { const pi = this.intents.get(id)!; pi.status = 'succeeded'; pi.amount_received = pi.amount }
   async createLoginLink(account: string) {
     this.calls.push({ op: 'login_link', params: { account } })
     return { url: `https://connect.stripe.com/express/${account}/fake` }

@@ -2,7 +2,7 @@
 // garantia, repasse com falha, Tentar de novo") — PURE: the row the desk reads, the filters, the
 // KPIs and the words. The server (server.ts) reads the rows; the page and the island show them.
 import { DEAL_PHASES, PHASE_STEPS, type DealPhase } from '@/lib/deals/domain'
-import { MANUAL_PAYOUT_PREFIX, SPLIT_PAYOUT_LABELS, type SplitPayoutState } from '@/lib/stripe/connect-core'
+import { isPayableParty, MANUAL_PAYOUT_PREFIX, SPLIT_PAYOUT_LABELS, type SplitPayoutState } from '@/lib/stripe/connect-core'
 export { MANUAL_PAYOUT_PREFIX }
 
 export const DEAL_FILTERS = ['open', 'escrow', 'payout', 'failed', 'dispute', 'completed', 'cancelled', 'all'] as const
@@ -12,7 +12,9 @@ export const DEAL_FILTER_LABELS: Record<DealFilter, string> = {
 }
 export const filterKey = (raw: string | undefined): DealFilter => (DEAL_FILTERS as readonly string[]).includes(raw ?? '') ? (raw as DealFilter) : 'open'
 
-export interface AdminSplitLine { id: number; party: string; label: string; amountCents: string; status: string; payoutState: SplitPayoutState; payoutLabel: string; payoutError: string | null; payee: string | null }
+export interface AdminSplitLine { id: number; party: string; label: string; amountCents: string; status: string; payoutState: SplitPayoutState; payoutLabel: string; payoutError: string | null; payee: string | null
+  /** The payee has a Stripe account that pays this line by itself (the cron): never a Pix by hand. */
+  stripePays: boolean }
 
 export interface AdminDealRow {
   id: number; code: string; phase: DealPhase; phaseLabel: string; exception: string | null
@@ -41,12 +43,15 @@ export function escrowOf(d: { escrowPaidAt: string | null; escrowMethod: string 
 /** The desk reads the note of a manual payout next to the state. */
 export const payoutLabelOf = (s: SplitPayoutState, payoutRef?: string | null) => s === 'MANUAL_PAID' && payoutRef ? `${SPLIT_PAYOUT_LABELS[s]} · ${payoutRef.slice(MANUAL_PAYOUT_PREFIX.length)}` : SPLIT_PAYOUT_LABELS[s]
 
-/** Lines the desk can mark as paid by hand: released, not transferred by Stripe, owed to someone. */
-export const canMarkPaid = (l: { status: string; payoutState: SplitPayoutState }) => l.status === 'RELEASED' && (l.payoutState === 'MANUAL' || l.payoutState === 'FAILED' || l.payoutState === 'AWAITING_ACCOUNT')
+/** A line someone is still owed: released and of a payable party (the house's own lines are released too and never "to pay"). */
+export const isOwed = (l: { status: string; party: string }) => l.status === 'RELEASED' && isPayableParty(l.party)
+
+/** Lines the desk can mark as paid by hand: owed, not transferred by Stripe, and not on the way by the Stripe (an ENABLED account pays it alone). */
+export const canMarkPaid = (l: { status: string; party: string; payoutState: SplitPayoutState; stripePays: boolean }) => isOwed(l) && !l.stripePays && (l.payoutState === 'MANUAL' || l.payoutState === 'FAILED' || l.payoutState === 'AWAITING_ACCOUNT')
 
 export function matchesFilter(d: AdminDealRow, f: DealFilter): boolean {
   const cancelled = d.exception === 'CANCELLED'
-  const released = d.splits.some((s) => s.status === 'RELEASED')
+  const released = d.splits.some(isOwed)
   switch (f) {
     case 'all': return true
     case 'open': return !cancelled && d.phase !== 'COMPLETED'
@@ -68,7 +73,7 @@ export function dealKpis(rows: AdminDealRow[]): DealKpis {
     const cancelled = d.exception === 'CANCELLED'
     if (cancelled) continue
     if (d.phase !== 'COMPLETED') { k.open += 1; if (d.escrow.state === 'PAID') k.escrowCents += BigInt(d.totalCents) }
-    const rel = d.splits.filter((s) => s.status === 'RELEASED')
+    const rel = d.splits.filter(isOwed)
     if (rel.length) { k.releasedCount += 1; for (const s of rel) k.releasedCents += BigInt(s.amountCents) }
     if (d.splits.some((s) => s.payoutState === 'FAILED')) k.failed += 1
     if (d.exception === 'DISPUTE') k.disputes += 1

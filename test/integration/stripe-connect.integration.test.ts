@@ -315,4 +315,22 @@ describe('Admin › Negócios: the desk marks a manual Pix as paid', () => {
     // a line of another deal under this deal's id is not found
     expect((await paid(deal.id + 1, held.id, 'x')).status).toBe(404)
   })
+
+  it('a line the Stripe pays alone (ENABLED account, even after a refusal) is never marked by hand; the house lines are never "to pay"', async () => {
+    const deal = await dealReadyForDelivery({ artworkId: s.b.artworkId, sellerMemberId: s.b.memberId, market: 'PRIMARY', seller: 'ARTIST' })
+    await enableAccount(s.b.memberId)
+    fake.transferFailure = { type: 'StripeInvalidRequestError', code: 'balance_insufficient' }
+    await confirmDelivery(buyerId, deal.id, null)
+    const line = (await splitsOf(deal.id)).find((l) => l.party === 'ARTIST')!
+    expect(line).toMatchObject({ status: 'RELEASED', payoutError: 'balance_insufficient' })
+    await signIn(s.staff.userId)
+    const row = (await adminDeals()).find((r) => r.id === deal.id)!
+    expect(row.splits.find((l) => l.party === 'ARTIST')).toMatchObject({ payoutState: 'FAILED', stripePays: true })
+    expect(row.splits.find((l) => l.party === 'PLATFORM')).toMatchObject({ status: 'RELEASED', stripePays: false })
+    const res = await paid(deal.id, line.id, 'Pix à mão')
+    expect(res.status).toBe(409); expect(await res.json()).toMatchObject({ code: 'STRIPE_PAYS' })
+    fake.transferFailure = null
+    expect(await retryDealPayout(deal.id)).toMatchObject({ paid: 1 })
+    expect((await prisma.dealSplit.findUniqueOrThrow({ where: { id: line.id } })).status).toBe('PAID')
+  })
 })

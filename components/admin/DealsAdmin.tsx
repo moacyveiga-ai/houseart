@@ -11,7 +11,7 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
 import { dataBR } from '@/lib/timezone'
-import { canMarkPaid, exceptionLabel, MANUAL_NOTE_MAX, type AdminDealRow, type AdminSplitLine, type DealFilter } from '@/lib/admin-deals/core'
+import { canMarkPaid, exceptionLabel, isOwed, MANUAL_NOTE_MAX, type AdminDealRow, type AdminSplitLine, type DealFilter } from '@/lib/admin-deals/core'
 
 const brl = (cents: string) => formatBRL(BigInt(cents))
 const SELLER_KIND: Record<string, string> = { ARTIST: 'artista', GALLERY_STAFF: 'galeria', ADVISOR: 'consultor', COLLECTOR: 'colecionador' }
@@ -44,7 +44,7 @@ export function DealsAdmin({ rows: initial, filter, filters }: { rows: AdminDeal
     setBusy(null)
     if (!res?.ok) { setError(data?.error ?? 'Não foi possível registrar.'); return }
     const { deal, line } = paying
-    setRows((xs) => xs.map((d) => (d.id !== deal.id ? d : { ...d, splits: d.splits.map((s) => (s.id !== line.id ? s : { ...s, status: 'PAID', payoutState: 'MANUAL_PAID', payoutLabel: `pago por Pix · ${note}`, payoutError: null })) })))
+    setRows((xs) => xs.map((d) => (d.id !== deal.id ? d : { ...d, splits: d.splits.map((s) => (s.id !== line.id ? s : { ...s, status: 'PAID', payoutState: 'MANUAL_PAID', payoutLabel: `pago por Pix · ${note.trim().slice(0, MANUAL_NOTE_MAX)}`, payoutError: null, stripePays: false })) })))
     setPaying(null); setNote('')
     setToast(`${data?.amount ?? brl(line.amountCents)} registrado como pago a ${line.payee ?? line.label}`)
   }
@@ -59,7 +59,7 @@ export function DealsAdmin({ rows: initial, filter, filters }: { rows: AdminDeal
         {rows.map((d) => {
           const ab = open === d.id
           const failed = d.splits.some((s) => s.payoutState === 'FAILED')
-          const released = d.splits.filter((s) => s.status === 'RELEASED')
+          const released = d.splits.filter(isOwed)
           const tone: BadgeTone = d.exception === 'CANCELLED' ? 'neutral' : d.exception === 'DISPUTE' ? 'alert' : d.phase === 'COMPLETED' ? 'verified' : 'pending'
           return (
             <article key={d.id} className={`ha-adeals__row${ab ? ' ha-adeals__row--open' : ''}`}>

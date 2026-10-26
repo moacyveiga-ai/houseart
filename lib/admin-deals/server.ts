@@ -11,6 +11,7 @@ import { dataBR } from '@/lib/timezone'
 import { SPLIT_PARTY_LABELS } from '@/lib/commission/split-core'
 import { MANUAL_PAYOUT_PREFIX, payeeMemberOf, splitPayoutState, type ConnectAccountStatus } from '@/lib/stripe/connect-core'
 import { stripeMode } from '@/lib/stripe/door'
+import { payeeAccountOf } from '@/lib/stripe/connect-server'
 import { canMarkPaid, escrowOf, isPhase, MANUAL_NOTE_MAX, payoutLabelOf, PHASE_LABELS, type AdminDealRow } from './core'
 
 const TAKE = 300
@@ -21,7 +22,7 @@ export async function adminDeals(): Promise<AdminDealRow[]> {
       orderBy: { createdAt: 'desc' }, take: TAKE,
       select: {
         id: true, code: true, phase: true, exceptionStatus: true, market: true, amountCents: true, shippingCents: true, insuranceCents: true,
-        escrowPaidAt: true, escrowMethod: true, escrowPendingRef: true, escrowExpiresAt: true, createdAt: true, completedAt: true, sellerMemberId: true, buyerUserId: true,
+        escrowPaidAt: true, escrowMethod: true, escrowPendingRef: true, escrowExpiresAt: true, createdAt: true, completedAt: true, sellerMemberId: true, tenantId: true, buyerUserId: true,
         artwork: { select: { id: true, title: true, artist: { select: { name: true, memberId: true } }, member: { select: { kind: true, displayName: true } } } },
         splits: { select: { id: true, party: true, amountCents: true, status: true, payoutError: true, payoutRef: true }, orderBy: { id: 'asc' } },
       },
@@ -36,6 +37,11 @@ export async function adminDeals(): Promise<AdminDealRow[]> {
     const mode = stripeMode()
     const accounts = new Map((await prisma.stripeConnectAccount.findMany({ where: { memberId: { in: [...payeeIds] }, mode }, select: { memberId: true, status: true } })).map((a) => [a.memberId, a.status as ConnectAccountStatus]))
     const members = new Map((await prisma.member.findMany({ where: { id: { in: [...payeeIds] } }, select: { id: true, displayName: true } })).map((m) => [m.id, m.displayName]))
+    // the gallery's line can be paid by the ENABLED account of an ADMIN of the tenant (the same rule as the cron, payeeAccountOf)
+    const galleryTenants = [...new Set(deals.filter((d) => d.artwork.member.kind === 'GALLERY_STAFF' && d.tenantId !== null).map((d) => d.tenantId as number))]
+    const admins = galleryTenants.length ? await prisma.member.findMany({ where: { tenantId: { in: galleryTenants }, kind: 'GALLERY_STAFF', status: 'ACTIVE', OR: [{ role: 'ADMIN' }, { user: { tenantRole: 'ADMIN' } }] }, select: { id: true, tenantId: true } }) : []
+    const enabledAdmins = new Set((await prisma.stripeConnectAccount.findMany({ where: { memberId: { in: admins.map((a) => a.id) }, mode, status: 'ENABLED' }, select: { memberId: true } })).map((a) => a.memberId))
+    const tenantPays = new Set(admins.filter((a) => enabledAdmins.has(a.id)).map((a) => a.tenantId))
     const fmt = (iso: string) => dataBR(iso)
     return deals.map((d) => {
       const ctx = { sellerMemberId: d.sellerMemberId, sellerKind: d.artwork.member.kind, artistMemberId: d.artwork.artist.memberId }
@@ -47,8 +53,10 @@ export async function adminDeals(): Promise<AdminDealRow[]> {
         escrow: escrowOf({ escrowPaidAt: d.escrowPaidAt?.toISOString() ?? null, escrowMethod: d.escrowMethod, escrowPendingRef: d.escrowPendingRef, escrowExpiresAt: d.escrowExpiresAt?.toISOString() ?? null }, fmt),
         splits: d.splits.map((s) => {
           const payeeId = payeeMemberOf(s.party, ctx)
-          const state = splitPayoutState(s, payeeId === null ? null : accounts.get(payeeId) ?? null)
-          return { id: s.id, party: s.party, label: SPLIT_PARTY_LABELS[s.party as keyof typeof SPLIT_PARTY_LABELS] ?? s.party, amountCents: s.amountCents.toString(), status: s.status, payoutState: state, payoutLabel: payoutLabelOf(state, s.payoutRef), payoutError: s.payoutError, payee: payeeId === null ? null : members.get(payeeId) ?? null }
+          const own = payeeId === null ? null : accounts.get(payeeId) ?? null
+          const byAdmin = own !== 'ENABLED' && s.party === 'GALLERY' && d.artwork.member.kind === 'GALLERY_STAFF' && d.tenantId !== null && tenantPays.has(d.tenantId)
+          const state = splitPayoutState(s, byAdmin ? 'ENABLED' : own)
+          return { id: s.id, party: s.party, label: SPLIT_PARTY_LABELS[s.party as keyof typeof SPLIT_PARTY_LABELS] ?? s.party, amountCents: s.amountCents.toString(), status: s.status, payoutState: state, payoutLabel: payoutLabelOf(state, s.payoutRef), payoutError: s.payoutError, payee: payeeId === null ? null : members.get(payeeId) ?? null, stripePays: s.status === 'RELEASED' && (own === 'ENABLED' || byAdmin) }
         }),
         createdAt: d.createdAt.toISOString(), completedAt: d.completedAt?.toISOString() ?? null,
       }
@@ -65,13 +73,19 @@ export async function markSplitPaidManually(dealId: number, splitId: number, raw
   const note = typeof rawNote === 'string' ? rawNote.trim().slice(0, MANUAL_NOTE_MAX) : ''
   if (!note) throw new ArtworkError('NOTE', 'Diga como foi pago (ex.: Pix 12/10, comprovante nº …).', 422)
   return totalScope('admin:deals:manual-payout', async () => {
-    const s = await prisma.dealSplit.findFirst({ where: { id: splitId, dealId }, select: { id: true, party: true, amountCents: true, status: true, payoutError: true, deal: { select: { phase: true, exceptionStatus: true, sellerMemberId: true, artwork: { select: { member: { select: { kind: true } }, artist: { select: { memberId: true } } } } } } } })
+    const s = await prisma.dealSplit.findFirst({ where: { id: splitId, dealId }, select: { id: true, party: true, amountCents: true, status: true, payoutError: true, deal: { select: { phase: true, exceptionStatus: true, sellerMemberId: true, tenantId: true, artwork: { select: { member: { select: { kind: true } }, artist: { select: { memberId: true } } } } } } } })
     if (!s) throw new ArtworkError('NOT_FOUND', 'Linha do repasse não encontrada.', 404)
-    if (s.deal.phase !== 'COMPLETED' || s.deal.exceptionStatus === 'CANCELLED') throw new ArtworkError('WRONG_PHASE', 'O repasse sai depois que o negócio é concluído.', 409)
-    const payeeId = payeeMemberOf(s.party, { sellerMemberId: s.deal.sellerMemberId, sellerKind: s.deal.artwork.member.kind, artistMemberId: s.deal.artwork.artist.memberId })
-    const account = payeeId === null ? null : await prisma.stripeConnectAccount.findFirst({ where: { memberId: payeeId, mode: stripeMode() }, select: { status: true } })
-    const state = splitPayoutState(s, account?.status as ConnectAccountStatus | undefined ?? null)
-    if (!canMarkPaid({ status: s.status, payoutState: state })) throw new ArtworkError('NOT_MANUAL', 'Esta linha não espera repasse manual.', 409)
+    if (s.deal.phase !== 'COMPLETED') throw new ArtworkError('WRONG_PHASE', 'O repasse sai depois que o negócio é concluído.', 409)
+    if (s.deal.exceptionStatus) throw new ArtworkError('WRONG_PHASE', s.deal.exceptionStatus === 'CANCELLED' ? 'Negócio cancelado: nada a repassar.' : 'Negócio em disputa: o repasse espera a decisão.', 409)
+    const ctx = { sellerMemberId: s.deal.sellerMemberId, sellerKind: s.deal.artwork.member.kind, artistMemberId: s.deal.artwork.artist.memberId }
+    const payeeId = payeeMemberOf(s.party, ctx)
+    const mode = stripeMode()
+    const account = payeeId === null ? null : await prisma.stripeConnectAccount.findFirst({ where: { memberId: payeeId, mode }, select: { status: true } })
+    // the same resolution the cron uses (own account, or the gallery ADMIN's): a line the Stripe pays alone is never paid by hand
+    const stripePays = (await payeeAccountOf(s, { ...ctx, tenantId: s.deal.tenantId }, mode)) !== null
+    const state = splitPayoutState(s, stripePays ? 'ENABLED' : account?.status as ConnectAccountStatus | undefined ?? null)
+    if (stripePays) throw new ArtworkError('STRIPE_PAYS', 'Quem recebe tem a conta Stripe ativa: o repasse sai pela Stripe (Tentar de novo).', 409)
+    if (!canMarkPaid({ status: s.status, party: s.party, payoutState: state, stripePays })) throw new ArtworkError('NOT_MANUAL', 'Esta linha não espera repasse manual.', 409)
     const r = await prisma.dealSplit.updateMany({ where: { id: s.id, status: 'RELEASED' }, data: { status: 'PAID', payoutRef: `${MANUAL_PAYOUT_PREFIX}${note}`, transferredAt: new Date(), payoutError: null } })
     if (r.count === 0) throw new ArtworkError('CHANGED', 'A linha acabou de mudar.', 409)
     if (s.party === 'ARTIST_ROYALTY') await prisma.royaltyPayment.updateMany({ where: { dealId, status: { in: ['PENDING', 'HELD'] } }, data: { status: 'PAID', paidAt: new Date(), receiptRef: `${MANUAL_PAYOUT_PREFIX}${note}` } })

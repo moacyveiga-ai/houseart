@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { balanceNotes, walletBalances, walletMovements, type PurchaseFact, type SaleLineFact } from './ledger-core'
+import { balanceNotes, escrowChargedCents, walletBalances, walletMovements, type PurchaseFact, type SaleLineFact } from './ledger-core'
 
 const d = (s: string) => new Date(s)
 const purchase = (p: Partial<PurchaseFact>): PurchaseFact => ({ id: 1, code: 'DL-1', title: 'Obra', totalCents: 100_00n, paidAt: d('2026-10-01'), completedAt: null, cancelled: false, ...p })
@@ -30,5 +30,11 @@ describe('wallet ledger', () => {
     expect(m[0]!.amount.startsWith('+ ')).toBe(true)
     expect(m[1]!.amount.startsWith('− ')).toBe(true)
     expect(m[1]!.sub).toBe('Compra concluída · DL-1')
+  })
+  it('escrow charged: the captured offer hold is only the price', () => {
+    const base = { amountCents: 100n, shippingCents: 10n, insuranceCents: 5n }
+    expect(escrowChargedCents({ ...base, escrowPaymentRef: 'pi_1:captured', offerHoldRef: 'pi_1' })).toBe(100n)
+    expect(escrowChargedCents({ ...base, escrowPaymentRef: 'pi_2', offerHoldRef: 'pi_1' })).toBe(115n)
+    expect(escrowChargedCents({ ...base, escrowPaymentRef: 'pi_2', offerHoldRef: null })).toBe(115n)
   })
 })

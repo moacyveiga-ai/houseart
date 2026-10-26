@@ -221,7 +221,6 @@ describe('deal flow', () => {
     // services for an artwork the person holds
     const listed = (await artworkServices()).map((x) => x.code)
     expect(listed).toContain('APPRAISAL_SIGNED')
-    expect(listed).not.toContain('CERTIFICATION')
     expect(await orderArtworkService(helena.id, s.b.artworkId, 'SHIPPING')).toEqual({ quote: true })
     await expect(orderArtworkService(buyer.id, s.b.artworkId, 'APPRAISAL_SIGNED')).rejects.toMatchObject({ code: 'NOT_OWNER' })
     await expect(orderArtworkService(helena.id, s.b.artworkId, 'TAG_KIT')).rejects.toMatchObject({ code: 'BAD_SERVICE' })

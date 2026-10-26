@@ -7,6 +7,7 @@ import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
 import { whenLabel } from '@/lib/messaging/core'
 import { publicUrlHosts } from '@/lib/public-url'
+import { isPublicMediaKey, PUBLIC_MEDIA_ROUTE } from '@/lib/storage/blob'
 import { formatBRL } from '@/lib/artworks/domain'
 import { checkComment, checkPost, dayMonthOf, pollResult, reactionAllowed, type CommentTarget, type ReactionKind, type ReactionTarget } from './domain'
 
@@ -126,13 +127,16 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
   return [...out, ...ag]
 }
 
-/** A post image is only one the house serves: the public media route or the Blob store. */
+/** A post image is only one the house serves: a media key under the public media route, or the public Blob. */
 function isOwnImageUrl(url: string): boolean {
-  // uploaded by POST /api/community/images: the media route of the house (relative) or the public Blob
-  if (url.startsWith('/api/public/media/') || url.startsWith('/uploads/')) return true
+  // uploaded by POST /api/community/images; the key is checked segment by segment (no "..", no query)
+  const mediaKey = (path: string) => path.startsWith(PUBLIC_MEDIA_ROUTE) && isPublicMediaKey(path.slice(PUBLIC_MEDIA_ROUTE.length))
+  if (url.startsWith('/')) return mediaKey(url) || (process.env.NODE_ENV !== 'production' && /^\/uploads\/[A-Za-z0-9/_.-]+$/.test(url) && !url.includes('..'))
   try {
     const u = new URL(url)
-    return publicUrlHosts().includes(u.host) || /\.public\.blob\.vercel-storage\.com$/.test(u.host)
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false
+    if (/\.public\.blob\.vercel-storage\.com$/.test(u.host)) return true
+    return publicUrlHosts().includes(u.host) && !u.search && mediaKey(u.pathname)
   } catch { return false }
 }
 

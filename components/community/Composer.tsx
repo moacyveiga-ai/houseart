@@ -2,7 +2,8 @@
 // Novo post (handoff "HouseArt App Colecionador" › sheet "Novo post"): the text,
 // the optional artwork of the collection, and — beyond the prototype, which only
 // wrote photo/text — the poll and the event the API also takes.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { canvasToJpeg, loadImage } from '@/components/artworks/capture-render'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { hasContactLeak } from '@/lib/messaging/core'
@@ -26,14 +27,21 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
   const [d, setD] = useState<ComposerDraft>(EMPTY_DRAFT)
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
+  // Each pick (and closing the composer) bumps the ticket: a late upload never lands in another draft.
+  const ticket = useRef(0)
   async function pickPhoto(file: File | undefined) {
     if (!file) return
+    const mine = ++ticket.current
     setUploading(true)
-    const form = new FormData(); form.append('file', file)
+    let body: Blob = file
+    // Phone photos pass Vercel's 4.5 MB body limit: re-encode to JPEG with the longer side ≤ 2048.
+    try { body = await shrinkPhoto(file) } catch { /* the server re-encodes and says what is wrong */ }
+    const form = new FormData(); form.append('file', body, 'foto.jpg')
     const res = await fetch('/api/community/images', { method: 'POST', body: form }).catch(() => null)
     const data = (await res?.json().catch(() => ({}))) as { url?: string; error?: string } | undefined
+    if (mine !== ticket.current) return
     setUploading(false)
-    if (!res?.ok || !data?.url) { onToast(data?.error ?? 'Não foi possível enviar a foto.'); return }
+    if (!res?.ok || !data?.url) { onToast(data?.error ?? (res?.status === 413 ? 'A foto é grande demais. Tente outra.' : 'Não foi possível enviar a foto.')); return }
     set({ imageUrl: data.url })
   }
   const [igOn, setIgOn] = useState(!!instagram.handle && instagram.defaultOn)
@@ -47,10 +55,10 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
   const igKind = d.kind === 'TEXT' || d.kind === 'PHOTO'
   const igSending = igOn && !!instagram.handle && igKind && !!igImage
 
-  function close() { setD(EMPTY_DRAFT); setIgOn(!!instagram.handle && instagram.defaultOn); onClose() }
+  function close() { ticket.current++; setUploading(false); setD(EMPTY_DRAFT); setIgOn(!!instagram.handle && instagram.defaultOn); onClose() }
 
   async function publish() {
-    if (!ready || sending) return
+    if (!ready || sending || uploading) return
     const text = [d.body, ...d.pollOptions, d.event.title, d.event.venue].join('\n')
     if (hasContactLeak(text)) { onToast('Tire telefones, e-mails e links para publicar'); return }
     setSending(true)
@@ -161,10 +169,21 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
           </div>
         ) : null}
 
-        <button type="button" className={`ha-cm-new__publish${ready ? ' ha-cm-new__publish--ready' : ''}`} aria-disabled={!ready} disabled={sending} onClick={publish}>
+        <button type="button" className={`ha-cm-new__publish${ready ? ' ha-cm-new__publish--ready' : ''}`} aria-disabled={!ready || uploading} disabled={sending || uploading} onClick={publish}>
           {sending ? 'Publicando…' : `Publicar ${d.kind === 'TEXT' ? 'na comunidade' : kindLabel(d.kind).toLowerCase()}`}
         </button>
       </div>
     </Modal>
   )
+}
+
+async function shrinkPhoto(file: File, maxSide = 2048): Promise<Blob> {
+  const { img, url } = await loadImage(file)
+  try {
+    const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * k)); canvas.height = Math.max(1, Math.round(img.naturalHeight * k))
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+    return await canvasToJpeg(canvas, 0.86)
+  } finally { URL.revokeObjectURL(url) }
 }

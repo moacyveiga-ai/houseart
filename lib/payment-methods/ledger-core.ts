@@ -8,6 +8,15 @@ export interface PurchaseFact { id: number; code: string; title: string; totalCe
 export interface ReleasedHoldFact { id: number; code: string; title: string; amountCents: bigint; at: Date }
 export interface SaleLineFact { id: number; dealId: number; dealCode: string; title: string; amountCents: bigint; status: string; buyerPaid: boolean; transferredAt: Date | null; cancelled: boolean }
 
+/**
+ * What the guarantee of a deal actually charged: buy-now and direct escrow charge price + shipping +
+ * insurance; a deal born from an offer whose hold was captured (`escrowPaymentRef` = `<hold>:captured`,
+ * lib/deals/server.ts createDealFromOffer) charged only the accepted price.
+ */
+export function escrowChargedCents(d: { amountCents: bigint; shippingCents: bigint; insuranceCents: bigint; escrowPaymentRef: string | null; offerHoldRef: string | null }): bigint {
+  return d.offerHoldRef && d.escrowPaymentRef === `${d.offerHoldRef}:captured` ? d.amountCents : d.amountCents + d.shippingCents + d.insuranceCents
+}
+
 export interface WalletBalances { inEscrowCents: bigint; inEscrowCount: number; receivableCents: bigint; receivableCount: number }
 
 const inEscrow = (p: PurchaseFact) => !!p.paidAt && !p.completedAt && !p.cancelled

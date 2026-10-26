@@ -83,7 +83,8 @@ export function rowStats(a: Pick<InventoryItem, 'status' | 'listing' | 'deal'>):
       const offers = l.openOffers ? ` · ${l.openOffers} ${l.openOffers === 1 ? 'oferta' : 'ofertas'}` : ''
       return `${l.views7d.toLocaleString('pt-BR')} views · 7 dias${saves}${offers}`
     }
-    case 'IN_DEAL': return a.deal ? `Vendida para ${a.deal.buyerName} · ${saleAction(a.deal).label.toLowerCase()}` : 'Negócio em andamento'
+    // before the escrow is paid the work is only reserved (a lapsed Pix/boleto gives it back to the market)
+    case 'IN_DEAL': return a.deal ? `${a.deal.phase === 'OFFER_ACCEPTED' ? 'Reservada' : 'Vendida'} para ${a.deal.buyerName} · ${saleAction(a.deal).label.toLowerCase()}` : 'Negócio em andamento'
     case 'IN_CERTIFICATION': return 'Vincule a etiqueta e assine o certificado'
     case 'AUTHENTICATED': return 'Liste no marketplace para vender'
     case 'DRAFT': return 'Complete o cadastro e peça a certificação'

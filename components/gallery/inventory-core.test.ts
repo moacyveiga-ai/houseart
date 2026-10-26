@@ -42,6 +42,7 @@ describe('inventory-core', () => {
     expect(rowStats(items[1])).toBe('0 views · 7 dias')
     expect(rowStats(items[2])).toBe('Vendida para Helena Vaz · registrar envio')
     expect(rowStats({ status: 'IN_DEAL', deal: { buyerName: 'Helena Vaz', phase: 'ESCROW', sellerSigned: false, exception: null } })).toBe('Vendida para Helena Vaz · assinar termo')
+    expect(rowStats({ status: 'IN_DEAL', deal: { buyerName: 'Helena Vaz', phase: 'OFFER_ACCEPTED', sellerSigned: false, exception: null } })).toBe('Reservada para Helena Vaz · aguardando pagamento')
     expect(rowStats({ status: 'IN_DEAL' })).toBe('Negócio em andamento')
     expect(rowStats(items[5])).toMatch(/certificação/)
   })

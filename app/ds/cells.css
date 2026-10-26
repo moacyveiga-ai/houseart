@@ -576,3 +576,14 @@ a.ha-review__title:hover { text-decoration: underline; }
 .ha-offer__talk .ha-icon { font-size: 18px; }
 .ha-offer__talk:hover { text-decoration: underline; }
 .ha-input-money { display: flex; align-items: center; gap: var(--ha-space-2); font-weight: 400; }
+
+/* ── detail side panel (SidePanel) — 600 px on the right under the top bar ─── */
+.ha-sidepanel { position: fixed; top: 64px; right: 0; bottom: 0; width: min(600px, 100vw); z-index: 31; display: flex; flex-direction: column; background: var(--ha-paper-50); border-left: var(--ha-border-w) solid var(--ha-paper-200); box-shadow: var(--ha-shadow-lg); animation: ha-sidepanel-in var(--ha-dur-panel) var(--ha-ease) both; outline: none; }
+.ha-sidepanel__head { flex: none; min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 6px; }
+.ha-sidepanel__back { width: 44px; height: 44px; border: 0; background: none; color: var(--ha-ink-900); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ha-radius-full); }
+.ha-sidepanel__back:hover { background: var(--ha-paper-200); }
+.ha-sidepanel__title { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; color: var(--ha-ink-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ha-sidepanel__body { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 18px; padding: 4px 16px 24px; }
+.ha-sidepanel__foot { flex: none; padding: 12px 16px calc(24px + env(safe-area-inset-bottom, 0px)); border-top: var(--ha-border-w) solid var(--ha-paper-200); display: flex; flex-direction: column; gap: 8px; }
+@keyframes ha-sidepanel-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ha-sidepanel { animation: none; } }

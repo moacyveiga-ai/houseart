@@ -44,7 +44,7 @@ export function DayPanel({ data, who, top }: { data: DayPanelData; who: { initia
       <section className="ha-dp__section" aria-labelledby="dp-top">
         <div className="ha-dp__section-head"><h2 id="dp-top" className="ha-dp__section-title">Obras mais vistas</h2><span className="ha-dp__section-note">últimos 7 dias</span></div>
         {top.length === 0 ? <p className="ha-dp__empty">Nenhuma visualização nos últimos 7 dias.</p> : top.map((t) => (
-          <Link key={t.id} href={`/artworks/${t.id}/listing`} className="ha-dp__top">
+          <Link key={t.id} href={`/artworks?open=${t.id}`} className="ha-dp__top">
             <span className="ha-dp__top-wall">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
               {t.coverUrl ? <img src={t.coverUrl} alt="" /> : null}</span>
             <span className="ha-dp__top-body">

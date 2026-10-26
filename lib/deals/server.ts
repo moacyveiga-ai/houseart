@@ -95,6 +95,8 @@ export interface DealView {
   split: { party: string; label: string; amountCents: bigint; status: string; payoutState: SplitPayoutState; payoutLabel: string }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
+  /** Seller view (Vendas até o repasse): the offer behind the deal, who sells, the buyer's city, the day of the sale. */
+  offerId: number; sellerKind: string; buyerCity: string | null; createdAt: string; exception: string | null; artworkId: number
 }
 
 function toView(d: Awaited<ReturnType<typeof loadDeal>>): DealView {
@@ -118,6 +120,7 @@ function toView(d: Awaited<ReturnType<typeof loadDeal>>): DealView {
     steps, split: d.splits.map((s) => { const payoutState = splitPayoutState(s, accountOf(s.party)); return { party: s.party, label: SPLIT_PARTY_LABELS[s.party as keyof typeof SPLIT_PARTY_LABELS] ?? s.party, amountCents: s.amountCents, status: s.status, payoutState, payoutLabel: SPLIT_PAYOUT_LABELS[payoutState] } }),
     shipping: d.carrierName ? { carrier: d.carrierName, tracking: d.trackingCode, insurer: d.insurerName } : null,
     sellerSigned: !!d.sellerSignedAt, buyerSigned: !!d.buyerSignedAt, escrowPaid: !!d.escrowPaidAt, completedAt: d.completedAt?.toISOString() ?? null,
+    offerId: d.offerId, sellerKind: d.artwork.member.kind, buyerCity: d.offer.buyerCity ?? null, createdAt: d.createdAt.toISOString(), exception: d.exceptionStatus ?? null, artworkId: d.artworkId,
   }
 }
 

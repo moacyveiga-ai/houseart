@@ -1,0 +1,17 @@
+/* The artwork in the side panel (Acervo › obra) */
+.ha-ap__photo { aspect-ratio: 1 / 1; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: 28px; color: var(--ha-ink-500); }
+.ha-ap__photo img { max-width: 100%; max-height: 100%; display: block; box-shadow: var(--ha-shadow-wall); }
+.ha-ap__thumbs { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
+.ha-ap__thumbs li { flex: none; width: 56px; height: 56px; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: 4px; }
+.ha-ap__thumbs img { max-width: 100%; max-height: 100%; display: block; }
+.ha-ap__title { margin: 0; font-family: var(--ha-font-display); font-style: italic; font-weight: 400; font-size: 26px; line-height: 32px; color: var(--ha-ink-900); }
+.ha-ap__price { display: flex; align-items: center; gap: 10px; font-size: 18px; font-variant-numeric: tabular-nums; }
+.ha-ap__facts { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); border-top: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-ap__facts div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); font-size: 14px; }
+.ha-ap__facts dt { color: var(--ha-ink-500); }
+.ha-ap__facts dd { margin: 0; text-align: right; }
+.ha-ap__h { margin: 0; font-size: 13px; font-weight: 600; color: var(--ha-ink-900); }
+.ha-ap__cert { display: flex; align-items: center; gap: 12px; padding: 12px; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); color: var(--ha-verified-500); }
+.ha-ap__cert b, .ha-ap__cert .ha-link { color: var(--ha-ink-900); }
+.ha-ap__prov { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ha-ap__prov li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); font-size: 14px; }

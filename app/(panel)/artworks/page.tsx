@@ -1,18 +1,50 @@
 import Link from 'next/link'
 import { requirePanelPage } from '../_session'
-import { listArtworks } from '@/lib/artworks/server'
-import { ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimensions, LIST_FILTERS } from '@/lib/artworks/domain'
+import { getArtwork, listArtworks } from '@/lib/artworks/server'
+import { ARTWORK_CATEGORY_LABELS, ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimensions, LIST_FILTERS, MEDIA_SLOTS, type ArtworkStatus } from '@/lib/artworks/domain'
 import { Chip } from '@/components/ds/Chip'
 import { Icon } from '@/components/ds/Icon'
 import { Badge } from '@/components/ds/Badge'
 import { listingsOf } from '@/lib/gallery/listing-server'
 import { InventoryList } from '@/components/gallery/InventoryList'
-import { chipCounts, chipKey, filterInventory, type InventoryItem } from '@/components/gallery/inventory-core'
+import { chipCounts, chipKey, filterInventory, rowPrice, rowStatus, type InventoryItem } from '@/components/gallery/inventory-core'
+import { ArtworkPanel, type ArtworkPanelData } from '@/components/gallery/ArtworkPanel'
+import { listingOf } from '@/lib/gallery/listing-server'
+import { rulesOf } from '@/lib/gallery/rules-server'
+import { publicCertificate } from '@/lib/certificates/server'
+import { galleryRoleOf } from '@/lib/offers/seller-role-server'
+import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
+import type { Scope } from '@/lib/scope/core'
 
 export const metadata = { title: 'Obras — HouseArt' }
 
+/** The work named by ?open= for the side panel (Acervo › obra): display fields only. */
+async function panelOf(scope: Scope, id: number) {
+  const a = await getArtwork(scope, id)
+  if (!a) return null
+  const listing = a.status === 'LISTED' ? await listingOf(scope, a.id) : null
+  const cert = a.publicId ? await publicCertificate(a.publicId) : null
+  const slotName = new Map(MEDIA_SLOTS.map((s) => [s.kind, s.name]))
+  const front = a.media.filter((m) => m.publicUrl).sort((x, y) => (x.kind === 'FRONT_COLOR_CARD' ? -1 : y.kind === 'FRONT_COLOR_CARD' ? 1 : 0))
+  const st = rowStatus({ status: a.status as ArtworkStatus, listing: listing ? { views7d: 0, openOffers: 0, paused: listing.paused } : null })
+  const data: ArtworkPanelData = {
+    id: a.id, title: a.title, year: a.year, artist: a.artist.name, publicId: a.publicId, status: a.status, statusLabel: st.label, statusTone: st.tone,
+    price: rowPrice({ saleMode: a.saleMode, listPriceCents: a.listPriceCents?.toString() ?? null }),
+    images: front.map((m) => ({ url: m.publicUrl!, label: slotName.get(m.kind as never) ?? m.kind })),
+    facts: [
+      ['Técnica', [a.technique, a.materials].filter(Boolean).join(' · ')], ['Dimensões', formatDimensions(a)],
+      ['Categoria', ARTWORK_CATEGORY_LABELS[a.category as keyof typeof ARTWORK_CATEGORY_LABELS] ?? ''], ['Edição', a.edition ?? ''], ['ID público', a.publicId ?? ''],
+    ].filter(([, v]) => v && v !== '—').map(([k, v]) => ({ k: k!, v: v! })),
+    certificate: cert ? { issuedAt: cert.issuedAt, status: cert.status } : null,
+    provenance: (cert?.events ?? []).map((e) => ({ label: e.label, at: e.at })),
+  }
+  const canManage = sellerPermissions(await galleryRoleOf(scope)).manageListing
+  const rules = listing ? await rulesOf(scope).then((r) => ({ refuseBelowBps: r.refuseBelowBps, responseHours: r.responseHours })).catch(() => null) : null
+  return { data, canManage, rules, listing: listing ? { listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers } } : null }
+}
+
 /** "Acervo" of the gallery: the whole inventory loaded once, chips and search applied here (listArtworks has no q). */
-async function GalleryInventory({ scope, chip, q }: { scope: Parameters<typeof listArtworks>[0]; chip: string; q: string }) {
+async function GalleryInventory({ scope, chip, q, openId }: { scope: Scope; chip: string; q: string; openId: number | null }) {
   const { items } = await listArtworks(scope, { filter: 'all' })
   const listings = await listingsOf(scope, items.filter((a) => a.status === 'LISTED').map((a) => a.id))
   const all: InventoryItem[] = []
@@ -20,13 +52,21 @@ async function GalleryInventory({ scope, chip, q }: { scope: Parameters<typeof l
     const listing = a.status === 'LISTED' ? listings.get(a.id) ?? null : null
     all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused } : null })
   })
-  return <InventoryList title="Acervo" all={all} items={filterInventory(all, chip, q)} chip={chip} q={q} counts={chipCounts(all)} />
+  const base = `/artworks?filter=${chip}${q ? `&q=${encodeURIComponent(q)}` : ''}`
+  const panel = openId ? await panelOf(scope, openId) : null
+  return (
+    <>
+      <InventoryList title="Acervo" all={all} items={filterInventory(all, chip, q)} chip={chip} q={q} counts={chipCounts(all)} openId={panel ? openId : null} />
+      {panel ? <ArtworkPanel key={panel.data.id} a={panel.data} closeHref={base} listing={panel.listing} rules={panel.rules} canManage={panel.canManage} blockedReason={ROLE_REASONS.listing} /> : null}
+    </>
+  )
 }
 
-export default async function ArtworksPage({ searchParams }: { searchParams: Promise<{ filter?: string; q?: string }> }) {
+export default async function ArtworksPage({ searchParams }: { searchParams: Promise<{ filter?: string; q?: string; open?: string }> }) {
   const { scope, nav } = await requirePanelPage('/artworks')
   const sp = await searchParams
-  if (nav === 'gallery' || nav === 'advisor') return <GalleryInventory scope={scope} chip={chipKey(sp.filter)} q={(sp.q ?? '').slice(0, 80)} />
+  const openId = Number(sp.open)
+  if (nav === 'gallery' || nav === 'advisor') return <GalleryInventory scope={scope} chip={chipKey(sp.filter)} q={(sp.q ?? '').slice(0, 80)} openId={Number.isInteger(openId) && openId > 0 ? openId : null} />
   const filter = sp.filter ?? 'all'
   const { items, counts } = await listArtworks(scope, { filter })
   return (

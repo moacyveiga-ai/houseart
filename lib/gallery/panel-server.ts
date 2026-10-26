@@ -35,8 +35,8 @@ export async function dayPanel(scope: Scope, now = new Date()): Promise<DayPanel
   const actions: PanelAction[] = []
   for (const o of open) actions.push({ icon: 'request_quote', title: `Oferta de ${brl(o.currentCents)}`, sub: `${o.artworkTitle} · ${o.buyer}${o.differenceLabel ? ` · ${o.differenceLabel}` : ''}`, tag: `expira em ${o.expiresIn}`, tone: 'pending', href: '/sales' })
   for (const o of offers.filter((x) => x.status === 'ACCEPTED')) actions.push({ icon: 'hourglass_top', title: 'Aguardando pagamento', sub: `${o.artworkTitle} · ${o.buyer}`, tag: 'até 24 h', tone: 'neutral', href: '/sales?tab=deals' })
-  for (const d of deals.filter((x) => x.phase === 'ESCROW' && !x.sellerSigned)) actions.push({ icon: 'draw', title: 'Assinar o termo de transferência', sub: `${d.artworkTitle} · vendida para ${d.buyerName}`, tag: 'hoje', tone: 'alert', href: '/sales?tab=deals' })
-  for (const d of deals.filter((x) => x.phase === 'DOCUMENTS')) actions.push({ icon: 'inventory_2', title: 'Embalar e agendar a coleta', sub: `${d.artworkTitle} · vendida para ${d.buyerName}`, tag: 'hoje', tone: 'alert', href: '/sales?tab=deals' })
+  for (const d of deals.filter((x) => x.phase === 'ESCROW' && !x.sellerSigned)) actions.push({ icon: 'draw', title: 'Assinar o termo de transferência', sub: `${d.artworkTitle} · vendida para ${d.buyerName}`, tag: 'hoje', tone: 'alert', href: `/sales?tab=deals&sale=${d.id}` })
+  for (const d of deals.filter((x) => x.phase === 'DOCUMENTS')) actions.push({ icon: 'inventory_2', title: 'Registrar o envio', sub: `${d.artworkTitle} · vendida para ${d.buyerName}`, tag: 'hoje', tone: 'alert', href: `/sales?tab=deals&sale=${d.id}` })
   const inCert = await prisma.artwork.count({ where: { ...memberFilter(scope), status: 'IN_CERTIFICATION' } })
   if (inCert) actions.push({ icon: 'verified', title: `${inCert} ${inCert === 1 ? 'obra' : 'obras'} em certificação`, sub: 'Vincule a etiqueta e assine o certificado', tag: 'pendente', tone: 'neutral', href: '/certification' })
   return { kpis, actions, monthName }

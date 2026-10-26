@@ -20,7 +20,7 @@ const STATE_TONE: Record<string, BadgeTone> = { ACTIVE: 'verified', SUSPENDED: '
 const TITLE: Record<Action, string> = { plan: 'Conceder plano', suspend: 'Suspender conta', reinstate: 'Reativar conta' }
 function explain(p: Pending, plans: PlanOption[]): string {
   switch (p.action) {
-    case 'plan': { const pl = plans.find((x) => x.code === p.code); return `${p.row.name} passa ao plano ${pl?.name ?? p.code} por 30 dias sem cobrança e sem fatura: a assinatura atual é encerrada. O motivo vai à auditoria.` }
+    case 'plan': { const pl = plans.find((x) => x.code === p.code); return `${p.row.name} passa ao plano ${pl?.name ?? p.code} sem cobrança e sem fatura, sem prazo: vale até a conta mudar de plano de novo. A assinatura atual é encerrada. O motivo vai à auditoria.` }
     case 'suspend': return `${p.row.name} perde o painel agora (as sessões das pessoas da conta são encerradas) e as obras saem do site público. Obras, negócios e escrituras ficam como estão. O motivo vai à auditoria.`
     case 'reinstate': return `${p.row.name} volta a entrar no painel e as obras anunciadas voltam ao site.`
   }
@@ -42,12 +42,12 @@ export function TenantsAdmin({ rows: initial, plans, filter, filters, query, man
     setBusy(true); setError('')
     const { row, action, code } = pending
     const res = await fetch(`/api/admin/tenants/${row.id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action, code, note }) }).catch(() => null)
-    const data = (await res?.json().catch(() => ({}))) as { error?: string; status?: string; code?: string; name?: string; periodEnd?: string; closedSessions?: number } | undefined
+    const data = (await res?.json().catch(() => ({}))) as { error?: string; status?: string; code?: string; name?: string; closedSessions?: number } | undefined
     setBusy(false)
     if (!res?.ok) { setError(data?.error ?? 'Não foi possível concluir.'); return }
     setRows((xs) => xs.map((r) => {
       if (r.id !== row.id) return r
-      if (action === 'plan') { const pl = plans.find((x) => x.code === (data?.code ?? code)); return { ...r, plan: { code: data?.code ?? code ?? r.plan.code, name: data?.name ?? pl?.name ?? r.plan.name, priceCents: pl?.priceCents ?? r.plan.priceCents, subscription: 'ACTIVE', periodEnd: data?.periodEnd ?? null, paid: !!pl && BigInt(pl.priceCents) > 0n } } }
+      if (action === 'plan') { const pl = plans.find((x) => x.code === (data?.code ?? code)); return { ...r, plan: { code: data?.code ?? code ?? r.plan.code, name: data?.name ?? pl?.name ?? r.plan.name, priceCents: pl?.priceCents ?? r.plan.priceCents, subscription: 'ACTIVE', periodEnd: null, paid: !!pl && BigInt(pl.priceCents) > 0n } } }
       const status = data?.status ?? (action === 'suspend' ? 'SUSPENDED' : 'ACTIVE')
       return { ...r, status, statusLabel: TENANT_STATUS_LABELS[status] ?? status, can: { plan: status === 'ACTIVE', suspend: status === 'ACTIVE', reinstate: status === 'SUSPENDED' } }
     }))

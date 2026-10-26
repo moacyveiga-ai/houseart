@@ -7,7 +7,9 @@ import { prisma } from '@/lib/prisma'
 import { POST } from '@/app/api/admin/tenants/[id]/route'
 import { adminTenants } from '@/lib/admin-tenants/server'
 import { panelSession, requirePanel } from '@/lib/auth/panel'
-import { listPublicArtworks, marketItems } from '@/lib/marketplace/public-server'
+import { requireAuth } from '@/lib/auth'
+import { listPublicArtworks, marketItems, publicArtwork } from '@/lib/marketplace/public-server'
+import { listPublicArtists } from '@/lib/public-content/server'
 import { createScenario, type Scenario } from './fixtures'
 import { signIn, signOut } from './session'
 import { truncateTables } from './db'
@@ -60,6 +62,7 @@ describe('admin tenants', () => {
     expect(await r.json()).toMatchObject({ code: 'GALLERY_PRO', name: 'Galeria Pro' })
     expect(await prisma.planSubscription.count({ where: { tenantId: s.galleryTenantId, status: 'ACTIVE' } })).toBe(1)
     expect(await prisma.invoice.count({ where: { tenantId: s.galleryTenantId } })).toBe(0)
+    expect((await prisma.planSubscription.findFirstOrThrow({ where: { tenantId: s.galleryTenantId, status: 'ACTIVE' } })).currentPeriodEnd).toBeNull()
     expect((await call(s.galleryTenantId, { action: 'plan', code: 'GALLERY_PRO', note: 'de novo' })).status).toBe(409)
     const row = (await adminTenants({ profile: 'admin' }, `#${s.galleryTenantId}`)).rows[0]
     expect(row.plan).toMatchObject({ code: 'GALLERY_PRO', subscription: 'ACTIVE', paid: true })
@@ -81,9 +84,13 @@ describe('admin tenants', () => {
     // the public site forgets the gallery's works; the gallery staff has no panel
     expect(await listPublicArtworks()).toEqual([])
     expect(await marketItems()).toEqual([])
+    expect(await publicArtwork('HA-2026-TEN-0001')).toBeNull()
+    expect((await listPublicArtists()).map((a) => a.slug)).not.toContain('tomas-rezende')
+    // the gallery staff has no panel and no API of the product (community, messages, apps); the session says so
     await signIn(s.a1.userId)
     expect(await panelSession()).toBeNull()
     await expect(requirePanel()).rejects.toMatchObject({ status: 403 })
+    await expect(requireAuth()).rejects.toMatchObject({ status: 403 })
     // the team keeps the panel; the other tenant is untouched
     await signIn(s.staff.userId)
     expect(await panelSession()).not.toBeNull()
@@ -94,6 +101,7 @@ describe('admin tenants', () => {
     const back = await call(s.galleryTenantId, { action: 'reinstate' })
     expect(back.status).toBe(200)
     expect((await listPublicArtworks()).map((w) => w.publicId)).toEqual(['HA-2026-TEN-0001'])
+    expect(await publicArtwork('HA-2026-TEN-0001')).not.toBeNull()
     await signIn(s.a1.userId)
     expect(await panelSession()).not.toBeNull()
     expect(await prisma.auditLog.count({ where: { entity: 'tenant', entityId: String(s.galleryTenantId), action: { in: ['suspend', 'reinstate'] } } })).toBe(2)

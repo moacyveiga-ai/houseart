@@ -11,6 +11,8 @@ export const filterKey = (raw: string | undefined): TenantFilter => (TENANT_FILT
 export const TENANT_KIND_LABELS: Record<string, string> = { GALLERY: 'galeria', PERSON: 'autônomo' }
 export const TENANT_STATUS_LABELS: Record<string, string> = { ACTIVE: 'Ativa', SUSPENDED: 'Suspensa' }
 export const SUBSCRIPTION_LABELS: Record<string, string> = { ACTIVE: 'em dia', PAST_DUE: 'em atraso', DEFAULT: 'padrão (sem assinatura)' }
+/** The list the desk reads is the newest TAKE tenants; the KPIs say so when the base is larger. */
+export const TENANT_TAKE = 300
 export const NOTE_MAX = 200
 
 export interface Actor { profile: string }

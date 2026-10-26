@@ -55,7 +55,7 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       where: { publicId },
       include: {
         artist: { select: { id: true, name: true, slug: true, birthYear: true, tenantId: true, profile: { select: { birthPlace: true, livesIn: true, bio: true } } } },
-        member: { select: { kind: true, displayName: true, city: true, uf: true, tenantId: true } },
+        member: { select: { kind: true, displayName: true, city: true, uf: true, tenantId: true, tenant: { select: { status: true } } } },
         media: { where: { kind: { in: ['FRONT_COLOR_CARD', 'BACK', 'DETAIL'] } }, orderBy: { sortOrder: 'asc' } },
         historyItems: { orderBy: { sortOrder: 'asc' } },
         mandates: { where: { status: 'ACTIVE' }, select: { fixedPrice: true } },
@@ -63,6 +63,8 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       },
     })
     if (!a || !(PAGE_STATUSES as readonly string[]).includes(a.status)) return null
+    // a seller suspended by the house has no public page (the works also leave the lists)
+    if (a.member.tenant.status !== 'ACTIVE') return null
     // Stolen / disputed works keep a public page (the badge is the warning); the rest only with the green seal.
     if (a.status !== 'STOLEN' && a.status !== 'DISPUTED' && a.seal !== 'GREEN') return null
     const isGallery = a.member.kind === 'GALLERY_STAFF'
@@ -132,8 +134,8 @@ export async function marketItems(take = 500): Promise<MarketItem[]> {
 export async function marketArtists(take = 6): Promise<{ slug: string; name: string; meta: string; count: number; photoUrl: string | null }[]> {
   return totalScope('marketplace:artists', async () => {
     const rows = await prisma.artist.findMany({
-      where: { artworks: { some: { status: 'LISTED', seal: 'GREEN' } } },
-      select: { slug: true, name: true, birthYear: true, deathYear: true, profile: { select: { livesIn: true, languagesJson: true, photoUrl: true } }, _count: { select: { artworks: { where: { status: 'LISTED', seal: 'GREEN' } } } } },
+      where: { artworks: { some: { status: 'LISTED', seal: 'GREEN', member: { tenant: { status: 'ACTIVE' } } } } },
+      select: { slug: true, name: true, birthYear: true, deathYear: true, profile: { select: { livesIn: true, languagesJson: true, photoUrl: true } }, _count: { select: { artworks: { where: { status: 'LISTED', seal: 'GREEN', member: { tenant: { status: 'ACTIVE' } } } } } } },
       orderBy: { artworks: { _count: 'desc' } }, take,
     })
     return rows.map((r) => {

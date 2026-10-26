@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { requirePanelPage } from '../../_session'
 import { hasTotalScope } from '@/lib/auth'
 import { adminTenants } from '@/lib/admin-tenants/server'
-import { canManageTenants, filterKey, kpisOf, matchesFilter, TENANT_FILTER_LABELS, TENANT_FILTERS } from '@/lib/admin-tenants/core'
+import { canManageTenants, filterKey, kpisOf, matchesFilter, TENANT_FILTER_LABELS, TENANT_FILTERS, TENANT_TAKE } from '@/lib/admin-tenants/core'
 import { Kpis } from '@/components/ds/Kpi'
 import { Icon } from '@/components/ds/Icon'
 import { TenantsAdmin } from '@/components/admin/TenantsAdmin'
@@ -30,6 +30,7 @@ export default async function AdminTenantsPage({ searchParams }: { searchParams:
           <button type="submit" className="ha-btn ha-btn--secondary ha-btn--md"><Icon name="search" /> Buscar</button>
         </div>
       </form>
+      {rows.length >= TENANT_TAKE ? <p className="ha-muted ha-sm">Números e filtros sobre as {TENANT_TAKE} contas mais recentes; use a busca para as demais.</p> : null}
       <Kpis items={[
         { label: 'Galerias', value: String(k.galleries), note: k.pendingInvites ? `${k.pendingInvites} ${k.pendingInvites === 1 ? 'convite de equipe pendente' : 'convites de equipe pendentes'}` : 'nenhum convite pendente' },
         { label: 'Autônomos', value: String(k.persons), note: 'artistas, consultores e colecionadores' },

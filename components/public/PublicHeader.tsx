@@ -29,11 +29,14 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
   const home = pathname === '/e'
   const scrolled = useSyncExternalStore(subscribeScroll, () => window.scrollY > window.innerHeight * 0.8, () => false)
   const solid = !home || scrolled
+  // Catalogue pages use the light top bar of the handoff (§4.5: full_horiz_color 30 px on paper-50); Site,
+  // Verificar and the Home keep the dark one.
+  const light = ['/e/marketplace', '/e/artwork', '/e/artist', '/e/artists', '/e/gallery', '/e/galleries'].some((p) => pathname === p || pathname.startsWith(p + '/'))
   const active = (href: string) => href !== '/e#agenda' && (pathname === href || pathname.startsWith(href + '/'))
   return (
-    <header className={`hp-header${home ? ' hp-header--home' : ''}${solid ? ' hp-header--solid' : ''}`}>
+    <header className={`hp-header${home ? ' hp-header--home' : ''}${solid ? ' hp-header--solid' : ''}${light ? ' hp-header--light' : ''}`}>
       <div className="hp-header__inner">
-        <Link href="/e" className="hp-header__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone="negativo" height={home ? 48 : 44} /></Link>
+        <Link href="/e" className="hp-header__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone={light ? 'color' : 'negativo'} height={home ? 48 : light ? 30 : 44} /></Link>
         <nav className="hp-nav" aria-label="Navegação pública">
           {PUBLIC_NAV.map((n) => <Link key={n.href} href={n.href} className={`hp-nav__link${active(n.href) ? ' hp-nav__link--on' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>{n.label}</Link>)}
         </nav>

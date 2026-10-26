@@ -3,6 +3,7 @@
 // rooms and media tabs are small client islands. The map is an OpenStreetMap
 // embed (the prototype uses Leaflet; no dependency here).
 import Link from 'next/link'
+import { PublicReactButton } from './PublicReactButton'
 import { Icon } from '@/components/ds/Icon'
 import type { PublicGalleryPage, PublicWork } from '@/lib/public-content/server'
 import { galleryInitial, initialsOf, mapLinks, osmEmbedUrl, workPriceLabel } from '@/lib/public-content/profile-core'
@@ -30,7 +31,7 @@ function WorkCard({ w, gallery }: { w: PublicWork; gallery: string }) {
   )
 }
 
-export function Gallery({ g, artistFilter }: { g: PublicGalleryPage; artistFilter: string | null }) {
+export function Gallery({ g, artistFilter, viewer = { signedIn: false, following: false } }: { g: PublicGalleryPage; artistFilter: string | null; viewer?: { signedIn: boolean; following: boolean } }) {
   const filterOk = artistFilter && g.artistList.some((a) => a.slug === artistFilter) ? artistFilter : null
   const works = filterOk ? g.artworks.filter((w) => w.artistSlug === filterOk) : g.artworks
   const hasAbout = g.about.length > 0 || g.milestones.length > 0
@@ -74,7 +75,10 @@ export function Gallery({ g, artistFilter }: { g: PublicGalleryPage; artistFilte
                 <div className="hp-gallery-count"><span className="hp-gallery-count__n">{g.artists}</span><span className="hp-gallery-count__l">artistas</span></div>
               </div>
               <div className="hp-gallery-actions">
-                <button type="button" className="hp-gallery-btn hp-gallery-btn--ink" aria-disabled="true" title="Em breve"><Icon name="add" size={18} />Seguir galeria</button>
+                {g.followMemberId ? (
+                  <PublicReactButton target="MEMBER" targetId={g.followMemberId} kind="FOLLOW" on={viewer.following} signedIn={viewer.signedIn} className="hp-gallery-btn hp-gallery-btn--ink"
+                    onChildren={<><Icon name="check" size={18} />Seguindo</>}><Icon name="add" size={18} />Seguir galeria</PublicReactButton>
+                ) : null}
                 {hasPlace ? <a href="#local" className="hp-gallery-btn"><Icon name="event" size={18} />Agendar visita</a> : null}
                 {g.team.length || g.email || g.phone ? <a href={g.team.length ? '#equipe' : '#local'} className="hp-gallery-btn"><Icon name="chat" size={18} />Falar com a galeria</a> : null}
               </div>

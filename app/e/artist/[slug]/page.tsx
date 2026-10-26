@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { Artist } from '@/components/public/Artist'
 import { publicArtist } from '@/lib/public-content/server'
 import { workFilterOf } from '@/lib/public-content/profile-core'
+import { getSession } from '@/lib/auth'
+import { reactedIds } from '@/lib/community/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,5 +20,7 @@ export default async function PublicArtistPage({ params, searchParams }: Props) 
   const [{ slug }, sp] = await Promise.all([params, searchParams])
   const a = await publicArtist(slug)
   if (!a) notFound()
-  return <Artist a={a} filter={workFilterOf(sp.obras)} />
+  const user = await getSession()
+  const following = a.followMemberId ? (await reactedIds(user?.id ?? null, 'MEMBER', 'FOLLOW', [a.followMemberId])).has(a.followMemberId) : false
+  return <Artist a={a} filter={workFilterOf(sp.obras)} viewer={{ signedIn: !!user, following }} />
 }

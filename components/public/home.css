@@ -145,3 +145,6 @@
 }
 /* the public header has two rows below 900 px (nav scrolls under the brand): keep the hero copy clear of it */
 @media (max-width: 900px) { .hp-home-hero__content { top: 108px; } }
+.hp-home-news__featured, .hp-home-news__item { text-decoration: none; }
+.hp-home-news__featured:hover .hp-home-news__headline, .hp-home-news__item:hover .hp-home-news__item-title { text-decoration: underline; text-underline-offset: 3px; }
+.hp-home-event__save--on { background: var(--ha-ink-900); color: var(--ha-paper-50); border-color: var(--ha-ink-900); }

@@ -18,7 +18,7 @@ export interface HomeNews { slug: string; category: string; title: string; summa
 export interface HomeData {
   works: HomeWork[]
   news: { featured: HomeNews | null; others: HomeNews[] }
-  agenda: { tabs: MonthTab[]; events: HomeAgendaEvent[] }
+  agenda: { tabs: MonthTab[]; events: HomeAgendaEvent[]; savedIds?: number[]; signedIn?: boolean }
 }
 
 const LANGUAGES: { language: Language; label: string; category: string }[] = [
@@ -152,22 +152,22 @@ export function Home({ works, news, agenda }: HomeData) {
             <Link href="/e/news" className="hp-home-news__all">Todas as notícias</Link>
           </div>
           <div className="hp-home-news__grid">
-            <article className="hp-home-news__featured">
+            <Link href={`/e/news/${news.featured!.slug}`} className="hp-home-news__featured">
               <div className="hp-home-news__cover">{news.featured!.imageUrl ? <NewsImage src={news.featured!.imageUrl} /> : null}</div>
               <span className="hp-home-news__cat">{news.featured!.category} · {news.featured!.date}</span>
               <span className="hp-home-news__headline">{news.featured!.title}</span>
               {news.featured!.summary ? <span className="hp-home-news__summary">{news.featured!.summary}</span> : null}
-            </article>
+            </Link>
             {news.others.length ? (
               <div className="hp-home-news__list">
                 {news.others.map((n) => (
-                  <article key={n.slug} className="hp-home-news__item">
+                  <Link key={n.slug} href={`/e/news/${n.slug}`} className="hp-home-news__item">
                     <div className="hp-home-news__item-body">
                       <span className="hp-home-news__cat">{n.category} · {n.date}</span>
                       <span className="hp-home-news__item-title">{n.title}</span>
                     </div>
                     <div className="hp-home-news__thumb">{n.imageUrl ? <NewsImage src={n.imageUrl} /> : null}</div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             ) : null}
@@ -175,7 +175,7 @@ export function Home({ works, news, agenda }: HomeData) {
         </section>
       ) : null}
 
-      <HomeAgenda tabs={agenda.tabs} events={agenda.events} />
+      <HomeAgenda tabs={agenda.tabs} events={agenda.events} savedIds={agenda.savedIds ?? []} signedIn={agenda.signedIn ?? false} />
 
       <section className="hp-home-final" aria-label="Chamada final">
         {pick(works, 5)?.cover ? <div className="hp-home-float hp-home-final__float-a" data-speed="-0.3"><Cover work={pick(works, 5)} /></div> : null}

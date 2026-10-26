@@ -117,3 +117,4 @@
 .hp-artist-more__head .ha-icon { font-size: 20px; color: var(--ha-ink-900); }
 .hp-artist-more__item { font-size: var(--ha-text-body-sm); text-wrap: pretty; }
 .hp-artist-note { max-width: var(--ha-max); margin: 0 auto; padding: 0 var(--ha-space-6) var(--ha-space-10); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.hp-artist-follow--on { background: var(--ha-paper-100); color: var(--ha-ink-900); }

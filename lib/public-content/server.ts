@@ -36,6 +36,8 @@ export async function listPublicArtists(q?: string | null, take = 60): Promise<P
 }
 
 export interface PublicArtistPage {
+  /** the artist's account, target of "Seguir" (FOLLOW on MEMBER); null for a represented artist without account */
+  followMemberId: number | null
   slug: string; name: string; fullName: string | null; alive: boolean; span: string | null; birthYear: number | null; deathYear: number | null
   facts: { k: string; v: string }[]; languages: string[]; quote: string | null; bio: string[]; photoUrl: string | null; photoCredit: string | null; royaltyBps: number | null
   entries: Record<ArtistEntryKind, { year: string; title: string; venue: string | null; city: string | null }[]>
@@ -62,6 +64,7 @@ export async function publicArtist(slug: string): Promise<PublicArtistPage | nul
     const entries = { TRAJECTORY: [], SOLO: [], GROUP: [], AWARD: [], EDUCATION: [], COLLECTION: [] } as PublicArtistPage['entries']
     for (const e of a.entries) (entries[e.kind as ArtistEntryKind] ?? (entries.TRAJECTORY)).push({ year: e.year, title: e.title, venue: e.venue, city: e.city })
     return {
+      followMemberId: a.memberId ?? null,
       slug: a.slug, name: a.name, fullName: p?.fullName ?? null, alive, span: lifeSpan(a.birthYear, a.deathYear), birthYear: a.birthYear, deathYear: a.deathYear,
       facts, languages: jsonList(p?.languagesJson), quote: p?.quote ?? null, bio: paragraphsOf(p?.bio), photoUrl: p?.photoUrl ?? null, photoCredit: p?.photoCredit ?? null, royaltyBps: p?.royaltyBps ?? null,
       entries, publications: a.publications.map((b) => ({ kind: b.kind, title: b.title, meta: b.meta, priceCents: b.priceCents, action: b.action, url: b.url, coverUrl: b.coverUrl })),
@@ -91,6 +94,8 @@ export async function listPublicGalleries(f: { q?: string | null; uf?: string | 
 }
 
 export interface PublicGalleryPage extends PublicGalleryCard {
+  /** the gallery's first active team member, target of "Seguir galeria" (follows are per member) */
+  followMemberId: number | null
   about: string[]; street: string | null; district: string | null; lat: number | null; lng: number | null; coverUrl: string | null; websiteUrl: string | null; instagram: string | null; email: string | null; phone: string | null; hours: string | null
   milestones: { year: string; title: string }[]; team: { name: string; role: string | null; photoUrl: string | null }[]; photos: { title: string; url: string | null }[]; videos: { title: string; url: string | null }[]; rooms: { title: string; url: string | null }[]
   publications: { kind: string; title: string; meta: string | null; priceCents: bigint | null; action: string; url: string | null; coverUrl: string | null }[]
@@ -107,10 +112,12 @@ export async function publicGallery(slug: string): Promise<PublicGalleryPage | n
       prisma.artwork.findMany({ where: { ...LISTED, tenantId: g.tenantId }, select: { ...WORK_SELECT, artistId: true }, orderBy: { updatedAt: 'desc' }, take: 120 }),
     ])
     const artistIds = [...new Set(works.map((w) => w.artistId))]
+    const desk = await prisma.member.findFirst({ where: { tenantId: g.tenantId, kind: 'GALLERY_STAFF', status: 'ACTIVE' }, orderBy: { id: 'asc' }, select: { id: true } })
     const artists = artistIds.length ? await prisma.artist.findMany({ where: { id: { in: artistIds } }, select: { slug: true, name: true, birthYear: true, deathYear: true, profile: { select: { livesIn: true, languagesJson: true, photoUrl: true } } }, orderBy: { name: 'asc' } }) : []
     const by = (kind: string) => items.filter((i) => i.kind === kind)
     const tags = jsonList(g.tagsJson)
     return {
+      followMemberId: desk?.id ?? null,
       slug: g.slug, name: g.name, city: [g.city, g.uf].filter(Boolean).join('/'), uf: g.uf, foundedYear: g.foundedYear, summary: g.summary, tags, works: works.length, artists: artistIds.length, covers: works.map((w) => w.media[0]?.publicUrl).filter((u): u is string => !!u).slice(0, 3),
       about: paragraphsOf(g.about), street: g.street, district: g.district, lat: g.lat, lng: g.lng, coverUrl: g.coverUrl, websiteUrl: g.websiteUrl, instagram: g.instagram, email: g.email, phone: g.phone, hours: g.hours,
       milestones: by('MILESTONE').map((i) => ({ year: i.subtitle ?? '', title: i.title })), team: by('TEAM').map((i) => ({ name: i.title, role: i.subtitle, photoUrl: i.url })),

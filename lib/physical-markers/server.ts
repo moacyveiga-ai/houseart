@@ -10,7 +10,7 @@ import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
 import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, publicIdOf, UID_RE, type ReadPurpose } from './domain'
-import { mockSunMessage, verifySun } from './sun-core'
+import { mockSunMessage, tamperOf, verifySun } from './sun-core'
 import { markerMasterKey } from './tap-server'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
@@ -44,6 +44,20 @@ export async function adminMarkersView(query: string | null) {
       prisma.markerRead.count({ where: { tamperFlag: true, createdAt: { gte: new Date(Date.now() - 24 * 3600_000) } } }),
       prisma.markerBatch.findMany({ orderBy: { code: 'desc' }, take: 50, include: { _count: { select: { markers: { where: { status: 'LINKED' } } } } } }),
     ])
+    // removal alerts (audit web-app §2): the tamper reads of the last 7 days, each with the artwork and
+    // whether the review item the read opened is still waiting for the desk
+    const tamperReads = await prisma.markerRead.findMany({ where: { tamperFlag: true, createdAt: { gte: new Date(Date.now() - 7 * 24 * 3600_000) } }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, createdAt: true, purpose: true, cmacValid: true, marker: { select: { uid: true, status: true, artworkId: true } } } })
+    const alertArtworkIds = [...new Set(tamperReads.map((r) => r.marker.artworkId).filter((id): id is number => id !== null))]
+    const [alertArtworks, openReviews] = await Promise.all([
+      alertArtworkIds.length ? prisma.artwork.findMany({ where: { id: { in: alertArtworkIds } }, select: { id: true, publicId: true, title: true } }) : [],
+      alertArtworkIds.length ? prisma.reviewQueueItem.findMany({ where: { kind: 'MARKER_REMOVED', status: 'OPEN', artworkId: { in: alertArtworkIds } }, select: { artworkId: true } }) : [],
+    ])
+    const artworkById = new Map(alertArtworks.map((a) => [a.id, a]))
+    const reviewOpen = new Set(openReviews.map((r) => r.artworkId))
+    const alerts = tamperReads.map((r) => {
+      const a = r.marker.artworkId ? artworkById.get(r.marker.artworkId) : undefined
+      return { id: r.id, at: r.createdAt.toISOString(), purpose: r.purpose, authenticated: r.cmacValid, uid: r.marker.uid, markerStatus: r.marker.status, artwork: a ? { publicId: a.publicId, title: a.title } : null, reviewOpen: !!r.marker.artworkId && reviewOpen.has(r.marker.artworkId) }
+    })
     const q = query?.trim()
     const found = q
       ? UID_RE.test(q)
@@ -52,10 +66,12 @@ export async function adminMarkersView(query: string | null) {
           ? await prisma.physicalMarker.findFirst({ where: { artworkId: (await prisma.artwork.findUnique({ where: { publicId: q.toUpperCase() }, select: { id: true } }))?.id ?? -1 }, include: { batch: true } })
           : null
       : null
+    const foundArtwork = found?.artworkId ? await prisma.artwork.findUnique({ where: { id: found.artworkId }, select: { publicId: true, title: true } }) : null
     return {
       kpis: { stock, linked, removedToday, newBatches: batches.filter((b) => b.status === 'NEW').length, linkedShare: linked + shipped ? Math.round((linked / (linked + shipped)) * 1000) / 10 : null },
       batches: batches.map((b) => ({ id: b.id, code: b.code, quantity: b.quantity, destination: b.destination, linked: b._count.markers, status: b.status })),
-      found: found ? { uid: found.uid, status: found.status, artworkId: found.artworkId, batch: found.batch.code, readCounter: found.readCounter } : null,
+      alerts,
+      found: found ? { uid: found.uid, status: found.status, artwork: foundArtwork ? { publicId: foundArtwork.publicId, title: foundArtwork.title } : null, batch: found.batch.code, readCounter: found.readCounter } : null,
     }
   })
 }
@@ -171,7 +187,7 @@ export async function recordPublicRead(publicId: string, sun: { uid?: string; ct
     const artwork = marker?.artworkId ? await prisma.artwork.findUnique({ where: { id: marker.artworkId }, select: { publicId: true, id: true, tenantId: true } }) : null
     if (!marker || !artwork || artwork.publicId !== publicId) return { authenticated: false, tamper: false, reason: 'MARKER_MISMATCH' }
     const verdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter })
-    const tamper = !!sun.tt
+    const tamper = tamperOf(!!sun.tt, verdict)
     await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: verdict.ok, tamperFlag: tamper, ipHash, purpose } })
     if (verdict.ok) await prisma.physicalMarker.update({ where: { id: marker.id }, data: { readCounter: sun.ctr ?? marker.readCounter, lastReadAt: new Date() } })
     if (tamper && marker.status === 'LINKED') {

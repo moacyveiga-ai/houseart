@@ -1517,3 +1517,22 @@ model ShippingAddress {
 
   @@index([userId])
 }
+
+/// One row per run of a cron/job (`withJob`) and per webhook delivery that failed: the trail the
+/// team reads in Admin › Saúde (lib/admin-ops). `summary` is the first bytes of the response body.
+model JobRun {
+  id         Int       @id @default(autoincrement())
+  kind       String // CRON | WEBHOOK
+  name       String
+  runId      String?
+  status     String    @default("RUNNING") // RUNNING | OK | FAILED | SKIPPED
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  ms         Int?
+  httpStatus Int?
+  error      String?
+  summary    String?
+
+  @@index([kind, name, startedAt])
+  @@index([status, startedAt])
+}

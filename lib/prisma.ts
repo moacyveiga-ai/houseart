@@ -20,6 +20,7 @@ import { classifyDatabaseUrl, DATABASE_URL_ERROR } from '@/lib/prisma-url'
 import { createLazyClient } from '@/lib/prisma-lazy'
 import { scopeExtension } from '@/lib/scope/extension'
 import { attachJobLeaseDb } from '@/lib/job-lease/server'
+import { attachJobRunDb } from '@/lib/job-runs/server'
 
 function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL ?? ''
@@ -43,3 +44,4 @@ export const prisma: Client = createLazyClient<Client>(() => {
 // lib/prisma from there would create an import cycle. Attaching the Proxy
 // opens no connection.
 attachJobLeaseDb(prisma)
+attachJobRunDb(prisma)

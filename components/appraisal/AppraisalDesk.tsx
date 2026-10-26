@@ -91,7 +91,8 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
   }
   const ruler = rangeRuler(Number(min || 0), Number(sug || 0), Number(max || 0))
   const rangeError = min && sug && max ? validRange({ minCents: BigInt(toCents(min)), suggestedCents: BigInt(toCents(sug)), maxCents: BigInt(toCents(max)) }) : null
-  const digits = (v: string) => v.replace(/\D/g, '').replace(/^0+/, '').slice(0, 12)
+  // whole reais only: a pasted "R$ 48.000,50" keeps 48000 (the cents never become digits)
+  const digits = (v: string) => v.split(',')[0].replace(/\D/g, '').replace(/^0+/, '').slice(0, 12)
   const row = sel ? { id: sel.id, status: sel.status, dueOn: sel.dueOnIso, assignedAppraiserId: sel.assignedAppraiserId } : null
   const mayIssue = row ? canIssue(actor, row) : false
   const mayTake = row ? canTake(actor, row) : false

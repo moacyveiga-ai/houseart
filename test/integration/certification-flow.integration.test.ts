@@ -87,6 +87,10 @@ describe('certification flow', () => {
     const read = await recordPublicRead(publicId, { ...mockSunMessage(shipped[0].uid, 9) }, null)
     expect(read).toEqual({ authenticated: true, tamper: false, reason: undefined })
     expect((await recordPublicRead(publicId, { ...mockSunMessage(shipped[0].uid, 9) }, null)).authenticated).toBe(false) // replay
+    // the same ctr in two requests at once: the counter is swapped once, so only one authenticates
+    const pair = await Promise.all([recordPublicRead(publicId, { ...mockSunMessage(shipped[0].uid, 10) }, null), recordPublicRead(publicId, { ...mockSunMessage(shipped[0].uid, 10) }, null)])
+    expect(pair.filter((r) => r.authenticated)).toHaveLength(1)
+    expect(pair.find((r) => !r.authenticated)?.reason).toBe('REPLAY')
 
     // anchor
     const anchor = await anchorDay('2099-01-01')

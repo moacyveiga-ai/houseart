@@ -10,7 +10,7 @@ import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
 import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, publicIdOf, UID_RE, type ReadPurpose } from './domain'
-import { mockSunMessage, tamperOf, verifySun } from './sun-core'
+import { mockSunMessage, tamperOf, verifySun, type SunVerdict } from './sun-core'
 import { markerMasterKey } from './tap-server'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
@@ -186,10 +186,16 @@ export async function recordPublicRead(publicId: string, sun: { uid?: string; ct
     const marker = await prisma.physicalMarker.findUnique({ where: { uid: sun.uid.toLowerCase() } })
     const artwork = marker?.artworkId ? await prisma.artwork.findUnique({ where: { id: marker.artworkId }, select: { publicId: true, id: true, tenantId: true } }) : null
     if (!marker || !artwork || artwork.publicId !== publicId) return { authenticated: false, tamper: false, reason: 'MARKER_MISMATCH' }
-    const verdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter })
+    let verdict: SunVerdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter })
+    // The counter is consumed by compare-and-swap, as in `verifyBuyerTap`: two requests
+    // carrying the same ctr (a double load, a link opened twice at once) never both pass —
+    // the one that loses the swap is a replay.
+    if (verdict.ok) {
+      const consumed = await prisma.physicalMarker.updateMany({ where: { id: marker.id, readCounter: { lt: sun.ctr ?? -1 } }, data: { readCounter: sun.ctr, lastReadAt: new Date() } })
+      if (consumed.count !== 1) verdict = { ok: false, reason: 'REPLAY' }
+    }
     const tamper = tamperOf(!!sun.tt, verdict)
     await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: verdict.ok, tamperFlag: tamper, ipHash, purpose } })
-    if (verdict.ok) await prisma.physicalMarker.update({ where: { id: marker.id }, data: { readCounter: sun.ctr ?? marker.readCounter, lastReadAt: new Date() } })
     if (tamper && marker.status === 'LINKED') {
       await prisma.physicalMarker.update({ where: { id: marker.id }, data: { status: 'REMOVED' } })
       await openReviewItem({ kind: 'MARKER_REMOVED', artworkId: artwork.id, tenantId: artwork.tenantId, reason: 'Leitura indicou violação do chip' })

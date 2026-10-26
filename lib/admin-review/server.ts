@@ -21,18 +21,19 @@ export async function openReviewItem(opt: { kind: ReviewKind; artworkId?: number
       const since = new Date(Date.now() - 86_400_000)
       const mine = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null, OR: [{ status: 'OPEN' }, { createdAt: { gte: since } }] }, orderBy: { id: 'desc' } })
       if (mine) return mine
-      return created(await prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null } }))
+      return await created(await prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null } }))
     }
     // One open item per (kind, artwork) — per check for duplicates: two lookalikes are two decisions.
     const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN', ...(opt.kind === 'DUPLICATE' && opt.refId != null ? { refId: opt.refId } : {}) } })
     if (existing) return existing
-    return created(await prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null } }))
+    return await created(await prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null } }))
   })
 }
 
-/** A NEW item tells the desk (admin and manager, the profiles that decide) — after the response, never in the caller's path. */
-function created<T extends { id: number; kind: string; reason: string }>(item: T): T {
-  afterResponseOrNow(`review:notice:${item.id}`, async () => {
+/** A NEW item tells the desk (admin and manager, the profiles that decide) — after the response in a request; outside one
+ *  (tests, scripts) the notice runs now and the caller waits, so nothing crosses the next test's TRUNCATE. */
+async function created<T extends { id: number; kind: string; reason: string }>(item: T): Promise<T> {
+  await afterResponseOrNow(`review:notice:${item.id}`, async () => {
     const staff = await prisma.user.findMany({ where: { profile: { in: ['admin', 'manager'] }, active: true }, select: { id: true } })
     const title = `Fila de revisão · ${REVIEW_KIND_LABELS[item.kind as ReviewKind] ?? item.kind}`
     for (const u of staff) await notify({ userId: u.id, kind: 'review.opened', title, body: item.reason.slice(0, 200), href: '/admin/review' })

@@ -28,6 +28,12 @@ export interface PlaceOrderInput {
   transferId?: number | null
 }
 
+/** The catalog price of a code (null when the row is missing or inactive): the kit's unit price, the transfer fee. */
+export async function catalogPriceCents(code: ServiceCode): Promise<bigint | null> {
+  const item = await prisma.serviceCatalog.findUnique({ where: { code }, select: { priceCents: true, active: true } })
+  return item && item.active ? item.priceCents : null
+}
+
 /** Creates and pays (mock, or Stripe in test/live) an order; returns null when FLAG_ORDERS is off (callers go on without a charge). */
 export async function placeOrder(i: PlaceOrderInput): Promise<{ id: number; code: string; amountCents: bigint; paymentRef: string } | null> {
   if (!flagOn('FLAG_ORDERS')) return null

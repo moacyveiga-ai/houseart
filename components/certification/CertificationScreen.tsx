@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { formatBRL } from '@/lib/artworks/domain'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
@@ -9,7 +10,7 @@ import { CERT_STAGES } from '@/lib/physical-markers/domain'
 export interface CertItem { id: number; certificateId: number | null; title: string; publicId: string | null; cover: string | null; stage: number; label: string; action: string; status: string }
 export interface CertOrder { id: number; quantity: number; status: string }
 
-export function CertificationScreen({ items: initialItems, orders: initialOrders, canOrder }: { items: CertItem[]; orders: CertOrder[]; canOrder: boolean }) {
+export function CertificationScreen({ items: initialItems, orders: initialOrders, canOrder, kitUnitCents = '1500' }: { items: CertItem[]; orders: CertOrder[]; canOrder: boolean; kitUnitCents?: string }) {
   const [items, setItems] = useState(initialItems)
   const [orders, setOrders] = useState(initialOrders)
   const [qty, setQty] = useState(10)
@@ -82,7 +83,7 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
             <span className="ha-num" style={{ minWidth: 32, textAlign: 'center' }}>{qty}</span>
             <button type="button" className="ha-iconbtn" aria-label="Mais" onClick={() => setQty(Math.min(200, qty + 1))}><Icon name="add" /></button>
           </div>
-          <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={order}>Pedir etiquetas · R$ {(qty * 15).toLocaleString('pt-BR')}</button>
+          <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={order}>Pedir etiquetas · {formatBRL(BigInt(kitUnitCents) * BigInt(qty))}</button>
         </section>
       ) : null}
       {pending.length ? (

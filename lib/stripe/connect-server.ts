@@ -156,7 +156,7 @@ interface SplitRow { id: number; dealId: number; party: string; amountCents: big
  * who listed the artwork: any ENABLED account of a GALLERY_STAFF member of the
  * deal's tenant serves, the seller's own first, then the admins'.
  */
-async function payeeAccountOf(split: SplitRow, deal: { sellerMemberId: number; tenantId: number | null; sellerKind: string; artistMemberId: number | null }, m: StripeMode): Promise<{ accountId: string; memberId: number } | null> {
+export async function payeeAccountOf(split: Pick<SplitRow, 'party'>, deal: { sellerMemberId: number; tenantId: number | null; sellerKind: string; artistMemberId: number | null }, m: StripeMode): Promise<{ accountId: string; memberId: number } | null> {
   const memberId = payeeMemberOf(split.party, { sellerMemberId: deal.sellerMemberId, sellerKind: deal.sellerKind, artistMemberId: deal.artistMemberId })
   if (memberId === null) return null
   const own = await prisma.stripeConnectAccount.findFirst({ where: { memberId, mode: m, status: 'ENABLED' }, select: { accountId: true, memberId: true } })
@@ -202,7 +202,14 @@ async function paySplit(split: SplitRow, m: StripeMode): Promise<'paid' | 'skipp
   }
   try {
     const r = await prisma.dealSplit.updateMany({ where: { id: split.id, status: 'RELEASED' }, data: { status: 'PAID', payoutRef: t.id, transferredAt: new Date(), payoutError: null } })
-    if (r.count && split.party === 'ARTIST_ROYALTY') await prisma.royaltyPayment.updateMany({ where: { dealId: deal.id, status: { in: ['PENDING', 'HELD'] } }, data: { status: 'PAID', paidAt: new Date(), receiptRef: t.id } })
+    if (r.count === 0) {
+      // the line left RELEASED while the transfer was in flight (the desk marked it paid by hand):
+      // the money went out twice — never silent, the desk reverses it at Stripe
+      console.error('[stripe] transfer feita para linha que já não estava liberada', deal.code, split.party, t.id)
+      void audit.event({ entity: 'deal_split', entityId: split.id, action: 'transfer_unrecorded', after: { dealCode: deal.code, party: split.party, amountCents: split.amountCents.toString(), transfer: t.id, memberId: payee.memberId } })
+      return 'failed'
+    }
+    if (split.party === 'ARTIST_ROYALTY') await prisma.royaltyPayment.updateMany({ where: { dealId: deal.id, status: { in: ['PENDING', 'HELD'] } }, data: { status: 'PAID', paidAt: new Date(), receiptRef: t.id } })
     void audit.event({ entity: 'deal_split', entityId: split.id, action: 'transfer', after: { dealCode: deal.code, party: split.party, amountCents: split.amountCents.toString(), transfer: t.id, memberId: payee.memberId } })
     return 'paid'
   } catch (e) {

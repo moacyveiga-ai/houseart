@@ -2,7 +2,9 @@
 export const MARKER_STATUSES = ['STOCK', 'SHIPPED', 'LINKED', 'REMOVED', 'REVOKED'] as const
 export const BATCH_STATUSES = ['NEW', 'IN_USE', 'EXHAUSTED'] as const
 export const BATCH_STATUS_LABELS: Record<(typeof BATCH_STATUSES)[number], string> = { NEW: 'Novo', IN_USE: 'Em uso', EXHAUSTED: 'Esgotado' }
+export const MARKER_STATUS_LABELS: Record<(typeof MARKER_STATUSES)[number], string> = { STOCK: 'Em estoque', SHIPPED: 'Enviada', LINKED: 'Vinculada', REMOVED: 'Removida', REVOKED: 'Revogada' }
 export const MARKER_ORDER_STATUSES = ['REQUESTED', 'SHIPPED', 'DELIVERED'] as const
+export const MARKER_ORDER_STATUS_LABELS: Record<(typeof MARKER_ORDER_STATUSES)[number], string> = { REQUESTED: 'Pedido', SHIPPED: 'Enviado', DELIVERED: 'Entregue' }
 export const READ_PURPOSES = ['VERIFY', 'LINK', 'DELIVERY_CONFIRM', 'TRANSFER_CONFIRM'] as const
 export type ReadPurpose = (typeof READ_PURPOSES)[number]
 

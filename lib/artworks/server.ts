@@ -4,6 +4,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { canView, memberFilter, memberOfScope, tenantOfScope, type Scope } from '@/lib/scope/core'
 import { audit } from '@/lib/audit'
+import { openReviewItem } from '@/lib/admin-review/server'
 import { ARTWORK_STATUSES, LIST_FILTERS, MEDIA_SLOTS, type ArtworkStatus } from './domain'
 import type { ArtworkPatch } from './input'
 import { submitProblems } from './state-machine'
@@ -138,6 +139,11 @@ export async function submitForCertification(scope: Scope, id: number, actor: { 
   if (updated.count === 0) throw new ArtworkError('INVALID_TRANSITION', 'A obra acabou de mudar.', 409)
   await prisma.certificate.upsert({ where: { artworkId: id }, create: { artworkId: id, stage: 0, status: 'DRAFT' }, update: {} })
   void audit.event({ entity: 'artwork', entityId: id, action: 'submit_for_certification', userId: actor.userId, userName: actor.name })
+  // "Emissor novo": the first submission of an account goes to the house review (portfolio check).
+  if (a.tenantId) {
+    const earlier = await prisma.artwork.count({ where: { tenantId: a.tenantId, id: { not: id }, submittedAt: { not: null } } })
+    if (earlier === 0) await openReviewItem({ kind: 'NEW_ISSUER', artworkId: id, tenantId: a.tenantId, reason: 'Primeiro envio desta conta · conferir portfólio' })
+  }
   return getArtwork(scope, id)
 }
 
@@ -146,8 +152,17 @@ export async function decideDuplicate(scope: Scope, artworkId: number, checkId: 
   if (!a || !canView(scope, a)) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
   const r = await prisma.duplicateCheck.updateMany({ where: { id: checkId, artworkId, decision: 'PENDING' }, data: { decision, decidedByUserId: userId, decidedAt: new Date() } })
   if (r.count === 0) throw new ArtworkError('NOT_FOUND', 'Verificação não encontrada.', 404)
-  // "É a mesma obra": the duplicate registration is archived; the admin queue (Phase 2) reviews SAME decisions.
+  // "É a mesma obra": the duplicate registration is archived by its own owner.
   if (decision === 'SAME') await prisma.artwork.updateMany({ where: { id: artworkId, status: 'DRAFT' }, data: { status: 'ARCHIVED' } })
+  // "São obras diferentes" against a work of ANOTHER account: the house confirms (audit 2026-10-25 —
+  // the Duplicidade kind of the queue was never opened).
+  if (decision === 'DIFFERENT') {
+    const check = await prisma.duplicateCheck.findUnique({ where: { id: checkId }, select: { similarityBps: true, candidate: { select: { tenantId: true, title: true } } } })
+    if (check && check.candidate.tenantId !== a.tenantId) {
+      const pct = Math.round(check.similarityBps / 100)
+      await openReviewItem({ kind: 'DUPLICATE', artworkId, tenantId: a.tenantId, refId: checkId, reason: `Imagem ${pct}% semelhante a “${check.candidate.title}”, de outra conta` })
+    }
+  }
 }
 
 export { ARTWORK_STATUSES, MEDIA_SLOTS, tenantOfScope }

@@ -19,7 +19,7 @@ export async function listPublicArtworks(f: MarketplaceFilters = {}, take = 60):
         ...(f.category && (ARTWORK_CATEGORIES as readonly string[]).includes(f.category) ? { category: f.category } : {}),
         ...(f.maxPriceCents ? { listPriceCents: { lte: f.maxPriceCents } } : {}),
         ...(f.market === 'PRIMARY' || f.market === 'SECONDARY' ? { market: f.market } : {}),
-        ...(f.uf ? { member: { uf: f.uf.toUpperCase() } } : {}),
+        member: { tenant: { status: 'ACTIVE' }, ...(f.uf ? { uf: f.uf.toUpperCase() } : {}) },
         ...(f.q ? { OR: [{ title: { contains: f.q, mode: 'insensitive' } }, { artist: { name: { contains: f.q, mode: 'insensitive' } } }, { publicId: { equals: f.q.replace(/\s/g, '').toUpperCase() } }] } : {}),
       },
       select: { id: true, publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, category: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
@@ -100,7 +100,7 @@ export async function relatedArtworks(publicId: string, take = 4): Promise<Marke
     const items = await marketItems(500)
     const byId = new Map(items.map((i) => [i.publicId, i]))
     const rows = await prisma.artwork.findMany({
-      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, id: { not: a.id }, OR: [{ artistId: a.artistId }, { memberId: a.memberId }] },
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, member: { tenant: { status: 'ACTIVE' } }, id: { not: a.id }, OR: [{ artistId: a.artistId }, { memberId: a.memberId }] },
       select: { publicId: true, artistId: true }, orderBy: { updatedAt: 'desc' }, take: 40,
     })
     const sorted = [...rows.filter((r) => r.artistId === a.artistId), ...rows.filter((r) => r.artistId !== a.artistId)]
@@ -112,7 +112,7 @@ export async function relatedArtworks(publicId: string, take = 4): Promise<Marke
 export async function marketItems(take = 500): Promise<MarketItem[]> {
   return totalScope('marketplace:items', async () => {
     const rows = await prisma.artwork.findMany({
-      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null },
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, member: { tenant: { status: 'ACTIVE' } } },
       select: { publicId: true, title: true, year: true, category: true, technique: true, heightMm: true, widthMm: true, depthMm: true, listPriceCents: true, saleMode: true, market: true, updatedAt: true, artist: { select: { name: true, slug: true } }, member: { select: { displayName: true, kind: true, uf: true, city: true, tenantId: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
       orderBy: { updatedAt: 'desc' }, take,
     })

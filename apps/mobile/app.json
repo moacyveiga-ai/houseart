@@ -9,8 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
+      "image": "./assets/brand/marca_houseart_full_45_vert_color.png",
+      "resizeMode": "contain",
       "backgroundColor": "#FBFAF7"
     },
     "ios": {
@@ -54,8 +54,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash.png",
-          "resizeMode": "cover",
+          "image": "./assets/brand/marca_houseart_full_45_vert_color.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
           "backgroundColor": "#FBFAF7"
         }
       ]

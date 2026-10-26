@@ -20,7 +20,7 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
   'HouseArt Cadastro': { Cadastro: 'app/signup/page.tsx' },
   // Mobile apps (shortcut list `out.atalhos` of each prototype)
   'HouseArt App Colecionador': {
-    Splash: null, 'Tela inicial': 'app/e/page.tsx', 'Entrar · login social': 'app/login/page.tsx', Cadastro: 'app/signup/page.tsx',
+    Splash: 'apps/mobile/src/screens/onboarding/SplashOverlay.tsx', 'Tela inicial': 'app/e/page.tsx', 'Entrar · login social': 'app/login/page.tsx', Cadastro: 'app/signup/page.tsx',
     'Explorar · feed': 'app/(panel)/explore/page.tsx', 'Explorar · descobrir': 'app/(panel)/explore/page.tsx', 'Página da obra': 'app/e/artwork/[publicId]/page.tsx', 'Fazer oferta': 'app/e/artwork/[publicId]/offer/page.tsx',
     'Comprar direto': 'app/e/artwork/[publicId]/buy/page.tsx', 'Contraproposta recebida': 'app/e/offer/[code]/page.tsx', Comunidade: 'app/(panel)/community/page.tsx', Comentários: 'components/community/CommentsSheet.tsx',
     Mensagens: 'app/(panel)/messages/page.tsx', 'Conversa com galeria': 'app/(panel)/messages/[id]/page.tsx', 'Minha coleção': 'app/(panel)/wallet/page.tsx', 'Favoritos e curtidos': 'app/(panel)/favorites/page.tsx',
@@ -29,13 +29,13 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
     'Instagram · conectar e postar': null, 'Compartilhar obra': 'components/public/ShareSheet.tsx', 'Ler notícia': 'app/e/news/[slug]/page.tsx', 'Guia de educação': 'app/e/guide/page.tsx', Busca: 'app/(panel)/search/page.tsx',
   },
   'HouseArt App Galeria': {
-    Splash: null, 'Tela inicial e login': 'app/login/page.tsx', 'Cadastro da galeria': 'app/signup/page.tsx', 'Galeria · painel do dia': 'app/(panel)/page.tsx', Acervo: 'app/(panel)/artworks/page.tsx',
+    Splash: 'apps/mobile/src/screens/onboarding/SplashOverlay.tsx', 'Tela inicial e login': 'app/login/page.tsx', 'Cadastro da galeria': 'app/signup/page.tsx', 'Galeria · painel do dia': 'app/(panel)/page.tsx', Acervo: 'app/(panel)/artworks/page.tsx',
     'Cadastrar obra': null, 'Gestão do anúncio': 'app/(panel)/artworks/[id]/listing/page.tsx', 'Ofertas recebidas': 'app/(panel)/sales/page.tsx', 'Vendas até o repasse': 'app/(panel)/sales/page.tsx', 'Regras de ofertas': 'app/(panel)/sales/rules/page.tsx',
     Mensagens: 'app/(panel)/messages/page.tsx', 'Conversa com compradora': 'app/(panel)/messages/[id]/page.tsx', 'Comunidade e eventos': 'app/(panel)/community/page.tsx', 'Instagram · conectar e postar': null,
     'Compartilhar obra': 'components/public/ShareSheet.tsx', 'Ler notícia': 'app/e/news/[slug]/page.tsx', 'Guia de educação': 'app/e/guide/page.tsx', Equipe: 'app/(panel)/gallery/team/page.tsx', 'Artistas representados': 'app/(panel)/gallery/artists/page.tsx', 'Conta, equipe e repasses': 'app/(panel)/gallery/account/page.tsx',
   },
   'HouseArt App Artista': {
-    Onboarding: null, Login: 'app/login/page.tsx', 'Início do artista': 'app/(panel)/page.tsx', 'Nova obra · câmera guiada': 'components/artworks/GuidedCapture.tsx', 'Vincular etiqueta': 'app/(panel)/certification/link/[artworkId]/page.tsx',
+    Onboarding: 'apps/mobile/src/screens/onboarding/OnboardingScreen.tsx', Login: 'app/login/page.tsx', 'Início do artista': 'app/(panel)/page.tsx', 'Nova obra · câmera guiada': 'components/artworks/GuidedCapture.tsx', 'Vincular etiqueta': 'app/(panel)/certification/link/[artworkId]/page.tsx',
     'Verificar obra': 'app/verify/page.tsx', 'Carteira de escrituras': 'app/(panel)/certification/page.tsx', 'Confirmar recebimento': 'app/(panel)/purchases/page.tsx', Avisos: 'app/(panel)/notifications/page.tsx',
   },
   // Desktop versions of the apps: same screens, side panel of detail (handoff §5)

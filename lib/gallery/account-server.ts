@@ -19,18 +19,14 @@ export interface GalleryAccountView {
   isAdmin: boolean
 }
 
-/** "12345678000190" → "12.345.678/0001-90" (the gallery's own document; shown only to its staff). */
-export function formatCnpj(digits: string | null | undefined): string | null {
-  const d = (digits ?? '').replace(/\D/g, '')
-  if (d.length !== 14) return null
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`
-}
+/** The public-profile phone rule (lib/public-content/editor-core): digits, spaces, +, ( ) and -; landlines welcome. */
+const PHONE_LOOSE = /^[0-9+()\-.\s]{8,30}$/
 
 export async function galleryAccount(user: { id: number; tenantRole: string | null; memberId: number | null }, scope: Scope): Promise<GalleryAccountView | null> {
   const tenantId = tenantOfScope(scope)
   if (!tenantId) return null
   const [tenant, me, isAdmin] = await Promise.all([
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, document: true, galleryProfile: { select: { tradeName: true, cnpjMask: true, cnpjHash: true } }, publicProfile: { select: { email: true, phone: true, city: true, summary: true } } } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, galleryProfile: { select: { tradeName: true, cnpjMask: true, cnpjHash: true } }, publicProfile: { select: { email: true, phone: true, city: true, summary: true } } } }),
     prisma.user.findUnique({ where: { id: user.id }, select: { emailVerifiedAt: true, phoneVerifiedAt: true } }),
     galleryAdminTenant(scope).then(() => true).catch((e) => { if (e instanceof ContentError || e instanceof ArtworkError) return false; throw e }),
   ])
@@ -38,8 +34,9 @@ export async function galleryAccount(user: { id: number; tenantRole: string | nu
   const p = tenant.publicProfile
   return {
     galleryName: tenant.galleryProfile?.tradeName || tenant.name,
-    cnpjMask: tenant.galleryProfile?.cnpjMask ?? formatCnpj(tenant.document),
-    verified: { cnpj: !!(tenant.galleryProfile?.cnpjHash || tenant.document), email: !!me?.emailVerifiedAt, phone: !!me?.phoneVerifiedAt },
+    // the CNPJ lives only in GalleryProfile (mask + hash); Tenant.document is a hash of the person's CPF, never shown
+    cnpjMask: tenant.galleryProfile?.cnpjMask ?? null,
+    verified: { cnpj: !!tenant.galleryProfile?.cnpjHash, email: !!me?.emailVerifiedAt, phone: !!me?.phoneVerifiedAt },
     data: { email: p?.email ?? '', phone: p?.phone ?? '', city: p?.city ?? '', summary: p?.summary ?? '' },
     isAdmin,
   }
@@ -52,15 +49,17 @@ export async function saveGalleryAccountData(scope: Scope, raw: unknown, actor: 
   const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
   const email = str(r.email, 160)
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ArtworkError('EMAIL', 'E-mail inválido.', 422)
-  const phoneRaw = str(r.phone, 32)
-  const phone = phoneRaw ? normalizeBrMobile(phoneRaw) : null
-  if (phoneRaw && !phone) throw new ArtworkError('PHONE', 'Celular inválido: use DDD e o número com 9 dígitos.', 422)
+  const phoneRaw = str(r.phone, 30)
+  // a mobile is stored masked "(71) 99999-0000"; a landline or another format stays as typed (the public-profile rule)
+  const mobile = phoneRaw ? normalizeBrMobile(phoneRaw) : null
+  if (phoneRaw && !mobile && !PHONE_LOOSE.test(phoneRaw)) throw new ArtworkError('PHONE', 'Telefone inválido: use só números, espaços, +, ( ) e -.', 422)
+  const phone = mobile ? maskPhone(mobile) : phoneRaw || null
   const city = str(r.city, 80)
   const summary = str(r.summary, 200)
   const current = await galleryProfileView(tenantId)
   const tenant = await prisma.tenant.findUniqueOrThrow({ where: { id: tenantId }, select: { name: true, galleryProfile: { select: { tradeName: true } } } })
   // `saveGalleryProfile` takes the whole profile (lists included): the view goes back with the four fields changed.
-  const next = { ...current, name: current.name || tenant.galleryProfile?.tradeName || tenant.name, email: email || null, phone: phone ? maskPhone(phone) : null, city: city || null, summary: summary || null }
+  const next = { ...current, name: current.name || tenant.galleryProfile?.tradeName || tenant.name, email: email || null, phone, city: city || null, summary: summary || null }
   const saved = await saveGalleryProfile(tenantId, next, actor)
   return { email: saved.email ?? '', phone: saved.phone ?? '', city: saved.city ?? '', summary: saved.summary ?? '' }
 }

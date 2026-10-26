@@ -7,11 +7,10 @@ import Link from 'next/link'
 import { useState, type ChangeEvent } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
-import { formatPhoneInput } from '@/lib/sms/core'
 import type { GalleryAccountView } from '@/lib/gallery/account-server'
 
 export function GalleryDataForm({ account }: { account: GalleryAccountView }) {
-  const [form, setForm] = useState({ ...account.data, phone: account.data.phone ? formatPhoneInput(account.data.phone) : '' })
+  const [form, setForm] = useState({ ...account.data })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
@@ -24,7 +23,7 @@ export function GalleryDataForm({ account }: { account: GalleryAccountView }) {
     const data = (await res?.json().catch(() => ({}))) as { data?: GalleryAccountView['data']; error?: string } | undefined
     setSaving(false)
     if (!res?.ok || !data?.data) { setError(data?.error ?? 'Não foi possível salvar.'); return }
-    setForm({ ...data.data, phone: data.data.phone ? formatPhoneInput(data.data.phone) : '' })
+    setForm({ ...data.data })
     setToast('Dados da galeria salvos')
   }
 
@@ -36,7 +35,7 @@ export function GalleryDataForm({ account }: { account: GalleryAccountView }) {
         <label className="ha-gdata__field"><span>Nome da galeria</span><input className="ha-input ha-gdata__ro" value={account.galleryName} readOnly /><small>Vem do cadastro · fale com a HouseArt para alterar</small></label>
         <label className="ha-gdata__field"><span>CNPJ</span><input className="ha-input ha-gdata__ro" value={account.cnpjMask ?? '—'} readOnly /><small>{account.verified.cnpj ? 'Verificado' : 'Não informado'}</small></label>
         <label className="ha-gdata__field"><span>E-mail de contato</span><input className="ha-input" type="email" value={form.email} onChange={on('email')} readOnly={ro} placeholder="contato@galeria.com.br" autoComplete="email" /><small>Aparece na página pública e recebe os avisos da galeria</small></label>
-        <label className="ha-gdata__field"><span>Celular</span><input className="ha-input" value={form.phone} onChange={on('phone', formatPhoneInput)} readOnly={ro} inputMode="tel" placeholder="(71) 99999-0000" autoComplete="tel" /></label>
+        <label className="ha-gdata__field"><span>Celular</span><input className="ha-input" value={form.phone} onChange={on('phone', formatPhoneLoose)} readOnly={ro} inputMode="tel" placeholder="(71) 99999-0000" autoComplete="tel" /></label>
         <label className="ha-gdata__field"><span>Cidade</span><input className="ha-input" value={form.city} onChange={on('city')} readOnly={ro} placeholder="Salvador" /></label>
         <label className="ha-gdata__field ha-gdata__field--wide"><span>Sobre a galeria</span><textarea className="ha-input ha-gdata__ta" value={form.summary} onChange={on('summary')} readOnly={ro} maxLength={200} rows={3} placeholder="Uma linha sobre a galeria, para o site e a comunidade" /><small>{form.summary.length}/200</small></label>
       </div>
@@ -45,4 +44,14 @@ export function GalleryDataForm({ account }: { account: GalleryAccountView }) {
       <Toast message={toast} onDone={() => setToast('')} />
     </div>
   )
+}
+
+/** Progressive mask for a mobile "(71) 99999-0000" or a landline "(71) 3333-0000"; anything with + or letters stays as typed. */
+function formatPhoneLoose(raw: string): string {
+  if (/[^0-9()\-.\s]/.test(raw)) return raw.slice(0, 30)
+  const d = raw.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 2) return d.length ? `(${d}` : ''
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
 }

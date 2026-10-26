@@ -19,7 +19,7 @@ let s: Scenario
 beforeEach(async () => {
   process.env.FLAG_TENANT_SCOPE = '1'; process.env.FLAG_DEALS = '1'
   s = await createScenario()
-  await truncateTables(['Mandate', 'Offer', 'Deal', 'Contact', 'Notification', 'OfferRules', 'TeamInvite', 'ArtistContract', 'ArtworkViewDay', 'rate_limit_bucket'])
+  await truncateTables(['Mandate', 'Offer', 'Deal', 'Contact', 'Notification', 'OfferRules', 'TeamInvite', 'ArtistContract', 'ArtworkViewDay', 'Conversation', 'Post', 'Reaction', 'AgendaEvent', 'rate_limit_bucket'])
   await prisma.artwork.update({ where: { id: s.a1.artworkId }, data: { status: 'AUTHENTICATED', seal: 'GREEN', publicId: 'HA-2026-TEST-0006' } })
   await asPanel(s.a1.userId, async ({ scope, user }) => {
     await listArtworkForSale(scope, s.a1.artworkId, { listPriceCents: 1_000_000n, reservePriceCents: 600_000n, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false }, { userId: user.id })

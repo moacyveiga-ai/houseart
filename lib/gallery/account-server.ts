@@ -16,6 +16,8 @@ export interface GalleryAccountView {
   verified: { cnpj: boolean; email: boolean; phone: boolean }
   /** the editable fields (public profile); null when the gallery has no public profile row yet */
   data: { email: string; phone: string; city: string; summary: string }
+  /** Endereço e horários (read here, edited in /gallery/public). */
+  address: { street: string | null; district: string | null; city: string | null; hours: string | null } | null
   isAdmin: boolean
 }
 
@@ -26,7 +28,7 @@ export async function galleryAccount(user: { id: number; tenantRole: string | nu
   const tenantId = tenantOfScope(scope)
   if (!tenantId) return null
   const [tenant, me, isAdmin] = await Promise.all([
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, galleryProfile: { select: { tradeName: true, cnpjMask: true, cnpjHash: true } }, publicProfile: { select: { email: true, phone: true, city: true, summary: true } } } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, galleryProfile: { select: { tradeName: true, cnpjMask: true, cnpjHash: true } }, publicProfile: { select: { email: true, phone: true, city: true, summary: true, street: true, district: true, hours: true } } } }),
     prisma.user.findUnique({ where: { id: user.id }, select: { emailVerifiedAt: true, phoneVerifiedAt: true } }),
     galleryAdminTenant(scope).then(() => true).catch((e) => { if (e instanceof ContentError || e instanceof ArtworkError) return false; throw e }),
   ])
@@ -38,6 +40,7 @@ export async function galleryAccount(user: { id: number; tenantRole: string | nu
     cnpjMask: tenant.galleryProfile?.cnpjMask ?? null,
     verified: { cnpj: !!tenant.galleryProfile?.cnpjHash, email: !!me?.emailVerifiedAt, phone: !!me?.phoneVerifiedAt },
     data: { email: p?.email ?? '', phone: p?.phone ?? '', city: p?.city ?? '', summary: p?.summary ?? '' },
+    address: p ? { street: p.street, district: p.district, city: p.city, hours: p.hours } : null,
     isAdmin,
   }
 }

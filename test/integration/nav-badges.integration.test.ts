@@ -11,7 +11,7 @@ import { createScenario, type Scenario } from './fixtures'
 import { truncateTables } from './db'
 
 let s: Scenario
-beforeEach(async () => { s = await createScenario(); await truncateTables(['Offer', 'Deal', 'AppraisalRequest', 'KycVerification', 'OwnershipTransfer', 'Certificate', 'ReviewQueueItem']) })
+beforeEach(async () => { s = await createScenario(); await truncateTables(['Offer', 'Deal', 'AppraisalRequest', 'KycVerification', 'OwnershipTransfer', 'Certificate', 'ReviewQueueItem', 'Conversation']) })
 
 const memberScope = (m: { userId: number; memberId: number }, tenantId: number) => scopeOfUser({ profile: 'member', memberId: m.memberId, tenantId, tenantRole: 'ADMIN' }, () => false)
 const day = 86_400_000

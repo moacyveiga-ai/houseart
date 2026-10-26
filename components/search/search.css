@@ -60,3 +60,7 @@
 .ha-search-empty { display: flex; flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-4) 0; }
 .ha-search-empty__t { font-family: var(--ha-font-display); font-size: 22px; line-height: 28px; color: var(--ha-fg); }
 .ha-search-empty__s { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); color: var(--ha-fg-muted); }
+
+/* the desk's rows (components/search/AdminSearchResults.tsx) */
+.ha-search-admin__acts { display: flex; gap: var(--ha-space-2); flex: none; }
+.ha-search-admin .ha-search-row__n { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }

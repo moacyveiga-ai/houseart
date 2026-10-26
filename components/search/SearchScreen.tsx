@@ -5,6 +5,7 @@
 // a grade de obras; nada → "Nada encontrado para …". Tudo é link: a busca é a
 // do servidor (`search()`), nunca do navegador.
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { initialsOf } from '@/lib/profiles/core'
 import { formatBRL, ARTWORK_CATEGORIES, ARTWORK_CATEGORY_LABELS } from '@/lib/artworks/domain'
@@ -16,12 +17,12 @@ import './search.css'
 const CATEGORY_CHIPS = ARTWORK_CATEGORIES
 
 /** `workPrefix`: the search URL ending in `work=` — the artwork opens in the side panel over the results. */
-export function SearchScreen({ result, featured, workPrefix }: { result: SearchResult; featured: PublicArtistCard[]; workPrefix: string }) {
+export function SearchScreen({ result, featured, workPrefix, before = null }: { result: SearchResult; featured: PublicArtistCard[]; workPrefix: string; before?: ReactNode }) {
   const q = result.q
   const cert = q && looksLikePublicId(q) ? result.artworks[0] ?? null : null
   const works = cert ? result.artworks.slice(1) : result.artworks
   const people = result.artists.length + result.galleries.length
-  const nothing = !!q && !cert && !people && !works.length
+  const nothing = !!q && !cert && !people && !works.length && !before
   return (
     <div className="ha-search">
       <form className="ha-search-box" role="search" action="/search">
@@ -61,6 +62,8 @@ export function SearchScreen({ result, featured, workPrefix }: { result: SearchR
           </Link>
         </>
       ) : null}
+
+      {before}
 
       {cert ? (
         <Link href={`${workPrefix}${encodeURIComponent(cert.publicId)}`} scroll={false} className="ha-search-cert">

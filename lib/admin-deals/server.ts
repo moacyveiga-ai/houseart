@@ -36,7 +36,8 @@ export async function adminDeals(): Promise<AdminDealRow[]> {
     }
     const mode = stripeMode()
     const accounts = new Map((await prisma.stripeConnectAccount.findMany({ where: { memberId: { in: [...payeeIds] }, mode }, select: { memberId: true, status: true } })).map((a) => [a.memberId, a.status as ConnectAccountStatus]))
-    const members = new Map((await prisma.member.findMany({ where: { id: { in: [...payeeIds] } }, select: { id: true, displayName: true } })).map((m) => [m.id, m.displayName]))
+    // names of the payees and of the sellers (after the transfer the artwork belongs to the buyer: the seller is the deal's member)
+    const members = new Map((await prisma.member.findMany({ where: { id: { in: [...new Set([...payeeIds, ...deals.map((d) => d.sellerMemberId)])] } }, select: { id: true, displayName: true } })).map((m) => [m.id, m.displayName]))
     // the gallery's line can be paid by the ENABLED account of an ADMIN of the tenant (the same rule as the cron, payeeAccountOf)
     const galleryTenants = [...new Set(deals.filter((d) => d.artwork.member.kind === 'GALLERY_STAFF' && d.tenantId !== null).map((d) => d.tenantId as number))]
     const admins = galleryTenants.length ? await prisma.member.findMany({ where: { tenantId: { in: galleryTenants }, kind: 'GALLERY_STAFF', status: 'ACTIVE', OR: [{ role: 'ADMIN' }, { user: { tenantRole: 'ADMIN' } }] }, select: { id: true, tenantId: true } }) : []
@@ -48,7 +49,7 @@ export async function adminDeals(): Promise<AdminDealRow[]> {
       const phase = isPhase(d.phase) ? d.phase : 'OFFER_ACCEPTED'
       return {
         id: d.id, code: d.code, phase, phaseLabel: PHASE_LABELS[phase], exception: d.exceptionStatus,
-        artworkTitle: d.artwork.title, artworkId: d.artwork.id, artist: d.artwork.artist.name, seller: d.artwork.member.displayName, sellerKind: d.artwork.member.kind, buyer: buyers.get(d.buyerUserId) ?? `comprador ${d.buyerUserId}`,
+        artworkTitle: d.artwork.title, artworkId: d.artwork.id, artist: d.artwork.artist.name, seller: members.get(d.sellerMemberId) ?? d.artwork.member.displayName, sellerKind: d.artwork.member.kind, buyer: buyers.get(d.buyerUserId) ?? `comprador ${d.buyerUserId}`,
         market: d.market, amountCents: d.amountCents.toString(), totalCents: (d.amountCents + d.shippingCents + d.insuranceCents).toString(),
         escrow: escrowOf({ escrowPaidAt: d.escrowPaidAt?.toISOString() ?? null, escrowMethod: d.escrowMethod, escrowPendingRef: d.escrowPendingRef, escrowExpiresAt: d.escrowExpiresAt?.toISOString() ?? null }, fmt),
         splits: d.splits.map((s) => {

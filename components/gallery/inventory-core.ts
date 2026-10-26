@@ -2,12 +2,16 @@
 // statuses, the search over title / artist / certificate, the summary line and
 // the status pill + stats line of each row.
 import { ARTWORK_STATUS_LABELS, formatBRL, type ArtworkStatus } from '@/lib/artworks/domain'
+import { saleAction } from '@/lib/deals/sale-progress-core'
+import type { DealPhase } from '@/lib/deals/domain'
 
 export interface InventoryItem {
   id: number; title: string; year: number | null; artistName: string; status: ArtworkStatus
   listPriceCents: bigint | string | null; saleMode: string | null; publicId: string | null; coverUrl: string | null
   /** Only LISTED works carry it (listingOf). */
-  listing?: { views7d: number; openOffers: number; paused: boolean } | null
+  listing?: { views7d: number; openOffers: number; paused: boolean; saves?: number } | null
+  /** Reserved / sold works: who bought and the step (dealLinesByArtwork). */
+  deal?: { buyerName: string; phase: DealPhase; sellerSigned: boolean; exception: string | null } | null
 }
 
 export const INVENTORY_CHIPS: { key: string; name: string; statuses: readonly ArtworkStatus[] | null }[] = [
@@ -70,19 +74,21 @@ export function rowPrice(a: Pick<InventoryItem, 'saleMode' | 'listPriceCents'>):
 }
 
 /** The third line of the row: engagement for listed works, the next step for the others. */
-export function rowStats(a: Pick<InventoryItem, 'status' | 'listing'>): string {
+export function rowStats(a: Pick<InventoryItem, 'status' | 'listing' | 'deal'>): string {
   switch (a.status) {
     case 'LISTED': {
       const l = a.listing
       if (!l) return 'Sem visualizações ainda'
+      const saves = l.saves !== undefined ? ` · ${l.saves} ${l.saves === 1 ? 'salvo' : 'salvos'}` : ''
       const offers = l.openOffers ? ` · ${l.openOffers} ${l.openOffers === 1 ? 'oferta' : 'ofertas'}` : ''
-      return `${l.views7d.toLocaleString('pt-BR')} views · 7 dias${offers}`
+      return `${l.views7d.toLocaleString('pt-BR')} views · 7 dias${saves}${offers}`
     }
-    case 'IN_DEAL': return 'Negócio em andamento'
+    // before the escrow is paid the work is only reserved (a lapsed Pix/boleto gives it back to the market)
+    case 'IN_DEAL': return a.deal ? `${a.deal.phase === 'OFFER_ACCEPTED' ? 'Reservada' : 'Vendida'} para ${a.deal.buyerName} · ${saleAction(a.deal).label.toLowerCase()}` : 'Negócio em andamento'
     case 'IN_CERTIFICATION': return 'Vincule a etiqueta e assine o certificado'
     case 'AUTHENTICATED': return 'Liste no marketplace para vender'
     case 'DRAFT': return 'Complete o cadastro e peça a certificação'
-    case 'SOLD': return 'Vendida'
+    case 'SOLD': return a.deal ? `Vendida para ${a.deal.buyerName}` : 'Vendida'
     default: return ARTWORK_STATUS_LABELS[a.status]
   }
 }

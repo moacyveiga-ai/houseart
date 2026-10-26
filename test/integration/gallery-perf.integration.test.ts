@@ -113,7 +113,7 @@ async function measure(n: number): Promise<Measure> {
     for (const id of theirs) await expect(listingOf(scope, id)).rejects.toThrow()
     for (const item of invBody.items.filter((i) => mine.includes(i.id))) {
       const l = batch.get(item.id)!
-      expect(item.listing).toEqual({ views7d: l.stats.views7d, openOffers: l.stats.openOffers, paused: l.paused })
+      expect(item.listing).toEqual({ views7d: l.stats.views7d, openOffers: l.stats.openOffers, paused: l.paused, saves: l.stats.saves })
     }
     const views = [...batch.values()].reduce((a, l) => a + l.stats.views7d, 0)
     const c = await counted(() => dayPanel(scope))

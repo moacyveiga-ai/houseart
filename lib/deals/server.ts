@@ -142,6 +142,21 @@ async function loadDeal(id: number) {
   return { ...d, connectAccounts, sellerKind: seller?.kind ?? d.artwork.member.kind }
 }
 
+/** The Acervo row of a reserved/sold work: who bought it and the step the sale is at (one query per batch). */
+export interface ArtworkDealLine { artworkId: number; buyerName: string; phase: DealPhase; sellerSigned: boolean; exception: string | null }
+export async function dealLinesByArtwork(scope: Scope, artworkIds: readonly number[]): Promise<Map<number, ArtworkDealLine>> {
+  const ids = [...new Set(artworkIds)].filter((id) => Number.isInteger(id) && id > 0)
+  const out = new Map<number, ArtworkDealLine>()
+  if (!ids.length) return out
+  const rows = await prisma.deal.findMany({
+    where: { ...memberFilter(scope), artworkId: { in: ids } },
+    orderBy: { createdAt: 'desc' },
+    select: { artworkId: true, phase: true, sellerSignedAt: true, exceptionStatus: true, offer: { select: { buyerName: true } } },
+  })
+  for (const d of rows) if (!out.has(d.artworkId)) out.set(d.artworkId, { artworkId: d.artworkId, buyerName: d.offer.buyerName, phase: d.phase as DealPhase, sellerSigned: !!d.sellerSignedAt, exception: d.exceptionStatus ?? null })
+  return out
+}
+
 export async function sellerDeals(scope: Scope): Promise<DealView[]> {
   const ids = await prisma.deal.findMany({ where: { ...memberFilter(scope) }, select: { id: true }, orderBy: { createdAt: 'desc' }, take: 50 })
   return Promise.all(ids.map((d) => loadDeal(d.id).then(toView)))

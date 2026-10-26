@@ -2,6 +2,7 @@
 // (accept/refuse/counter, all CAS on the status read), the buyer's reply and
 // retraction by token, the negotiator. The floor is read here and dies here.
 import 'server-only'
+import { isSecondaryOrigin } from '@/lib/artworks/domain'
 import { createHash, randomBytes, randomInt } from 'node:crypto'
 import { prisma } from '@/lib/prisma'
 import { canView, memberFilter, memberOfScope, type Scope } from '@/lib/scope/core'
@@ -41,8 +42,9 @@ export async function listArtworkForSale(scope: Scope, artworkId: number, m: { l
   const memberId = memberOfScope(scope)
   const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { id: true, memberId: true, tenantId: true, status: true, seal: true, market: true, acquisitionKind: true, member: { select: { kind: true, tenantId: true } } } })
   if (!a || !canView(scope, a) || !memberId) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
-  // Secondary market: an artwork that already changed hands, or one a collector registered as theirs.
-  const market = a.market === 'SECONDARY' || a.acquisitionKind || a.member.kind === 'COLLECTOR' ? 'SECONDARY' : 'PRIMARY'
+  // Secondary market: an artwork that already changed hands, one a collector registered as theirs, or a
+  // gallery's resale for a collector. A consignment, the gallery's own stock or "outro" is a first sale.
+  const market = a.market === 'SECONDARY' || a.member.kind === 'COLLECTOR' || isSecondaryOrigin(a.acquisitionKind) ? 'SECONDARY' : 'PRIMARY'
   const problems = mandateProblems(m)
   if (problems.length) throw new ArtworkError('BAD_MANDATE', problems.join(' '), 400)
   const verdict = artworkCanTransition(a.status as never, 'LISTED', { seal: a.seal })

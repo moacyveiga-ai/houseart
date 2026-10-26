@@ -78,6 +78,15 @@ export const GALLERY_SOURCE_CARDS: { key: GallerySourceKind; name: string; descr
 ]
 /** Every value `Artwork.acquisitionKind` takes (the collector's and the gallery's). */
 export const ORIGIN_KINDS = [...ACQUISITION_KINDS, ...GALLERY_SOURCE_KINDS] as const
+/**
+ * Whether an origin makes the sale a SECONDARY one (lib/offers listArtworkForSale): everything a collector
+ * registered already changed hands; of the gallery's, only the resale for a collector — a consignment,
+ * the gallery's own stock or "outro" is the first sale, with the primary split and no resale royalty.
+ */
+export function isSecondaryOrigin(kind: string | null | undefined): boolean {
+  if (!kind) return false
+  return (ACQUISITION_KINDS as readonly string[]).includes(kind) || kind === 'COLLECTOR_RESALE'
+}
 
 export const HISTORY_KINDS = ['EXHIBITION', 'PUBLICATION', 'AWARD', 'RESTORATION', 'LOAN'] as const
 export const HISTORY_KIND_LABELS: Record<(typeof HISTORY_KINDS)[number], string> = {

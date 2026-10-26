@@ -6,7 +6,7 @@ import type { RegisterStep } from '@/lib/collectors/register-core'
 
 export const GALLERY_REGISTER_STEPS: readonly RegisterStep[] = [
   { key: 'origin', title: 'De onde vem esta obra?', lead: 'Define a divisão da venda e os documentos pedidos.' },
-  { key: 'artist', title: 'Quem é o artista?', lead: 'Escolha entre os artistas da galeria ou busque na HouseArt. Se não estiver em lugar nenhum, escreva o nome.' },
+  { key: 'artist', title: 'Quem é o artista?', lead: 'Escolha entre os artistas da galeria. Se não estiver na lista, escreva o nome: ele entra na galeria sem contrato.' },
   { key: 'photos', title: 'Fotos guiadas', lead: 'Siga a ordem. A câmera avisa quando luz, foco e ângulo estão bons; depois de cada foto você ajusta luz, cor e recorte.' },
   { key: 'sheet', title: 'Ficha da obra', lead: 'Quanto mais completa, mais rápida a certificação.' },
   { key: 'review', title: 'Revisão', lead: 'Confira antes de concluir. Você pode editar a ficha depois, no Acervo.' },

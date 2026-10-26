@@ -27,9 +27,9 @@ export async function registerGalleryArtwork(scope: Scope, i: RegisterGalleryArt
   let artistId = i.artistId ?? null
   const name = i.artistName?.replace(/\s+/g, ' ').trim() ?? ''
   if (artistId) {
-    // one of the gallery's, or any artist with a public account (the gallery sells for them — consignment)
-    const a = await prisma.artist.findFirst({ where: { id: artistId, OR: [{ tenantId }, { member: { tenantId } }, { memberId: { not: null } }] }, select: { id: true } })
-    if (!a) throw new ArtworkError('ARTIST_NOT_REACHABLE', 'Artista fora da sua galeria.', 404)
+    // one of the gallery's own (the same reach createDraft enforces): a gallery sells only artists it represents
+    const a = await prisma.artist.findFirst({ where: { id: artistId, OR: [{ tenantId }, { member: { tenantId } }] }, select: { id: true } })
+    if (!a) throw new ArtworkError('ARTIST_NOT_REACHABLE', 'Artista fora da sua galeria. Cadastre em Artistas representados.', 404)
   } else {
     if (name.length < 2) throw new ArtworkError('NO_ARTIST', 'Informe o artista da obra.', 422)
     // the gallery's own artist of that name, else a new one of the tenant (no contract yet)

@@ -23,7 +23,7 @@ export default async function GalleryRegisterPage({ searchParams }: { searchPara
   const artists = artistOptionsOf(await representedArtists(scope).catch(() => []))
   const variant: RegisterVariant = {
     kind: 'gallery', steps: GALLERY_REGISTER_STEPS, originCards: GALLERY_SOURCE_CARDS, originLabel: 'De onde vem esta obra',
-    createUrl: '/api/gallery/artworks', resumeHref: (d) => `/artworks/register?draft=${d}`, exitHref: '/artworks', exitLabel: 'Ver no acervo',
+    createUrl: '/api/gallery/artworks', resumeHrefBase: '/artworks/register?draft=', exitHref: '/artworks', exitLabel: 'Ver no acervo',
     nextSteps: GALLERY_NEXT_STEPS, provenance: GALLERY_PROVENANCE, artists,
   }
   // keyed by the draft: going from one draft to another (or to a new register) starts the screen over

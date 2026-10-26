@@ -36,18 +36,19 @@ export interface RegisterVariant {
   originLabel: string
   /** POST that creates the draft: body { acquisitionKind, artistId? | artistName } → { id } */
   createUrl: string
-  resumeHref: (id: number) => string
+  /** the URL that resumes a draft, the id appended (data, never a function: the page is a Server Component) */
+  resumeHrefBase: string
   exitHref: string
   exitLabel: string
   nextSteps: readonly { title: string; sub: string; icon: string; done: boolean }[]
   provenance: { title: string; from: { label: string; placeholder: string }; year: { label: string; placeholder: string }; paid: { label: string; note: string }; note: { label: string; placeholder: string } }
-  /** the artists to offer before any search (the gallery's represented ones); the collector has none */
+  /** the gallery's own artists, offered as the list (the public search is the collector's: a gallery sells only artists it represents — Artistas representados adds one) */
   artists?: { id: number; name: string; sub: string }[]
 }
 
 const COLLECTOR_VARIANT: RegisterVariant = {
   kind: 'collector', steps: REGISTER_STEPS, originCards: ACQUISITION_KIND_CARDS, originLabel: 'Origem da obra',
-  createUrl: '/api/collector/artworks', resumeHref: (id) => `/wallet/register?draft=${id}`, exitHref: '/wallet', exitLabel: 'Ver na coleção',
+  createUrl: '/api/collector/artworks', resumeHrefBase: '/wallet/register?draft=', exitHref: '/wallet', exitLabel: 'Ver na coleção',
   nextSteps: NEXT_STEPS,
   provenance: { title: 'Aquisição', from: { label: 'De quem você adquiriu', placeholder: 'Galeria, leilão, pessoa ou família' }, year: { label: 'Ano da aquisição', placeholder: 'Ex.: 2019' }, paid: { label: 'Valor pago', note: 'fica só com você' }, note: { label: 'Observações', placeholder: 'História da obra, exposições, restauros anteriores…' } },
 }
@@ -159,7 +160,7 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
     setBusy(false)
     if (!res.ok || typeof data.id !== 'number') { creating.current = false; setError(String(data.error ?? 'Não foi possível começar o cadastro agora.')); return }
     setId(data.id); setPicked(artistName); setStep(2)
-    router.replace(V.resumeHref(data.id), { scroll: false })
+    router.replace(`${V.resumeHrefBase}${data.id}`, { scroll: false })
   }
 
   async function patch(body: Record<string, unknown>): Promise<boolean> {
@@ -257,7 +258,7 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
   }
 
   const S = V.steps[step]!
-  const canGo = step === 0 ? !!kind : step === 1 ? artistName.length >= 2 : step === 2 ? hasFront : true
+  const canGo = step === 0 ? !!kind : step === 1 ? (V.kind === 'gallery' && !free ? pickedId != null : artistName.length >= 2) : step === 2 ? hasFront : true
   const cta = step === 1 && !id ? (busy ? 'Começando…' : 'Continuar para as fotos') : step === 2 ? (hasFront ? 'Continuar para a ficha' : 'Falta a foto da frente') : step === 3 ? 'Revisar' : step === 4 ? (busy ? 'Concluindo…' : 'Concluir cadastro') : 'Continuar'
   const bad = (v: boolean) => (tried && !v ? ' ha-reg__field--bad' : '')
 
@@ -287,10 +288,10 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
 
         {step === 1 && id ? <span className="ha-reg__picked"><Icon name="check_circle" size={18} filled /><b>{picked}</b><span className="ha-reg__sugg-s">Para outro artista, comece um novo cadastro.</span></span> : null}
         {step === 1 && !id ? (<>
-          {V.artists?.length && !free && !picked && term.length < 2 ? (
+          {V.kind === 'gallery' && V.artists?.length && !free && !picked ? (
             <div className="ha-reg__sugg" role="listbox" aria-label="Artistas da galeria">
               {V.artists.map((a) => (
-                <button type="button" key={a.id} role="option" aria-selected={false} className="ha-reg__sugg-row" onClick={() => { setPicked(a.name); setPickedId(a.id); setQ(a.name) }}>
+                <button type="button" key={a.id} role="option" aria-selected={false} className="ha-reg__sugg-row" onClick={() => { setPicked(a.name); setPickedId(a.id) }}>
                   <span className="ha-reg__av">{initialsOf(a.name)}</span>
                   <span className="ha-stack" style={{ gap: 2 }}><span className="ha-reg__sugg-n">{a.name}</span><span className="ha-reg__sugg-s">{a.sub}</span></span>
                   <Icon name="chevron_right" size={22} />
@@ -298,13 +299,15 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
               ))}
             </div>
           ) : null}
-          {!free ? (
+          {V.kind === 'gallery' && !V.artists?.length && !free ? <span className="ha-reg__sugg-s">A galeria ainda não tem artistas cadastrados. Escreva o nome abaixo, ou cadastre em Artistas representados.</span> : null}
+          {V.kind === 'gallery' && picked && !free ? <span className="ha-reg__picked"><Icon name="check_circle" size={18} filled /><b>{picked}</b><button type="button" className="ha-link ha-link--quiet ha-sm" onClick={() => { setPicked(''); setPickedId(null); setQ('') }}>Trocar</button></span> : null}
+          {V.kind === 'collector' && !free ? (
             <label className="ha-reg__field"><span className="ha-reg__field-k">Artista</span>
-              <span className="ha-reg__search"><Icon name="search" size={20} /><input className="ha-input" value={q} placeholder={V.artists?.length ? 'Buscar outro artista na HouseArt' : 'Nome do artista'} autoComplete="off" onChange={(e) => { setQ(e.target.value); setPicked(''); setPickedId(null) }} /></span>
+              <span className="ha-reg__search"><Icon name="search" size={20} /><input className="ha-input" value={q} placeholder="Nome do artista" autoComplete="off" onChange={(e) => { setQ(e.target.value); setPicked(''); setPickedId(null) }} /></span>
             </label>
           ) : null}
-          {picked && !free ? <span className="ha-reg__picked"><Icon name="check_circle" size={18} filled /><b>{picked}</b><button type="button" className="ha-link ha-link--quiet ha-sm" onClick={() => { setPicked(''); setPickedId(null); setQ('') }}>Trocar</button></span> : null}
-          {!free && !picked && term.length >= 2 ? (
+          {V.kind === 'collector' && picked && !free ? <span className="ha-reg__picked"><Icon name="check_circle" size={18} filled /><b>{picked}</b><button type="button" className="ha-link ha-link--quiet ha-sm" onClick={() => { setPicked(''); setPickedId(null); setQ('') }}>Trocar</button></span> : null}
+          {V.kind === 'collector' && !free && !picked && term.length >= 2 ? (
             <div className="ha-reg__sugg" role="listbox" aria-label="Sugestões">
               {searching && hits.length === 0 ? <span className="ha-reg__sugg-row ha-muted">Buscando…</span> : null}
               {!searching && hits.length === 0 ? <span className="ha-reg__sugg-row ha-muted">Nenhum artista com esse nome na HouseArt.</span> : null}

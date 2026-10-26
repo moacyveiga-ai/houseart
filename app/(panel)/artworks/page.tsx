@@ -5,6 +5,7 @@ import { categoryLabel, ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, 
 import { Chip } from '@/components/ds/Chip'
 import { Icon } from '@/components/ds/Icon'
 import { listingsOf } from '@/lib/gallery/listing-server'
+import { dealLinesByArtwork } from '@/lib/deals/server'
 import { InventoryList } from '@/components/gallery/InventoryList'
 import { chipCounts, chipKey, filterInventory, rowPrice, rowStatus, type InventoryItem } from '@/components/gallery/inventory-core'
 import { ArtworkPanel, type ArtworkPanelData } from '@/components/gallery/ArtworkPanel'
@@ -50,10 +51,11 @@ async function panelOf(scope: Scope, id: number, userId: number) {
 async function GalleryInventory({ scope, userId, chip, q, openId }: { scope: Scope; userId: number; chip: string; q: string; openId: number | null }) {
   const { items } = await listArtworks(scope, { filter: 'all' })
   const listings = await listingsOf(scope, items.filter((a) => a.status === 'LISTED').map((a) => a.id))
+  const deals = await dealLinesByArtwork(scope, items.filter((a) => a.status === 'IN_DEAL' || a.status === 'SOLD').map((a) => a.id))
   const all: InventoryItem[] = []
   items.forEach((a) => {
     const listing = a.status === 'LISTED' ? listings.get(a.id) ?? null : null
-    all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused } : null })
+    all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused, saves: listing.stats.saves } : null, deal: deals.get(a.id) ?? null })
   })
   const base = `/artworks?filter=${chip}${q ? `&q=${encodeURIComponent(q)}` : ''}`
   const panel = openId ? await panelOf(scope, openId, userId) : null

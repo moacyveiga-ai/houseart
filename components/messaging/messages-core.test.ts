@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { bubbleTime, conversationIdOfPath, mergeMessages, roleOfProfile, touchRow, type ConversationView, type MessageView } from './messages-core'
+import { bubbleTime, COLLECTOR_SELLER_REPLIES, conversationIdOfPath, headerSubOf, mergeMessages, QUICK_REPLIES, quickRepliesOf, roleOfProfile, touchRow, type ConversationView, type MessageView } from './messages-core'
 
 const m = (id: number): MessageView => ({ id, mine: false, kind: 'TEXT', body: `m${id}`, at: '2026-10-22T13:00:00.000Z', offerId: null })
 const row = (id: number, unread = 0): ConversationView => ({ id, artworkId: null, artworkTitle: null, artworkPublicId: null, artworkCoverUrl: null, other: { id: 9, name: 'Ana', initials: 'A', sub: 'Galeria' }, preview: 'p', when: 'agora', unread })
 
 describe('messages-core', () => {
+  it('quick replies follow my side in the conversation, not my profile', () => {
+    expect(quickRepliesOf('buyer', 'buyer')).toBe(QUICK_REPLIES.buyer)
+    expect(quickRepliesOf('buyer', 'seller')).toBe(COLLECTOR_SELLER_REPLIES) // a collector selling their own work
+    expect(quickRepliesOf('seller', 'seller')).toBe(QUICK_REPLIES.seller)
+    expect(quickRepliesOf('seller', 'buyer')).toBe(QUICK_REPLIES.buyer) // gallery staff asking about someone else's work
+    expect(quickRepliesOf('buyer', undefined)).toBe(QUICK_REPLIES.buyer)
+    expect(headerSubOf({ id: 1, name: 'G', initials: 'G', sub: 'Galeria', verified: true })).toBe('Galeria · verificado pela HouseArt')
+    expect(headerSubOf({ id: 1, name: 'G', initials: 'G', sub: 'Colecionador' })).toBe('Colecionador')
+  })
+
   it('bubbleTime: today = hh:mm, yesterday prefixed, older with the date (America/Bahia)', () => {
     const now = new Date('2026-10-22T18:00:00.000Z')
     expect(bubbleTime('2026-10-22T13:12:00.000Z', now)).toBe('10:12')

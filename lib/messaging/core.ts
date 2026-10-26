@@ -58,3 +58,29 @@ export function whenLabel(at: Date, now = new Date()): string {
   if (d < 7) return `há ${d} dias`
   return at.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Bahia' })
 }
+
+/** Which side of the counter I am in THIS conversation: the artwork is mine (or my gallery's) → seller. */
+export function sideOfConversation(input: { artworkMemberUserId: number | null; artworkTenantId: number | null; me: number; myTenantId: number | null; myMemberKind: string | null }): 'buyer' | 'seller' {
+  if (input.artworkMemberUserId != null && input.artworkMemberUserId === input.me) return 'seller'
+  // the gallery staff answer for any artwork of their gallery (a collector's tenant is their own)
+  if (input.myMemberKind === 'GALLERY_STAFF' && input.myTenantId != null && input.myTenantId === input.artworkTenantId) return 'seller'
+  return 'buyer'
+}
+
+/** "verificado pela HouseArt": an active member (artist, gallery, advisor) or a collector the team confirmed or who proved e-mail and phone. */
+export function verifiedByHouse(u: { memberKind: string | null; memberStatus: string | null; collectorVerifiedAt: Date | null; emailVerifiedAt: Date | null; phoneVerifiedAt: Date | null }): boolean {
+  if (u.memberKind && u.memberKind !== 'COLLECTOR' && u.memberStatus === 'ACTIVE') return true
+  return !!u.collectorVerifiedAt || (!!u.emailVerifiedAt && !!u.phoneVerifiedAt)
+}
+
+/** Denunciar (handoff Web/App Colecionador › Conversa › flag): the reasons the person picks. */
+export const REPORT_REASONS = [
+  { key: 'OFF_PLATFORM', label: 'Pediu contato ou pagamento fora da HouseArt' },
+  { key: 'SCAM', label: 'Parece golpe ou obra falsa' },
+  { key: 'ABUSE', label: 'Ofensa ou assédio' },
+  { key: 'OTHER', label: 'Outro motivo' },
+] as const
+export type ReportReason = (typeof REPORT_REASONS)[number]['key']
+export const REPORT_NOTE_MAX = 500
+export const isReportReason = (v: unknown): v is ReportReason => typeof v === 'string' && REPORT_REASONS.some((r) => r.key === v)
+export const reportReasonLabel = (k: ReportReason) => REPORT_REASONS.find((r) => r.key === k)!.label

@@ -14,7 +14,7 @@ export { REVIEW_KINDS, REVIEW_KIND_LABELS, type ReviewKind }
 export async function openReviewItem(opt: { kind: ReviewKind; artworkId?: number | null; tenantId?: number | null; reason: string; refId?: number | null }) {
   return totalScope('review:open', async () => {
     // One open item per (kind, artwork) — per check for duplicates: two lookalikes are two decisions.
-    const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN', ...(opt.kind === 'DUPLICATE' && opt.refId != null ? { refId: opt.refId } : {}) } })
+    const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN', ...((opt.kind === 'DUPLICATE' || opt.kind === 'MESSAGE_REPORT') && opt.refId != null ? { refId: opt.refId } : {}) } })
     if (existing) return existing
     return prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null } })
   })

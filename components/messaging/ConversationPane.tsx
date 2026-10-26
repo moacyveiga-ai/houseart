@@ -7,7 +7,9 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type Keyboard
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { CONTACT_GUARD, hasContactLeak, MESSAGE_MAX } from '@/lib/messaging/core'
-import { bubbleTime, lastIdOf, mergeMessages, QUICK_REPLIES, type ConversationView, type MessageRole, type MessageView } from './messages-core'
+import { Modal } from '@/components/ds/Modal'
+import { REPORT_NOTE_MAX, REPORT_REASONS, type ReportReason } from '@/lib/messaging/core'
+import { bubbleTime, headerSubOf, lastIdOf, mergeMessages, quickRepliesOf, type ConversationView, type MessageRole, type MessageView } from './messages-core'
 
 const POLL_MS = 5000
 
@@ -29,6 +31,8 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
   const [text, setText] = useState('')
   const [guard, setGuard] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLInputElement>(null)
   const changed = useRef(onChanged)
@@ -94,17 +98,20 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
           {h ? (
             <>
               <span className="ha-msg-avatar ha-msg-avatar--sm" aria-hidden="true">{h.other.initials}</span>
-              <span className="ha-msg-conv__who"><span className="ha-msg-conv__name">{h.other.name}</span><span className="ha-msg-conv__sub">{h.other.sub}</span></span>
+              <span className="ha-msg-conv__who"><span className="ha-msg-conv__name">{h.other.name}</span><span className="ha-msg-conv__sub">{h.other.verified ? <Icon name="verified" size={14} filled /> : null}{headerSubOf(h.other)}</span></span>
+              {data ? <button type="button" className="ha-msg-iconbtn ha-msg-conv__flag" onClick={() => setReporting(true)} aria-label={reported ? 'Denúncia enviada' : `Denunciar ${h.other.name}`} disabled={reported}><Icon name="flag" size={22} filled={reported} /></button> : null}
             </>
           ) : <span className="ha-msg-conv__who"><span className="ha-msg-conv__name">Conversa</span></span>}
         </div>
         {h?.artworkPublicId ? (
-          <Link href={`/e/artwork/${h.artworkPublicId}`} className="ha-msg-conv__art">
-            <span className="ha-msg-thumb ha-msg-thumb--sm" aria-hidden="true">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
-              {h.artworkCoverUrl ? <img src={h.artworkCoverUrl} alt="" /> : <Icon name="imagesmode" size={18} />}</span>
-            <span className="ha-msg-conv__artcol"><i className="ha-msg-conv__arttitle">{h.artworkTitle}</i><span className="ha-msg-conv__artsub">{h.artworkPublicId}</span></span>
-            <span className="ha-msg-conv__see"><Icon name="open_in_new" size={16} />Ver obra</span>
-          </Link>
+          <div className="ha-msg-conv__art">
+            <Link href={`/e/artwork/${h.artworkPublicId}`} className="ha-msg-conv__artlink">
+              <span className="ha-msg-thumb ha-msg-thumb--sm" aria-hidden="true">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
+                {h.artworkCoverUrl ? <img src={h.artworkCoverUrl} alt="" /> : <Icon name="imagesmode" size={18} />}</span>
+              <span className="ha-msg-conv__artcol"><i className="ha-msg-conv__arttitle">{h.artworkTitle}</i><span className="ha-msg-conv__artsub">{h.artworkPrice ?? h.artworkPublicId}</span></span>
+            </Link>
+            {h.canOffer ? <Link href={`/e/artwork/${h.artworkPublicId}/offer`} className="ha-btn ha-btn--outline ha-btn--sm">Ofertar</Link> : <Link href={`/e/artwork/${h.artworkPublicId}`} className="ha-msg-conv__see"><Icon name="open_in_new" size={16} />Ver obra</Link>}
+          </div>
         ) : null}
       </header>
 
@@ -118,13 +125,53 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
       </div>
 
       <div className="ha-msg-quick" aria-label="Respostas rápidas">
-        {QUICK_REPLIES[role].map((q) => <button key={q} type="button" className="ha-msg-quick__chip" disabled={sending || !data} onClick={() => void send(q)}>{q}</button>)}
+        {quickRepliesOf(role, data?.header.myRole).map((q) => <button key={q} type="button" className="ha-msg-quick__chip" disabled={sending || !data} onClick={() => void send(q)}>{q}</button>)}
       </div>
       {guard ? <div className="ha-msg-guard" role="alert"><Icon name="shield" size={17} />{guard}</div> : null}
       <form className="ha-msg-composer" onSubmit={onSubmit}>
         <input ref={input} className="ha-msg-composer__input" value={text} onChange={(e) => onInput(e.target.value)} onKeyDown={onKey} placeholder="Mensagem" aria-label="Mensagem" maxLength={MESSAGE_MAX} disabled={!data} autoComplete="off" />
         <button type="submit" className="ha-msg-composer__send" aria-label="Enviar" disabled={sending || !data || !text.trim() || !!guard}><Icon name="send" size={20} /></button>
       </form>
+      {reporting && h ? <ReportSheet conversationId={conversationId} name={h.other.name} onClose={() => setReporting(false)} onDone={() => { setReporting(false); setReported(true) }} /> : null}
     </section>
+  )
+}
+
+/** Denunciar: the reason (one of four), an optional note, and the promise of what happens next. */
+function ReportSheet({ conversationId, name, onClose, onDone }: { conversationId: number; name: string; onClose: () => void; onDone: () => void }) {
+  const [reason, setReason] = useState<ReportReason | null>(null)
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [sent, setSent] = useState(false)
+  async function submit() {
+    if (!reason || busy) return
+    setBusy(true); setError(null)
+    const r = await fetch(`/api/messages/${conversationId}/report`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reason, note }) }).catch(() => null)
+    setBusy(false)
+    if (!r || !r.ok) { const j = (await r?.json().catch(() => ({}))) as { error?: string } | undefined; setError(j?.error ?? 'Não foi possível enviar a denúncia.'); return }
+    setSent(true)
+  }
+  return (
+    <Modal open title={sent ? 'Denúncia enviada' : `Denunciar ${name}`} onClose={sent ? onDone : onClose}>
+      {sent ? (
+        <div className="ha-msg-report">
+          <p className="ha-sm">A equipe da HouseArt vai ler a denúncia e falar com a pessoa se ela proceder. A conversa continua aberta para você.</p>
+          <button type="button" className="ha-btn ha-btn--primary" onClick={onDone}>Entendi</button>
+        </div>
+      ) : (
+        <div className="ha-msg-report">
+          <div className="ha-msg-report__reasons" role="radiogroup" aria-label="Motivo">
+            {REPORT_REASONS.map((r) => <button key={r.key} type="button" role="radio" aria-checked={reason === r.key} className={`ha-msg-report__reason${reason === r.key ? ' ha-msg-report__reason--on' : ''}`} onClick={() => setReason(r.key)}>{r.label}</button>)}
+          </div>
+          <label className="ha-msg-report__label">Conte o que aconteceu · opcional
+            <textarea className="ha-input ha-msg-report__note" rows={3} maxLength={REPORT_NOTE_MAX} value={note} onChange={(e) => setNote(e.target.value)} />
+          </label>
+          <p className="ha-sm ha-muted">Só a equipe vê a denúncia. A outra pessoa não é avisada de quem denunciou.</p>
+          {error ? <p className="ha-msg-report__error" role="alert">{error}</p> : null}
+          <button type="button" className="ha-btn ha-btn--primary" disabled={!reason || busy} onClick={submit}>{busy ? 'Enviando…' : 'Enviar denúncia'}</button>
+        </div>
+      )}
+    </Modal>
   )
 }

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
+import { TagReader } from '@/components/ds/TagReader'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { SerializableDeal as Serializable } from './deal-view'
 import { EscrowPay } from '@/components/payments/EscrowPay'
@@ -11,11 +12,16 @@ type Side = 'seller' | 'buyer'
 export function DealTimeline({ deal, side }: { deal: Serializable; side: Side }) {
   const [toast, setToast] = useState('')
   const [ship, setShip] = useState({ carrier: '', tracking: '', insurer: '' })
+  const [busy, setBusy] = useState(false)
   async function post(path: string, body?: unknown) {
-    const res = await fetch(`/api/deals/${deal.id}/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) })
-    const data = await res.json().catch(() => ({})) as { error?: string }
-    setToast(res.ok ? 'Registrado.' : data.error ?? 'Não foi possível registrar.')
-    if (res.ok) window.setTimeout(() => window.location.reload(), 700)
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/deals/${deal.id}/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) })
+      const data = await res.json().catch(() => ({})) as { error?: string }
+      setToast(res.ok ? (path === 'confirm-delivery' ? 'Leitura válida · escritura transferida' : 'Registrado.') : data.error ?? 'Não foi possível registrar.')
+      if (res.ok) { window.setTimeout(() => window.location.reload(), 700); return }
+    } catch { setToast('Sem conexão. Tente de novo.') }
+    setBusy(false)
   }
   const amount = BigInt(deal.amountCents)
   const shipping = BigInt(deal.shippingCents)
@@ -71,19 +77,24 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
           {deal.exception === 'CANCELLED' ? <p className="ha-muted">Negócio cancelado: o pagamento não foi identificado no prazo e a reserva da obra foi desfeita.</p> : null}
           {deal.phase === 'ESCROW' && !deal.buyerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'ESCROW' && deal.buyerSigned && !deal.sellerSigned ? <p className="ha-muted">Aguardando a assinatura do vendedor.</p> : null}
-          {deal.phase === 'SHIPPING' || done ? (
-            <div className={`ha-callout${done ? ' ha-callout--ok' : ''}`}>
-              <Icon name={done ? 'check' : 'contactless'} />
+          {/* Compras › cartão de recebimento (HouseArt Web App.dc.html: "A obra chegou?" → "Escritura emitida em seu nome") */}
+          {done ? (
+            <div className="ha-callout ha-callout--ok">
+              <Icon name="check" />
               <div className="ha-stack ha-stack--3">
                 <div>
-                  <b>{done ? 'A obra é sua' : 'Entrega · toque na etiqueta'}</b>
-                  <p className="ha-sm">{done ? 'Escritura emitida em seu nome. O pagamento foi liberado ao vendedor e a obra está na sua coleção.' : 'Encoste o celular no verso para confirmar. A leitura confirma a posse: o pagamento é liberado ao vendedor e a escritura passa para o seu nome no mesmo instante.'}</p>
+                  <b>Escritura emitida em seu nome</b>
+                  <p className="ha-sm">A obra entrou na sua carteira e o pagamento foi liberado ao vendedor.</p>
                 </div>
-                {done
-                  ? <a href="/wallet" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="collections" size={18} />Ver na coleção</a>
-                  : <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" onClick={() => post('confirm-delivery')}><Icon name="contactless" size={18} />Confirmar com o toque na etiqueta</button>}
+                <a href="/wallet" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="collections" size={18} />Ver na coleção</a>
               </div>
             </div>
+          ) : deal.phase === 'SHIPPING' ? (
+            <TagReader state="confirm" title="A obra chegou?" subtitle="Abra o app e encoste o celular na etiqueta do verso. A leitura confirma a posse: o pagamento é liberado ao vendedor e a escritura passa para o seu nome no mesmo instante.">
+              <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => { void post('confirm-delivery') }}><Icon name="contactless" size={18} />Confirmar recebimento</button>
+            </TagReader>
+          ) : deal.phase === 'DELIVERY' || deal.phase === 'TRANSFER' ? (
+            <div className="ha-callout"><Icon name="contract" /><p className="ha-sm" style={{ margin: 0 }}>Leitura válida · posse confirmada. A escritura está sendo emitida em seu nome.</p></div>
           ) : null}
         </div>
       )}

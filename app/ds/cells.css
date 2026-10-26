@@ -178,7 +178,7 @@
 .ha-ticker b { color: var(--ha-paper-50); font-weight: 600; }
 .ha-ticker .ha-ticker__delta { color: var(--ha-ink-300); }
 .ha-topbar { height: 64px; display: flex; align-items: center; gap: var(--ha-space-6); padding: 0 var(--ha-space-6); border-bottom: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); position: sticky; top: 0; z-index: 20; }
-.ha-topbar__brand { width: 192px; flex: none; display: flex; align-items: center; gap: var(--ha-space-2); color: var(--ha-fg); text-decoration: none; }
+.ha-topbar__brand { width: 192px; /* the wordmark without the symbol, 24 px, as the apps */ flex: none; display: flex; align-items: center; gap: var(--ha-space-2); color: var(--ha-fg); text-decoration: none; }
 .ha-topbar__search { flex: 0 1 420px; min-width: 0; display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-sm); color: var(--ha-fg-muted); font-size: var(--ha-text-body-sm); white-space: nowrap; overflow: hidden; }
 .ha-topbar__search .ha-icon { font-size: 20px; }
 .ha-topbar__right { margin-left: auto; display: flex; align-items: center; gap: var(--ha-space-4); flex: none; }

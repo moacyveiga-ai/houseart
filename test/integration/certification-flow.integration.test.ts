@@ -96,9 +96,15 @@ describe('certification flow', () => {
     // contestation → queue → approve → revoked + disputed
     expect(await contestCertificate(publicId, 'Herdeiro alega titularidade anterior')).toBe(true)
     const q = await reviewQueue()
-    expect(q.items.map((i) => i.kind)).toEqual(['CONTESTATION'])
+    // the first submission of the account opened "Emissor novo" too (audit 2026-10-25)
+    expect(q.items.map((i) => i.kind).sort()).toEqual(['CONTESTATION', 'NEW_ISSUER'])
+    const contest = q.items.find((i) => i.kind === 'CONTESTATION')!
+    expect(q.kpis.contestedNote).toMatch(/% das obras$/)
     expect((await publicCertificate(publicId))?.status).toBe('CONTESTED')
-    await decideReviewItem(q.items[0].id, 'APPROVED', staff)
+    // revoking a certificate needs a written reason
+    await expect(decideReviewItem(contest.id, 'APPROVED', staff)).rejects.toMatchObject({ name: 'ReviewDecisionError' })
+    await decideReviewItem(contest.id, 'APPROVED', staff, 'Documentos do herdeiro conferidos')
+    expect((await prisma.reviewQueueItem.findUniqueOrThrow({ where: { id: contest.id } })).decisionNote).toBe('Documentos do herdeiro conferidos')
     const after = await publicCertificate(publicId)
     expect(after).toMatchObject({ status: 'REVOKED', artworkStatus: 'DISPUTED' })
     expect(after!.events.map((e) => e.kind)).toEqual(['CREATED', 'CERTIFIED', 'DISPUTED'])
@@ -121,9 +127,29 @@ describe('certification flow', () => {
     const read = await recordPublicRead(publicId, { ...mockSunMessage(marker.uid, 2), tt: true }, 'h')
     expect(read.tamper).toBe(true)
     const q = await reviewQueue()
-    expect(q.items[0]).toMatchObject({ kind: 'MARKER_REMOVED' })
-    await decideReviewItem(q.items[0].id, 'APPROVED', staff)
+    const removed = q.items.find((i) => i.kind === 'MARKER_REMOVED')!
+    expect(removed).toBeTruthy()
+    await decideReviewItem(removed.id, 'APPROVED', staff, 'Leitura com violação confirmada')
     expect((await prisma.physicalMarker.findUniqueOrThrow({ where: { id: marker.id } })).status).toBe('REVOKED')
     expect((await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).publicId).toBeNull()
+  }, 60_000)
+
+  it('the first submission of an account opens "Emissor novo"; rejecting sends the artwork back to draft', async () => {
+    const staff = { userId: s.staff.userId, name: 'Equipe' }
+    await asPanel(s.b.userId, async ({ scope, user }) => {
+      await uploadMedia(scope, s.b.artworkId, 'FRONT_COLOR_CARD', { bytes: await png({ r: 5, g: 6, b: 7 }), declaredType: 'image/png' })
+      await uploadMedia(scope, s.b.artworkId, 'BACK', { bytes: await png({ r: 7, g: 6, b: 5 }), declaredType: 'image/png' })
+      await prisma.artwork.update({ where: { id: s.b.artworkId }, data: { technique: 'x' } })
+      await submitForCertification(scope, s.b.artworkId, { userId: user.id, name: user.name })
+    }, 'ARTIST')
+    const q = await reviewQueue()
+    const item = q.items.find((i) => i.kind === 'NEW_ISSUER')!
+    expect(item).toMatchObject({ artwork: { id: s.b.artworkId }, reason: 'Primeiro envio desta conta · conferir portfólio' })
+    expect(item.ago).toMatch(/^(agora|há \d+ min)$/)
+    await expect(decideReviewItem(item.id, 'REJECTED', staff)).rejects.toMatchObject({ name: 'ReviewDecisionError' })
+    await decideReviewItem(item.id, 'REJECTED', staff, 'Portfólio sem obras do artista')
+    expect(await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).toMatchObject({ status: 'DRAFT', seal: 'NONE' })
+    // a decided item is not decided twice
+    expect(await decideReviewItem(item.id, 'APPROVED', staff, 'x')).toBeNull()
   }, 60_000)
 })

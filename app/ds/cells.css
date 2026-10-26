@@ -501,3 +501,46 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-status__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ha-space-3); margin-top: var(--ha-space-3); }
 .ha-status__code { margin: var(--ha-space-2) 0 0; }
 .ha-status-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-4); padding: var(--ha-space-12) var(--ha-space-4); background: var(--ha-bg); }
+
+/* visually hidden, still read by screen readers */
+.ha-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Admin · Obras e certificados › Fila de revisão (HouseArt Web App.dc.html) */
+.ha-review { overflow-x: auto; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-review__inner { min-width: 860px; }
+.ha-review__head, .ha-review__row { display: grid; grid-template-columns: 130px minmax(220px, 2fr) minmax(200px, 2fr) 110px 200px; gap: var(--ha-space-4); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-review__head { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-500); text-transform: uppercase; letter-spacing: .08em; }
+.ha-review__row { font-size: var(--ha-text-body-sm); }
+.ha-review__row:last-child { border-bottom: 0; }
+.ha-review__kind { justify-self: start; display: inline-block; font-size: var(--ha-text-caption); font-weight: 600; padding: 2px var(--ha-space-2); border-radius: var(--ha-radius-sm); }
+.ha-review__work { display: flex; gap: var(--ha-space-3); align-items: center; min-width: 0; }
+.ha-review__thumb { width: 40px; height: 40px; flex: none; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-1); }
+.ha-review__thumb img { max-width: 100%; max-height: 100%; }
+.ha-review__title { font-family: var(--ha-font-display); color: var(--ha-ink-900); text-decoration: none; }
+a.ha-review__title:hover { text-decoration: underline; }
+.ha-review__who { display: block; font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-review__reason { color: var(--ha-ink-700); }
+.ha-review__ago { color: var(--ha-ink-500); font-variant-numeric: tabular-nums; }
+.ha-review__actions { justify-self: end; display: flex; gap: var(--ha-space-2); }
+.ha-review__done { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-review__empty { padding: var(--ha-space-8) var(--ha-space-4); color: var(--ha-ink-500); font-size: var(--ha-text-body-sm); }
+
+/* Admin · Etiquetas (HouseArt Web App.dc.html) */
+.ha-markers__search { display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-ink-300); border-radius: var(--ha-radius-sm); color: var(--ha-ink-500); min-width: min(260px, 100%); }
+.ha-markers__search:focus-within { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
+.ha-markers { overflow-x: auto; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-markers__inner { min-width: 720px; }
+.ha-markers__head, .ha-markers__row { display: grid; grid-template-columns: 110px 90px minmax(200px, 2fr) minmax(180px, 1.4fr) 130px; gap: var(--ha-space-4); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-markers__head { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-500); text-transform: uppercase; letter-spacing: .08em; }
+.ha-markers__row { font-size: var(--ha-text-body-sm); }
+.ha-markers__row:last-child { border-bottom: 0; }
+.ha-markers__num { font-variant-numeric: tabular-nums; }
+.ha-markers__bar { display: flex; align-items: center; gap: var(--ha-space-3); }
+.ha-markers__track { flex: 1; height: 6px; border-radius: var(--ha-radius-full); background: var(--ha-paper-200); overflow: hidden; }
+.ha-markers__track > span { display: block; height: 100%; background: var(--ha-ink-900); border-radius: inherit; }
+.ha-markers__empty { padding: var(--ha-space-8) var(--ha-space-4); color: var(--ha-ink-500); font-size: var(--ha-text-body-sm); }
+.ha-markers__order { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+.ha-markers__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--ha-space-4); align-items: start; }
+.ha-markers__uids { grid-column: 1 / -1; }
+.ha-select--sm { width: auto; padding: var(--ha-space-1) var(--ha-space-3); font-size: var(--ha-text-body-sm); }
+.ha-house__row { grid-template-columns: 100px minmax(140px, 1.2fr) 100px minmax(200px, 2fr) 120px 120px; }

@@ -45,9 +45,10 @@ export async function createBatch(opt: { code: string; quantity: number; destina
 
 export async function adminMarkersView(query: string | null) {
   return totalScope('markers:admin', async () => {
-    const [stock, linked, removedToday, batches] = await Promise.all([
+    const [stock, linked, shipped, removedToday, batches] = await Promise.all([
       prisma.physicalMarker.count({ where: { status: 'STOCK' } }),
       prisma.physicalMarker.count({ where: { status: 'LINKED' } }),
+      prisma.physicalMarker.count({ where: { status: 'SHIPPED' } }),
       prisma.markerRead.count({ where: { tamperFlag: true, createdAt: { gte: new Date(Date.now() - 24 * 3600_000) } } }),
       prisma.markerBatch.findMany({ orderBy: { code: 'desc' }, take: 50, include: { _count: { select: { markers: { where: { status: 'LINKED' } } } } } }),
     ])
@@ -60,7 +61,7 @@ export async function adminMarkersView(query: string | null) {
           : null
       : null
     return {
-      kpis: { stock, linked, removedToday },
+      kpis: { stock, linked, removedToday, newBatches: batches.filter((b) => b.status === 'NEW').length, linkedShare: linked + shipped ? Math.round((linked / (linked + shipped)) * 1000) / 10 : null },
       batches: batches.map((b) => ({ id: b.id, code: b.code, quantity: b.quantity, destination: b.destination, linked: b._count.markers, status: b.status })),
       found: found ? { uid: found.uid, status: found.status, artworkId: found.artworkId, batch: found.batch.code, readCounter: found.readCounter } : null,
     }
@@ -86,7 +87,17 @@ export async function shipOrder(orderId: number, batchId: number, actor: { userI
 }
 
 export async function listOrdersForStaff() {
-  return totalScope('markers:orders', () => prisma.markerOrder.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }))
+  return totalScope('markers:orders', async () => {
+    const orders = await prisma.markerOrder.findMany({ orderBy: { createdAt: 'desc' }, take: 100 })
+    const members = await prisma.member.findMany({ where: { id: { in: [...new Set(orders.map((o) => o.memberId))] } }, select: { id: true, displayName: true, tenant: { select: { name: true, kind: true } } } })
+    const byId = new Map(members.map((m) => [m.id, m]))
+    return orders.map((o) => {
+      const m = byId.get(o.memberId)
+      // who asked: the member, and the gallery when the account is a gallery
+      const who = m ? (m.tenant.kind === 'GALLERY' && m.tenant.name !== m.displayName ? `${m.displayName} · ${m.tenant.name}` : m.displayName) : 'Conta removida'
+      return { ...o, who }
+    })
+  })
 }
 
 // ── member: orders ────────────────────────────────────────────────────────

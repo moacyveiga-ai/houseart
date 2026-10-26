@@ -11,7 +11,10 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ artist
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const g = await publicGallery((await params).slug)
-  return { title: g ? `${g.name} — HouseArt` : 'Galeria — HouseArt', description: g?.summary ?? undefined }
+  const title = g ? `${g.name} — HouseArt` : 'Galeria — HouseArt'
+  const description = g?.summary ?? undefined
+  const image = g?.coverUrl ?? g?.rooms.find((r) => r.url)?.url ?? null
+  return { title, description, openGraph: { title, description, type: 'website', ...(image ? { images: [{ url: image, alt: g!.name }] } : {}) } }
 }
 
 // Galeria (handoff "HouseArt Galeria"): the public page of a verified gallery.

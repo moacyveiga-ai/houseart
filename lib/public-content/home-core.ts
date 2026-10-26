@@ -58,3 +58,11 @@ export function initialMonth(tabs: MonthTab[], items: { startsOn: string }[]): s
 export function newsDateLabel(d: Date): string {
   return `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`
 }
+
+/** The Home hero never puts the brand over a work (handoff §4.5): the background is an exhibition
+ *  room of an active gallery, the gallery's own cover as the fallback, or nothing (the gradient alone). */
+export interface HeroPhoto { url: string; gallery: string; room: string | null }
+export function heroCaption(h: HeroPhoto | null): string | null {
+  if (!h) return null
+  return [h.room ?? 'Sala de exposição', h.gallery, 'foto ilustrativa'].join(' · ')
+}

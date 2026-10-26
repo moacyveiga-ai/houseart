@@ -6,7 +6,7 @@ import { getSession } from '@/lib/auth'
 import { selectionFromParams, type SortKey } from '@/lib/marketplace/filter-core'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Marketplace — HouseArt' }
+export const metadata: Metadata = { title: 'Marketplace — HouseArt', description: 'Obras autenticadas com escritura, à venda por artistas, galerias e colecionadores. Preço, origem e certificado em cada uma.', openGraph: { title: 'Marketplace — HouseArt', description: 'Obras autenticadas com escritura, à venda por artistas, galerias e colecionadores.' } }
 
 const SORTS: SortKey[] = ['rel', 'lower', 'higher', 'recent']
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? ''

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { formatDimensions } from '@/lib/artworks/domain'
 import { jsonList, lifeSpan, paragraphsOf, type ArtistEntryKind } from './domain'
+import type { HeroPhoto } from './home-core'
 
 // a seller suspended by the house is out of every public list
 const LISTED = { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, member: { tenant: { status: 'ACTIVE' } } } as const
@@ -127,6 +128,21 @@ export async function publicGallery(slug: string): Promise<PublicGalleryPage | n
       artworks: works.map(workOf),
       artistList: artists.map((a) => ({ slug: a.slug, name: a.name, meta: [lifeSpan(a.birthYear, a.deathYear) ?? jsonList(a.profile?.languagesJson)[0], a.profile?.livesIn].filter(Boolean).join(' · '), photoUrl: a.profile?.photoUrl ?? null })),
     }
+  })
+}
+
+/** The Home hero photo: the newest exhibition room of an active gallery (never a work, handoff §4.5);
+ *  without rooms, the newest gallery cover; without either, null (the Home shows the gradient alone). */
+export async function homeHeroPhoto(): Promise<HeroPhoto | null> {
+  return totalScope('public:hero', async () => {
+    const rooms = await prisma.galleryItem.findMany({ where: { kind: 'ROOM', url: { not: null } }, orderBy: [{ id: 'desc' }], take: 20, select: { title: true, url: true, tenantId: true } })
+    const tenantIds = [...new Set(rooms.map((r) => r.tenantId))]
+    const galleries = tenantIds.length ? await prisma.galleryPublicProfile.findMany({ where: { tenantId: { in: tenantIds }, tenant: { status: 'ACTIVE' } }, select: { tenantId: true, name: true } }) : []
+    const byTenant = new Map(galleries.map((g) => [g.tenantId, g.name]))
+    const room = rooms.find((r) => byTenant.has(r.tenantId))
+    if (room) return { url: room.url!, gallery: byTenant.get(room.tenantId)!, room: room.title || null }
+    const cover = await prisma.galleryPublicProfile.findFirst({ where: { coverUrl: { not: null }, tenant: { status: 'ACTIVE' } }, orderBy: { id: 'desc' }, select: { coverUrl: true, name: true } })
+    return cover ? { url: cover.coverUrl!, gallery: cover.name, room: null } : null
   })
 }
 

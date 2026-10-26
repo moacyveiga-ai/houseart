@@ -16,6 +16,8 @@ export interface HomeWork { publicId: string; title: string; artist: string; sel
 export interface HomeNews { slug: string; category: string; title: string; summary: string | null; imageUrl: string | null; date: string }
 
 export interface HomeData {
+  /** exhibition room behind the hero (never a work); null = gradient alone */
+  hero?: { url: string; caption: string } | null
   works: HomeWork[]
   news: { featured: HomeNews | null; others: HomeNews[] }
   agenda: { tabs: MonthTab[]; events: HomeAgendaEvent[]; savedIds?: number[]; signedIn?: boolean }
@@ -43,8 +45,7 @@ function Cover({ work, className = '' }: { work: HomeWork | undefined; className
 /** The n-th work, cycling when there are fewer than needed (and nothing when there are none). */
 const pick = (works: HomeWork[], i: number): HomeWork | undefined => (works.length ? works[i % works.length] : undefined)
 
-export function Home({ works, news, agenda }: HomeData) {
-  const hero = pick(works, 0)
+export function Home({ works, news, agenda, hero = null }: HomeData) {
   const featured = works.slice(0, 4)
   const hasNews = news.featured !== null
   return (
@@ -53,7 +54,8 @@ export function Home({ works, news, agenda }: HomeData) {
 
       <section id="topo" className="hp-home-hero" aria-label="Abertura">
         <div className="hp-home-hero__bg" data-speed="0.35">
-          <div className="hp-home-hero__photo" data-zoom="1">{hero?.cover ? <Cover work={hero} className="hp-home-hero__img" /> : null}</div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- foto pública da galeria */}
+          <div className="hp-home-hero__photo" data-zoom="1">{hero ? <img src={hero.url} alt="" className="hp-home-hero__img" /> : null}</div>
         </div>
         <div className="hp-home-hero__scrim" />
         <div className="hp-home-hero__content" data-speed="0.5" data-out="1">
@@ -65,7 +67,7 @@ export function Home({ works, news, agenda }: HomeData) {
             <Link href="/e/marketplace" className="hp-btn-paper">Explorar obras</Link>
           </div>
         </div>
-        <span className="hp-home-hero__caption"><i>Foto ilustrativa</i></span>
+        {hero ? <span className="hp-home-hero__caption"><i>{hero.caption}</i></span> : null}
       </section>
 
       <section id="manifesto" className="hp-home-manifesto" aria-label="Manifesto">

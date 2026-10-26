@@ -11,7 +11,7 @@
 .hp-home-hero { position: relative; height: 120vh; min-height: 720px; overflow: hidden; background: var(--ha-ink-900); color: var(--ha-paper-50); }
 .hp-home-hero__bg { position: absolute; inset: -12% 0; z-index: 0; }
 .hp-home-hero__photo { position: absolute; inset: 0; background: var(--ha-ink-900); overflow: hidden; scale: 1.05; }
-.hp-home-hero__img { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; object-position: center 50%; filter: blur(28px) saturate(.85); opacity: .55; }
+.hp-home-hero__img { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; object-position: center 50%; filter: blur(6px) saturate(.85); opacity: .6; }
 .hp-home-hero__scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(20, 18, 15, .55) 0%, rgba(20, 18, 15, .35) 40%, rgba(20, 18, 15, .92) 100%), radial-gradient(ellipse at center, rgba(20, 18, 15, .15) 0%, rgba(20, 18, 15, .65) 100%); }
 .hp-home-hero__content { position: absolute; inset: 72px 0 calc(20vh + 64px); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 var(--ha-space-6); gap: var(--ha-space-6); pointer-events: none; }
 .hp-home-hero__eyebrow { font-size: var(--ha-text-caption); letter-spacing: .24em; text-transform: uppercase; font-weight: 600; color: var(--ha-sand-500); }

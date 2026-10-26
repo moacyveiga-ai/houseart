@@ -12,7 +12,9 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ obras?
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const a = await publicArtist((await params).slug)
-  return { title: a ? `${a.name} — HouseArt` : 'Artista — HouseArt', description: a?.bio[0] ?? undefined }
+  const title = a ? `${a.name} — HouseArt` : 'Artista — HouseArt'
+  const description = a?.bio[0] ?? undefined
+  return { title, description, openGraph: { title, description, type: 'profile', ...(a?.photoUrl ? { images: [{ url: a.photoUrl, alt: a.name }] } : {}) } }
 }
 
 // Artista (handoff "HouseArt Artista"): the public profile of an artist.

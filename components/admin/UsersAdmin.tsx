@@ -106,7 +106,7 @@ export function UsersAdmin({ rows: initial, filter, filters, query, viewerId }: 
                         <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={(pick[r.id] ?? r.profile) === r.profile} onClick={() => { setError(''); setPending({ row: r, action: 'profile', profile: pick[r.id] }) }}>Trocar papel</button>
                       </span>
                     ) : null}
-                    {!r.can.block && !r.can.reset && !r.can.invite && !r.can.profile ? <span className="ha-muted ha-sm">{me ? 'A própria conta se edita em Conta.' : 'Esta conta está acima do seu papel: nada a fazer aqui.'}</span> : null}
+                    {!r.can.block && !r.can.reset && !r.can.invite && !r.can.profile ? <span className="ha-muted ha-sm">{me ? 'A própria conta se edita em Conta.' : r.state === 'DELETION' ? 'A pessoa pediu a exclusão: a conta é encerrada pelo atendimento, não reaberta aqui.' : 'Esta conta está acima do seu papel: nada a fazer aqui.'}</span> : null}
                   </div>
                 </div>
               ) : null}

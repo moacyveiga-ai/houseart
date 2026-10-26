@@ -37,7 +37,8 @@ export interface AdminUserRow {
   can: { block: boolean; profile: boolean; reset: boolean; invite: boolean }
 }
 
-export const accountStateOf = (u: { active: boolean; deletionRequestedAt: string | Date | null }): AccountState => (!u.active ? 'BLOCKED' : u.deletionRequestedAt ? 'DELETION' : 'ACTIVE')
+/** The deletion request wins over the block it carries (the person's own request sets both); the desk closes that account, never reopens it. */
+export const accountStateOf = (u: { active: boolean; deletionRequestedAt: string | Date | null }): AccountState => (u.deletionRequestedAt ? 'DELETION' : !u.active ? 'BLOCKED' : 'ACTIVE')
 
 export function matchesFilter(r: AdminUserRow, f: UserFilter): boolean {
   switch (f) {
@@ -59,15 +60,18 @@ export function parseQuery(raw: string | undefined): { text: string; id: number 
 }
 
 export interface Actor { id: number; profile: string }
-export interface Target { id: number; profile: string; active: boolean }
+export interface Target { id: number; profile: string; active: boolean; deletionRequested?: boolean }
 
 /** Only a higher level touches an account; the admin touches everyone but never themself. */
 export const outranks = (actor: Actor, target: Target) => actor.id !== target.id && (canManageAdmin(actor.profile) || profileLevel(actor.profile) > profileLevel(target.profile))
 
-/** Block/unblock: by rank; the last active admin is never blocked (the server counts). */
-export const canBlock = (actor: Actor, target: Target, activeAdmins: number) => outranks(actor, target) && !(target.active && target.profile === 'admin' && activeAdmins <= 1)
+/** Block/unblock: by rank; the last active admin is never blocked (the server counts); an account whose owner asked for deletion is never unblocked here. */
+export const canBlock = (actor: Actor, target: Target, activeAdmins: number) => outranks(actor, target) && !(target.active && target.profile === 'admin' && activeAdmins <= 1) && !(!target.active && target.deletionRequested)
 
 /** The staff profile is changed by the admin only, between staff profiles, never on themself; the last admin keeps the admin profile. */
+/** Whether any other staff profile could be assigned (the screen shows the selector only then). */
+export const canChangeProfile = (actor: Actor, target: Target, activeAdmins: number) => STAFF_PROFILES.some((p) => p !== target.profile && canSetProfile(actor, target, p, activeAdmins))
+
 export function canSetProfile(actor: Actor, target: Target, next: string, activeAdmins: number): boolean {
   if (!canManageAdmin(actor.profile) || actor.id === target.id) return false
   if (!hasTotalScope(target.profile) || !(STAFF_PROFILES as readonly string[]).includes(next)) return false

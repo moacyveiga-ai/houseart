@@ -14,12 +14,15 @@ import { sendEmail } from '@/lib/email/send'
 import { afterResponse } from '@/lib/after'
 import { publicBaseUrl } from '@/lib/public-url'
 import { INVITE_TTL_DAYS, TEAM_ROLE_LABELS, type TeamRole } from '@/lib/gallery/domain'
-import { accountStateOf, canBlock, canSendReset, canSetProfile, LOGIN_PROFILE_LABELS, outranks, parseQuery, type Actor, type AdminUserRow } from './core'
+import { accountStateOf, canBlock, canChangeProfile, canSendReset, canSetProfile, LOGIN_PROFILE_LABELS, outranks, parseQuery, type Actor, type AdminUserRow } from './core'
 
 const TAKE = 200
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex')
 
-const activeAdminCount = () => prisma.user.count({ where: { profile: 'admin', active: true } })
+type Db = Pick<typeof prisma, 'user'>
+const activeAdminCount = (db: Db = prisma) => db.user.count({ where: { profile: 'admin', active: true } })
+/** One key for every write that can change the number of active admins: the count and the write happen under it. */
+const ADMIN_GUARD_LOCK = 7_431_001
 
 export async function adminUsers(actor: Actor, rawQuery: string | undefined): Promise<AdminUserRow[]> {
   const q = parseQuery(rawQuery)
@@ -37,7 +40,7 @@ export async function adminUsers(actor: Actor, rawQuery: string | undefined): Pr
     const emails = users.map((u) => u.email)
     const [kycs, invites, admins] = await Promise.all([
       prisma.kycVerification.findMany({ where: { userId: { in: ids } }, orderBy: { id: 'desc' }, select: { userId: true, status: true, expiresAt: true } }),
-      prisma.teamInvite.findMany({ where: { email: { in: emails }, status: 'PENDING', expiresAt: { gt: new Date() } }, orderBy: { id: 'desc' }, select: { id: true, email: true, role: true, expiresAt: true, tenantId: true } }),
+      prisma.teamInvite.findMany({ where: { email: { in: emails }, status: 'PENDING' }, orderBy: { id: 'desc' }, select: { id: true, email: true, role: true, expiresAt: true, tenantId: true } }),
       activeAdminCount(),
     ])
     const tenantNames = new Map((await prisma.tenant.findMany({ where: { id: { in: [...new Set(invites.map((i) => i.tenantId))] } }, select: { id: true, name: true } })).map((t) => [t.id, t.name]))
@@ -46,7 +49,7 @@ export async function adminUsers(actor: Actor, rawQuery: string | undefined): Pr
     const inviteOf = new Map<string, (typeof invites)[number]>()
     for (const i of invites) if (!inviteOf.has(i.email)) inviteOf.set(i.email, i)
     return users.map((u) => {
-      const target = { id: u.id, profile: u.profile, active: u.active }
+      const target = { id: u.id, profile: u.profile, active: u.active, deletionRequested: !!u.deletionRequestedAt }
       const inv = inviteOf.get(u.email) ?? null
       return {
         id: u.id, name: u.name, email: u.email, profile: u.profile, profileLabel: LOGIN_PROFILE_LABELS[u.profile] ?? u.profile,
@@ -56,7 +59,7 @@ export async function adminUsers(actor: Actor, rawQuery: string | undefined): Pr
         kyc: kycOf.get(u.id) ?? null,
         pendingInvite: inv ? { id: inv.id, gallery: tenantNames.get(inv.tenantId) ?? 'galeria', role: inv.role, expiresAt: inv.expiresAt.toISOString() } : null,
         lastLoginAt: u.lastLoginAt?.toISOString() ?? null, createdAt: u.createdAt.toISOString(),
-        can: { block: canBlock(actor, target, admins), profile: canSetProfile(actor, target, target.profile, admins), reset: canSendReset(actor, target), invite: !!inv && outranks(actor, target) },
+        can: { block: canBlock(actor, target, admins), profile: canChangeProfile(actor, target, admins), reset: canSendReset(actor, target), invite: !!inv && outranks(actor, target) },
       }
     })
   })
@@ -65,20 +68,26 @@ export async function adminUsers(actor: Actor, rawQuery: string | undefined): Pr
 type Ctx = Actor & { name: string; ip?: string; userAgent?: string }
 const act = (actor: Ctx, entityId: number, action: string, before: unknown, after: unknown) => void audit.event({ entity: 'user', entityId, action, userId: actor.id, userName: actor.name, ip: actor.ip, userAgent: actor.userAgent, before, after })
 
-async function targetOf(id: number) {
-  const u = await prisma.user.findUnique({ where: { id }, select: { id: true, profile: true, active: true, email: true, name: true } })
+async function targetOf(id: number, db: Db = prisma) {
+  const u = await db.user.findUnique({ where: { id }, select: { id: true, profile: true, active: true, email: true, name: true, deletionRequestedAt: true } })
   if (!u) throw new ArtworkError('NOT_FOUND', 'Conta não encontrada.', 404)
-  return u
+  return { ...u, deletionRequested: !!u.deletionRequestedAt }
 }
 
 /** Blocks (every session closed; the person cannot sign in) or unblocks an account. */
 export async function setUserActive(id: number, active: boolean, actor: Ctx): Promise<{ active: boolean }> {
   return totalScope('admin:users:active', async () => {
-    const u = await targetOf(id)
-    if (!canBlock(actor, u, await activeAdminCount())) throw new ArtworkError('FORBIDDEN', u.id === actor.id ? 'Você não bloqueia a própria conta.' : u.profile === 'admin' ? 'O último admin ativo não pode ser bloqueado.' : 'Só um perfil acima deste muda a conta.', 403)
+    const u = await prisma.$transaction(async (tx) => {
+      // the last-admin rule is a global invariant: count and write under one lock (two admins blocking each other at once)
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ADMIN_GUARD_LOCK})`
+      const u = await targetOf(id, tx)
+      if (!canBlock(actor, u, await activeAdminCount(tx))) throw new ArtworkError('FORBIDDEN', u.id === actor.id ? 'Você não bloqueia a própria conta.' : u.deletionRequested && !u.active ? 'A pessoa pediu a exclusão: a conta é encerrada pelo atendimento, não reaberta.' : u.profile === 'admin' ? 'O último admin ativo não pode ser bloqueado.' : 'Só um perfil acima deste muda a conta.', 403)
+      if (u.active === active) return u
+      const r = await tx.user.updateMany({ where: { id, active: !active }, data: { active } })
+      if (r.count === 0) throw new ArtworkError('CHANGED', 'A conta acabou de mudar.', 409)
+      return u
+    })
     if (u.active === active) return { active }
-    const r = await prisma.user.updateMany({ where: { id, active: !active }, data: { active } })
-    if (r.count === 0) throw new ArtworkError('CHANGED', 'A conta acabou de mudar.', 409)
     if (!active) await destroyAllSessions(id)
     act(actor, id, active ? 'unblock' : 'block', { active: !active }, { active })
     return { active }
@@ -89,11 +98,16 @@ export async function setUserActive(id: number, active: boolean, actor: Ctx): Pr
 export async function setStaffProfile(id: number, next: unknown, actor: Ctx): Promise<{ profile: string }> {
   const profile = typeof next === 'string' ? next : ''
   return totalScope('admin:users:profile', async () => {
-    const u = await targetOf(id)
-    if (!canSetProfile(actor, u, profile, await activeAdminCount())) throw new ArtworkError('FORBIDDEN', 'Só o admin troca o papel de uma conta da equipe (nunca o próprio, e o último admin fica admin).', 403)
+    const u = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ADMIN_GUARD_LOCK})`
+      const u = await targetOf(id, tx)
+      if (!canSetProfile(actor, u, profile, await activeAdminCount(tx))) throw new ArtworkError('FORBIDDEN', 'Só o admin troca o papel de uma conta da equipe (nunca o próprio, e o último admin fica admin).', 403)
+      if (u.profile === profile) return u
+      const r = await tx.user.updateMany({ where: { id, profile: u.profile }, data: { profile } })
+      if (r.count === 0) throw new ArtworkError('CHANGED', 'A conta acabou de mudar.', 409)
+      return u
+    })
     if (u.profile === profile) return { profile }
-    const r = await prisma.user.updateMany({ where: { id, profile: u.profile }, data: { profile } })
-    if (r.count === 0) throw new ArtworkError('CHANGED', 'A conta acabou de mudar.', 409)
     await destroyAllSessions(id) // the new scope starts on the next sign-in
     act(actor, id, 'profile', { profile: u.profile }, { profile })
     return { profile }

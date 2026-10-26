@@ -50,8 +50,11 @@ describe('admin users', () => {
     expect(await prisma.accessCode.count({ where: { userId: s.b.userId, purpose: 'RESET' } })).toBe(1)
     expect((await call(s.b.userId, { action: 'nope' })).status).toBe(400)
     expect((await call(999_999, { action: 'block' })).status).toBe(404)
-    const audits = await prisma.auditLog.findMany({ where: { entity: 'user', entityId: String(s.b.userId) }, select: { action: true } })
-    expect(audits.map((a) => a.action).sort()).toEqual(['block', 'password_link', 'unblock'])
+    await expect.poll(() => prisma.auditLog.findMany({ where: { entity: 'user', entityId: String(s.b.userId) }, select: { action: true } }).then((xs) => xs.map((a) => a.action).sort())).toEqual(['block', 'password_link', 'unblock'])
+    // the person asked for deletion: read as "Exclusão pedida", never reopened by the desk
+    await prisma.user.update({ where: { id: s.b.userId }, data: { active: false, deletionRequestedAt: new Date() } })
+    expect((await adminUsers({ id: s.staff.userId, profile: 'admin' }, `#${s.b.userId}`))[0]).toMatchObject({ state: 'DELETION', can: { block: false } })
+    expect((await call(s.b.userId, { action: 'unblock' })).status).toBe(403)
   })
 
   it('staff profile: admin only, between staff profiles, never a member, the last admin stays admin; a manager cannot block an admin', async () => {

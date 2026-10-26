@@ -83,8 +83,6 @@ export async function issueCertificate(scope: Scope, certificateId: number, acto
   // Only a work under certification is issued: a work sent back to draft or archived by the house
   // review keeps its signed certificate row, and issuing it would undo the decision.
   if (c.artwork.status !== 'IN_CERTIFICATION') throw new ArtworkError('NOT_IN_CERTIFICATION', 'A obra precisa estar em certificação.', 409)
-  const pendingDuplicate = await prisma.reviewQueueItem.count({ where: { artworkId: c.artworkId, kind: 'DUPLICATE', status: 'OPEN' } })
-  if (pendingDuplicate) throw new ArtworkError('UNDER_REVIEW', 'A equipe está conferindo uma obra parecida de outra conta. A emissão fica liberada depois da decisão.', 409)
   const content = contentOf(c, 1)
   const contentHash = contentHashOf(content)
   const now = new Date()
@@ -97,6 +95,10 @@ export async function issueCertificate(scope: Scope, certificateId: number, acto
   const pdfRef = await savePrivateFile({ buffer: Buffer.from(pdf), contentType: 'application/pdf', prefix: `certificates/${c.id}` })
   const pdfHash = sha256OfBytes(pdf)
   await prisma.$transaction(async (tx) => {
+    // The artwork row is locked against a review decision deciding it at the same moment (admin-review).
+    await tx.$queryRaw`SELECT id FROM "Artwork" WHERE id = ${c.artworkId} FOR UPDATE`
+    const pendingDuplicate = await tx.reviewQueueItem.count({ where: { artworkId: c.artworkId, kind: 'DUPLICATE', status: 'OPEN' } })
+    if (pendingDuplicate) throw new ArtworkError('UNDER_REVIEW', 'A equipe está conferindo uma obra parecida de outra conta. A emissão fica liberada depois da decisão.', 409)
     const r = await tx.certificate.updateMany({ where: { id: certificateId, issuedAt: null }, data: { issuedAt: now, status: 'ACTIVE', stage: 5 } })
     if (r.count === 0) throw new ArtworkError('ALREADY_ISSUED', 'O certificado acabou de ser emitido.', 409)
     const version = await tx.certificateVersion.create({

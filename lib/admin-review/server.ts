@@ -74,6 +74,7 @@ export async function decideReviewItem(id: number, decision: ReviewDecision, act
       // Rejecting a duplicate or a new issuer sends the work back (draft / archived): only while it is not
       // certified yet — the text the staff confirmed would be false. A certified work leaves by contestation.
       if (item.artworkId && decision === 'REJECTED' && (kind === 'DUPLICATE' || kind === 'NEW_ISSUER')) {
+        await tx.$queryRaw`SELECT id FROM "Artwork" WHERE id = ${item.artworkId} FOR UPDATE`
         const a = await tx.artwork.findUnique({ where: { id: item.artworkId }, select: { status: true } })
         if (a && a.status !== 'DRAFT' && a.status !== 'IN_CERTIFICATION') throw new ReviewDecisionError('A obra já foi certificada. Para retirar o certificado, abra uma contestação.')
       }

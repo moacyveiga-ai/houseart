@@ -99,7 +99,7 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
                     </div>
                   )
               ) : <span className="ha-offer__status">{o.statusLabel}</span>}
-              <button type="button" className="ha-offer__talk" disabled={busy !== null} onClick={() => talk(o)}><span className="ha-icon" aria-hidden="true">chat_bubble</span>Conversar com {o.buyerFirstName}</button>
+              {canAnswer ? <button type="button" className="ha-offer__talk" disabled={busy !== null} onClick={() => talk(o)}><span className="ha-icon" aria-hidden="true">chat_bubble</span>Conversar com {o.buyerFirstName}</button> : null}
             </article>
           )
         })}

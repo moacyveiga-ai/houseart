@@ -7,8 +7,10 @@ import { Chip } from '@/components/ds/Chip'
 import { INVENTORY_CHIPS, emptyText, rowPrice, rowStats, rowStatus, summaryLine, type InventoryItem } from './inventory-core'
 import './inventory-list.css'
 
-export function InventoryList({ title, all, items, chip, q, counts }: { title: string; all: InventoryItem[]; items: InventoryItem[]; chip: string; q: string; counts: Record<string, number> }) {
+export function InventoryList({ title, all, items, chip, q, counts, openId = null }: { title: string; all: InventoryItem[]; items: InventoryItem[]; chip: string; q: string; counts: Record<string, number>; openId?: number | null }) {
   const href = (key: string) => `/artworks?filter=${key}${q ? `&q=${encodeURIComponent(q)}` : ''}`
+  // the row opens the work in the side panel (?open=), keeping the chip and the search
+  const openHref = (id: number) => `${href(chip)}&open=${id}`
   return (
     <div className="ha-inv">
       <div className="ha-inv__head">
@@ -28,8 +30,8 @@ export function InventoryList({ title, all, items, chip, q, counts }: { title: s
           {items.map((a) => {
             const st = rowStatus(a)
             return (
-              <li key={a.id} className="ha-inv__row">
-                <Link href={`/artworks/${a.id}/edit`} className="ha-inv__main">
+              <li key={a.id} className={`ha-inv__row${openId === a.id ? ' ha-inv__row--on' : ''}`}>
+                <Link href={openHref(a.id)} scroll={false} className="ha-inv__main" aria-current={openId === a.id ? 'true' : undefined}>
                   <span className="ha-inv__wall">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
                     {a.coverUrl ? <img src={a.coverUrl} alt="" /> : <Icon name="imagesmode" size={24} />}</span>
                   <span className="ha-inv__body">
@@ -41,7 +43,7 @@ export function InventoryList({ title, all, items, chip, q, counts }: { title: s
                 </Link>
                 <span className="ha-inv__aside">
                   {a.status === 'LISTED' ? <Link href={`/artworks/${a.id}/listing`} className="ha-inv__manage"><Icon name="tune" size={16} /><span>Gestão do anúncio</span></Link> : null}
-                  <Link href={`/artworks/${a.id}/edit`} className="ha-inv__chev" aria-label={`Abrir ${a.title}`}><Icon name="chevron_right" size={20} /></Link>
+                  <Link href={openHref(a.id)} scroll={false} className="ha-inv__chev" aria-label={`Abrir ${a.title}`}><Icon name="chevron_right" size={20} /></Link>
                 </span>
               </li>
             )

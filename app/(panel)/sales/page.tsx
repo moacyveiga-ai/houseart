@@ -7,7 +7,10 @@ import { OfferCards } from '@/components/offers/OfferCards'
 import { collectionSummary } from '@/lib/collector-wallet/collection-server'
 import { CollectionHeader } from '@/components/collector/CollectionHeader'
 import { sellerDeals } from '@/lib/deals/server'
-import { DealTimeline } from '@/components/deals/DealTimeline'
+import { SaleRows } from '@/components/sales/SaleRows'
+import { SaleDetail } from '@/components/sales/SaleDetail'
+import { saleFinance } from '@/lib/deals/sale-progress-core'
+import type { DealView } from '@/lib/deals/server'
 import { serializeDeal } from '@/components/deals/deal-view'
 import { flagOn } from '@/lib/flags'
 import Link from 'next/link'
@@ -17,7 +20,15 @@ import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
 
 export const metadata = { title: 'Negócios — HouseArt' }
 
-export default async function SalesPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+/** "Financeiro" of the sale panel and the payout note (what the seller's lines say now). */
+function financeOf(d: DealView) {
+  const finance = saleFinance({ amountCents: d.amountCents, market: d.market, sellerKind: d.sellerKind, artistName: d.artist, split: d.split })
+  const mine = d.split.filter((s) => (s.party === 'GALLERY' || s.party === 'ARTIST') && s.payoutLabel)
+  const payoutNote = mine.length ? mine.map((s) => `${s.party === 'ARTIST' && d.sellerKind !== 'ARTIST' ? d.artist : d.sellerKind === 'GALLERY_STAFF' ? 'Galeria' : 'Seu repasse'}: ${s.payoutLabel}`).join(' · ') + '.' : null
+  return { finance: finance.map((l) => ({ label: l.label, cents: l.cents.toString(), sign: l.sign, strong: l.strong })), payoutNote }
+}
+
+export default async function SalesPage({ searchParams }: { searchParams: Promise<{ tab?: string; sale?: string }> }) {
   const { scope, user, nav } = await requirePanelPage('/sales')
   // A collector without a member (no artwork in their name yet) has nothing to sell: the
   // scope is NONE, every list is empty and the page says so instead of erroring.
@@ -30,9 +41,13 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       </div>
     )
   }
-  const tab = (await searchParams).tab === 'deals' ? 'deals' : 'offers'
+  const sp = await searchParams
+  const tab = sp.tab === 'deals' ? 'deals' : 'offers'
+  const saleId = Number(sp.sale)
   const offers = await sellerOffers(scope)
   const deals = tab === 'deals' && flagOn('FLAG_DEALS') ? await sellerDeals(scope) : []
+  // the sale named by ?sale= among the seller's own deals (scope-limited list: another seller's id opens nothing)
+  const open1 = Number.isInteger(saleId) && saleId > 0 ? deals.find((d) => d.id === saleId) ?? null : null
   const mandate = await negotiatorOf(scope)
   const open = offers.filter((o) => o.open).length
   // The gallery team role: Acervo does not answer proposals, only Admin changes the rules (the API refuses the rest).
@@ -59,7 +74,13 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, expiresIn: o.expiresIn, differenceLabel: o.differenceLabel, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null,
         }))} />
       ) : (
-        deals.length === 0 ? <div className="ha-card ha-card--pad"><p className="ha-muted">Nenhuma venda em andamento.</p></div> : deals.map((d) => <DealTimeline key={d.id} deal={serializeDeal(d)} side="seller" />)
+        deals.length === 0 ? <div className="ha-card ha-card--pad"><p className="ha-muted">Nenhuma venda em andamento.</p></div> : (
+          // "Vendas até o repasse": compact rows; the sale opens in the side panel (?sale=), the list stays behind.
+          <>
+            <SaleRows deals={deals.map(serializeDeal)} openId={open1?.id ?? null} hrefOf={(id) => `/sales?tab=deals&sale=${id}`} />
+            {open1 ? <SaleDetail key={open1.id} deal={serializeDeal(open1)} {...financeOf(open1)} canAnswer={can.answerOffers} closeHref="/sales?tab=deals" workHref={desk && open1.phase !== 'COMPLETED' ? `/artworks?open=${open1.artworkId}` : null} /> : null}
+          </>
+        )
       )}
     </div>
   )

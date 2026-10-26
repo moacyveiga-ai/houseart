@@ -36,3 +36,4 @@
 .ha-inv__chev { color: var(--ha-ink-500); }
 .ha-inv__empty { padding: var(--ha-space-8) 0; font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
 @media (max-width: 480px) { .ha-inv__manage span:last-child { display: none; } .ha-inv__manage { padding: 0 var(--ha-space-2); } }
+.ha-inv__row--on { background: var(--ha-paper-100); }

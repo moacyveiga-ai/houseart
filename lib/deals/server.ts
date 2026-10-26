@@ -48,7 +48,10 @@ export async function createDealFromOffer(offerId: number): Promise<{ id: number
       royaltyCents = royaltyFor(amount, previous).royaltyCents
     }
     const seller = o.artwork.member.kind === 'ARTIST' ? 'ARTIST' : 'GALLERY'
-    const lines: SplitLine[] = computeSplit({ amountCents: amount, market, seller, galleryBps: DEFAULT_GALLERY_BPS, royaltyCents })
+    // The consignment share to the artist exists only when a GALLERY sells for an artist; a collector
+    // reselling a work of theirs keeps the seller share (the artist gets the resale royalty).
+    const galleryBps = o.artwork.member.kind === 'COLLECTOR' ? 0 : DEFAULT_GALLERY_BPS
+    const lines: SplitLine[] = computeSplit({ amountCents: amount, market, seller, galleryBps, royaltyCents })
     const year = new Date().getUTCFullYear()
     const seq = await prisma.deal.count({ where: { code: { startsWith: `DL-${year}-` } } })
     const deal = await prisma.$transaction(async (tx) => {
@@ -95,6 +98,8 @@ export interface DealView {
   split: { party: string; label: string; amountCents: bigint; status: string; payoutState: SplitPayoutState; payoutLabel: string }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
+  /** Seller view (Vendas até o repasse): the offer behind the deal, who sells, the buyer's city, the day of the sale. */
+  offerId: number; sellerKind: string; buyerCity: string | null; createdAt: string; exception: string | null; artworkId: number
 }
 
 function toView(d: Awaited<ReturnType<typeof loadDeal>>): DealView {
@@ -118,6 +123,7 @@ function toView(d: Awaited<ReturnType<typeof loadDeal>>): DealView {
     steps, split: d.splits.map((s) => { const payoutState = splitPayoutState(s, accountOf(s.party)); return { party: s.party, label: SPLIT_PARTY_LABELS[s.party as keyof typeof SPLIT_PARTY_LABELS] ?? s.party, amountCents: s.amountCents, status: s.status, payoutState, payoutLabel: SPLIT_PAYOUT_LABELS[payoutState] } }),
     shipping: d.carrierName ? { carrier: d.carrierName, tracking: d.trackingCode, insurer: d.insurerName } : null,
     sellerSigned: !!d.sellerSignedAt, buyerSigned: !!d.buyerSignedAt, escrowPaid: !!d.escrowPaidAt, completedAt: d.completedAt?.toISOString() ?? null,
+    offerId: d.offerId, sellerKind: d.sellerKind, buyerCity: d.offer.buyerCity ?? null, createdAt: d.createdAt.toISOString(), exception: d.exceptionStatus ?? null, artworkId: d.artworkId,
   }
 }
 
@@ -125,7 +131,9 @@ async function loadDeal(id: number) {
   const d = await prisma.deal.findUniqueOrThrow({ where: { id }, include: { artwork: { include: { artist: true, member: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 } } }, offer: true, phaseEvents: { orderBy: { occurredAt: 'asc' } }, splits: { orderBy: { id: 'asc' } } } })
   const members = [d.sellerMemberId, d.artwork.artist.memberId].filter((m): m is number => m !== null)
   const connectAccounts = stripeMode() === 'mock' ? [] : await prisma.stripeConnectAccount.findMany({ where: { memberId: { in: members }, mode: stripeMode() }, select: { memberId: true, status: true } })
-  return { ...d, connectAccounts }
+  // who SOLD (the artwork's member changes to the buyer once the transfer completes)
+  const seller = await prisma.member.findUnique({ where: { id: d.sellerMemberId }, select: { kind: true } })
+  return { ...d, connectAccounts, sellerKind: seller?.kind ?? d.artwork.member.kind }
 }
 
 export async function sellerDeals(scope: Scope): Promise<DealView[]> {

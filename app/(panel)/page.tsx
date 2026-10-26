@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { requirePanelPage } from './_session'
-import { dashboardCounts } from '@/lib/dashboard/server'
-import { dateLabel, greetingFor, kpisFor, nextActionsFor } from '@/lib/dashboard/core'
+import { dashboardCounts, salesThisYear } from '@/lib/dashboard/server'
+import { dateLabel, greetingFor, kpisFor, nextActionsFor, salesChart } from '@/lib/dashboard/core'
+import { SalesChart } from '@/components/dashboard/SalesChart'
+import { ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS } from '@/lib/artworks/domain'
+import '@/components/dashboard/dashboard.css'
 import { listArtworks } from '@/lib/artworks/server'
-import { ARTWORK_STATUS_LABELS } from '@/lib/artworks/domain'
 import { Kpis } from '@/components/ds/Kpi'
 import { Icon } from '@/components/ds/Icon'
 import { Badge } from '@/components/ds/Badge'
@@ -33,9 +35,11 @@ export default async function DashboardPage() {
   if (nav !== 'artist' && nav !== 'gallery' && nav !== 'advisor') redirect(homeOf(nav))
   const now = new Date()
   if (nav === 'gallery' || nav === 'advisor') return <GalleryDay scope={scope} userId={user.id} userName={user.name} now={now} />
-  const [counts, recent] = await Promise.all([dashboardCounts(scope, now), listArtworks(scope, { take: 6 })])
+  const [counts, recent, sales] = await Promise.all([dashboardCounts(scope, now), listArtworks(scope, { take: 4 }), salesThisYear(scope, now)])
   const profile = nav === 'artist' ? 'artist' : 'gallery'
   const year = Number(new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: 'America/Bahia' }).format(now))
+  const month = Number(new Intl.DateTimeFormat('en-US', { month: 'numeric', timeZone: 'America/Bahia' }).format(now))
+  const chart = salesChart(sales, year, month)
   const actions = nextActionsFor(counts)
   return (
     <div className="ha-page">
@@ -61,22 +65,23 @@ export default async function DashboardPage() {
             </ul>
           )}
         </section>
-        <section className="ha-card ha-card--pad">
-          <div className="ha-row"><h2 className="ha-h3">Obras recentes</h2><Link href="/artworks" className="ha-link">Ver todas</Link></div>
-          {recent.items.length === 0 ? <p className="ha-muted">Cadastre a primeira obra para começar.</p> : (
-            <ul className="ha-list">
-              {recent.items.map((a) => (
-                <li key={a.id}><Link href={`/artworks/${a.id}/edit`} className="ha-list__row">
-                  <span className="ha-wall ha-wall--40">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
-                  {a.coverUrl ? <img src={a.coverUrl} alt="" /> : null}</span>
-                  <span><b>{a.title}{a.year ? `, ${a.year}` : ''}</b><br /><span className="ha-muted ha-sm">{a.artistName}</span></span>
-                  <Badge tone={a.status === 'AUTHENTICATED' || a.status === 'LISTED' ? 'verified' : a.status === 'IN_CERTIFICATION' ? 'pending' : 'neutral'}>{ARTWORK_STATUS_LABELS[a.status]}</Badge>
-                </Link></li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <SalesChart year={year} chart={chart} />
       </div>
+      <section className="ha-dash__section" aria-labelledby="ha-dash-recent">
+        <div className="ha-dash__head"><h2 id="ha-dash-recent" className="ha-dash__title">Obras recentes</h2><Link href="/artworks" className="ha-link">Ver todas</Link></div>
+        {recent.items.length === 0 ? <p className="ha-muted">Cadastre a primeira obra para começar.</p> : (
+          <div className="ha-dash__grid">
+            {recent.items.map((a) => (
+              <Link key={a.id} href={`/artworks/${a.id}/edit`} className="ha-dash__work">
+                <span className="ha-wall ha-wall--sq">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
+                  {a.coverUrl ? <img src={a.coverUrl} alt="" /> : <Icon name="imagesmode" size={28} />}</span>
+                <span className="ha-dash__work-name">{a.title}{a.year ? `, ${a.year}` : ''}</span>
+                <Badge tone={a.status === 'AUTHENTICATED' || a.status === 'LISTED' ? 'verified' : a.status === 'IN_CERTIFICATION' ? 'pending' : 'neutral'}><Icon name={ARTWORK_STATUS_ICONS[a.status]} size={14} /> {ARTWORK_STATUS_LABELS[a.status]}</Badge>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canIssue, canTake, daysLeft, dueLabel, kpisOf, matchesFilter, parseDueDay, stateOf } from './desk-core'
+import { canIssue, canTake, daysLeft, dueLabel, kpisOf, matchesFilter, parseDueDay, rangeRuler, reaisInput, stateOf } from './desk-core'
 
 const now = new Date('2026-10-26T15:00:00Z')
 const row = (p: Partial<{ id: number; status: string; dueOn: string; assignedAppraiserId: number | null }> = {}) => ({ id: 1, status: 'QUEUED', dueOn: '2026-10-30T12:00:00Z', assignedAppraiserId: null, ...p })
@@ -48,5 +48,31 @@ describe('appraisal desk core', () => {
     expect(parseDueDay('2026-02-30', now)).toBeNull()
     expect(parseDueDay('2027-10-26', now)).toBeNull()
     expect(parseDueDay(12, now)).toBeNull()
+  })
+})
+
+describe('rangeRuler', () => {
+  it('centres the min–max segment and marks the suggestion', () => {
+    const r = rangeRuler(40_000, 48_000, 55_000)!
+    expect(r.left).toBeCloseTo(20.6, 1)
+    expect(r.right).toBeCloseTo(20.6, 1)
+    expect(r.marker).toBeGreaterThan(r.left)
+    expect(r.marker).toBeLessThan(100 - r.right)
+  })
+  it('clamps a suggestion outside the track and hides the marker without one', () => {
+    expect(rangeRuler(100, 10_000, 200)!.marker).toBe(100)
+    expect(rangeRuler(100, 0, 200)!.marker).toBeNull()
+  })
+  it('is null until the values make a range', () => {
+    expect(rangeRuler(0, 5, 10)).toBeNull()
+    expect(rangeRuler(10, 5, 10)).toBeNull()
+    expect(rangeRuler(20, 5, 10)).toBeNull()
+  })
+})
+
+describe('reaisInput', () => {
+  it('formats the digits as reais', () => {
+    expect(reaisInput('48000')).toBe('R$ 48.000')
+    expect(reaisInput('')).toBe('')
   })
 })

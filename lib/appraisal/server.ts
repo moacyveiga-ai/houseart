@@ -76,6 +76,8 @@ export async function requestAppraisal(actor: { userId: number; name: string; sc
 // ── the appraiser's desk ─────────────────────────────────────────────────
 export interface QueueItem {
   id: number; title: string; who: string
+  /** For the row as the design draws it: 48 px thumbnail, italic title, artist apart. */
+  cover: string | null; artworkTitle: string; artist: string
   /** Deadline as the design prints it (dd/mm/yyyy), as a calendar day (yyyy-mm-dd) and as an instant. */
   dueOn: string; dueDay: string; dueOnIso: string
   status: string; state: DeskState; stateLabel: string; overdue: boolean; daysLeft: number
@@ -89,7 +91,7 @@ export interface QueueItem {
 /** The open requests by deadline; with `all`, also the issued and cancelled ones (newest first, after the open). */
 export async function appraisalQueue(now = new Date(), opts: { all?: boolean } = {}): Promise<QueueItem[]> {
   return totalScope('appraisal:queue', async () => {
-    const include = { artwork: { include: { artist: true } }, appraisal: { select: { verificationCode: true, status: true } } } as const
+    const include = { artwork: { include: { artist: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }, appraisal: { select: { verificationCode: true, status: true } } } as const
     // the open ones by deadline, all of them; the closed ones are history, the 200 newest
     const open = await prisma.appraisalRequest.findMany({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] } }, include, orderBy: [{ dueOn: 'asc' }, { id: 'asc' }], take: 500 })
     const closed = opts.all ? await prisma.appraisalRequest.findMany({ where: { status: { in: ['ISSUED', 'CANCELLED'] } }, include, orderBy: { id: 'desc' }, take: 200 }) : []
@@ -101,6 +103,7 @@ export async function appraisalQueue(now = new Date(), opts: { all?: boolean } =
       const st = stateOf({ status: r.status, dueOn: r.dueOn.toISOString() }, now)
       return {
         id: r.id, title: `${r.artwork.title}${r.artwork.year ? `, ${r.artwork.year}` : ''} · ${r.artwork.artist.name}`, who: `${r.requesterLabel} · ${PURPOSE_LABELS[r.purpose as AppraisalPurpose] ?? r.purpose}`,
+        cover: r.artwork.media[0]?.publicUrl ?? null, artworkTitle: `${r.artwork.title}${r.artwork.year ? `, ${r.artwork.year}` : ''}`, artist: r.artwork.artist.name,
         dueOn: r.dueOn.toLocaleDateString('pt-BR', BAHIA), dueDay: dayOf(r.dueOn), dueOnIso: r.dueOn.toISOString(),
         status: r.status, state: st, stateLabel: DESK_STATE_LABELS[st], overdue: st === 'OVERDUE', daysLeft: daysLeft(r.dueOn, now),
         assignedAppraiserId: r.assignedAppraiserId, assignedName: r.assignedAppraiserId ? nameOf.get(r.assignedAppraiserId) ?? `conta ${r.assignedAppraiserId}` : null,

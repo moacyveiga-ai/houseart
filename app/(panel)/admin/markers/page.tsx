@@ -27,9 +27,9 @@ export default async function AdminMarkersPage({ searchParams }: { searchParams:
       <Kpis items={[
         { label: 'Em estoque', value: k.stock.toLocaleString('pt-BR'), note: k.newBatches ? `${k.newBatches} ${k.newBatches === 1 ? 'lote novo' : 'lotes novos'}` : 'nenhum lote novo' },
         { label: 'Vinculadas', value: k.linked.toLocaleString('pt-BR'), note: k.linkedShare === null ? 'nenhuma enviada ainda' : `${k.linkedShare.toLocaleString('pt-BR')}% das enviadas` },
-        { label: 'Alertas de remoção', value: String(k.removedToday), note: 'últimas 24 h' },
+        { label: 'Alertas de remoção', value: String(k.removedToday), note: k.removedToday ? 'nas últimas 24 h · lista abaixo' : 'nenhum nas últimas 24 h' },
       ]} />
-      <MarkersAdmin batches={view.batches} found={view.found} query={q} orders={orders.map((o) => ({ id: o.id, quantity: o.quantity, status: o.status, who: o.who, createdAt: o.createdAt.toISOString() }))} />
+      <MarkersAdmin batches={view.batches} found={view.found} query={q} alerts={view.alerts} orders={orders.map((o) => ({ id: o.id, quantity: o.quantity, status: o.status, who: o.who, createdAt: o.createdAt.toISOString() }))} />
     </div>
   )
 }

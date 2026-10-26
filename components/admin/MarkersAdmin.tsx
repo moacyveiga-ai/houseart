@@ -3,13 +3,26 @@
 // kit orders to ship, a new batch from the supplier's UIDs. Every status the
 // operator reads is in Portuguese; shipping asks for a confirmation.
 import { useCallback, useState } from 'react'
+import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { BATCH_STATUS_LABELS, MARKER_ORDER_STATUS_LABELS, MARKER_STATUS_LABELS } from '@/lib/physical-markers/domain'
+import { reviewHref } from '@/lib/admin-review/core'
 
 export interface BatchRow { id: number; code: string; quantity: number; destination: string; linked: number; status: string }
 export interface OrderRow { id: number; quantity: number; status: string; who: string; createdAt: string }
+/** A read whose chip reported tampering: the marker is REMOVED and a review item opened for the desk. */
+export interface AlertRow { id: number; at: string; purpose: string; uid: string; markerStatus: string; artwork: { publicId: string | null; title: string } | null; reviewOpen: boolean }
+export interface FoundMarker { uid: string; status: string; artwork: { publicId: string | null; title: string } | null; batch: string; readCounter: number }
+
+const PURPOSE_LABELS: Record<string, string> = { VERIFY: 'verificação pública', LINK: 'vínculo', DELIVERY_CONFIRM: 'confirmação de entrega', TRANSFER_CONFIRM: 'transferência' }
+const whenBR = (iso: string) => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Bahia', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+
+function ArtworkRef({ a }: { a: { publicId: string | null; title: string } | null }) {
+  if (!a) return <>sem obra</>
+  return a.publicId ? <Link href={`/verify/${a.publicId}`} className="ha-link">{a.title} · <span className="ha-id">{a.publicId}</span></Link> : <>{a.title}</>
+}
 
 const label = <T extends string>(map: Record<T, string>, v: string) => (map as Record<string, string>)[v] ?? v
 const BATCH_TONE: Record<string, { bg: string; fg: string }> = {
@@ -20,7 +33,7 @@ const BATCH_TONE: Record<string, { bg: string; fg: string }> = {
 const UID_LINE = /^[0-9a-f]{14}$/i
 const dateBR = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Bahia' })
 
-export function MarkersAdmin({ batches: initial, orders, found, query }: { batches: BatchRow[]; orders: OrderRow[]; found: { uid: string; status: string; artworkId: number | null; batch: string; readCounter: number } | null; query: string }) {
+export function MarkersAdmin({ batches: initial, orders, found, query, alerts }: { batches: BatchRow[]; orders: OrderRow[]; found: FoundMarker | null; query: string; alerts: AlertRow[] }) {
   const [batches, setBatches] = useState(initial)
   const [form, setForm] = useState({ code: '', quantity: 100, destination: '', uids: '' })
   const [creating, setCreating] = useState(false)
@@ -68,7 +81,7 @@ export function MarkersAdmin({ batches: initial, orders, found, query }: { batch
   return (
     <div className="ha-stack">
       {found ? (
-        <div className="ha-callout"><Icon name="sell" /><div className="ha-sm">Etiqueta <span className="ha-id">{found.uid}</span> · lote {found.batch} · {label(MARKER_STATUS_LABELS, found.status)} · {found.artworkId ? `vinculada à obra ${found.artworkId}` : 'sem obra'} · {found.readCounter} {found.readCounter === 1 ? 'leitura' : 'leituras'}</div></div>
+        <div className="ha-callout"><Icon name="sell" /><div className="ha-sm">Etiqueta <span className="ha-id">{found.uid}</span> · lote {found.batch} · {label(MARKER_STATUS_LABELS, found.status)} · {found.artwork ? <>vinculada a <ArtworkRef a={found.artwork} /></> : 'sem obra'} · {found.readCounter} {found.readCounter === 1 ? 'leitura' : 'leituras'}</div></div>
       ) : null}
       {query && !found ? <p className="ha-muted">Nenhuma etiqueta encontrada para “{query}”. Busque pelo UID (14 caracteres) ou pelo ID da obra (HA-…).</p> : null}
 
@@ -92,6 +105,18 @@ export function MarkersAdmin({ batches: initial, orders, found, query }: { batch
         </div>
       </div>
       <p className="ha-muted ha-sm">Etiquetas com chip NXP e criptografia por obra. Uma etiqueta removida invalida a leitura e abre alerta automático.</p>
+
+      <h2 className="ha-h3">Alertas de remoção</h2>
+      <ul className="ha-list" aria-label="Leituras com violação do chip nos últimos 7 dias">
+        {alerts.length === 0 ? <li className="ha-muted">Nenhuma leitura indicou violação do chip nos últimos 7 dias.</li> : null}
+        {alerts.map((al) => (
+          <li key={al.id} className="ha-list__row ha-markers__order">
+            <span><b><ArtworkRef a={al.artwork} /></b><br /><span className="ha-muted ha-sm">etiqueta <span className="ha-id">{al.uid}</span> · {label(MARKER_STATUS_LABELS, al.markerStatus)} · {PURPOSE_LABELS[al.purpose] ?? al.purpose} · {whenBR(al.at)}</span></span>
+            <span className="ha-review__kind" style={{ background: 'var(--ha-alert-500)', color: 'var(--ha-paper-50)' }}>Removida</span>
+            {al.reviewOpen ? <Link href={reviewHref('open', 'MARKER_REMOVED')} className="ha-btn ha-btn--ink ha-btn--xs">Abrir revisão</Link> : <span className="ha-muted ha-sm">{al.artwork ? 'revisão decidida' : 'sem revisão'}</span>}
+          </li>
+        ))}
+      </ul>
 
       <h2 className="ha-h3">Pedidos de kit</h2>
       <ul className="ha-list">

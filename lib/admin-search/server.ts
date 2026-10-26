@@ -34,17 +34,21 @@ export async function adminSearch(raw: string | null | undefined): Promise<Admin
       : null
     const [artworks, deals, users] = await Promise.all([
       artworkWhere ? prisma.artwork.findMany({ where: artworkWhere, take: ADMIN_SEARCH_TAKE, orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, status: true, publicId: true, artist: { select: { name: true } }, member: { select: { displayName: true } }, certificate: { select: { publicId: true, status: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : [],
-      dealWhere ? prisma.deal.findMany({ where: dealWhere, take: ADMIN_SEARCH_TAKE, orderBy: { id: 'desc' }, select: { id: true, code: true, phase: true, exceptionStatus: true, buyerUserId: true, artwork: { select: { title: true, member: { select: { displayName: true } } } } } }) : [],
+      dealWhere ? prisma.deal.findMany({ where: dealWhere, take: ADMIN_SEARCH_TAKE, orderBy: { id: 'desc' }, select: { id: true, code: true, phase: true, exceptionStatus: true, buyerUserId: true, sellerMemberId: true, artwork: { select: { title: true } } } }) : [],
       userWhere ? prisma.user.findMany({ where: userWhere, take: ADMIN_SEARCH_TAKE, orderBy: { id: 'desc' }, select: { id: true, name: true, email: true, profile: true, active: true, member: { select: { displayName: true } } } }) : [],
     ])
-    const buyers = new Map((await prisma.user.findMany({ where: { id: { in: deals.map((d) => d.buyerUserId) } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]))
+    // the seller is the deal's own member: after the transfer the artwork belongs to the buyer
+    const [buyers, sellers] = await Promise.all([
+      prisma.user.findMany({ where: { id: { in: deals.map((d) => d.buyerUserId) } }, select: { id: true, name: true } }).then((xs) => new Map(xs.map((u) => [u.id, u.name]))),
+      prisma.member.findMany({ where: { id: { in: deals.map((d) => d.sellerMemberId) } }, select: { id: true, displayName: true } }).then((xs) => new Map(xs.map((m) => [m.id, m.displayName]))),
+    ])
     const result: AdminSearchResult = {
       q,
       artworks: artworks.map((a) => {
         const pid = a.certificate?.publicId ?? a.publicId
         return { id: a.id, title: a.title, artist: a.artist.name, owner: a.member.displayName, status: a.status, statusLabel: ARTWORK_STATUS_LABELS[a.status as ArtworkStatus] ?? a.status, publicId: pid, certificateStatus: a.certificate?.status ?? null, cover: a.media[0]?.publicUrl ?? null, href: `/artworks/${a.id}/edit`, verifyHref: pid ? `/verify/${encodeURIComponent(pid)}` : null }
       }),
-      deals: deals.map((d) => ({ id: d.id, code: d.code, phase: d.phase, phaseLabel: isPhase(d.phase) ? PHASE_LABELS[d.phase] : d.phase, exception: d.exceptionStatus, artworkTitle: d.artwork.title, seller: d.artwork.member.displayName, buyer: buyers.get(d.buyerUserId) ?? `conta #${d.buyerUserId}`, href: '/admin/deals?f=all' })),
+      deals: deals.map((d) => ({ id: d.id, code: d.code, phase: d.phase, phaseLabel: isPhase(d.phase) ? PHASE_LABELS[d.phase] : d.phase, exception: d.exceptionStatus, artworkTitle: d.artwork.title, seller: sellers.get(d.sellerMemberId) ?? `membro #${d.sellerMemberId}`, buyer: buyers.get(d.buyerUserId) ?? `conta #${d.buyerUserId}`, href: `/admin/deals?f=all&deal=${d.id}` })),
       users: users.map((u) => ({ id: u.id, name: u.name, email: u.email, profile: u.profile, profileLabel: LOGIN_PROFILE_LABELS[u.profile] ?? u.profile, active: u.active, member: u.member?.displayName ?? null, href: `/admin/users?q=%23${u.id}` })),
       total: 0,
     }

@@ -23,7 +23,7 @@ describe('admin search', () => {
     expect(byTitle.deals.map((d) => d.code)).toEqual(['DL-2026-000007']) // the deal of that artwork
     expect((await adminSearch('joana')).artworks.length).toBeGreaterThan(0) // by artist / owner
     expect((await adminSearch('ha2026ab12cd34')).artworks.map((a) => a.id)).toEqual([s.b.artworkId])
-    expect((await adminSearch('dl-2026-7')).deals[0]).toMatchObject({ code: 'DL-2026-000007', phaseLabel: expect.any(String), seller: 'Joana Teixeira', buyer: 'Lia Prado', href: '/admin/deals?f=all' })
+    expect((await adminSearch('dl-2026-7')).deals[0]).toMatchObject({ code: 'DL-2026-000007', phaseLabel: expect.any(String), seller: 'Joana Teixeira', buyer: 'Lia Prado', href: expect.stringMatching(/^\/admin\/deals\?f=all&deal=\d+$/) })
     expect((await adminSearch('lia@col.test')).users[0]).toMatchObject({ name: 'Lia Prado', profileLabel: 'Colecionador', href: `/admin/users?q=%23${buyer.id}` })
     const byId = await adminSearch(`#${s.b.userId}`)
     expect(byId.users.map((u) => u.id)).toEqual([s.b.userId])

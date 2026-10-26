@@ -11,10 +11,12 @@ import '@/components/admin/deals-admin.css'
 export const metadata = { title: 'Negócios — HouseArt' }
 
 /** Admin › Negócios (audit 2026-10-25): every deal of the house, the guarantee, the payouts, and what the desk does about them. */
-export default async function AdminDealsPage({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
+export default async function AdminDealsPage({ searchParams }: { searchParams: Promise<{ f?: string; deal?: string }> }) {
   const { user } = await requirePanelPage('/admin/deals')
   if (!hasTotalScope(user)) notFound()
-  const f = filterKey((await searchParams).f)
+  const sp = await searchParams
+  const f = filterKey(sp.f)
+  const openId = /^\d{1,9}$/.test(sp.deal ?? '') ? Number(sp.deal) : null
   const rows = await adminDeals()
   const k = dealKpis(rows)
   return (
@@ -26,7 +28,7 @@ export default async function AdminDealsPage({ searchParams }: { searchParams: P
         { label: 'Repasses com falha', value: String(k.failed), note: k.failed ? 'a Stripe recusou · Tentar de novo' : 'nenhum' },
         { label: 'Em disputa', value: String(k.disputes), note: k.disputes ? 'aguardam a equipe' : 'nenhuma' },
       ]} />
-      <DealsAdmin rows={rows.filter((d) => matchesFilter(d, f))} filter={f} filters={DEAL_FILTERS.map((key) => ({ key, label: DEAL_FILTER_LABELS[key], count: rows.filter((d) => matchesFilter(d, key)).length }))} />
+      <DealsAdmin rows={rows.filter((d) => matchesFilter(d, f))} filter={f} openId={openId} filters={DEAL_FILTERS.map((key) => ({ key, label: DEAL_FILTER_LABELS[key], count: rows.filter((d) => matchesFilter(d, key)).length }))} />
     </div>
   )
 }

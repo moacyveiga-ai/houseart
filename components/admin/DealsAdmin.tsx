@@ -17,9 +17,9 @@ const brl = (cents: string) => formatBRL(BigInt(cents))
 const SELLER_KIND: Record<string, string> = { ARTIST: 'artista', GALLERY_STAFF: 'galeria', ADVISOR: 'consultor', COLLECTOR: 'colecionador' }
 const PAYOUT_TONE: Record<AdminSplitLine['payoutState'], BadgeTone> = { PLATFORM: 'soft', HELD: 'neutral', STRIPE_PAID: 'verified', MANUAL_PAID: 'verified', PENDING: 'pending', FAILED: 'alert', AWAITING_ACCOUNT: 'pending', MANUAL: 'ink' }
 
-export function DealsAdmin({ rows: initial, filter, filters }: { rows: AdminDealRow[]; filter: DealFilter; filters: { key: DealFilter; label: string; count: number }[] }) {
+export function DealsAdmin({ rows: initial, filter, filters, openId = null }: { rows: AdminDealRow[]; filter: DealFilter; filters: { key: DealFilter; label: string; count: number }[]; openId?: number | null }) {
   const [rows, setRows] = useState(initial)
-  const [open, setOpen] = useState<number | null>(null)
+  const [open, setOpen] = useState<number | null>(openId)
   const [busy, setBusy] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const [paying, setPaying] = useState<{ deal: AdminDealRow; line: AdminSplitLine } | null>(null)

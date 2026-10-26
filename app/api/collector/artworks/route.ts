@@ -4,7 +4,7 @@ import { registerOwnArtwork } from '@/lib/collectors/server'
 import { artworkErrorResponse } from '@/app/api/artworks/_http'
 import { ACQUISITION_KINDS, type AcquisitionKind } from '@/lib/artworks/domain'
 
-/** "Cadastrar obra" of the collector: origin + artist → a draft the wizard completes at /artworks/<id>/edit. */
+/** "Cadastrar obra" of the collector: origin + artist → a draft the register goes on with at /wallet/register?draft=<id> (photos, sheet, review). */
 export async function POST(req: Request) {
   try {
     const u = await requireAuth()
@@ -22,6 +22,6 @@ export async function POST(req: Request) {
       acquisitionNote: typeof b.acquisitionNote === 'string' ? b.acquisitionNote.slice(0, 500) : null,
       acquisitionPriceCents: price,
     })
-    return NextResponse.json({ ok: true, id: r.id, href: `/artworks/${r.id}/edit` }, { status: 201 })
+    return NextResponse.json({ ok: true, id: r.id, href: `/wallet/register?draft=${r.id}` }, { status: 201 })
   } catch (e) { return artworkErrorResponse(e) }
 }

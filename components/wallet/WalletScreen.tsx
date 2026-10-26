@@ -6,6 +6,7 @@ import { Badge } from '@/components/ds/Badge'
 import { Icon } from '@/components/ds/Icon'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { WalletItem } from '@/lib/collector-wallet/server'
+import type { CollectorDraftRow } from '@/lib/collectors/server'
 
 /** The deed plus its status (the row's badge). */
 export type WalletScreenItem = WalletItem & { status: string; sealGreen: boolean; registeredCents: string | null }
@@ -17,7 +18,7 @@ function badgeOf(it: WalletScreenItem): { tone: 'verified' | 'pending' | 'neutra
   return it.insured ? { tone: 'verified', label: 'Segurada' } : { tone: 'neutral', label: 'Sem seguro' }
 }
 
-export function WalletScreen({ items, totalCents, holderName, inCollection = false, openId = null }: { items: WalletScreenItem[]; totalCents: string; holderName: string; inCollection?: boolean; openId?: number | null }) {
+export function WalletScreen({ items, totalCents, holderName, inCollection = false, openId = null, drafts = [] }: { items: WalletScreenItem[]; totalCents: string; holderName: string; inCollection?: boolean; openId?: number | null; drafts?: CollectorDraftRow[] }) {
   return (
     <section className="ha-stack">
       <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><span className="ha-row" style={{ gap: 'var(--ha-space-4)' }}><Link href="/wallet/register" className="ha-btn ha-btn--ink ha-btn--xs"><Icon name="add_photo_alternate" size={18} />Cadastrar obra</Link><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></span></div>
@@ -42,6 +43,22 @@ export function WalletScreen({ items, totalCents, holderName, inCollection = fal
         })}
       </ul>
       {items.length ? <p className="ha-muted ha-sm" style={{ margin: 0 }}>Toque numa obra para ver a escritura, vender, pedir serviços ou transferir.</p> : null}
+      {drafts.length ? (<>
+        <h2 className="ha-h3" style={{ marginTop: 'var(--ha-space-4)' }}>Em cadastro</h2>
+        <ul className="ha-list">
+          {drafts.map((d) => {
+            const row = (<>
+              {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
+              <span className="ha-wall ha-wall--40">{d.cover ? <img src={d.cover} alt="" /> : null}</span>
+              <span style={{ textAlign: 'left' }}><b>{d.title}</b><br /><span className="ha-muted ha-sm">{d.artist}</span></span>
+              {d.href ? <span className="ha-link ha-sm">Continuar</span> : <span />}
+              <Badge tone={d.href ? 'neutral' : 'pending'}>{d.href ? 'Rascunho' : 'Em certificação'}</Badge>
+            </>)
+            const style = { gridTemplateColumns: '40px 1fr auto auto', width: '100%', color: 'inherit', textDecoration: 'none' }
+            return <li key={d.id}>{d.href ? <Link href={d.href} className="ha-list__row ha-list__btn" style={style}>{row}</Link> : <span className="ha-list__row" style={style}>{row}</span>}</li>
+          })}
+        </ul>
+      </>) : null}
     </section>
   )
 }

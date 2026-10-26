@@ -5,7 +5,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
 import { ensureCollectorMember } from '@/lib/tenant/member-server'
-import { createDraft, patchArtwork, ArtworkError } from '@/lib/artworks/server'
+import { createDraft, getArtwork, patchArtwork, ArtworkError } from '@/lib/artworks/server'
 import { scopeOfUser, type Scope } from '@/lib/scope/core'
 import { ACQUISITION_KINDS, type AcquisitionKind } from '@/lib/artworks/domain'
 import { listArtworkForSale } from '@/lib/offers/server'
@@ -28,6 +28,34 @@ export async function registerOwnArtwork(userId: number, i: RegisterOwnArtworkIn
   const a = await createDraft(scope, { title: i.title, artistId: i.artistId ?? null, artistName: i.artistName ?? null })
   await patchArtwork(scope, a.id, { acquisitionKind: i.acquisitionKind, acquisitionYear: i.acquisitionYear ?? null, acquisitionFrom: i.acquisitionFrom ?? null, acquisitionNote: i.acquisitionNote ?? null, acquisitionPriceCents: i.acquisitionPriceCents ?? null })
   return { id: a.id, scope }
+}
+
+/** A draft of "Cadastrar obra" the collector resumes (/wallet/register?draft=<id>): theirs, still DRAFT, registered as an own artwork. */
+export async function collectorDraft(userId: number, artworkId: number) {
+  const scope = await collectorScope(userId)
+  if (!scope) return null
+  const a = await withScope(scope, 'collector:draft', () => getArtwork(scope, artworkId))
+  if (!a || a.status !== 'DRAFT' || !a.acquisitionKind) return null
+  return a
+}
+
+export interface CollectorDraftRow { id: number; title: string; artist: string; cover: string | null; status: string; href: string | null }
+
+/**
+ * "Em cadastro" of Minha coleção: the collector's own artworks without a deed yet — a DRAFT resumes
+ * the register, one sent to certification only shows its state (the deed arrives when it is issued).
+ */
+export async function collectorDrafts(userId: number): Promise<CollectorDraftRow[]> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { memberId: true, member: { select: { kind: true } } } })
+  if (!u?.memberId || u.member?.kind !== 'COLLECTOR') return []
+  const scope = await collectorScope(userId)
+  if (!scope) return []
+  const rows = await withScope(scope, 'collector:drafts', () => prisma.artwork.findMany({
+    where: { memberId: u.memberId!, status: { in: ['DRAFT', 'IN_CERTIFICATION'] }, acquisitionKind: { not: null } },
+    select: { id: true, title: true, status: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
+    orderBy: { updatedAt: 'desc' }, take: 50,
+  }))
+  return rows.map((r) => ({ id: r.id, title: r.title, artist: r.artist.name, cover: r.media[0]?.publicUrl ?? null, status: r.status, href: r.status === 'DRAFT' ? `/wallet/register?draft=${r.id}` : null }))
 }
 
 /** The scope of the collector's own member (null until they own or register something). */

@@ -1,0 +1,17 @@
+/* Admin › KYC (components/admin/KycAdmin.tsx). Prefix ha-akyc. */
+.ha-akyc { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-akyc__filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-akyc__filters .ha-chip { text-decoration: none; }
+.ha-akyc__list { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-akyc__row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 1.4fr) minmax(0, 0.9fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-akyc__row--old { opacity: 0.7; }
+.ha-akyc__who, .ha-akyc__facts { display: flex; flex-direction: column; min-width: 0; font-size: var(--ha-text-body-sm); }
+.ha-akyc__who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-akyc__sub { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-akyc__state { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: var(--ha-text-caption); }
+.ha-akyc__flag { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ha-alert-500); }
+.ha-akyc__flag--soft { color: var(--ha-fg-body); }
+.ha-akyc__actions { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); justify-content: flex-end; }
+.ha-akyc__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-akyc__err { font-size: var(--ha-text-caption); color: var(--ha-alert-500); margin: 0; }
+@media (max-width: 900px) { .ha-akyc__row { grid-template-columns: minmax(0, 1fr); } .ha-akyc__actions { justify-content: flex-start; } }

@@ -4,6 +4,8 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 
 export async function verifyIdentity(userId: number, documentHash: string | null): Promise<'APPROVED' | 'PENDING' | 'REJECTED'> {
+  // a verification the desk approved (or a valid one from before) is reused: no second row, no second provider call
+  if (await hasValidKyc(userId)) return 'APPROVED'
   const provider = process.env.KYC_PROVIDER ?? 'mock'
   if (provider !== 'mock') {
     await prisma.kycVerification.create({ data: { userId, provider, status: 'PENDING', documentHash } })

@@ -12,7 +12,7 @@ export interface SwitcherProfile { kind: ProfileKindKey; name: string; icon: str
  * session's profile in place (POST /api/profiles) — there is no separate
  * "choose a profile" screen. With one profile it only shows who is in.
  */
-export function ProfileSwitcher({ initials, label, name, profiles }: { initials: string; label: string; name?: string; profiles: SwitcherProfile[] }) {
+export function ProfileSwitcher({ initials, label, name, profiles, accountHref = '/account' }: { initials: string; label: string; name?: string; profiles: SwitcherProfile[]; accountHref?: string }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +60,7 @@ export function ProfileSwitcher({ initials, label, name, profiles }: { initials:
           )) : null}
           {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
           <div className="ha-switcher__sep" />
-          <Link role="menuitem" href="/account" className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="person" size={20} /><span>Minha conta</span></Link>
+          <Link role="menuitem" href={accountHref} className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="person" size={20} /><span>Minha conta</span></Link>
           <form action="/api/auth/logout" method="post">
             <button type="submit" role="menuitem" className="ha-switcher__item"><Icon name="logout" size={20} /><span>Sair</span></button>
           </form>

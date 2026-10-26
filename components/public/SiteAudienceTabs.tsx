@@ -10,7 +10,7 @@ export interface AudienceImage { src: string; alt: string }
 const AUDIENCES = [
   { name: 'Artistas', title: 'Sua obra com nome, data e dono para sempre.', cta: 'Certificar minhas obras', href: '/signup', items: ['Cadastro pelo celular em menos de dez minutos por obra', 'Certificado com assinatura digital e carimbo do tempo', '5% da valorização a cada revenda, automático', 'Perfil público ligado ao seu Instagram'] },
   { name: 'Galerias', title: 'Seu inventário inteiro com escritura.', cta: 'Falar com a equipe', href: '/signup', items: ['Certificação em lote em nome dos artistas representados', 'Viewing rooms privados e CRM de colecionadores', 'Frete, seguro e exportação assistida no checkout', 'Repartição automática entre galeria, artista e parceiros'] },
-  { name: 'Colecionadores', title: 'Sua coleção como patrimônio registrado.', cta: 'Abrir minha carteira', href: '/collector/access', items: ['Carteira de escrituras com certificado e proveniência', 'Pagamento em garantia: só libera depois que a obra chega', 'Seguro, laudo de valor e revenda a partir da carteira', 'Transferência registrada mesmo em vendas fora da plataforma'] },
+  { name: 'Colecionadores', title: 'Sua coleção como patrimônio registrado.', cta: 'Abrir minha carteira', href: '/wallet', items: ['Carteira de escrituras com certificado e proveniência', 'Pagamento em garantia: só libera depois que a obra chega', 'Seguro, laudo de valor e revenda a partir da carteira', 'Transferência registrada mesmo em vendas fora da plataforma'] },
 ] as const
 
 export function SiteAudienceTabs({ images }: { images: (AudienceImage | null)[] }) {

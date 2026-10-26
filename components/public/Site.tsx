@@ -10,7 +10,7 @@ import './site.css'
 export interface SiteHero { publicId: string; artist: string; title: string; year: number | null; cover: string; back: string | null }
 export interface SiteFeeGroup { icon: string; title: string; items: { name: string; desc: string; value: string }[] }
 export interface SiteUser { href: string; name: string; meta: string }
-export interface SiteData { hero: SiteHero | null; audienceImages: (AudienceImage | null)[]; plans: PublicPlan[]; fees: SiteFeeGroup[]; users: SiteUser[] }
+export interface SiteData { hero: SiteHero | null; audienceImages: (AudienceImage | null)[]; plans: PublicPlan[]; fees: SiteFeeGroup[]; users: SiteUser[]; supportEmail?: string | null }
 
 const PILLARS = [
   { icon: 'verified', title: 'Certifique', text: 'Etiqueta física, ID único e certificado com validade jurídica, emitido pelo artista ou pela galeria.' },
@@ -34,7 +34,7 @@ function StepText({ n, name, desc }: { n: number; name: string; desc: string }) 
   return <div className="hp-site-step__text"><span className="hp-site-step__n">{n}</span><div><div className="hp-site-step__name">{name}</div><div className="hp-site-step__desc">{desc}</div></div></div>
 }
 
-export function Site({ hero, audienceImages, plans, fees, users }: SiteData) {
+export function Site({ hero, audienceImages, plans, fees, users, supportEmail = null }: SiteData) {
   return (
     <div className="hp-site">
       <section id="topo" className="hp-site-hero">
@@ -210,6 +210,15 @@ export function Site({ hero, audienceImages, plans, fees, users }: SiteData) {
           </div>
         </section>
       ) : null}
+
+      {/* The target of "Falar com o suporte" / "Reportar problema" on the public verification (audit 2026-10-25: the anchor did not exist). */}
+      <section id="suporte" className="hp-site-who" aria-labelledby="hp-site-support-title">
+        <h2 id="hp-site-support-title" className="hp-section-title">Suporte</h2>
+        <p className="hp-site-support__text">Para relatar um problema com uma obra, uma contestação ou um furto, tenha em mãos o ID da obra (o código <b>HA-</b> do certificado). Não conclua uma compra de obra com alerta antes de falar com a equipe.</p>
+        {supportEmail
+          ? <p className="hp-site-support__text"><Icon name="mail" size={18} /> Escreva para <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
+          : <p className="hp-site-support__text">Quem tem conta fala com a equipe HouseArt pela área logada. <Link href="/login">Entrar</Link></p>}
+      </section>
     </div>
   )
 }

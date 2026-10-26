@@ -2,7 +2,8 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { HouseArtLogo } from './HouseArtLogo'
-import { NAV, PROFILE_LABELS, type ProfileKind } from '@/lib/profiles/nav'
+import { accountHrefOf, HELP_HREF, NAV, PROFILE_LABELS, type ProfileKind } from '@/lib/profiles/nav'
+import { ShellDrawer } from './ShellDrawer'
 import { ProfileSwitcher, type SwitcherProfile } from './ProfileSwitcher'
 
 export interface ShellUser { initials: string; profile: ProfileKind; name?: string }
@@ -28,10 +29,13 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
   children: ReactNode
 }) {
   const nav = NAV[user.profile]
+  const accountHref = accountHrefOf(user.profile)
+  const drawerItems = nav.map((item) => ({ key: item.key, href: item.href, label: item.label, icon: item.icon, badge: badges[item.key] || undefined, on: item.key === activeKey }))
   return (
     <div className="ha-shell">
       <IndexTicker items={ticker} />
       <header className="ha-topbar">
+        <ShellDrawer items={drawerItems} accountHref={accountHref} helpHref={HELP_HREF} />
         <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="full_vert" height={48} /></Link>
         <form className="ha-topbar__search" role="search" action="/search">
           <Icon name="search" size={20} />
@@ -39,7 +43,7 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
         </form>
         <div className="ha-topbar__right">
           <Link href="/notifications" className="ha-btn ha-btn--ghost ha-btn--xs ha-bell" aria-label={bell ? `Notificações, ${bell} não lidas` : 'Notificações'}><Icon name="notifications" />{bell ? <span className="ha-bell__dot" /> : null}</Link>
-          <ProfileSwitcher initials={user.initials} label={PROFILE_LABELS[user.profile]} name={user.name} profiles={profiles} />
+          <ProfileSwitcher initials={user.initials} label={PROFILE_LABELS[user.profile]} name={user.name} profiles={profiles} accountHref={accountHref} />
         </div>
       </header>
       <div className="ha-body">
@@ -58,12 +62,12 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
             })}
           </nav>
           <div className="ha-sidebar__foot">
-            <Link href="/settings">Configurações</Link>
-            <Link href="/help">Ajuda</Link>
+            <Link href={accountHref}>Configurações</Link>
+            <Link href={HELP_HREF}>Ajuda</Link>
             <form action="/api/auth/logout" method="post"><button type="submit" className="ha-sidebar__exit">Sair</button></form>
           </div>
         </aside>
-        <main className="ha-main">{children}</main>
+        <main className="ha-main"><div className="ha-main__inner">{children}</div></main>
       </div>
     </div>
   )

@@ -7,7 +7,8 @@ import { antiFlashScript } from '@/lib/theme-routes'
 
 // Fraunces (display) + Inter (UI), exposed as --font-fraunces / --font-inter
 // and consumed by --ha-font-display / --ha-font-ui (app/ds/tokens.css).
-const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', weight: ['400', '500'], display: 'swap' })
+// Variable Fraunces with the optical-size axis and a real italic (artwork titles are italic in the design; synthetic italic before 2026-10-25).
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', style: ['normal', 'italic'], axes: ['opsz'], display: 'swap' })
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' }

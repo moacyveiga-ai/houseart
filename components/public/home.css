@@ -143,3 +143,5 @@
   .hp-home-manifesto__float-a, .hp-home-manifesto__float-b { opacity: .9 !important; }
   .hp-home-final__float-a, .hp-home-final__float-b { opacity: .6 !important; }
 }
+/* the public header has two rows below 900 px (nav scrolls under the brand): keep the hero copy clear of it */
+@media (max-width: 900px) { .hp-home-hero__content { top: 108px; } }

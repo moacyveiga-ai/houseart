@@ -12,22 +12,23 @@ import { Toast } from '@/components/ds/Toast'
 import { ShareSheet } from '@/components/public/ShareSheet'
 import { categoryLabel, formatBRL } from '@/lib/artworks/domain'
 import { installmentCents } from '@/lib/shipping/quote-core'
-import { acceptsOffers, deckCounter, exploreHref, exploreWorkHref, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
+import { CommentsSheet, type CommentSubject } from '@/components/community/CommentsSheet'
+import { acceptsOffers, deckCounter, exploreHref, exploreWorkHref, marketLabel, sellerSubOf, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
 import './explore.css'
 
 const initialsOf = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
 const priceOf = (cents: string | null) => (cents === null ? 'Sob consulta' : formatBRL(BigInt(cents)))
 const installmentOf = (cents: string | null) => (cents === null ? 'O preço não aparece: interessados pedem contato.' : `ou 10× de ${formatBRL(installmentCents(Number(cents)))} sem juros`)
-const marketLabel = (m: ExploreItem['market']) => (m === 'SECONDARY' ? 'Secundário' : 'Primário')
 
 type Kind = 'LIKE' | 'SAVE'
 
-export function ExploreScreen({ items: initial, view, chip }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip }) {
+export function ExploreScreen({ items: initial, view, chip, me }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip; me: { initials: string } }) {
   const [items, setItems] = useState(initial)
   const workHref = (publicId: string) => exploreWorkHref(view, chip, publicId)
   const [toast, setToast] = useState('')
   const [sharing, setSharing] = useState<ExploreItem | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
+  const [commenting, setCommenting] = useState<CommentSubject | null>(null)
   const clearToast = useCallback(() => setToast(''), [])
 
   const patch = (id: number, p: Partial<ExploreItem>) => setItems((xs) => xs.map((i) => (i.id === id ? { ...i, ...p } : i)))
@@ -36,13 +37,13 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
   async function react(item: ExploreItem, kind: Kind, quiet = false): Promise<boolean> {
     const key = kind === 'LIKE' ? 'liked' : 'saved'
     const before = item[key]
-    patch(item.id, { [key]: !before })
+    patch(item.id, kind === 'LIKE' ? { liked: !before, likes: Math.max(0, item.likes + (before ? -1 : 1)) } : { saved: !before })
     setBusy(item.id)
     const res = await fetch('/api/community/reactions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ target: 'ARTWORK', targetId: item.id, kind }) })
     setBusy(null)
-    if (!res.ok) { patch(item.id, { [key]: before }); setToast('Não foi possível registrar agora.'); return false }
-    const data = (await res.json().catch(() => ({}))) as { on?: boolean }
-    patch(item.id, { [key]: !!data.on })
+    if (!res.ok) { patch(item.id, kind === 'LIKE' ? { liked: before, likes: item.likes } : { saved: before }); setToast('Não foi possível registrar agora.'); return false }
+    const data = (await res.json().catch(() => ({}))) as { on?: boolean; count?: number }
+    patch(item.id, kind === 'LIKE' ? { liked: !!data.on, ...(typeof data.count === 'number' ? { likes: data.count } : {}) } : { saved: !!data.on })
     if (!quiet) setToast(kind === 'SAVE' ? (data.on ? 'Salva nos favoritos' : 'Removida dos favoritos') : data.on ? 'Curtida' : 'Curtida removida')
     return !!data.on
   }
@@ -51,7 +52,9 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
     <div className="ha-explore">
       <div className="ha-explore__head">
         <div className="ha-explore__top">
-          <h1 className="ha-h1">Explorar</h1>
+          {/* the prototype has no title over the feed; the page keeps one for screen readers */}
+          <h1 className="ha-sr">Explorar</h1>
+          <span className="ha-explore__sp" />
           <Link href="/search" className="ha-iconbtn ha-explore__ic" aria-label="Buscar"><Icon name="search" size={24} /></Link>
           <Link href="/favorites" className="ha-iconbtn ha-explore__ic" aria-label="Favoritos"><Icon name="bookmark" size={24} /></Link>
         </div>
@@ -71,8 +74,17 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
             return (
               <article key={o.id} className="ha-xp-post" aria-label={o.title}>
                 <div className="ha-xp-post__by">
-                  <span className="ha-avatar ha-xp-post__av" aria-hidden="true">{initialsOf(o.seller)}</span>
-                  <span className="ha-stack ha-xp-post__who"><span className="ha-xp-post__name">{o.seller}</span><span className="ha-xp-post__sub">{o.sellerKind === 'GALLERY' ? 'Galeria' : 'Particular'}{o.uf ? ` · ${o.uf}` : ''}</span></span>
+                  {o.sellerHref ? (
+                    <Link href={o.sellerHref} className="ha-xp-post__seller">
+                      <span className="ha-avatar ha-xp-post__av" aria-hidden="true">{initialsOf(o.seller)}</span>
+                      <span className="ha-stack ha-xp-post__who"><span className="ha-xp-post__name">{o.seller}</span><span className="ha-xp-post__sub">{sellerSubOf(o)}</span></span>
+                    </Link>
+                  ) : (
+                    <span className="ha-xp-post__seller">
+                      <span className="ha-avatar ha-xp-post__av" aria-hidden="true">{initialsOf(o.seller)}</span>
+                      <span className="ha-stack ha-xp-post__who"><span className="ha-xp-post__name">{o.seller}</span><span className="ha-xp-post__sub">{sellerSubOf(o)}</span></span>
+                    </span>
+                  )}
                   <span className="ha-xp-post__pill">{marketLabel(o.market)}</span>
                 </div>
                 <Link href={workHref(o.publicId)} scroll={false} className="ha-xp-post__wall" aria-label={`Ver obra ${o.title}`}>
@@ -84,7 +96,8 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
                   </span>
                 </Link>
                 <div className="ha-xp-post__acts">
-                  <button type="button" className={`ha-xp-act${o.liked ? ' ha-xp-act--liked' : ''}`} aria-label={o.liked ? 'Remover curtida' : 'Curtir'} aria-pressed={o.liked} disabled={busy === o.id} onClick={() => react(o, 'LIKE')}><Icon name="favorite" size={24} filled={o.liked} /></button>
+                  <button type="button" className={`ha-xp-act${o.liked ? ' ha-xp-act--liked' : ''}`} aria-label={o.liked ? 'Remover curtida' : 'Curtir'} aria-pressed={o.liked} disabled={busy === o.id} onClick={() => react(o, 'LIKE')}><Icon name="favorite" size={24} filled={o.liked} />{o.likes > 0 ? <span className="ha-xp-act__n">{o.likes}</span> : null}</button>
+                  <button type="button" className="ha-xp-act" aria-label={`Comentários (${o.comments})`} onClick={() => setCommenting({ key: `a${o.id}`, id: o.id, target: 'ARTWORK', author: { memberId: null, name: o.seller } })}><Icon name="chat_bubble" size={24} />{o.comments > 0 ? <span className="ha-xp-act__n">{o.comments}</span> : null}</button>
                   <button type="button" className="ha-xp-act" aria-label="Compartilhar" onClick={() => setSharing(o)}><Icon name="send" size={24} /></button>
                   <span className="ha-xp-post__sp" />
                   <button type="button" className="ha-xp-act" aria-label={o.saved ? 'Remover dos favoritos' : 'Salvar'} aria-pressed={o.saved} disabled={busy === o.id} onClick={() => react(o, 'SAVE')}><Icon name="bookmark" size={24} filled={o.saved} /></button>
@@ -96,7 +109,6 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
                 </Link>
                 <div className="ha-xp-post__buy">
                   <span className="ha-stack ha-xp-post__price"><span className="ha-xp-post__v">{priceOf(o.priceCents)}</span><span className="ha-xp-post__inst">{installmentOf(o.priceCents)}</span></span>
-                  <Link href={workHref(o.publicId)} scroll={false} className="ha-btn ha-btn--ghost ha-btn--sm">Ver obra</Link>
                   {offers ? <Link href={`/e/artwork/${o.publicId}/offer`} className="ha-btn ha-btn--outline ha-btn--sm">Ofertar</Link> : null}
                   {o.priceCents !== null ? <Link href={`/e/artwork/${o.publicId}/buy`} className="ha-btn ha-btn--primary ha-btn--sm">Comprar</Link> : null}
                 </div>
@@ -111,6 +123,8 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
       )}
 
       {sharing ? <ShareSheet artwork={{ publicId: sharing.publicId, title: sharing.title, artist: sharing.artist, year: sharing.year, cover: sharing.cover, price: sharing.priceCents === null ? null : priceOf(sharing.priceCents) }} open onClose={() => setSharing(null)} onDone={setToast} /> : null}
+      <CommentsSheet key={commenting?.key ?? 'none'} item={commenting} me={me} onClose={() => setCommenting(null)} onToast={setToast}
+        onCount={(key, delta) => setItems((xs) => xs.map((i) => (`a${i.id}` === key ? { ...i, comments: Math.max(0, i.comments + delta) } : i)))} />
       <Toast message={toast} onDone={clearToast} />
     </div>
   )

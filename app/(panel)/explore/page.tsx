@@ -1,6 +1,7 @@
 import { requirePanelPage } from '../_session'
+import { initialsOf } from '@/lib/profiles/core'
 import { listPublicArtworks, marketItems } from '@/lib/marketplace/public-server'
-import { artworkFlags } from '@/lib/community/server'
+import { artworkCounts, artworkFlags } from '@/lib/community/server'
 import { ExploreScreen } from '@/components/collector/ExploreScreen'
 import { chipOf, exploreHref, passesChip, viewOf, type ExploreItem } from '@/components/collector/explore-core'
 import { collectorPanel } from '@/lib/collector-wallet/panel-server'
@@ -12,7 +13,7 @@ export const metadata = { title: 'Explorar — HouseArt' }
 async function exploreItems(viewer: number): Promise<ExploreItem[]> {
   const [cards, market] = await Promise.all([listPublicArtworks({}, 60), marketItems(500)])
   const byId = new Map(market.map((m) => [m.publicId, m]))
-  const flags = await artworkFlags(viewer, cards.map((c) => c.id))
+  const [flags, counts] = await Promise.all([artworkFlags(viewer, cards.map((c) => c.id)), artworkCounts(cards.map((c) => c.id))])
   return cards.flatMap((c) => {
     const m = byId.get(c.publicId)
     if (!m) return []
@@ -22,6 +23,8 @@ async function exploreItems(viewer: number): Promise<ExploreItem[]> {
       priceCents: c.priceCents === null ? null : c.priceCents.toString(), saleMode: c.saleMode, cover: c.cover,
       technique: m.technique, dimensions: m.dimensions, seller: m.seller, sellerKind: m.sellerKind, market: m.market, uf: m.uf,
       liked: f?.liked ?? false, saved: f?.saved ?? false,
+      likes: counts.get(c.id)?.likes ?? 0, comments: counts.get(c.id)?.comments ?? 0,
+      city: m.city ?? null, sellerHref: m.sellerSlug ? `/e/gallery/${m.sellerSlug}` : null,
     }]
   })
 }
@@ -35,8 +38,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const panel = p.work ? await collectorPanel(user, { work: p.work }) : null
   return (
     <div className="ha-page">
-      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} />
-      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref={exploreHref(view, chip)} /> : null}
+      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} me={{ initials: initialsOf(user.name) }} />
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref={exploreHref(view, chip)} /> : null}
     </div>
   )
 }

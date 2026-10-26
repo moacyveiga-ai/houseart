@@ -13,16 +13,17 @@ import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { SellSheet } from './SellSheet'
 import { ServicesSheet } from './ServicesSheet'
+import { CommentsSheet } from '@/components/community/CommentsSheet'
 import type { CollectorPanelData } from '@/lib/collector-wallet/panel-core'
 import './collector-panel.css'
 import '@/components/sales/sales-progress.css'
 
-export function CollectorArtworkPanel({ a, closeHref }: { a: CollectorPanelData; closeHref: string }) {
+export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: CollectorPanelData; closeHref: string; meInitials: string }) {
   const router = useRouter()
   const [photo, setPhoto] = useState(0)
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null)
   const [sig, setSig] = useState(a.signals)
-  const [sheet, setSheet] = useState<'sell' | 'services' | null>(null)
+  const [sheet, setSheet] = useState<'sell' | 'services' | 'comments' | null>(null)
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState(false)
   const cur = a.images[photo] ?? null
@@ -119,7 +120,12 @@ export function CollectorArtworkPanel({ a, closeHref }: { a: CollectorPanelData;
       </div>
       <div className="ha-cp__price">
         <span className="ha-stack" style={{ gap: 0 }}><span className="ha-cp__muted">{a.priceLabel}</span><b>{a.price}</b>{a.priceSub ? <span className="ha-cp__muted">{a.priceSub}</span> : null}</span>
-        {sig ? <span className="ha-cp__muted ha-row" style={{ gap: 4 }}><Icon name="favorite" size={16} />{sig.likes}</span> : null}
+        {sig ? (
+          <span className="ha-row ha-cp__social">
+            <span className="ha-cp__muted ha-row" style={{ gap: 4 }}><Icon name="favorite" size={16} />{sig.likes}</span>
+            <button type="button" className="ha-cp__comments" aria-label={`Comentários (${sig.comments})`} onClick={() => setSheet('comments')}><Icon name="chat_bubble" size={16} />{sig.comments}</button>
+          </span>
+        ) : null}
       </div>
       <div className={`ha-cp__cert${a.certificate.ok ? '' : ' ha-cp__cert--warn'}`}>
         <span className="ha-cp__cert-h"><Icon name={a.certificate.ok ? 'verified' : 'schedule'} size={20} filled />Certificado HouseArt</span>
@@ -162,6 +168,10 @@ export function CollectorArtworkPanel({ a, closeHref }: { a: CollectorPanelData;
       {/* the sheets render on <body>: the panel's slide-in transform would make it their containing block */}
       {o && sheet === 'sell' ? createPortal(<SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents }} />, document.body) : null}
       {o && sheet === 'services' ? createPortal(<ServicesSheet open onClose={() => setSheet(null)} onDone={setToast} artworkId={a.id} title={a.title} sealGreen={o.sealGreen} />, document.body) : null}
+      {sheet === 'comments' && sig ? (
+        <CommentsSheet item={{ key: `a${a.id}`, id: a.id, target: 'ARTWORK', author: { memberId: null, name: a.seller?.name ?? '' } }} me={{ initials: meInitials }} onClose={() => setSheet(null)} onToast={setToast}
+          onCount={(_k, delta) => setSig((s) => (s ? { ...s, comments: Math.max(0, s.comments + delta) } : s))} />
+      ) : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </SidePanel>
   )

@@ -5,6 +5,7 @@ import { WalletScreen } from '@/components/wallet/WalletScreen'
 import { collectionSummary } from '@/lib/collector-wallet/collection-server'
 import { CollectionHeader } from '@/components/collector/CollectionHeader'
 import { collectorPanel } from '@/lib/collector-wallet/panel-server'
+import { initialsOf } from '@/lib/profiles/core'
 import { CollectorArtworkPanel } from '@/components/collector/CollectorArtworkPanel'
 import { collectorDrafts } from '@/lib/collectors/server'
 
@@ -27,7 +28,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="works" /> : null}
       <WalletScreen items={items} totalCents={w.totalCents.toString()} holderName={user.name} inCollection={!!summary} openId={panel?.id ?? null} drafts={drafts} />
-      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref="/wallet" /> : null}
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref="/wallet" /> : null}
     </div>
   )
 }

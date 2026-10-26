@@ -6,6 +6,8 @@ import { ARTWORK_CATEGORIES } from '@/lib/artworks/domain'
 export interface MarketItem {
   publicId: string; artist: string; artistSlug: string; title: string; year: number | null; category: string; technique: string | null; dimensions: string; sizeKey: 'SMALL' | 'MEDIUM' | 'LARGE' | null
   priceCents: bigint | null; saleMode: string | null; seller: string; sellerKind: 'GALLERY' | 'PRIVATE'; market: 'PRIMARY' | 'SECONDARY' | null; uf: string | null; cover: string | null; updatedAt: number
+  /** the seller's city and, for a gallery with a public page, its slug (Explorar: "Galeria · Salvador, BA" and the avatar link) */
+  city?: string | null; sellerSlug?: string | null
 }
 
 export const PRICE_RANGES = [

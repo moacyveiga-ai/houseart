@@ -5,6 +5,8 @@ export interface ExploreItem {
   priceCents: string | null; saleMode: string | null; cover: string | null
   technique: string | null; dimensions: string; seller: string; sellerKind: 'GALLERY' | 'PRIVATE'; market: 'PRIMARY' | 'SECONDARY' | null; uf: string | null
   liked: boolean; saved: boolean
+  /** prototype: ♥ and 💬 with the counts; the head "Galeria · Salvador, BA" and the avatar to the gallery page */
+  likes: number; comments: number; city: string | null; sellerHref: string | null
 }
 
 export const EXPLORE_CHIPS = [
@@ -47,6 +49,15 @@ export function exploreHref(view: ExploreView, chip: ExploreChip): string {
 export function exploreWorkHref(view: ExploreView, chip: ExploreChip, publicId: string): string {
   const base = exploreHref(view, chip)
   return `${base}${base.includes('?') ? '&' : '?'}work=${encodeURIComponent(publicId)}`
+}
+
+/** The market pill of the prototype (`merc`): a gallery sale is the primary market, the rest is resale. */
+export const marketLabel = (m: ExploreItem['market']) => (m === 'SECONDARY' ? 'Revenda' : 'Primário')
+
+/** "Galeria · Salvador, BA" / "Colecionador · BA": who sells and where (prototype `vendSub`). */
+export function sellerSubOf(item: Pick<ExploreItem, 'sellerKind' | 'city' | 'uf'>): string {
+  const place = [item.city, item.uf].filter(Boolean).join(', ')
+  return [item.sellerKind === 'GALLERY' ? 'Galeria' : 'Colecionador', place || null].filter(Boolean).join(' · ')
 }
 
 /** "3 de 12 · arraste para a direita para curtir" of the deck. */

@@ -12,7 +12,7 @@ import { Toast } from '@/components/ds/Toast'
 import { ShareSheet } from '@/components/public/ShareSheet'
 import { formatBRL } from '@/lib/artworks/domain'
 import { installmentCents } from '@/lib/shipping/quote-core'
-import { acceptsOffers, deckCounter, exploreHref, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
+import { acceptsOffers, deckCounter, exploreHref, exploreWorkHref, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
 import './explore.css'
 
 const CATEGORY_FALLBACK: Record<string, string> = { PAINTING: 'Pintura', SCULPTURE: 'Escultura', WORK_ON_PAPER: 'Obra sobre papel', PHOTOGRAPHY: 'Fotografia', DIGITAL: 'Digital', OTHER: 'Outro' }
@@ -25,6 +25,7 @@ type Kind = 'LIKE' | 'SAVE'
 
 export function ExploreScreen({ items: initial, view, chip }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip }) {
   const [items, setItems] = useState(initial)
+  const workHref = (publicId: string) => exploreWorkHref(view, chip, publicId)
   const [toast, setToast] = useState('')
   const [sharing, setSharing] = useState<ExploreItem | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
@@ -75,7 +76,7 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
                   <span className="ha-stack ha-xp-post__who"><span className="ha-xp-post__name">{o.seller}</span><span className="ha-xp-post__sub">{o.sellerKind === 'GALLERY' ? 'Galeria' : 'Particular'}{o.uf ? ` · ${o.uf}` : ''}</span></span>
                   <span className="ha-xp-post__pill">{marketLabel(o.market)}</span>
                 </div>
-                <Link href={`/e/artwork/${o.publicId}`} className="ha-xp-post__wall" aria-label={`Ver obra ${o.title}`}>
+                <Link href={workHref(o.publicId)} scroll={false} className="ha-xp-post__wall" aria-label={`Ver obra ${o.title}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
                   {o.cover ? <img src={o.cover} alt={o.title} loading="lazy" /> : null}
                   <span className="ha-xp-post__badges">
@@ -89,14 +90,14 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
                   <span className="ha-xp-post__sp" />
                   <button type="button" className="ha-xp-act" aria-label={o.saved ? 'Remover dos favoritos' : 'Salvar'} aria-pressed={o.saved} disabled={busy === o.id} onClick={() => react(o, 'SAVE')}><Icon name="bookmark" size={24} filled={o.saved} /></button>
                 </div>
-                <Link href={`/e/artwork/${o.publicId}`} className="ha-xp-post__cap">
+                <Link href={workHref(o.publicId)} scroll={false} className="ha-xp-post__cap">
                   <span className="ha-xp-post__artist">{o.artist}</span>
                   <i className="ha-xp-post__title">{o.title}{o.year ? `, ${o.year}` : ''}</i>
                   <span className="ha-xp-post__sheet">{sheetLineOf(o, CATEGORY_FALLBACK[o.category] ?? o.category)}</span>
                 </Link>
                 <div className="ha-xp-post__buy">
                   <span className="ha-stack ha-xp-post__price"><span className="ha-xp-post__v">{priceOf(o.priceCents)}</span><span className="ha-xp-post__inst">{installmentOf(o.priceCents)}</span></span>
-                  <Link href={`/e/artwork/${o.publicId}`} className="ha-btn ha-btn--ghost ha-btn--sm">Ver obra</Link>
+                  <Link href={workHref(o.publicId)} scroll={false} className="ha-btn ha-btn--ghost ha-btn--sm">Ver obra</Link>
                   {offers ? <Link href={`/e/artwork/${o.publicId}/offer`} className="ha-btn ha-btn--outline ha-btn--sm">Ofertar</Link> : null}
                   {o.priceCents !== null ? <Link href={`/e/artwork/${o.publicId}/buy`} className="ha-btn ha-btn--primary ha-btn--sm">Comprar</Link> : null}
                 </div>
@@ -107,7 +108,7 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
           <div className="ha-explore__foot">Todas as obras têm certificado assinado e etiqueta no verso.</div>
         </div>
       ) : (
-        <DiscoverDeck items={items} react={react} onShare={setSharing} />
+        <DiscoverDeck items={items} react={react} onShare={setSharing} workHref={workHref} />
       )}
 
       {sharing ? <ShareSheet artwork={{ publicId: sharing.publicId, title: sharing.title, artist: sharing.artist, year: sharing.year, cover: sharing.cover, price: sharing.priceCents === null ? null : priceOf(sharing.priceCents) }} open onClose={() => setSharing(null)} onDone={setToast} /> : null}
@@ -117,7 +118,7 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
 }
 
 /** Descobrir: the deck. Decisions live in this screen (the prototype's `dec`); like and save go to the server. */
-function DiscoverDeck({ items, react, onShare }: { items: ExploreItem[]; react: (item: ExploreItem, kind: Kind, quiet?: boolean) => Promise<boolean>; onShare: (item: ExploreItem) => void }) {
+function DiscoverDeck({ items, react, onShare, workHref }: { items: ExploreItem[]; react: (item: ExploreItem, kind: Kind, quiet?: boolean) => Promise<boolean>; onShare: (item: ExploreItem) => void; workHref: (publicId: string) => string }) {
   const [decided, setDecided] = useState<Record<number, true>>({})
   const [drag, setDrag] = useState<number | null>(null)
   const [fly, setFly] = useState<0 | 1 | -1 | 2>(0)
@@ -177,7 +178,7 @@ function DiscoverDeck({ items, react, onShare }: { items: ExploreItem[]; react: 
         <button type="button" className="ha-deck__b ha-deck__b--lg" aria-label="Passar" onClick={() => decide('pass')}><Icon name="close" size={28} /></button>
         <button type="button" className="ha-deck__b" aria-label="Salvar" onClick={() => decide('save')}><Icon name="bookmark" size={22} /></button>
         <button type="button" className="ha-deck__b ha-deck__b--lg ha-deck__b--ink" aria-label="Curtir" onClick={() => decide('like')}><Icon name="favorite" size={28} filled /></button>
-        <Link href={`/e/artwork/${top.publicId}`} className="ha-deck__b" aria-label="Ver obra"><Icon name="open_in_full" size={22} /></Link>
+        <Link href={workHref(top.publicId)} scroll={false} className="ha-deck__b" aria-label="Ver obra"><Icon name="open_in_full" size={22} /></Link>
         <button type="button" className="ha-deck__b" aria-label="Compartilhar" onClick={() => onShare(top)}><Icon name="send" size={22} /></button>
       </div>
       <span className="ha-deck__count">{deckCounter(total - deck.length, total)}</span>

@@ -18,6 +18,8 @@ const priceOf = (r: FavoriteRow) => (!available(r) ? 'Indisponível' : r.priceCe
 
 /** `bare`: inside "Minha coleção", whose header already has the title and the Favoritos/Curtidos tabs. */
 export function FavoritesScreen({ rows: initial, tab, bare = false }: { rows: FavoriteRow[]; tab: FavoritesTab; bare?: boolean }) {
+  // the artwork opens in the side panel over the list (Web Colecionador › obra)
+  const workHref = (publicId: string) => `${tab === 'liked' ? '/favorites?tab=liked&' : '/favorites?'}work=${encodeURIComponent(publicId)}`
   const [rows, setRows] = useState(initial)
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState<number | null>(null)
@@ -47,7 +49,7 @@ export function FavoritesScreen({ rows: initial, tab, bare = false }: { rows: Fa
         <div className="ha-fav__list">
           {saved.map((r) => (
             <div key={r.id} className="ha-fav-row">
-              <Link href={`/e/artwork/${r.publicId}`} className="ha-wall ha-fav-row__wall" aria-label={`Ver obra ${r.title}`}>
+              <Link href={workHref(r.publicId)} scroll={false} className="ha-wall ha-fav-row__wall" aria-label={`Ver obra ${r.title}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
                 {r.cover ? <img src={r.cover} alt="" /> : null}
               </Link>
@@ -58,7 +60,7 @@ export function FavoritesScreen({ rows: initial, tab, bare = false }: { rows: Fa
                   <span className="ha-fav-row__p">{priceOf(r)}</span>
                   <span className="ha-row">
                     <button type="button" className="ha-iconbtn ha-fav-row__rm" aria-label="Remover dos favoritos" disabled={busy === r.id} onClick={() => remove(r, 'SAVE')}><Icon name="bookmark" size={20} filled /></button>
-                    {available(r) && r.priceCents !== null ? <Link href={`/e/artwork/${r.publicId}/buy`} className="ha-btn ha-btn--primary ha-btn--xs">Comprar</Link> : <Link href={`/e/artwork/${r.publicId}`} className="ha-btn ha-btn--outline ha-btn--xs">Ver</Link>}
+                    {available(r) && r.priceCents !== null ? <Link href={`/e/artwork/${r.publicId}/buy`} className="ha-btn ha-btn--primary ha-btn--xs">Comprar</Link> : <Link href={workHref(r.publicId)} scroll={false} className="ha-btn ha-btn--outline ha-btn--xs">Ver</Link>}
                   </span>
                 </span>
               </span>
@@ -73,7 +75,7 @@ export function FavoritesScreen({ rows: initial, tab, bare = false }: { rows: Fa
             <div className="ha-fav__grid">
               {liked.map((r) => (
                 <div key={r.id} className="ha-fav-tile">
-                  <Link href={`/e/artwork/${r.publicId}`} className="ha-wall ha-fav-tile__wall" aria-label={r.title}>
+                  <Link href={workHref(r.publicId)} scroll={false} className="ha-wall ha-fav-tile__wall" aria-label={r.title}>
                     {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
                     {r.cover ? <img src={r.cover} alt="" /> : null}
                   </Link>

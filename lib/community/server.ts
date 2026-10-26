@@ -273,6 +273,12 @@ export async function newsSignals(viewer: number | null, newsId: number): Promis
   return { likes: counts.get(`${newsId}:LIKE`) ?? 0, liked: mine.has(`NEWS:${newsId}:LIKE`), saved: mine.has(`NEWS:${newsId}:SAVE`), comments: comments.get(newsId) ?? 0 }
 }
 
+/** The like count and the viewer's like/save of one artwork (the collector's artwork panel). */
+export async function artworkSignals(viewer: number | null, artworkId: number): Promise<{ likes: number; liked: boolean; saved: boolean }> {
+  const [counts, mine] = await Promise.all([countsOf('ARTWORK', [artworkId]), myReactions(viewer, [{ kind: 'ARTWORK', id: artworkId }])])
+  return { likes: counts.get(`${artworkId}:LIKE`) ?? 0, liked: mine.has(`ARTWORK:${artworkId}:LIKE`), saved: mine.has(`ARTWORK:${artworkId}:SAVE`) }
+}
+
 /** Which of `ids` the viewer already reacted to with `kind` (public pages: "Seguindo", "Salvo"). */
 export async function reactedIds(viewer: number | null, targetKind: string, kind: string, ids: number[]): Promise<Set<number>> {
   if (!viewer || !ids.length) return new Set()

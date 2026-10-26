@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { requirePanelPage } from '../_session'
 import { getArtwork, listArtworks } from '@/lib/artworks/server'
-import { ARTWORK_CATEGORY_LABELS, ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimensions, LIST_FILTERS, MEDIA_SLOTS, type ArtworkStatus } from '@/lib/artworks/domain'
+import { categoryLabel, ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimensions, LIST_FILTERS, MEDIA_SLOTS, type ArtworkStatus } from '@/lib/artworks/domain'
 import { Chip } from '@/components/ds/Chip'
 import { Icon } from '@/components/ds/Icon'
 import { Badge } from '@/components/ds/Badge'
@@ -33,7 +33,7 @@ async function panelOf(scope: Scope, id: number) {
     images: front.map((m) => ({ url: m.publicUrl!, label: slotName.get(m.kind as never) ?? m.kind })),
     facts: [
       ['Técnica', [a.technique, a.materials].filter(Boolean).join(' · ')], ['Dimensões', formatDimensions(a)],
-      ['Categoria', ARTWORK_CATEGORY_LABELS[a.category as keyof typeof ARTWORK_CATEGORY_LABELS] ?? ''], ['Edição', a.edition ?? ''], ['ID público', a.publicId ?? ''],
+      ['Técnica', categoryLabel(a.category)], ['Edição', a.edition ?? ''], ['ID público', a.publicId ?? ''],
     ].filter(([, v]) => v && v !== '—').map(([k, v]) => ({ k: k!, v: v! })),
     certificate: cert ? { issuedAt: cert.issuedAt, status: cert.status } : null,
     provenance: (cert?.events ?? []).map((e) => ({ label: e.label, at: e.at })),

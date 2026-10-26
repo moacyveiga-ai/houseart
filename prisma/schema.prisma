@@ -235,7 +235,7 @@ model Artwork {
   edition           String?
   signatureLocation String?
   series            String?
-  category          String                   @default("PAINTING") // PAINTING | SCULPTURE | WORK_ON_PAPER | PHOTOGRAPHY | DIGITAL | OTHER
+  category          String                   @default("PAINTING") // PAINTING | SCULPTURE | PHOTOGRAPHY | LITERATURE | PRINT | DRAWING | MIXED_MEDIA (lib/artworks/domain.ts)
   conditionGrade    String? // EXCELLENT | GOOD | FAIR | NEEDS_RESTORATION
   conditionBy       String?
   conditionAt       DateTime?

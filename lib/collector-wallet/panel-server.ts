@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { publicArtwork } from '@/lib/marketplace/public-server'
 import { artworkSignals } from '@/lib/community/server'
 import { walletOf } from './server'
-import { ARTWORK_CATEGORY_LABELS, formatBRL, formatDimensions } from '@/lib/artworks/domain'
+import { categoryLabel, formatBRL, formatDimensions } from '@/lib/artworks/domain'
 import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 import { flagOn } from '@/lib/flags'
 import { isPublicId } from '@/lib/physical-markers/domain'
@@ -52,7 +52,7 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
   const signals = a.publicId && a.seal === 'GREEN' ? await artworkSignals(userId, a.id) : null
   return {
     mode: 'owner', id: a.id, publicId: a.publicId, title: a.title, artist: a.artist.name, artistSlug: a.artist.slug,
-    ficha: fichaOf(a.year, a.technique ?? ARTWORK_CATEGORY_LABELS[a.category as keyof typeof ARTWORK_CATEGORY_LABELS] ?? null, formatDimensions(a)),
+    ficha: fichaOf(a.year, a.technique ?? (categoryLabel(a.category) || null), formatDimensions(a)),
     images: byView(a.media.filter((m) => m.publicUrl)).map((m) => ({ url: m.publicUrl!, label: MEDIA_LABELS[m.kind] ?? m.kind })),
     priceLabel: listed ? 'Seu preço pedido' : 'Valor registrado', price: listed && a.listPriceCents ? formatBRL(a.listPriceCents) : w.priceLabel,
     priceSub: `Titular desde ${w.acquiredAt}`, signals,

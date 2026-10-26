@@ -10,12 +10,11 @@ import { useCallback, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { ShareSheet } from '@/components/public/ShareSheet'
-import { formatBRL } from '@/lib/artworks/domain'
+import { categoryLabel, formatBRL } from '@/lib/artworks/domain'
 import { installmentCents } from '@/lib/shipping/quote-core'
 import { acceptsOffers, deckCounter, exploreHref, exploreWorkHref, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
 import './explore.css'
 
-const CATEGORY_FALLBACK: Record<string, string> = { PAINTING: 'Pintura', SCULPTURE: 'Escultura', WORK_ON_PAPER: 'Obra sobre papel', PHOTOGRAPHY: 'Fotografia', DIGITAL: 'Digital', OTHER: 'Outro' }
 const initialsOf = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
 const priceOf = (cents: string | null) => (cents === null ? 'Sob consulta' : formatBRL(BigInt(cents)))
 const installmentOf = (cents: string | null) => (cents === null ? 'O preço não aparece: interessados pedem contato.' : `ou 10× de ${formatBRL(installmentCents(Number(cents)))} sem juros`)
@@ -93,7 +92,7 @@ export function ExploreScreen({ items: initial, view, chip }: { items: ExploreIt
                 <Link href={workHref(o.publicId)} scroll={false} className="ha-xp-post__cap">
                   <span className="ha-xp-post__artist">{o.artist}</span>
                   <i className="ha-xp-post__title">{o.title}{o.year ? `, ${o.year}` : ''}</i>
-                  <span className="ha-xp-post__sheet">{sheetLineOf(o, CATEGORY_FALLBACK[o.category] ?? o.category)}</span>
+                  <span className="ha-xp-post__sheet">{sheetLineOf(o, categoryLabel(o.category))}</span>
                 </Link>
                 <div className="ha-xp-post__buy">
                   <span className="ha-stack ha-xp-post__price"><span className="ha-xp-post__v">{priceOf(o.priceCents)}</span><span className="ha-xp-post__inst">{installmentOf(o.priceCents)}</span></span>
@@ -169,7 +168,7 @@ function DiscoverDeck({ items, react, onShare, workHref }: { items: ExploreItem[
           <div className="ha-deck__cap">
             <span className="ha-xp-post__artist">{top.artist}</span>
             <i className="ha-deck__title">{top.title}{top.year ? `, ${top.year}` : ''}</i>
-            <span className="ha-xp-post__sheet">{sheetLineOf(top, CATEGORY_FALLBACK[top.category] ?? top.category)}</span>
+            <span className="ha-xp-post__sheet">{sheetLineOf(top, categoryLabel(top.category))}</span>
             <span className="ha-deck__row"><span className="ha-xp-post__v">{priceOf(top.priceCents)}</span><span className="ha-xp-post__sub">{top.seller}</span></span>
           </div>
         </div>

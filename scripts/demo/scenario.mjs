@@ -172,7 +172,7 @@ async function main() {
   // ── artworks ─────────────────────────────────────────────────────────
   const j1 = await registerArtwork(joana, { title: 'Construção nº 7', year: 2025, technique: 'Óleo sobre linho', h: 1000, w: 800, category: 'PAINTING', series: 'Construções' }, 0)
   const j2 = await registerArtwork(joana, { title: 'Voo baixo', year: 2024, technique: 'Óleo sobre linho', h: 1200, w: 1000, category: 'PAINTING' }, 1)
-  const j3 = await registerArtwork(joana, { title: 'Estudo em vermelho', year: 2025, technique: 'Óleo sobre papel', h: 500, w: 500, category: 'WORK_ON_PAPER' }, 2)
+  const j3 = await registerArtwork(joana, { title: 'Estudo em vermelho', year: 2025, technique: 'Óleo sobre papel', h: 500, w: 500, category: 'PAINTING' }, 2)
   const m1 = await registerArtwork(marta, { title: 'Maré cheia', year: 2024, technique: 'Pigmento mineral sobre papel de algodão', h: 600, w: 900, category: 'PHOTOGRAPHY', edition: '2/5' }, 5)
   const m2 = await registerArtwork(marta, { title: 'Jangada ao amanhecer', year: 2023, technique: 'Pigmento mineral sobre papel de algodão', h: 600, w: 900, category: 'PHOTOGRAPHY', edition: '1/5' }, 6)
   const artists = (await ana.get('/api/gallery/artists')).artists
@@ -181,7 +181,7 @@ async function main() {
   const g1 = await registerArtwork(ana, { title: 'Retábulo do Rio Vermelho', year: 1983, technique: 'Acrílica e folha de ouro sobre madeira', h: 1400, w: 1050, d: 40, category: 'PAINTING' }, 3, tomas.id)
   const g2 = await registerArtwork(ana, { title: 'Duas luas', year: 1977, technique: 'Acrílica sobre tela', h: 900, w: 900, category: 'PAINTING' }, 4, tomas.id)
   const g3 = await registerArtwork(ana, { title: 'Maré baixa, Itapuã', year: 2024, technique: 'Pigmento mineral · ed. 3/5', h: 600, w: 900, category: 'PHOTOGRAPHY', edition: '3/5' }, 7, liaM.id)
-  const h1 = await registerArtwork(helena, { title: 'Sem título (coleção Prado)', year: 2019, technique: 'Serigrafia sobre papel', h: 700, w: 500, category: 'WORK_ON_PAPER', edition: '12/30' }, 8)
+  const h1 = await registerArtwork(helena, { title: 'Sem título (coleção Prado)', year: 2019, technique: 'Serigrafia sobre papel', h: 700, w: 500, category: 'PRINT', edition: '12/30' }, 8)
 
   // ── certification ────────────────────────────────────────────────────
   const J = await certify(joana, [j1, j2, j3])

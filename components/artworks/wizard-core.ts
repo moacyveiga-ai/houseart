@@ -1,6 +1,6 @@
 // Wizard decisions — PURE (tested): what each step saves, the review lines,
 // the next-button label, the media summary.
-import { CONDITION_GRADE_LABELS, CONDITION_STATE_LABELS, formatBRL, formatDimensions, MEDIA_SLOTS, REQUIRED_MEDIA_SLOTS, WIZARD_STEPS } from '@/lib/artworks/domain'
+import { categoryLabel, CONDITION_GRADE_LABELS, CONDITION_STATE_LABELS, formatBRL, formatDimensions, MEDIA_SLOTS, REQUIRED_MEDIA_SLOTS, WIZARD_STEPS } from '@/lib/artworks/domain'
 
 export interface WizardMedia { id: number; kind: string; publicUrl: string | null; quality: string | null }
 export interface WizardRegion { region: string; note: string; state: string }
@@ -8,6 +8,8 @@ export interface WizardHistory { kind: string; description: string; occurredOn: 
 
 export interface WizardState {
   title: string; year: number | null; technique: string | null; materials: string | null
+  /** one of the seven techniques of the handoff (lib/artworks/domain ARTWORK_CATEGORIES) */
+  category: string
   heightMm: number | null; widthMm: number | null; depthMm: number | null
   edition: string | null; signatureLocation: string | null; series: string | null
   conditionGrade: string | null; saleMode: string | null; listPriceCents: number | null
@@ -32,7 +34,7 @@ export function reviewLines(s: WizardState): { k: string; v: string }[] {
   const grade = s.conditionGrade ? CONDITION_GRADE_LABELS[s.conditionGrade as keyof typeof CONDITION_GRADE_LABELS] ?? s.conditionGrade : '—'
   return [
     { k: 'Título', v: `${s.title}${s.year ? `, ${s.year}` : ''}` },
-    { k: 'Técnica', v: s.technique || '—' },
+    { k: 'Técnica', v: [categoryLabel(s.category), s.technique].filter(Boolean).join(' · ') || '—' },
     { k: 'Dimensões', v: formatDimensions(s) },
     { k: 'Edição', v: s.edition || '—' },
     { k: 'Mídia', v: mediaSummary(s.media) },
@@ -48,7 +50,7 @@ export function regionStateLabel(state: string): string {
 /** The PATCH body of the sheet (step 1) — only the sheet fields. */
 export function sheetPatch(s: WizardState) {
   return {
-    title: s.title, year: s.year, technique: s.technique, materials: s.materials,
+    title: s.title, year: s.year, category: s.category, technique: s.technique, materials: s.materials,
     heightMm: s.heightMm === null ? null : s.heightMm / 10, widthMm: s.widthMm === null ? null : s.widthMm / 10, depthMm: s.depthMm === null ? null : s.depthMm / 10,
     edition: s.edition, signatureLocation: s.signatureLocation, series: s.series,
   }

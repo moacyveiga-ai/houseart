@@ -13,7 +13,7 @@ import type { SearchResult } from '@/lib/search/server'
 import type { PublicArtistCard } from '@/lib/public-content/server'
 import './search.css'
 
-const CATEGORY_CHIPS = ARTWORK_CATEGORIES.filter((c) => c !== 'OTHER')
+const CATEGORY_CHIPS = ARTWORK_CATEGORIES
 
 /** `workPrefix`: the search URL ending in `work=` — the artwork opens in the side panel over the results. */
 export function SearchScreen({ result, featured, workPrefix }: { result: SearchResult; featured: PublicArtistCard[]; workPrefix: string }) {

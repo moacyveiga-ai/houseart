@@ -6,8 +6,9 @@ export const EXPLORE_CHIPS = [
   { key: 'all', label: 'Tudo' },
   { key: 'PAINTING', label: 'Pintura' },
   { key: 'PHOTOGRAPHY', label: 'Fotografia' },
-  { key: 'WORK_ON_PAPER', label: 'Obra sobre papel' },
   { key: 'SCULPTURE', label: 'Escultura' },
+  { key: 'PRINT', label: 'Gravura' },
+  { key: 'DRAWING', label: 'Desenho' },
   { key: 'upto10k', label: 'Até R$ 10 mil' },
   { key: 'offers', label: 'Aceita ofertas' },
 ] as const

@@ -25,7 +25,7 @@ const LANGUAGES: { language: Language; label: string; category: string }[] = [
   { language: 'pintura', label: 'Pintura', category: 'PAINTING' },
   { language: 'escultura', label: 'Escultura', category: 'SCULPTURE' },
   { language: 'fotografia', label: 'Fotografia', category: 'PHOTOGRAPHY' },
-  { language: 'literatura', label: 'Literatura', category: 'WORK_ON_PAPER' },
+  { language: 'literatura', label: 'Literatura', category: 'LITERATURE' },
 ]
 
 const PILLARS = [

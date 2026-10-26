@@ -19,7 +19,7 @@ import { recordEvent } from '@/lib/certificate-events/server'
 import { contentHashOf, sha256Hex } from '@/lib/certificates/core'
 import { publicBaseUrl } from '@/lib/public-url'
 import { mockMasterKey, verifySun } from '@/lib/physical-markers/sun-core'
-import { placeOrder } from '@/lib/orders/server'
+import { catalogPriceCents, placeOrder } from '@/lib/orders/server'
 import { chargeNow, stripeMode } from '@/lib/stripe/door'
 
 export const TRANSFER_FEE_CENTS = 19900n
@@ -66,14 +66,16 @@ export async function createTransfer(userId: number, i: { artworkId: number; toD
   const doc = protectDocument(i.toDocument)
   const royalty = flagOn('FLAG_RESALE_ROYALTY') ? royaltyFor(i.priceCents, await lastPrice(i.artworkId)).royaltyCents : 0n
   const token = randomBytes(24).toString('base64url')
+  // the fee is the catalog's OFFPLATFORM_TRANSFER (Admin › Catálogo) at the moment of the invite; the constant is the fallback of a base without the row
+  const feeCents = (await catalogPriceCents('OFFPLATFORM_TRANSFER')) ?? TRANSFER_FEE_CENTS
   const t = await prisma.ownershipTransfer.create({ data: {
     certificateId: v.certificateId, artworkId: i.artworkId, fromUserId: userId, toName: i.toName.trim().slice(0, 120), toEmail: email, toDocumentHash: doc.hash, toDocumentEnc: doc.enc, toDocumentMask: doc.mask,
-    priceCents: i.priceCents, priceSealed: i.priceSealed, sealedPriceHash: i.priceSealed ? sha256Hex(`${i.artworkId}:${i.priceCents}:${doc.hash}`) : null, royaltyCents: royalty, feeCents: TRANSFER_FEE_CENTS,
+    priceCents: i.priceCents, priceSealed: i.priceSealed, sealedPriceHash: i.priceSealed ? sha256Hex(`${i.artworkId}:${i.priceCents}:${doc.hash}`) : null, royaltyCents: royalty, feeCents,
     status: 'INVITED', inviteTokenHash: sha(token), inviteIssuedAt: new Date(),
   } })
   await notify({ userId: null, email, kind: 'transfer.invite', title: `Transferência de “${v.certificate.artwork.title}”`, body: `${publicBaseUrl()}/transfer/${token}`, emailSubject: 'Você foi convidado a receber a titularidade de uma obra' })
   void audit.event({ entity: 'ownership_transfer', entityId: t.id, action: 'create', userId })
-  return { id: t.id, royaltyCents: royalty }
+  return { id: t.id, royaltyCents: royalty, feeCents }
 }
 
 export async function transferOf(userId: number, id: number) {
@@ -130,10 +132,10 @@ async function afterSignature(id: number) {
 export async function payTransferFee(userId: number, id: number, paymentRef: string | null = null) {
   const t = await transferOf(userId, id)
   if (t.status !== 'SIGNED') throw new ArtworkError('NOT_SIGNED', 'As duas assinaturas vêm antes da taxa.', 409)
-  const order = await placeOrder({ serviceCode: 'OFFPLATFORM_TRANSFER', payerKind: 'SELLER', userId, artworkId: t.artworkId, transferId: id })
+  const order = await placeOrder({ serviceCode: 'OFFPLATFORM_TRANSFER', payerKind: 'SELLER', userId, artworkId: t.artworkId, transferId: id, amountCents: t.feeCents })
   // test/live without FLAG_ORDERS: the seller's default card pays the fee (one charge per transfer).
   const ref = order?.paymentRef ?? paymentRef
-    ?? (stripeMode() !== 'mock' ? (await chargeNow({ amountCents: TRANSFER_FEE_CENTS, description: 'Taxa de transferência de titularidade', payerUserId: userId, idempotencyKey: `transfer-fee:${id}`, metadata: { kind: 'transfer_fee', transferId: String(id) } })).ref : null)
+    ?? (stripeMode() !== 'mock' ? (await chargeNow({ amountCents: t.feeCents, description: 'Taxa de transferência de titularidade', payerUserId: userId, idempotencyKey: `transfer-fee:${id}`, metadata: { kind: 'transfer_fee', transferId: String(id) } })).ref : null)
     ?? (process.env.STRIPE_ENV === 'live' ? null : `mock_fee_${id}_${Date.now()}`)
   if (!ref) throw new ArtworkError('PAYMENT_REQUIRED', 'Pagamento real ainda não disponível.', 503)
   const r = await prisma.ownershipTransfer.updateMany({ where: { id, status: 'SIGNED' }, data: { status: 'AWAITING_TAP', feePaidAt: new Date(), feePaymentRef: ref } })

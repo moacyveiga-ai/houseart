@@ -85,6 +85,8 @@ const ADMIN: NavItem[] = [
   { key: 'appraisals', label: 'Laudos', icon: 'assignment', href: '/appraisals' },
   // Not in the design: the editors of the public site (news and agenda), 2026-10-22.
   { key: 'content', label: 'Conteúdo do site', icon: 'newspaper', href: '/admin/content' },
+  // Not in the design: plans, services and the marker price, editable without SQL (audit §5), 2026-10-26.
+  { key: 'catalog', label: 'Catálogo', icon: 'sell', href: '/admin/catalog' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
 ]
 

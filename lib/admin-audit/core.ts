@@ -7,7 +7,7 @@ export const ENTITY_LABELS: Record<string, string> = {
   user: 'Conta', auth: 'Acesso', member: 'Membro', team_invite: 'Convite de equipe', artist: 'Artista', kyc_verification: 'KYC', ownership_transfer: 'Transferência',
   stripe_connect_account: 'Conta Stripe', payment_method: 'Forma de pagamento', payout_account: 'Pix de recebimento', plan_subscription: 'Plano', order: 'Pedido',
   marker_batch: 'Lote de etiquetas', marker_order: 'Pedido de kit', news_article: 'Notícia', agenda_event: 'Agenda', content_image: 'Imagem do site',
-  artist_profile: 'Perfil do artista', gallery_public_profile: 'Perfil da galeria', appraisal: 'Laudo', appraisal_request: 'Pedido de laudo',
+  artist_profile: 'Perfil do artista', gallery_public_profile: 'Perfil da galeria', appraisal: 'Laudo', appraisal_request: 'Pedido de laudo', plan: 'Plano do catálogo', service_catalog: 'Serviço do catálogo',
 }
 export const ACTION_LABELS: Record<string, string> = {
   create: 'criou', update: 'alterou', delete: 'apagou', approve: 'aprovou', reject: 'reprovou', revalidate: 'pediu nova verificação',

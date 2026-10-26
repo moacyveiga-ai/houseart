@@ -34,7 +34,7 @@ export function TransferWizard({ artwork, existing }: { artwork: { id: number; t
   async function create() {
     const { res, data } = await post('/api/ownership/transfers', { artworkId: artwork.id, ...form, priceCents })
     if (!res.ok) { setToast(String(data.error ?? 'Não foi possível iniciar.')); return }
-    setT({ id: Number(data.id), status: 'INVITED', sellerSignedAt: null, buyerSignedAt: null, toName: form.toName, priceCents: String(priceCents), priceSealed: form.priceSealed, royaltyCents: String(data.royaltyCents ?? '0'), feeCents: '19900' })
+    setT({ id: Number(data.id), status: 'INVITED', sellerSignedAt: null, buyerSignedAt: null, toName: form.toName, priceCents: String(priceCents), priceSealed: form.priceSealed, royaltyCents: String(data.royaltyCents ?? '0'), feeCents: String(data.feeCents ?? '19900') })
     setStep(2); setToast('Convite enviado ao comprador')
   }
   async function sign() {

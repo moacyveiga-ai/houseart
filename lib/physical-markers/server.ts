@@ -10,7 +10,7 @@ import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
 import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, publicIdOf, UID_RE, type ReadPurpose } from './domain'
-import { mockMasterKey, mockSunMessage, tamperOf, verifySun } from './sun-core'
+import { mockMasterKey, mockSunMessage, tamperDecision, verifySun } from './sun-core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
 
@@ -49,7 +49,7 @@ export async function adminMarkersView(query: string | null) {
       prisma.physicalMarker.count({ where: { status: 'STOCK' } }),
       prisma.physicalMarker.count({ where: { status: 'LINKED' } }),
       prisma.physicalMarker.count({ where: { status: 'SHIPPED' } }),
-      prisma.markerRead.count({ where: { tamperFlag: true, createdAt: { gte: new Date(Date.now() - 24 * 3600_000) } } }),
+      prisma.markerRead.count({ where: { tamperFlag: true, cmacValid: true, createdAt: { gte: new Date(Date.now() - 24 * 3600_000) } } }),
       prisma.markerBatch.findMany({ orderBy: { code: 'desc' }, take: 50, include: { _count: { select: { markers: { where: { status: 'LINKED' } } } } } }),
     ])
     // removal alerts (audit web-app §2): the tamper reads of the last 7 days, each with the artwork and
@@ -188,21 +188,24 @@ export async function linkMarker(scope: Scope, opt: { uid: string; ctr: number; 
 // ── public read (the verification page) ──────────────────────────────────
 export type PublicRead = { authenticated: boolean; tamper: boolean; reason?: string }
 
-export async function recordPublicRead(publicId: string, sun: { uid?: string; ctr?: number; cmac?: string; tt?: boolean } | null, ipHash: string | null, purpose: ReadPurpose = 'VERIFY'): Promise<PublicRead> {
+/** `sun.tt` is the TT status as it came in the link (`CC`, `OO`…): it is verified inside the CMAC. */
+export async function recordPublicRead(publicId: string, sun: { uid?: string; ctr?: number; cmac?: string; tt?: string } | null, ipHash: string | null, purpose: ReadPurpose = 'VERIFY'): Promise<PublicRead> {
   return totalScope('markers:publicRead', async () => {
     if (!sun?.uid) return { authenticated: false, tamper: false, reason: 'NO_SUN' }
     const marker = await prisma.physicalMarker.findUnique({ where: { uid: sun.uid.toLowerCase() } })
     const artwork = marker?.artworkId ? await prisma.artwork.findUnique({ where: { id: marker.artworkId }, select: { publicId: true, id: true, tenantId: true } }) : null
     if (!marker || !artwork || artwork.publicId !== publicId) return { authenticated: false, tamper: false, reason: 'MARKER_MISMATCH' }
-    const verdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter })
-    const tamper = tamperOf(!!sun.tt, verdict)
-    await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: verdict.ok, tamperFlag: tamper, ipHash, purpose } })
+    const verdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter, tt: sun.tt })
+    // the claim is recorded either way (cmacValid tells the desk whether it was authenticated); only an
+    // authenticated one revokes the tag — a forged `&tt=` on a tap link changes nothing
+    const tamper = tamperDecision(sun.tt, verdict)
+    await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: verdict.ok, tamperFlag: tamper.recordFlag, ipHash, purpose } })
     if (verdict.ok) await prisma.physicalMarker.update({ where: { id: marker.id }, data: { readCounter: sun.ctr ?? marker.readCounter, lastReadAt: new Date() } })
-    if (tamper && marker.status === 'LINKED') {
+    if (tamper.revoke && marker.status === 'LINKED') {
       await prisma.physicalMarker.update({ where: { id: marker.id }, data: { status: 'REMOVED' } })
       await openReviewItem({ kind: 'MARKER_REMOVED', artworkId: artwork.id, tenantId: artwork.tenantId, reason: 'Leitura indicou violação do chip' })
     }
-    return { authenticated: verdict.ok, tamper, reason: verdict.ok ? undefined : verdict.reason }
+    return { authenticated: verdict.ok, tamper: tamper.revoke, reason: verdict.ok ? undefined : verdict.reason }
   })
 }
 

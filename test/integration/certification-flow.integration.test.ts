@@ -124,12 +124,20 @@ describe('certification flow', () => {
     await shipOrder(order.id, batch.id, staff)
     const marker = await prisma.physicalMarker.findFirstOrThrow({ where: { orderId: order.id } })
     const publicId = await asPanel(s.b.userId, async ({ scope, user }) => (await linkMarker(scope, { ...mockSunMessage(marker.uid, 1), artworkId: s.b.artworkId }, { userId: user.id })).publicId, 'ARTIST')
-    // a forged link (tt=1 with a CMAC that does not verify) changes nothing: the tag stays linked, no review opens
-    const forged = await recordPublicRead(publicId, { uid: marker.uid, ctr: 2, cmac: '0000000000000000', tt: true }, 'h')
+    // a forged link (tt=1 with a CMAC that does not verify) is recorded but changes nothing: the tag stays linked, no review opens
+    const forged = await recordPublicRead(publicId, { uid: marker.uid, ctr: 2, cmac: '0000000000000000', tt: '1' }, 'h')
     expect(forged).toMatchObject({ authenticated: false, tamper: false })
-    expect((await prisma.physicalMarker.findUniqueOrThrow({ where: { id: marker.id } })).status).toBe('LINKED')
+    const forgedRead = await prisma.markerRead.findFirstOrThrow({ where: { markerId: marker.id, purpose: 'VERIFY' }, orderBy: { id: 'desc' } })
+    expect(forgedRead).toMatchObject({ tamperFlag: true, cmacValid: false })
+    // a genuine tap link (valid CMAC, unused counter) with `tt=OO` appended: the status is inside the CMAC, so it fails too
+    const appended = await recordPublicRead(publicId, { ...mockSunMessage(marker.uid, 2), tt: 'OO' }, 'h')
+    expect(appended).toMatchObject({ authenticated: false, tamper: false, reason: 'BAD_CMAC' })
+    const m = await prisma.physicalMarker.findUniqueOrThrow({ where: { id: marker.id } })
+    expect(m.status).toBe('LINKED')
+    expect(m.readCounter).toBe(1)
     expect((await reviewQueue()).items.some((i) => i.kind === 'MARKER_REMOVED')).toBe(false)
-    const read = await recordPublicRead(publicId, { ...mockSunMessage(marker.uid, 2), tt: true }, 'h')
+    // the tag itself reports the open loop (TT status OO, authenticated): revoked and sent to review
+    const read = await recordPublicRead(publicId, mockSunMessage(marker.uid, 2, 'OO'), 'h')
     expect(read.tamper).toBe(true)
     const q = await reviewQueue()
     const removed = q.items.find((i) => i.kind === 'MARKER_REMOVED')!

@@ -13,7 +13,7 @@ import { reviewHref } from '@/lib/admin-review/core'
 export interface BatchRow { id: number; code: string; quantity: number; destination: string; linked: number; status: string }
 export interface OrderRow { id: number; quantity: number; status: string; who: string; createdAt: string }
 /** A read whose chip reported tampering: the marker is REMOVED and a review item opened for the desk. */
-export interface AlertRow { id: number; at: string; purpose: string; /** the read's CMAC checked out (a forged `tt` link does not) */ authenticated: boolean; uid: string; markerStatus: string; artwork: { publicId: string | null; title: string } | null; reviewOpen: boolean }
+export interface AlertRow { id: number; at: string; purpose: string; /** the read's CMAC checked out (the TT status is inside it; a forged `tt` is recorded but changes nothing) */ authenticated: boolean; uid: string; markerStatus: string; artwork: { publicId: string | null; title: string } | null; reviewOpen: boolean }
 export interface FoundMarker { uid: string; status: string; artwork: { publicId: string | null; title: string } | null; batch: string; readCounter: number }
 
 const PURPOSE_LABELS: Record<string, string> = { VERIFY: 'verificação pública', LINK: 'vínculo', DELIVERY_CONFIRM: 'confirmação de entrega', TRANSFER_CONFIRM: 'transferência' }

@@ -30,8 +30,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Material Symbols Rounded: no npm package; the ligature is rendered by components/ds/Icon.tsx. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- root layout of the App Router; the rule is about pages/ */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=swap" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font, @next/next/google-font-display -- root layout of the App Router (the rule is about pages/); display=block because an icon font with swap shows the icon NAME as text until it loads (DS audit 2026-10-25, handoff: display=block) */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" />
       </head>
       <body>{children}</body>
     </html>

@@ -22,7 +22,7 @@
 .ha-strong { font-weight: 600; color: var(--ha-fg); }
 
 /* ── buttons ────────────────────────────────────────────────────────────── */
-.ha-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--ha-space-2); font-weight: 600; font-size: var(--ha-text-body-sm); padding: var(--ha-space-3) var(--ha-space-5); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background var(--ha-dur-fast), border-color var(--ha-dur-fast); }
+.ha-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--ha-space-2); font-weight: 600; font-size: var(--ha-text-body-sm); padding: var(--ha-space-3) var(--ha-space-5); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease), transform var(--ha-dur-fast) var(--ha-ease); }
 .ha-btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .ha-btn--primary { background: var(--ha-sand-500); color: var(--ha-ink-900); }
 .ha-btn--primary:hover { background: var(--ha-sand-600); }
@@ -69,7 +69,8 @@
 .ha-input[disabled], .ha-select[disabled], .ha-textarea[disabled] { border-color: var(--ha-paper-200); background: var(--ha-paper-100); color: var(--ha-ink-300); }
 .ha-label--disabled { color: var(--ha-ink-300); }
 .ha-input--id { font-variant-numeric: tabular-nums; letter-spacing: .04em; }
-.ha-input::placeholder { color: var(--ha-ink-300); }
+.ha-input::placeholder, .ha-textarea::placeholder, .ha-select:invalid { color: var(--ha-ink-300); }
+.ha-select option { color: var(--ha-fg); }
 .ha-input--num { font-variant-numeric: tabular-nums; }
 .ha-field-error { font-size: var(--ha-text-caption); color: var(--ha-alert-500); }
 .ha-divider { display: flex; align-items: center; gap: var(--ha-space-3); font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }

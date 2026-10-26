@@ -17,17 +17,18 @@ import { useEffect, useCallback, useSyncExternalStore } from 'react'
 export type Theme = 'light' | 'dark' | 'system'
 
 export const THEME_KEY = 'ha-theme'
+import { DEFAULT_THEME } from './theme-routes'
 
 const isTheme = (v: unknown): v is Theme => v === 'light' || v === 'dark' || v === 'system'
 
-/** Lê a preferência salva; default 'system'. Seguro no server (retorna default). */
+/** Lê a preferência salva; default 'light' (auditoria DS 2026-10-25: o escuro do painel não foi desenhado e não há seletor na tela — só uma preferência gravada o liga). Seguro no server (retorna default). */
 export function getTheme(): Theme {
-  if (typeof window === 'undefined') return 'system'
+  if (typeof window === 'undefined') return DEFAULT_THEME
   try {
     const v = window.localStorage.getItem(THEME_KEY)
-    return isTheme(v) ? v : 'system'
+    return isTheme(v) ? v : DEFAULT_THEME
   } catch {
-    return 'system'
+    return DEFAULT_THEME
   }
 }
 
@@ -86,12 +87,12 @@ export function setTheme(t: Theme): void {
 
 /**
  * Hook de tema: retorna [theme, setTheme]. Lê a preferência do localStorage via
- * useSyncExternalStore — 'system' no server (evita mismatch de hidratação) e o
+ * useSyncExternalStore — 'light' (DEFAULT_THEME) no server e o
  * valor real no client. Enquanto em 'system', escuta a troca de esquema do SO
  * em tempo real, removendo o listener no cleanup / ao sair de 'system'.
  */
 export function useTheme(): [Theme, (t: Theme) => void] {
-  const theme = useSyncExternalStore<Theme>(subscribeTheme, getTheme, () => 'system')
+  const theme = useSyncExternalStore<Theme>(subscribeTheme, getTheme, () => DEFAULT_THEME)
 
   useEffect(() => {
     if (theme !== 'system' || typeof window === 'undefined') return

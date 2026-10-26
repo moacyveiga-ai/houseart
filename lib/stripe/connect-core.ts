@@ -169,12 +169,15 @@ export type ConnectEvent = (typeof CONNECT_EVENTS)[number]
 export const isConnectEvent = (t: string): t is ConnectEvent => (CONNECT_EVENTS as readonly string[]).includes(t)
 
 // ── what a screen shows for a split line ──────────────────────────────────
-export type SplitPayoutState = 'PLATFORM' | 'HELD' | 'STRIPE_PAID' | 'PENDING' | 'FAILED' | 'AWAITING_ACCOUNT' | 'MANUAL'
+export type SplitPayoutState = 'PLATFORM' | 'HELD' | 'STRIPE_PAID' | 'MANUAL_PAID' | 'PENDING' | 'FAILED' | 'AWAITING_ACCOUNT' | 'MANUAL'
+/** A split line the desk paid by hand keeps the note under this prefix in `payoutRef` (a Stripe transfer is `tr_…`). */
+export const MANUAL_PAYOUT_PREFIX = 'manual:'
 
 export const SPLIT_PAYOUT_LABELS: Record<SplitPayoutState, string> = {
   PLATFORM: '',
   HELD: 'em garantia',
   STRIPE_PAID: 'pago pela Stripe',
+  MANUAL_PAID: 'pago por Pix',
   PENDING: 'repasse pela Stripe em processamento',
   FAILED: 'repasse pela Stripe falhou · tentaremos de novo',
   AWAITING_ACCOUNT: 'aguardando a conta Stripe',
@@ -186,10 +189,10 @@ export const SPLIT_PAYOUT_LABELS: Record<SplitPayoutState, string> = {
  * whether the payee has a Connect account (`payee`: null = no account row,
  * otherwise its status).
  */
-export function splitPayoutState(line: { party: string; status: string; payoutError: string | null }, payee: ConnectAccountStatus | null | undefined): SplitPayoutState {
+export function splitPayoutState(line: { party: string; status: string; payoutError: string | null; payoutRef?: string | null }, payee: ConnectAccountStatus | null | undefined): SplitPayoutState {
   if (!isPayableParty(line.party)) return 'PLATFORM'
   if (line.status === 'HELD') return 'HELD'
-  if (line.status === 'PAID') return 'STRIPE_PAID'
+  if (line.status === 'PAID') return line.payoutRef?.startsWith(MANUAL_PAYOUT_PREFIX) ? 'MANUAL_PAID' : 'STRIPE_PAID'
   if (line.payoutError) return 'FAILED'
   if (payee === 'ENABLED') return 'PENDING'
   if (payee && payee !== 'DISABLED') return 'AWAITING_ACCOUNT'

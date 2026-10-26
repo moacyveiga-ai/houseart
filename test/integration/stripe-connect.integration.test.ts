@@ -14,6 +14,8 @@ import { computeSplit } from '@/lib/commission/split-core'
 import { POST as webhookPOST } from '@/app/api/stripe/webhook/route'
 import { POST as startPOST } from '@/app/api/sales/connect/start/route'
 import { POST as cronPOST } from '@/app/api/cron/connect-payouts/route'
+import { POST as paidPOST } from '@/app/api/admin/deals/[id]/splits/[splitId]/paid/route'
+import { adminDeals } from '@/lib/admin-deals/server'
 import { NextRequest } from 'next/server'
 import { createScenario, type Scenario } from './fixtures'
 import { signIn, signOut } from './session'
@@ -275,5 +277,42 @@ describe('mock mode', () => {
     expect((await splitsOf(deal.id)).every((l) => l.status === 'RELEASED' && l.payoutRef === null)).toBe(true)
     expect(await payReleasedSplits()).toEqual({ paid: 0, skipped: 0, failed: 0 })
     expect(fake.calls).toHaveLength(0)
+  })
+})
+
+describe('Admin › Negócios: the desk marks a manual Pix as paid', () => {
+  const paid = (dealId: number, splitId: number, note: unknown) => paidPOST(new Request(`http://test/api/admin/deals/${dealId}/splits/${splitId}/paid`, { method: 'POST', body: JSON.stringify({ note }), headers: { 'content-type': 'application/json' } }), { params: Promise.resolve({ id: String(dealId), splitId: String(splitId) }) })
+
+  it('only the team; a RELEASED line without a Stripe transfer becomes PAID with the note, the royalty settles, a transferred or held line is refused', async () => {
+    const deal = await dealReadyForDelivery({ artworkId: s.b.artworkId, sellerMemberId: s.b.memberId, market: 'SECONDARY', seller: 'ARTIST', royaltyCents: 10_000n, artistId: (await prisma.artist.findFirstOrThrow({ where: { memberId: s.b.memberId } })).id })
+    const held = (await splitsOf(deal.id)).find((l) => l.party === 'ARTIST')!
+    // before the completion: HELD, nothing to mark; the seller is not the desk
+    await signIn(s.b.userId)
+    expect((await paid(deal.id, held.id, 'Pix')).status).toBe(403)
+    signOut(); await signIn(s.staff.userId)
+    expect((await paid(deal.id, held.id, 'Pix')).status).toBe(409)
+    await confirmDelivery(buyerId, deal.id, null)
+    const rows = await adminDeals()
+    const row = rows.find((r) => r.id === deal.id)!
+    expect(row.phase).toBe('COMPLETED')
+    expect(row.splits.find((l) => l.party === 'ARTIST')).toMatchObject({ status: 'RELEASED', payoutState: 'MANUAL', payee: 'Joana Teixeira' })
+    expect(row.splits.find((l) => l.party === 'PLATFORM')).toMatchObject({ payoutState: 'PLATFORM', payee: null })
+    expect((await paid(deal.id, held.id, '   ')).status).toBe(422)
+    const res = await paid(deal.id, held.id, 'Pix 26/10 · comprovante 77')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ ok: true, amount: expect.stringContaining('R$') })
+    const after = await prisma.dealSplit.findUniqueOrThrow({ where: { id: held.id } })
+    expect(after).toMatchObject({ status: 'PAID', payoutRef: 'manual:Pix 26/10 · comprovante 77', payoutError: null })
+    expect(after.transferredAt).not.toBeNull()
+    // twice is a conflict; the platform line is never manual; the royalty line settles its payment
+    expect((await paid(deal.id, held.id, 'de novo')).status).toBe(409)
+    const platform = (await splitsOf(deal.id)).find((l) => l.party === 'PLATFORM')!
+    expect((await paid(deal.id, platform.id, 'x')).status).toBe(409)
+    const royalty = (await splitsOf(deal.id)).find((l) => l.party === 'ARTIST_ROYALTY')!
+    expect((await paid(deal.id, royalty.id, 'Pix royalty')).status).toBe(200)
+    expect((await prisma.royaltyPayment.findFirstOrThrow({ where: { dealId: deal.id } })).status).toBe('PAID')
+    expect((await adminDeals()).find((r) => r.id === deal.id)!.splits.find((l) => l.party === 'ARTIST')).toMatchObject({ status: 'PAID', payoutState: 'MANUAL_PAID', payoutLabel: 'pago por Pix · Pix 26/10 · comprovante 77' })
+    // a line of another deal under this deal's id is not found
+    expect((await paid(deal.id + 1, held.id, 'x')).status).toBe(404)
   })
 })

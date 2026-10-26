@@ -91,8 +91,6 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
   }
   const ruler = rangeRuler(Number(min || 0), Number(sug || 0), Number(max || 0))
   const rangeError = min && sug && max ? validRange({ minCents: BigInt(toCents(min)), suggestedCents: BigInt(toCents(sug)), maxCents: BigInt(toCents(max)) }) : null
-  // whole reais only: a pasted "R$ 48.000,50" keeps 48000 (the cents never become digits)
-  const digits = (v: string) => v.split(',')[0].replace(/\D/g, '').replace(/^0+/, '').slice(0, 12)
   const row = sel ? { id: sel.id, status: sel.status, dueOn: sel.dueOnIso, assignedAppraiserId: sel.assignedAppraiserId } : null
   const mayIssue = row ? canIssue(actor, row) : false
   const mayTake = row ? canTake(actor, row) : false
@@ -164,9 +162,9 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
           ) : (
             <fieldset disabled={busy || !mayIssue} className="ha-stack">
               <div className="ha-grid-cards ha-grid-cards--3">
-                <label className="ha-label">Mínimo<input className="ha-input ha-input--num" inputMode="numeric" value={reaisInput(min)} onChange={(e) => setMin(digits(e.target.value))} /></label>
-                <label className="ha-label">Sugerido<input className="ha-input ha-input--num ha-adesk__sug" inputMode="numeric" value={reaisInput(sug)} onChange={(e) => setSug(digits(e.target.value))} /></label>
-                <label className="ha-label">Máximo<input className="ha-input ha-input--num" inputMode="numeric" value={reaisInput(max)} onChange={(e) => setMax(digits(e.target.value))} /></label>
+                <label className="ha-label">Mínimo<ReaisField className="ha-input ha-input--num" value={min} onChange={setMin} /></label>
+                <label className="ha-label">Sugerido<ReaisField className="ha-input ha-input--num ha-adesk__sug" value={sug} onChange={setSug} /></label>
+                <label className="ha-label">Máximo<ReaisField className="ha-input ha-input--num" value={max} onChange={setMax} /></label>
               </div>
               {ruler ? (
                 <div className="ha-adesk__ruler" aria-hidden>
@@ -174,12 +172,12 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
                   {ruler.marker !== null ? <span className="ha-adesk__ruler-mark" style={{ left: `${ruler.marker}%` }} /> : null}
                 </div>
               ) : null}
-              {rangeError ? <p className="ha-adesk__err" role="alert">{rangeError}</p> : null}
+              <p className="ha-adesk__err" aria-live="polite">{rangeError ?? ''}</p>
               {dossier.estimate ? <p className="ha-muted ha-sm">Estimativa de referência com base em {dossier.estimate.count} venda(s) comparável(is). Não é laudo.</p> : null}
               <label className="ha-label">Metodologia<textarea className="ha-input" rows={3} value={method} onChange={(e) => setMethod(e.target.value)} /></label>
               <div className="ha-adesk__foot">
                 <span className="ha-muted ha-sm">Laudo assinado · PDF com QR para a página pública{manage && heldByOther ? ` · assinado por você em nome da equipe, não por ${sel.assignedName}` : ''}</span>
-                <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={issue} disabled={busy || !mayIssue || !!rangeError}>Assinar e emitir laudo</button>
+                <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={issue} disabled={busy || !mayIssue || !min || !sug || !max || !!rangeError}>Assinar e emitir laudo</button>
               </div>
             </fieldset>
           )}
@@ -192,5 +190,20 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
       </Modal>
       <Toast message={toast} onDone={() => setToast('')} />
     </div>
+  )
+}
+
+/**
+ * A whole-reais field: while focused it holds the bare digits (the cursor stays
+ * where the person types, backspace removes a digit), on blur it reads "R$ 48.000".
+ * A paste with cents keeps the reais ("R$ 48.000,50" → 48000); past 12 digits the
+ * change is refused instead of cutting the end.
+ */
+function ReaisField({ value, onChange, className }: { value: string; onChange: (digits: string) => void; className: string }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <input className={className} inputMode="numeric" value={focused ? value : reaisInput(value)}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      onChange={(e) => { const d = e.target.value.split(',')[0].replace(/\D/g, '').replace(/^0+/, ''); if (d.length <= 12) onChange(d) }} />
   )
 }

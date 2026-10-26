@@ -50,7 +50,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       {tab === 'offers' && cards ? (
         <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} offers={offers.map((o) => ({
           id: o.id, code: o.code, artworkId: o.artworkId, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),
-          status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, buyerFirstName: o.buyerFirstName, buyerInitials: o.buyerInitials, buyerUserId: o.buyerUserId,
+          status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, buyerFirstName: o.buyerFirstName, buyerInitials: o.buyerInitials,
           expiresIn: o.expiresIn, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null, pctOfPrice: o.pctOfPrice, buyerMessage: o.buyerMessage,
         }))} />
       ) : tab === 'offers' ? (

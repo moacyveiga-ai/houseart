@@ -62,6 +62,7 @@ export async function signCertificate(scope: Scope, certificateId: number, actor
   const c = await certificateReachable(scope, certificateId)
   if (!c.publicId || !c.artwork.publicId) throw new ArtworkError('NOT_LINKED', 'Vincule a etiqueta antes de assinar.', 409)
   if (c.signedAt) throw new ArtworkError('ALREADY_SIGNED', 'O certificado já foi assinado.', 409)
+  if (c.artwork.status !== 'IN_CERTIFICATION') throw new ArtworkError('NOT_IN_CERTIFICATION', 'A obra precisa estar em certificação.', 409)
   const content = contentOf(c, 1)
   const contentHash = contentHashOf(content)
   const now = new Date()
@@ -79,6 +80,11 @@ export async function issueCertificate(scope: Scope, certificateId: number, acto
   const c = await certificateReachable(scope, certificateId)
   if (!c.signedAt || !c.signatureJson || !c.publicId) throw new ArtworkError('NOT_SIGNED', 'Assine o certificado antes de emitir.', 409)
   if (c.issuedAt) throw new ArtworkError('ALREADY_ISSUED', 'O certificado já foi emitido.', 409)
+  // Only a work under certification is issued: a work sent back to draft or archived by the house
+  // review keeps its signed certificate row, and issuing it would undo the decision.
+  if (c.artwork.status !== 'IN_CERTIFICATION') throw new ArtworkError('NOT_IN_CERTIFICATION', 'A obra precisa estar em certificação.', 409)
+  const pendingDuplicate = await prisma.reviewQueueItem.count({ where: { artworkId: c.artworkId, kind: 'DUPLICATE', status: 'OPEN' } })
+  if (pendingDuplicate) throw new ArtworkError('UNDER_REVIEW', 'A equipe está conferindo uma obra parecida de outra conta. A emissão fica liberada depois da decisão.', 409)
   const content = contentOf(c, 1)
   const contentHash = contentHashOf(content)
   const now = new Date()
@@ -97,7 +103,8 @@ export async function issueCertificate(scope: Scope, certificateId: number, acto
       data: { certificateId, version: 1, holderName: content.holder.name, holderDocumentHash: c.artwork.owners[0]?.documentHash ?? null, holderDocumentMask: content.holder.documentMask, holderUserId: c.artwork.member ? actor.userId : null, contentJson: JSON.stringify(content), contentHash, prevHash: null, signaturesJson: c.signatureJson ?? '[]', timestampTokenRef: c.timestampTokenRef, issuedAt: now, pdfRef, pdfHash },
     })
     await tx.certificate.update({ where: { id: certificateId }, data: { currentVersionId: version.id } })
-    await tx.artwork.update({ where: { id: c.artworkId }, data: { status: 'AUTHENTICATED', seal: 'GREEN', sealIssuedAt: now } })
+    const moved = await tx.artwork.updateMany({ where: { id: c.artworkId, status: 'IN_CERTIFICATION' }, data: { status: 'AUTHENTICATED', seal: 'GREEN', sealIssuedAt: now } })
+    if (moved.count === 0) throw new ArtworkError('NOT_IN_CERTIFICATION', 'A obra acabou de sair da certificação.', 409)
   })
   await recordEvent(c.artworkId, 'CERTIFIED', { version: 1, contentHash, pdfHash }, actor.userId)
   void audit.event({ entity: 'certificate', entityId: certificateId, action: 'issue', userId: actor.userId, userName: actor.name, after: { contentHash, pdfHash } })

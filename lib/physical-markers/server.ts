@@ -157,7 +157,11 @@ export async function linkMarker(scope: Scope, opt: { uid: string; ctr: number; 
     const r = await tx.physicalMarker.updateMany({ where: { id: marker.id, status: 'SHIPPED' }, data: { status: 'LINKED', artworkId: artwork.id, linkedAt: new Date(), linkedByUserId: actor.userId, readCounter: opt.ctr, lastReadAt: new Date() } })
     if (r.count === 0) throw new ArtworkError('MARKER_UNAVAILABLE', 'A etiqueta acabou de ser usada.', 409)
     await tx.artwork.update({ where: { id: artwork.id }, data: { publicId } })
-    const c = await tx.certificate.upsert({ where: { artworkId: artwork.id }, create: { artworkId: artwork.id, publicId, stage: 3 }, update: { publicId, stage: 3 } })
+    const prev = await tx.certificate.findUnique({ where: { artworkId: artwork.id }, select: { issuedAt: true } })
+    const c = await tx.certificate.upsert({ where: { artworkId: artwork.id }, create: { artworkId: artwork.id, publicId, stage: 3 }, update: { publicId, stage: prev?.issuedAt ? 5 : 3 } })
+    // A replacement tag (the old one revoked by "Etiqueta removida"): the certificate was issued before,
+    // so the work is authenticated again instead of waiting for a signature it cannot take twice.
+    if (prev?.issuedAt) await tx.artwork.update({ where: { id: artwork.id }, data: { status: 'AUTHENTICATED', seal: 'GREEN' } })
     certificateId = c.id
     if (order.status === 'SHIPPED') await tx.markerOrder.update({ where: { id: order.id }, data: { status: 'DELIVERED', deliveredAt: new Date() } })
   })

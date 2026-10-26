@@ -149,6 +149,8 @@ describe('certification flow', () => {
     await expect(decideReviewItem(item.id, 'REJECTED', staff)).rejects.toMatchObject({ name: 'ReviewDecisionError' })
     await decideReviewItem(item.id, 'REJECTED', staff, 'Portfólio sem obras do artista')
     expect(await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).toMatchObject({ status: 'DRAFT', seal: 'NONE' })
+    // the signature (if any) went with it: the work is signed again after the new submission
+    expect(await prisma.certificate.findUniqueOrThrow({ where: { artworkId: s.b.artworkId } })).toMatchObject({ signedAt: null, signatureJson: null })
     // a decided item is not decided twice
     expect(await decideReviewItem(item.id, 'APPROVED', staff, 'x')).toBeNull()
   }, 60_000)

@@ -14,7 +14,7 @@ import { afterResponseOrNow } from '@/lib/after'
 import { ArtworkError } from '@/lib/artworks/server'
 import { canTransition as artworkCanTransition } from '@/lib/artworks/state-machine'
 import { notify } from '@/lib/notifications/server'
-import { systemLine } from '@/lib/messaging/server'
+import { systemLine, openConversationWith } from '@/lib/messaging/server'
 import { formatBRL as formatReais } from '@/lib/format'
 const formatBRL = (c: bigint) => formatReais(Number(c) / 100, { casas: 0 })
 import { syncOpportunityFromOffer } from '@/lib/crm/server'
@@ -281,6 +281,14 @@ async function answerableOffer(scope: Scope, id: number) {
   const o = await reachableOffer(scope, id)
   await requireSellerRole(scope, OFFER_ROLES, 'Seu papel na galeria não responde propostas.')
   return o
+}
+
+/** "Conversar com {proponente}" on the seller's offer card: the conversation about the artwork between
+ *  the person answering and the proponent's account. A proponent without an account answers by e-mail. */
+export async function openOfferConversation(scope: Scope, id: number, me: number): Promise<number> {
+  const o = await answerableOffer(scope, id)
+  if (!o.buyerUserId) throw new ArtworkError('NO_COUNTERPART', 'O proponente ainda não tem conta. Responda pela proposta; ele recebe por e-mail.', 404)
+  return openConversationWith(me, o.buyerUserId, o.artworkId)
 }
 
 /** Accept under an advisory lock per artwork: a second live offer on the same artwork is refused. */

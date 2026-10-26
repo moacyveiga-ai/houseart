@@ -13,7 +13,8 @@ export { REVIEW_KINDS, REVIEW_KIND_LABELS, type ReviewKind }
 
 export async function openReviewItem(opt: { kind: ReviewKind; artworkId?: number | null; tenantId?: number | null; reason: string; refId?: number | null }) {
   return totalScope('review:open', async () => {
-    const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN' } })
+    // One open item per (kind, artwork) — per check for duplicates: two lookalikes are two decisions.
+    const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN', ...(opt.kind === 'DUPLICATE' && opt.refId != null ? { refId: opt.refId } : {}) } })
     if (existing) return existing
     return prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null } })
   })
@@ -69,13 +70,20 @@ export async function decideReviewItem(id: number, decision: ReviewDecision, act
     const kind = item.kind as ReviewKind
     const reason = note?.trim().slice(0, 500) || null
     if (needsReason(kind, decision) && !reason) throw new ReviewDecisionError('Escreva o motivo da decisão.')
-    return prisma.$transaction(async (tx) => {
+    const decided = await prisma.$transaction(async (tx) => {
+      // Rejecting a duplicate or a new issuer sends the work back (draft / archived): only while it is not
+      // certified yet — the text the staff confirmed would be false. A certified work leaves by contestation.
+      if (item.artworkId && decision === 'REJECTED' && (kind === 'DUPLICATE' || kind === 'NEW_ISSUER')) {
+        const a = await tx.artwork.findUnique({ where: { id: item.artworkId }, select: { status: true } })
+        if (a && a.status !== 'DRAFT' && a.status !== 'IN_CERTIFICATION') throw new ReviewDecisionError('A obra já foi certificada. Para retirar o certificado, abra uma contestação.')
+      }
       const r = await tx.reviewQueueItem.updateMany({ where: { id, status: 'OPEN' }, data: { status: decision, decidedByUserId: actor.userId, decidedAt: new Date(), decisionNote: reason } })
       if (r.count === 0) return null
       if (item.artworkId) {
         const artworkId = item.artworkId
         if (kind === 'DUPLICATE' && decision === 'REJECTED') {
-          await tx.artwork.updateMany({ where: { id: artworkId, status: { in: ['DRAFT', 'IN_CERTIFICATION'] } }, data: { status: 'ARCHIVED' } })
+          await tx.artwork.updateMany({ where: { id: artworkId, status: { in: ['DRAFT', 'IN_CERTIFICATION'] } }, data: { status: 'ARCHIVED', seal: 'NONE' } })
+          await tx.certificate.updateMany({ where: { artworkId, issuedAt: null }, data: { signedAt: null, signedByUserId: null, signatureJson: null, timestampTokenRef: null } })
         }
         if (kind === 'CONTESTATION' && decision === 'APPROVED') {
           await tx.certificate.updateMany({ where: { artworkId }, data: { status: 'REVOKED' } })
@@ -86,6 +94,8 @@ export async function decideReviewItem(id: number, decision: ReviewDecision, act
         }
         if (kind === 'NEW_ISSUER' && decision === 'REJECTED') {
           await tx.artwork.updateMany({ where: { id: artworkId, status: 'IN_CERTIFICATION' }, data: { status: 'DRAFT', seal: 'NONE' } })
+          // The signature covered the content sent; the work comes back editable, so it must be signed again.
+          await tx.certificate.updateMany({ where: { artworkId, issuedAt: null }, data: { signedAt: null, signedByUserId: null, signatureJson: null, timestampTokenRef: null, stage: 0 } })
         }
         if (kind === 'MARKER_REMOVED' && decision === 'APPROVED') {
           await tx.physicalMarker.updateMany({ where: { artworkId }, data: { status: 'REVOKED', artworkId: null } })
@@ -93,8 +103,9 @@ export async function decideReviewItem(id: number, decision: ReviewDecision, act
           await tx.certificate.updateMany({ where: { artworkId }, data: { stage: 2 } })
         }
       }
-      void audit.event({ entity: 'review_item', entityId: id, action: decision.toLowerCase(), userId: actor.userId, userName: actor.name, after: { kind, artworkId: item.artworkId, note: reason } })
       return item
     })
+    if (decided) void audit.event({ entity: 'review_item', entityId: id, action: decision.toLowerCase(), userId: actor.userId, userName: actor.name, after: { kind, artworkId: item.artworkId, note: reason } })
+    return decided
   })
 }

@@ -38,6 +38,12 @@ export async function openConversation(me: number, artworkId: number | null, oth
     other = u?.id ?? null
   }
   if (other == null) throw new ArtworkError('NO_COUNTERPART', artworkId != null ? 'Esta obra ainda não tem quem responda por ela.' : 'Pessoa não encontrada.', 404)
+  return openConversationWith(me, other, artworkId)
+}
+
+/** The row between two KNOWN users about an artwork — only for callers that already authorized the pair
+ *  (the seller answering an offer talks to its proponent). */
+export async function openConversationWith(me: number, other: number, artworkId: number | null): Promise<number> {
   if (other === me) throw new ArtworkError('SELF', 'Você não pode conversar com você mesmo.', 400)
   const pair = pairOf(me, other)
   return prisma.$transaction(async (tx) => {

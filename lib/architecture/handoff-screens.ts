@@ -30,7 +30,7 @@ export const HANDOFF_SCREENS: Record<string, Record<string, string | null>> = {
   },
   'HouseArt App Galeria': {
     Splash: 'apps/mobile/src/screens/onboarding/SplashOverlay.tsx', 'Tela inicial e login': 'app/login/page.tsx', 'Cadastro da galeria': 'app/signup/page.tsx', 'Galeria · painel do dia': 'app/(panel)/page.tsx', Acervo: 'app/(panel)/artworks/page.tsx',
-    'Cadastrar obra': null, 'Gestão do anúncio': 'app/(panel)/artworks/[id]/listing/page.tsx', 'Ofertas recebidas': 'app/(panel)/sales/page.tsx', 'Vendas até o repasse': 'app/(panel)/sales/page.tsx', 'Regras de ofertas': 'app/(panel)/sales/rules/page.tsx',
+    'Cadastrar obra': 'app/(panel)/artworks/register/page.tsx', 'Gestão do anúncio': 'app/(panel)/artworks/[id]/listing/page.tsx', 'Ofertas recebidas': 'app/(panel)/sales/page.tsx', 'Vendas até o repasse': 'app/(panel)/sales/page.tsx', 'Regras de ofertas': 'app/(panel)/sales/rules/page.tsx',
     Mensagens: 'app/(panel)/messages/page.tsx', 'Conversa com compradora': 'app/(panel)/messages/[id]/page.tsx', 'Comunidade e eventos': 'app/(panel)/community/page.tsx', 'Instagram · conectar e postar': 'app/(panel)/instagram/page.tsx',
     'Compartilhar obra': 'components/public/ShareSheet.tsx', 'Ler notícia': 'app/e/news/[slug]/page.tsx', 'Guia de educação': 'app/e/guide/page.tsx', Equipe: 'app/(panel)/gallery/team/page.tsx', 'Artistas representados': 'app/(panel)/gallery/artists/page.tsx', 'Conta, equipe e repasses': 'app/(panel)/gallery/account/page.tsx',
   },

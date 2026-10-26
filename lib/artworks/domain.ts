@@ -62,6 +62,32 @@ export const ACQUISITION_KIND_CARDS: { key: AcquisitionKind; name: string; descr
   { key: 'INHERITED', name: 'Herdei ou ganhei', description: 'Herança, doação ou presente de família', icon: 'family_restroom' },
 ]
 
+/**
+ * Where a gallery's artwork comes from (handoff "Web Galeria" › Cadastrar obra › "De onde vem esta obra?").
+ * Stored in the same `Artwork.acquisitionKind` column as the collector's origin: one column for "where it
+ * came from", two allowlists (the member kind says which applies). "Define a divisão da venda": a
+ * consignment follows the artist's contract; the rest is the gallery's own.
+ */
+export const GALLERY_SOURCE_KINDS = ['CONSIGNMENT', 'OWN_STOCK', 'COLLECTOR_RESALE', 'OTHER'] as const
+export type GallerySourceKind = (typeof GALLERY_SOURCE_KINDS)[number]
+export const GALLERY_SOURCE_CARDS: { key: GallerySourceKind; name: string; description: string; icon: string }[] = [
+  { key: 'CONSIGNMENT', name: 'Consignação de artista', description: 'Obra de artista representado, com divisão por contrato', icon: 'handshake' },
+  { key: 'OWN_STOCK', name: 'Acervo próprio da galeria', description: 'Obra comprada pela galeria', icon: 'storefront' },
+  { key: 'COLLECTOR_RESALE', name: 'Revenda para colecionador', description: 'Mercado secundário, obra de terceiro', icon: 'swap_horiz' },
+  { key: 'OTHER', name: 'Outro', description: 'Doação, permuta, espólio', icon: 'more_horiz' },
+]
+/** Every value `Artwork.acquisitionKind` takes (the collector's and the gallery's). */
+export const ORIGIN_KINDS = [...ACQUISITION_KINDS, ...GALLERY_SOURCE_KINDS] as const
+/**
+ * Whether an origin makes the sale a SECONDARY one (lib/offers listArtworkForSale): everything a collector
+ * registered already changed hands; of the gallery's, only the resale for a collector — a consignment,
+ * the gallery's own stock or "outro" is the first sale, with the primary split and no resale royalty.
+ */
+export function isSecondaryOrigin(kind: string | null | undefined): boolean {
+  if (!kind) return false
+  return (ACQUISITION_KINDS as readonly string[]).includes(kind) || kind === 'COLLECTOR_RESALE'
+}
+
 export const HISTORY_KINDS = ['EXHIBITION', 'PUBLICATION', 'AWARD', 'RESTORATION', 'LOAN'] as const
 export const HISTORY_KIND_LABELS: Record<(typeof HISTORY_KINDS)[number], string> = {
   EXHIBITION: 'Exposição', PUBLICATION: 'Publicação', AWARD: 'Prêmio', RESTORATION: 'Restauro', LOAN: 'Empréstimo',

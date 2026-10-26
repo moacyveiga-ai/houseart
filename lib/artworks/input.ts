@@ -1,6 +1,6 @@
 // The PATCH body of the wizard (autosave): validated with zod, cm → mm. Pure.
 import { z } from 'zod'
-import { ACQUISITION_KINDS, ARTWORK_CATEGORIES, CONDITION_GRADES, CONDITION_REGIONS, CONDITION_STATES, HISTORY_KINDS, SALE_MODES } from './domain'
+import { ORIGIN_KINDS, ARTWORK_CATEGORIES, CONDITION_GRADES, CONDITION_REGIONS, CONDITION_STATES, HISTORY_KINDS, SALE_MODES } from './domain'
 
 const cmToMm = (v: unknown) => {
   if (v === '' || v === null || v === undefined) return null
@@ -31,7 +31,7 @@ export const artworkPatchSchema = z.object({
   signatureLocation: text(120),
   series: text(120),
   category: z.enum(ARTWORK_CATEGORIES).optional(),
-  acquisitionKind: z.enum(ACQUISITION_KINDS).nullable().optional(),
+  acquisitionKind: z.enum(ORIGIN_KINDS).nullable().optional(),
   acquisitionYear: intOrNull,
   acquisitionFrom: text(160),
   acquisitionNote: text(500),

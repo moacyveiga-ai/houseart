@@ -5,7 +5,7 @@ import { publicBaseUrl } from '@/lib/public-url'
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: ['/e', '/e/', '/verify', '/verify/', '/design-system'], disallow: ['/api/', '/a/', '/sign/', '/transfer/', '/login', '/signup', '/collector/', '/e/offer/', '/e/artwork/*/offer', '/e/artwork/*/buy'] }],
+    rules: [{ userAgent: '*', allow: ['/e', '/e/', '/verify', '/verify/', '/design-system'], disallow: ['/api/', '/a/', '/sign/', '/transfer/', '/login', '/signup', '/e/offer/', '/e/artwork/*/offer', '/e/artwork/*/buy'] }],
     sitemap: `${publicBaseUrl()}/sitemap.xml`,
   }
 }

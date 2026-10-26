@@ -5,11 +5,12 @@ const now = new Date('2026-10-26T15:00:00Z')
 const later = new Date(now.getTime() + 3_600_000)
 
 describe('nav badges core', () => {
-  it('an offer waits on the seller when received, or negotiating with the buyer as the last to move; never when expired', () => {
+  it('an offer waits on the seller when received or below the reserve, or negotiating with the buyer as the last to move; never when expired', () => {
     expect(offerWaitsOnSeller({ status: 'RECEIVED', expiresAt: later, lastAuthor: 'BUYER' }, now)).toBe(true)
     expect(offerWaitsOnSeller({ status: 'NEGOTIATING', expiresAt: later, lastAuthor: 'BUYER' }, now)).toBe(true)
     expect(offerWaitsOnSeller({ status: 'NEGOTIATING', expiresAt: later, lastAuthor: 'SELLER' }, now)).toBe(false)
     expect(offerWaitsOnSeller({ status: 'NEGOTIATING', expiresAt: later, lastAuthor: 'NEGOTIATOR' }, now)).toBe(false)
+    expect(offerWaitsOnSeller({ status: 'BELOW_RESERVE', expiresAt: later, lastAuthor: 'BUYER' }, now)).toBe(true) // the desk answers it too
     expect(offerWaitsOnSeller({ status: 'RECEIVED', expiresAt: now, lastAuthor: 'BUYER' }, now)).toBe(false)
     expect(offerWaitsOnSeller({ status: 'ACCEPTED', expiresAt: later, lastAuthor: 'BUYER' }, now)).toBe(false)
   })

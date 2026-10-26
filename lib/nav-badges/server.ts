@@ -1,51 +1,68 @@
-// Menu badges — the counts (audit 2026-10-25, web-app §6): cheap, one query each, read by the
-// panel layout on every page; a failure zeroes the badge and never blocks the page.
+// Menu badges — the counts (audit 2026-10-25, web-app §6): cheap, read by the panel layout on
+// every page, in parallel; a failure zeroes the badge and never blocks the page. Each number is
+// the one the screen behind the item shows by default (its opening filter), so the menu and the
+// page never disagree.
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { memberFilter, type Scope } from '@/lib/scope/core'
+import { ScopeNotApplied } from '@/lib/scope/extension-core'
 import type { ProfileKind } from '@/lib/profiles/nav'
 import { unreadMessages } from '@/lib/messaging/server'
-import { isStuck, OPEN_STATUSES } from '@/lib/admin-transfers/core'
+import { OPEN_FOR_SELLER } from '@/lib/offers/domain'
+import { OPEN_STATUSES } from '@/lib/admin-transfers/core'
 import { PAYABLE_PARTIES } from '@/lib/stripe/connect-core'
 import { badgesFor, offerWaitsOnSeller, type BadgeCounts } from './core'
 
-const quiet = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback)
+/** Any error zeroes the badge — except the scope ratchet, which must keep hurting in dev/test. */
+const quiet = <T,>(p: Promise<T>, fallback: T) => p.catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return fallback })
 
-/** Offers waiting on the seller (the desk's "Ofertas recebidas"). */
+/** Offers waiting on the seller (the desk's "Ofertas recebidas"). Newest first; above the cap the count is a floor. */
+const OFFERS_CAP = 500
 async function offersWaiting(scope: Scope, now: Date): Promise<number> {
-  const rows = await prisma.offer.findMany({ where: { ...memberFilter(scope), status: { in: ['RECEIVED', 'NEGOTIATING'] }, expiresAt: { gt: now } }, select: { status: true, expiresAt: true, rounds: { orderBy: { number: 'desc' }, take: 1, select: { author: true } } }, take: 500 })
+  const rows = await prisma.offer.findMany({ where: { ...memberFilter(scope), status: { in: [...OPEN_FOR_SELLER] }, expiresAt: { gt: now } }, orderBy: { id: 'desc' }, select: { status: true, expiresAt: true, rounds: { orderBy: { number: 'desc' }, take: 1, select: { author: true } } }, take: OFFERS_CAP })
   return rows.filter((o) => offerWaitsOnSeller({ status: o.status, expiresAt: o.expiresAt, lastAuthor: o.rounds[0]?.author ?? null }, now)).length
 }
 
-/** The collector's purchases in course (buyer of a deal not completed nor cancelled). */
-const purchasesInCourse = (userId: number) => prisma.deal.count({ where: { buyerUserId: userId, phase: { not: 'COMPLETED' }, exceptionStatus: null } })
+/** The collector's "Compras" of the collection header: deals in course as the buyer (a dispute is still in course) plus the collector's own open offers. */
+async function purchasesInCourse(userId: number): Promise<number> {
+  const [deals, offers] = await Promise.all([
+    prisma.deal.count({ where: { buyerUserId: userId, phase: { not: 'COMPLETED' }, OR: [{ exceptionStatus: null }, { exceptionStatus: 'DISPUTE' }] } }),
+    prisma.offer.count({ where: { buyerUserId: userId, status: { in: [...OPEN_FOR_SELLER] } } }),
+  ])
+  return deals + offers
+}
 
-/** The appraiser's queue: the requests they hold plus the free ones (any member's — the desk is house-wide, hence the total scope). */
-const appraiserQueue = (userId: number) => totalScope('nav-badges:appraiser', () => prisma.appraisalRequest.count({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] }, OR: [{ assignedAppraiserId: userId }, { assignedAppraiserId: null }] } }))
+/** The appraisals desk opens on "open": every request in the queue or in progress (also another appraiser's), for the appraiser and for the staff alike. */
+const openAppraisals = () => totalScope('nav-badges:appraisals', () => prisma.appraisalRequest.count({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] } } }))
 
-async function staffCounts(now: Date): Promise<BadgeCounts> {
+async function staffCounts(): Promise<BadgeCounts> {
   return totalScope('nav-badges:staff', async () => {
-    const [review, kyc, appraisals, owed, open] = await Promise.all([
+    const [review, latestKyc, appraisals, owed, transfers] = await Promise.all([
       prisma.reviewQueueItem.count({ where: { status: 'OPEN' } }),
-      prisma.kycVerification.count({ where: { status: 'PENDING' } }),
-      prisma.appraisalRequest.count({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] }, assignedAppraiserId: null } }),
+      // the KYC queue counts PEOPLE by their most recent verification (lib/admin-kyc), not rows: one person may hold several PENDING rows
+      prisma.kycVerification.findMany({ orderBy: { id: 'desc' }, distinct: ['userId'], select: { status: true }, take: 2000 }),
+      openAppraisals(),
       // deals with a payable line released and not paid: the same rule as /admin/deals (isOwed), counted by deal
-      prisma.dealSplit.findMany({ where: { status: 'RELEASED', party: { in: [...PAYABLE_PARTIES] } }, select: { dealId: true }, distinct: ['dealId'], take: 1000 }),
-      prisma.ownershipTransfer.findMany({ where: { status: { in: [...OPEN_STATUSES] }, dealId: null }, select: { status: true, kycStatus: true, createdAt: true, sellerSignedAt: true, buyerSignedAt: true, feePaidAt: true }, take: 1000 }),
+      prisma.dealSplit.groupBy({ by: ['dealId'], where: { status: 'RELEASED', party: { in: [...PAYABLE_PARTIES] } } }),
+      // /admin/transfers opens on "Em curso": every open transfer outside a deal
+      prisma.ownershipTransfer.count({ where: { status: { in: [...OPEN_STATUSES] }, dealId: null } }),
     ])
-    return { review, kyc, appraisals, deals: owed.length, transfers: open.filter((t) => isStuck({ status: t.status, kycStatus: t.kycStatus, createdAt: t.createdAt.toISOString(), sellerSignedAt: t.sellerSignedAt?.toISOString() ?? null, buyerSignedAt: t.buyerSignedAt?.toISOString() ?? null, feePaidAt: t.feePaidAt?.toISOString() ?? null }, now)).length }
+    return { review, kyc: latestKyc.filter((v) => v.status === 'PENDING').length, appraisals, deals: owed.length, transfers }
   })
 }
 
 /** All the badges of one person's active navigation profile, keyed by NAV item. */
 export async function navBadges(profile: ProfileKind, user: { id: number }, scope: Scope, now = new Date()): Promise<Record<string, number>> {
   const c: BadgeCounts = {}
-  if (profile !== 'appraiser' && profile !== 'admin') c.messages = await quiet(unreadMessages(user.id), 0)
-  if (profile === 'artist') c.certification = await quiet(prisma.artwork.count({ where: { ...memberFilter(scope), status: 'IN_CERTIFICATION' } }), 0)
-  if (profile === 'artist' || profile === 'gallery' || profile === 'advisor') c.sales = await quiet(offersWaiting(scope, now), 0)
-  if (profile === 'collector') c.wallet = await quiet(purchasesInCourse(user.id), 0)
-  if (profile === 'appraiser') c.appraisals = await quiet(appraiserQueue(user.id), 0)
-  if (profile === 'admin') Object.assign(c, await quiet(staffCounts(now), {}))
+  const jobs: Promise<void>[] = []
+  const put = <K extends keyof BadgeCounts>(k: K, p: Promise<number>) => { jobs.push(quiet(p, 0).then((v) => { c[k] = v })) }
+  if (profile !== 'appraiser' && profile !== 'admin') put('messages', unreadMessages(user.id))
+  if (profile === 'artist') put('certification', prisma.artwork.count({ where: { ...memberFilter(scope), status: 'IN_CERTIFICATION' } }))
+  if (profile === 'artist' || profile === 'gallery' || profile === 'advisor') put('sales', offersWaiting(scope, now))
+  if (profile === 'collector') put('wallet', purchasesInCourse(user.id))
+  if (profile === 'appraiser') put('appraisals', openAppraisals())
+  if (profile === 'admin') jobs.push(quiet(staffCounts(), {}).then((s) => { Object.assign(c, s) }))
+  await Promise.all(jobs)
   return badgesFor(profile, c)
 }

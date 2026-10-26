@@ -1,12 +1,13 @@
 // Menu badges — pure rules (audit 2026-10-25, web-app §6 "Badges no menu"): which NAV key each
 // count lands on per navigation profile, and the offer rule shared by the seller desks.
+import { OPEN_FOR_SELLER } from '@/lib/offers/domain'
 import type { ProfileKind } from '@/lib/profiles/nav'
 
-/** Offers that wait on the seller: received and not yet answered, or a negotiation whose last round is the buyer's. */
+/** Offers that wait on the seller: open for the desk (received, below the reserve, negotiating) and, when negotiating, the buyer made the last move. The same `open` the Vendas screen counts in "Ofertas recebidas". */
 export function offerWaitsOnSeller(o: { status: string; expiresAt: Date | string; lastAuthor: string | null }, now: Date): boolean {
   if (new Date(o.expiresAt) <= now) return false
-  if (o.status === 'RECEIVED') return true
-  return o.status === 'NEGOTIATING' && o.lastAuthor === 'BUYER'
+  if (!(OPEN_FOR_SELLER as readonly string[]).includes(o.status)) return false
+  return o.status !== 'NEGOTIATING' || o.lastAuthor === 'BUYER'
 }
 
 export interface BadgeCounts {

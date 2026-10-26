@@ -6,7 +6,6 @@ import { buyNow, listArtworkForSale } from '@/lib/offers/server'
 import { expireUnpaidEscrows, payEscrow, pendingEscrowOf, simulateEscrowPayment, startEscrowPayment } from '@/lib/deals/server'
 import { setStripeGatewayForTests } from '@/lib/stripe/gateway-server'
 import { signStripePayload } from '@/lib/stripe/mode-core'
-import { totalScope } from '@/lib/scope/context'
 import { POST as webhookPOST } from '@/app/api/stripe/webhook/route'
 import { createScenario, type Scenario } from './fixtures'
 import { asPanel } from './session'
@@ -83,7 +82,7 @@ describe('Pix e boleto na garantia do negócio', () => {
   it('boleto needs who pays and the address; the voucher comes back', async () => {
     testMode()
     expect(await buy('BOLETO', { ...BILLING, taxId: '1' })).toMatchObject({ ok: false })
-    expect(await totalScope('test:offers', () => prisma.offer.count())).toBe(0)
+    expect(await prisma.offer.count({ where: { artworkId: s.b.artworkId } })).toBe(0)
     const r = await buy('BOLETO', BILLING)
     if (!r.ok) throw new Error(r.error)
     expect(r.instructions).toMatchObject({ method: 'BOLETO', boletoPdfUrl: expect.stringContaining('.pdf') })

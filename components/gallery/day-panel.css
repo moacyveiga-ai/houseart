@@ -51,3 +51,4 @@
 .ha-dp__shortcut { display: flex; align-items: center; gap: var(--ha-space-2); height: 52px; padding: 0 var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); font-size: 13px; font-weight: 600; color: var(--ha-ink-900); text-decoration: none; }
 .ha-dp__shortcut:hover { background: var(--ha-paper-100); }
 .ha-dp__shortcut .ha-icon { font-size: 22px; }
+.ha-dp__tools { margin-left: auto; display: flex; gap: var(--ha-space-1); }

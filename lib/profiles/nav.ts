@@ -13,6 +13,8 @@ export interface NavItem {
   label: string
   icon: string
   href: string
+  /** other path prefixes that light this item (the screens that live "inside" it) */
+  also?: readonly string[]
 }
 
 export const PROFILE_LABELS: Record<ProfileKind, string> = {
@@ -37,21 +39,16 @@ const ARTIST: NavItem[] = [
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
 ]
 
+// Handoff "Web Galeria" (out.tabs): five entries — Acervo · Negócios · Comunidade ·
+// Mensagens · Galeria. "Galeria" is the painel do dia and the account; team,
+// artists, payout, billing, certification, collectors and royalty live inside it
+// (audit 2026-10-25: the old 14-item menu of the Web App).
 const GALLERY: NavItem[] = [
-  { key: 'home', label: 'Início', icon: 'space_dashboard', href: '/' },
-  { key: 'artworks', label: 'Inventário', icon: 'inventory_2', href: '/artworks' },
-  { key: 'new', label: 'Nova obra', icon: 'add_photo_alternate', href: '/artworks/new' },
-  { key: 'certification', label: 'Certificação', icon: 'verified', href: '/certification' },
-  { key: 'sales', label: 'Vendas e ofertas', icon: 'handshake', href: '/sales' },
-  { key: 'payout', label: 'Pix para receber', icon: 'account_balance', href: '/sales/payout' },
-  { key: 'crm', label: 'Colecionadores', icon: 'view_kanban', href: '/crm' },
-  { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },
+  { key: 'artworks', label: 'Acervo', icon: 'imagesmode', href: '/artworks' },
+  { key: 'sales', label: 'Negócios', icon: 'handshake', href: '/sales' },
   { key: 'community', label: 'Comunidade', icon: 'forum', href: '/community' },
-  { key: 'royalty', label: 'Direito de sequência', icon: 'autorenew', href: '/royalty' },
-  { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },
-  { key: 'team', label: 'Equipe', icon: 'groups', href: '/gallery/team' },
-  { key: 'artists', label: 'Artistas', icon: 'palette', href: '/gallery/artists' },
-  { key: 'account', label: 'Conta da galeria', icon: 'settings', href: '/gallery/account' },
+  { key: 'messages', label: 'Mensagens', icon: 'chat_bubble', href: '/messages' },
+  { key: 'home', label: 'Galeria', icon: 'storefront', href: '/', also: ['/gallery', '/billing', '/certification', '/crm', '/royalty', '/wallet/cards', '/sales/payout'] },
 ]
 
 // Handoff "Web Colecionador": Explorar (feed · descobrir) opens the profile,
@@ -101,17 +98,19 @@ export function accountHrefOf(profile: ProfileKind): string {
 /** "Ajuda" of the sidebar footer: the public "Como funciona" until a help center exists. */
 export const HELP_HREF = '/e/how-it-works'
 
-/** First screen of each profile (where the profile switcher lands). */
+/** First screen of each profile (where the profile switcher lands): the gallery desk opens on its painel do dia. */
 export function homeOf(profile: ProfileKind): string {
-  return NAV[profile][0].href
+  return profile === 'gallery' || profile === 'advisor' ? '/' : NAV[profile][0].href
 }
 
 /** The nav item that is "on" for a pathname: the longest href prefix wins. */
 export function activeNavKey(profile: ProfileKind, pathname: string): string | null {
-  let best: NavItem | null = null
+  let best: { key: string; len: number } | null = null
   for (const item of NAV[profile]) {
-    const hit = item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(item.href + '/')
-    if (hit && (!best || item.href.length > best.href.length)) best = item
+    for (const p of [item.href, ...(item.also ?? [])]) {
+      const hit = p === '/' ? pathname === '/' : pathname === p || pathname.startsWith(p + '/')
+      if (hit && (!best || p.length > best.len)) best = { key: item.key, len: p.length }
+    }
   }
   return best?.key ?? null
 }

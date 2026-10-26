@@ -544,3 +544,35 @@ a.ha-review__title:hover { text-decoration: underline; }
 .ha-markers__uids { grid-column: 1 / -1; }
 .ha-select--sm { width: auto; padding: var(--ha-space-1) var(--ha-space-3); font-size: var(--ha-text-body-sm); }
 .ha-house__row { grid-template-columns: 100px minmax(140px, 1.2fr) 100px minmax(200px, 2fr) 120px 120px; }
+
+/* Negócios › Ofertas as cards (HouseArt Web Galeria.dc.html) */
+.ha-offer-insight { display: flex; align-items: center; gap: var(--ha-space-3); padding: var(--ha-space-3); border-radius: var(--ha-radius-md); background: var(--ha-sand-100); color: var(--ha-ink-900); font-size: var(--ha-text-body-sm); }
+.ha-offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: var(--ha-space-4); align-items: start; }
+.ha-offer { display: flex; flex-direction: column; gap: var(--ha-space-3); padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-bg); }
+.ha-offer--open { border-color: var(--ha-ink-300); }
+.ha-offer__top { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; }
+.ha-offer__thumb { height: 56px; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-1); }
+.ha-offer__thumb img { max-width: 100%; max-height: 100%; display: block; }
+.ha-offer__work { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ha-offer__work i { font-family: var(--ha-font-display); font-size: var(--ha-text-body-sm); color: var(--ha-ink-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-offer__work span { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-offer__value { display: flex; flex-direction: column; align-items: flex-end; }
+.ha-offer__value b { font-size: var(--ha-text-body-lg); font-weight: 600; color: var(--ha-ink-900); font-variant-numeric: tabular-nums; }
+.ha-offer__value span { font-size: var(--ha-text-caption); font-weight: 600; }
+.ha-offer__who { display: flex; align-items: center; gap: var(--ha-space-3); }
+.ha-avatar--32 { width: 32px; height: 32px; }
+.ha-offer__name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ha-offer__name b { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-ink-900); }
+.ha-offer__name span { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-offer__deadline { padding: 2px var(--ha-space-2); border-radius: var(--ha-radius-full); background: var(--ha-paper-100); font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-700); white-space: nowrap; }
+.ha-offer__msg { margin: 0; padding: var(--ha-space-2) var(--ha-space-3); border-radius: var(--ha-radius-sm); background: var(--ha-paper-100); font-size: var(--ha-text-body-sm); color: var(--ha-ink-700); }
+.ha-offer__others { display: flex; align-items: center; gap: var(--ha-space-2); font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-sand-600); }
+.ha-offer__others .ha-icon { font-size: 16px; }
+.ha-offer__actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--ha-space-2); }
+.ha-offer__refuse { background: var(--ha-paper-100); color: var(--ha-ink-900); }
+.ha-offer__refuse:hover { background: var(--ha-paper-200); }
+.ha-offer__status { padding: var(--ha-space-2) var(--ha-space-3); border-radius: var(--ha-radius-sm); background: var(--ha-paper-100); font-size: var(--ha-text-body-sm); color: var(--ha-ink-700); }
+.ha-offer__talk { align-self: flex-start; display: flex; align-items: center; gap: var(--ha-space-2); border: 0; background: none; padding: 0; color: var(--ha-ink-900); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; }
+.ha-offer__talk .ha-icon { font-size: 18px; }
+.ha-offer__talk:hover { text-decoration: underline; }
+.ha-input-money { display: flex; align-items: center; gap: var(--ha-space-2); font-weight: 400; }

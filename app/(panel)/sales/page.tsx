@@ -6,6 +6,8 @@ import { OffersTable } from '@/components/offers/OffersTable'
 import { OfferCards } from '@/components/offers/OfferCards'
 import { collectionSummary } from '@/lib/collector-wallet/collection-server'
 import { CollectionHeader } from '@/components/collector/CollectionHeader'
+import { ActiveListings } from '@/components/collector/ActiveListings'
+import { activeListings } from '@/lib/collectors/listings-server'
 import { sellerDeals } from '@/lib/deals/server'
 import { SaleRows } from '@/components/sales/SaleRows'
 import { SaleDetail } from '@/components/sales/SaleDetail'
@@ -58,6 +60,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const cards = desk || collector
   const negotiatorLine = mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'
   const summary = collector ? await collectionSummary(user) : null
+  // Web Colecionador › Vendas: the works on the marketplace, under the offers (audit colecionador §12)
+  const listings = collector && tab === 'offers' ? await activeListings(scope) : null
   return (
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="sales" /> : <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : 'Vendas e ofertas'}</h1></div>}
@@ -82,6 +86,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </>
         )
       )}
+      {listings ? <ActiveListings rows={listings} /> : null}
     </div>
   )
 }

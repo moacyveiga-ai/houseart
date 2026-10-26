@@ -1,0 +1,18 @@
+/* "Anúncios ativos" (Web Colecionador › Vendas). Prefix ha-alist-. */
+.ha-alist { display: flex; flex-direction: column; gap: var(--ha-space-3); margin-top: var(--ha-space-6); }
+.ha-alist__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ha-space-3); }
+.ha-alist__title { font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); color: var(--ha-fg); margin: 0; }
+.ha-alist__count { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-alist__list { list-style: none; margin: 0; padding: 0; border-top: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-alist__row { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); color: inherit; text-decoration: none; }
+.ha-alist__row:hover .ha-alist__name { text-decoration: underline; }
+.ha-alist__wall { height: 68px; width: 68px; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-2); }
+.ha-alist__wall img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; object-fit: contain; box-shadow: var(--ha-shadow-sm); }
+.ha-alist__wall .ha-icon { color: var(--ha-ink-300); }
+.ha-alist__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ha-alist__name { font-family: var(--ha-font-display); font-style: italic; font-size: 15px; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-alist__price { font-size: 13px; font-weight: 600; color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-alist__price span { font-weight: 400; color: var(--ha-ink-500); }
+.ha-alist__stats { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-alist__chev { color: var(--ha-ink-500); display: inline-flex; }
+.ha-alist__hint { font-size: var(--ha-text-caption); color: var(--ha-ink-500); margin: 0; }

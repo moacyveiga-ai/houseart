@@ -4,9 +4,10 @@
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import type { DayPanel as DayPanelData } from '@/lib/gallery/panel-server'
+import { topStats } from '@/lib/gallery/panel-core'
 import './day-panel.css'
 
-export interface TopViewed { id: number; title: string; coverUrl: string | null; views7d: number; openOffers: number }
+export interface TopViewed { id: number; title: string; coverUrl: string | null; views7d: number; openOffers: number; likes: number; saves: number }
 
 export function DayPanel({ data, who, top }: { data: DayPanelData; who: { initials: string; name: string; dateLabel: string }; top: TopViewed[] }) {
   const n = data.actions.length
@@ -50,8 +51,18 @@ export function DayPanel({ data, who, top }: { data: DayPanelData; who: { initia
             <span className="ha-dp__top-body">
               <span className="ha-dp__top-line"><span className="ha-dp__top-title">{t.title}</span><span className="ha-dp__top-views">{t.views7d.toLocaleString('pt-BR')}</span></span>
               <span className="ha-dp__bar" aria-hidden="true"><span style={{ width: `${Math.round((t.views7d / max) * 100)}%` }} /></span>
-              <span className="ha-dp__top-stats">{t.openOffers} {t.openOffers === 1 ? 'oferta' : 'ofertas'}</span>
+              <span className="ha-dp__top-stats">{topStats(t)}</span>
             </span>
+          </Link>
+        ))}
+      </section>
+      <section className="ha-dp__section" aria-labelledby="dp-agenda">
+        <div className="ha-dp__section-head"><h2 id="dp-agenda" className="ha-dp__section-title">Agenda</h2><Link href="/community?tab=events" className="ha-dp__section-note">Ver eventos</Link></div>
+        {data.agenda.length === 0 ? <p className="ha-dp__empty">Nada marcado. Crie um evento ou confirme presença na comunidade.</p> : data.agenda.map((e) => (
+          <Link key={e.key} href={e.href} className="ha-dp__event">
+            <span className="ha-dp__event-date" aria-hidden="true"><span className="ha-dp__event-day">{e.day}</span><span className="ha-dp__event-month">{e.month}</span></span>
+            <span className="ha-dp__action-text"><span className="ha-dp__action-title">{e.title}</span><span className="ha-dp__action-sub">{e.sub}</span></span>
+            <span className="ha-dp__event-icon"><Icon name={e.icon} size={20} /></span>
           </Link>
         ))}
       </section>

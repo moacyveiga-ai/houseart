@@ -23,3 +23,27 @@
 .ha-account-logout[disabled] { color: var(--ha-ink-300); border-color: var(--ha-ink-300); cursor: default; }
 .ha-account-foot { text-align: center; font-size: 11px; color: var(--ha-fg-muted); }
 .ha-account-foot a { color: inherit; }
+
+/* Verification line under the header; the danger link; the sheets of Sair and Excluir. */
+.ha-account-me__ver { display: inline-flex; align-items: center; gap: 4px; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-fg-muted); }
+.ha-account-me__ver--ok { color: var(--ha-verified-500); }
+.ha-account-danger { border: 0; background: none; padding: 4px 0; color: var(--ha-alert-500); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; align-self: center; }
+.ha-account-danger:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-account-sheet { display: flex; flex-direction: column; gap: 12px; }
+.ha-account-sheet__list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: var(--ha-text-body-sm); color: var(--ha-fg-body); }
+.ha-account-sheet__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-account-sheet__err { margin: 0; color: var(--ha-alert-500); font-size: var(--ha-text-caption); }
+
+/* Dados da galeria (components/gallery/GalleryDataForm.tsx). */
+.ha-gdata { display: flex; flex-direction: column; gap: var(--ha-space-5); max-width: 720px; }
+.ha-gdata__back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); text-decoration: none; }
+.ha-gdata__back:hover { text-decoration: underline; }
+.ha-gdata__note { display: flex; align-items: center; gap: 6px; margin: 0; padding: var(--ha-space-3); border-radius: var(--ha-radius-md); background: var(--ha-paper-100); font-size: var(--ha-text-body-sm); color: var(--ha-fg-body); }
+.ha-gdata__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ha-space-4); }
+.ha-gdata__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-gdata__field small { font-weight: 500; font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-gdata__field--wide { grid-column: 1 / -1; }
+.ha-gdata__ro { background: var(--ha-paper-100); color: var(--ha-fg-body); }
+.ha-gdata__ta { height: auto; min-height: 84px; padding-top: 10px; resize: vertical; font: inherit; }
+.ha-gdata__err { margin: 0; color: var(--ha-alert-500); font-size: var(--ha-text-caption); }
+@media (max-width: 640px) { .ha-gdata__grid { grid-template-columns: 1fr; } }

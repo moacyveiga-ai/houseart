@@ -7,17 +7,19 @@ import { acceptInvite, invite, inviteByToken, removeFromTeam, setRole, teamOf } 
 import { addArtist, endRepresentation, representedArtists, updateContract } from '@/lib/gallery/artists-server'
 import { changeListPrice, listingOf, recordView, setAcceptsOffers, setPaused } from '@/lib/gallery/listing-server'
 import { dayPanel } from '@/lib/gallery/panel-server'
+import { galleryAccount } from '@/lib/gallery/account-server'
+import { PATCH as accountPatch } from '@/app/api/gallery/account/route'
 import { listPublicArtworks } from '@/lib/marketplace/public-server'
 import { hashPassword } from '@/lib/auth'
 import { createScenario, type Scenario } from './fixtures'
-import { asPanel } from './session'
+import { asPanel, signIn, signOut } from './session'
 import { truncateTables } from './db'
 
 let s: Scenario
 beforeEach(async () => {
   process.env.FLAG_TENANT_SCOPE = '1'; process.env.FLAG_DEALS = '1'
   s = await createScenario()
-  await truncateTables(['Mandate', 'Offer', 'Deal', 'Contact', 'Notification', 'OfferRules', 'TeamInvite', 'ArtistContract', 'ArtworkViewDay', 'rate_limit_bucket'])
+  await truncateTables(['Mandate', 'Offer', 'Deal', 'Contact', 'Notification', 'OfferRules', 'TeamInvite', 'ArtistContract', 'ArtworkViewDay', 'Conversation', 'Post', 'Reaction', 'AgendaEvent', 'rate_limit_bucket'])
   await prisma.artwork.update({ where: { id: s.a1.artworkId }, data: { status: 'AUTHENTICATED', seal: 'GREEN', publicId: 'HA-2026-TEST-0006' } })
   await asPanel(s.a1.userId, async ({ scope, user }) => {
     await listArtworkForSale(scope, s.a1.artworkId, { listPriceCents: 1_000_000n, reservePriceCents: 600_000n, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false }, { userId: user.id })
@@ -116,5 +118,72 @@ describe('represented artists, listing, panel', () => {
       expect(p.kpis.map((k) => k.key)).toEqual(['sales', 'offers', 'escrow', 'views'])
       expect(p.kpis[3].value).toBe('2')
     })
+  }, 60_000)
+
+  it('panel: agenda (own event post, confirmed agenda entry), messages without an answer and drafts', async () => {
+    const a1 = await prisma.user.findUniqueOrThrow({ where: { id: s.a1.userId }, select: { memberId: true, tenantId: true } })
+    const soon = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10)
+    const past = '2020-01-01'
+    await prisma.post.createMany({ data: [
+      { authorUserId: s.a1.userId, authorMemberId: a1.memberId, tenantId: a1.tenantId, kind: 'EVENT', body: '', eventTitle: 'Abertura · Nina Prado', eventVenue: 'Galeria Ladeira', eventStartsOn: soon, eventStartsAt: '19h' },
+      { authorUserId: s.a1.userId, authorMemberId: a1.memberId, tenantId: a1.tenantId, kind: 'EVENT', body: '', eventTitle: 'Já passou', eventVenue: 'x', eventStartsOn: past },
+    ] })
+    const fair = await prisma.agendaEvent.create({ data: { kind: 'FAIR', title: 'SP-Arte', venue: 'Bienal', city: 'São Paulo/SP', startsOn: soon } })
+    await prisma.reaction.create({ data: { userId: s.a1.userId, targetKind: 'EVENT', targetId: fair.id, kind: 'RSVP' } })
+    // a collector wrote and nobody answered; another conversation where the gallery spoke last
+    const [lo, hi] = [Math.min(s.a1.userId, s.b.userId), Math.max(s.a1.userId, s.b.userId)]
+    const waiting = await prisma.conversation.create({ data: { userAId: lo, userBId: hi, artworkId: null, lastMessageAt: new Date(), lastPreview: 'Ainda disponível?', participants: { create: [{ userId: s.a1.userId, unread: 1 }, { userId: s.b.userId }] } } })
+    await prisma.message.create({ data: { conversationId: waiting.id, senderUserId: s.b.userId, kind: 'TEXT', body: 'Ainda disponível?' } })
+    const answered = await prisma.conversation.create({ data: { userAId: lo, userBId: hi, artworkId: s.a1.artworkId, lastMessageAt: new Date(), lastPreview: 'Sim!', participants: { create: [{ userId: s.a1.userId }, { userId: s.b.userId }] } } })
+    await prisma.message.createMany({ data: [{ conversationId: answered.id, senderUserId: s.b.userId, kind: 'TEXT', body: 'Oi' }, { conversationId: answered.id, senderUserId: s.a1.userId, kind: 'TEXT', body: 'Sim!' }] })
+    const artist = await prisma.artwork.findUniqueOrThrow({ where: { id: s.a1.artworkId }, select: { artistId: true } })
+    await prisma.artwork.create({ data: { memberId: a1.memberId!, tenantId: a1.tenantId, artistId: artist.artistId, title: 'Rascunho', status: 'DRAFT', seal: 'NONE' } })
+    await asPanel(s.a1.userId, async ({ scope, user }) => {
+      const p = await dayPanel(scope, new Date(), user.id)
+      expect(p.agenda.map((e) => e.title)).toEqual(['Abertura · Nina Prado', 'SP-Arte'])
+      expect(p.agenda[0]).toMatchObject({ icon: 'celebration', sub: 'Galeria Ladeira · 19h' })
+      expect(p.agenda[1]).toMatchObject({ icon: 'event_available', sub: 'Feira · Bienal · São Paulo/SP' })
+      const unanswered = p.actions.find((a) => a.tag === 'responder')
+      expect(unanswered).toMatchObject({ title: '1 mensagem sem resposta', href: '/messages' })
+      // the gallery's drafts: the one above plus whatever the scenario left in DRAFT (the advisor's artwork)
+      const drafts = await prisma.artwork.count({ where: { tenantId: a1.tenantId!, status: 'DRAFT' } })
+      expect(drafts).toBeGreaterThanOrEqual(1)
+      expect(p.actions.find((a) => a.tag === 'rascunho')).toMatchObject({ title: `${drafts} ${drafts === 1 ? 'obra' : 'obras'} sem certificado`, href: '/artworks?filter=drafts' })
+      // without the person at the desk: no messages, no RSVPs
+      const anon = await dayPanel(scope)
+      expect(anon.actions.some((a) => a.tag === 'responder')).toBe(false)
+      expect(anon.agenda.map((e) => e.title)).toEqual(['Abertura · Nina Prado'])
+    })
+  }, 60_000)
+})
+
+describe('gallery account data', () => {
+  it('the ADMIN saves contact and city into the public profile; staff read only; the header knows who is verified', async () => {
+    await asPanel(s.a1.userId, async ({ scope, user }) => {
+      const before = await galleryAccount(user, scope)
+      expect(before).toMatchObject({ galleryName: 'Galeria Ladeira', isAdmin: true, verified: { cnpj: false } })
+    })
+    await signIn(s.a1.userId, 'GALLERY')
+    const bad = await accountPatch(new Request('http://t/api/gallery/account', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'não é', phone: '', city: 'Salvador', summary: '' }) }))
+    expect(bad.status).toBe(422)
+    const ok = await accountPatch(new Request('http://t/api/gallery/account', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'Contato@Ladeira.art', phone: '(71) 99999-0000', city: 'Salvador', summary: 'Arte contemporânea no Santo Antônio' }) }))
+    expect(ok.status).toBe(200)
+    const body = (await ok.json()) as { data: { email: string; phone: string; city: string; summary: string } }
+    expect(body.data).toEqual({ email: 'contato@ladeira.art', phone: '(71) 99999-0000', city: 'Salvador', summary: 'Arte contemporânea no Santo Antônio' })
+    signOut()
+    const a1 = await prisma.user.findUniqueOrThrow({ where: { id: s.a1.userId }, select: { tenantId: true } })
+    expect(await prisma.galleryPublicProfile.findUnique({ where: { tenantId: a1.tenantId! }, select: { name: true, city: true, email: true } })).toEqual({ name: 'Galeria Ladeira', city: 'Salvador', email: 'contato@ladeira.art' })
+    // a sales staffer reads the same data but cannot save
+    const sales = await prisma.user.create({ data: { email: 'vendas@galeria.test', name: 'Vera', profile: 'member', active: true, tenantId: a1.tenantId, tenantRole: 'MEMBER', profiles: { create: { kind: 'GALLERY', isDefault: true } } } })
+    const m = await prisma.member.create({ data: { userId: sales.id, tenantId: a1.tenantId!, kind: 'GALLERY_STAFF', role: 'SALES', displayName: 'Vera', slug: 'vera', status: 'ACTIVE' } })
+    await prisma.user.update({ where: { id: sales.id }, data: { memberId: m.id } })
+    await asPanel(sales.id, async ({ scope, user }) => {
+      const v = await galleryAccount(user, scope)
+      expect(v).toMatchObject({ isAdmin: false, data: { city: 'Salvador' } })
+    })
+    await signIn(sales.id, 'GALLERY')
+    const denied = await accountPatch(new Request('http://t/api/gallery/account', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city: 'Rio' }) }))
+    expect(denied.status).toBe(403)
+    signOut()
   }, 60_000)
 })

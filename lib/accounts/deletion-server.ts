@@ -32,11 +32,17 @@ export async function openNegotiations(userId: number): Promise<OpenNegotiations
  *  (tenants, listings, payouts and the team's own access go with them). */
 export const SELF_DELETE_PROFILES = ['collector'] as const
 
+/** Whether this account closes itself here (a collector) — the sheet says who else to talk to. */
+export async function canSelfDelete(userId: number): Promise<boolean> {
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { profile: true, member: { select: { kind: true } } } })
+  return me?.profile === 'collector' && (!me.member || me.member.kind === 'COLLECTOR')
+}
+
+export const NOT_SELF_SERVICE_MESSAGE = 'A exclusão de conta de artista, galeria ou equipe é feita pelo atendimento da HouseArt.'
+
 export async function requestAccountDeletion(userId: number, typed: unknown, ctx: { ip?: string; userAgent?: string } = {}): Promise<void> {
   if (!typedOk(typed)) throw new ArtworkError('CONFIRM', 'Digite EXCLUIR para confirmar.', 422)
-  const me = await prisma.user.findUnique({ where: { id: userId }, select: { profile: true, tenantRole: true, member: { select: { kind: true } } } })
-  const collector = me?.profile === 'collector' && (!me.member || me.member.kind === 'COLLECTOR')
-  if (!collector) throw new ArtworkError('NOT_SELF_SERVICE', 'A exclusão de conta de artista, galeria ou equipe é feita pelo atendimento da HouseArt.', 403)
+  if (!(await canSelfDelete(userId))) throw new ArtworkError('NOT_SELF_SERVICE', NOT_SELF_SERVICE_MESSAGE, 403)
   const blocker = deletionBlocker(await openNegotiations(userId))
   if (blocker) throw new ArtworkError('IN_NEGOTIATION', blocker, 409)
   const u = await prisma.$transaction(async (tx) => {

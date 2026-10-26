@@ -52,3 +52,12 @@
 .ha-dp__shortcut:hover { background: var(--ha-paper-100); }
 .ha-dp__shortcut .ha-icon { font-size: 22px; }
 .ha-dp__tools { margin-left: auto; display: flex; gap: var(--ha-space-1); }
+
+/* Agenda: day/month tile · title and place · what it is. */
+.ha-dp__event { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: 8px var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); color: var(--ha-ink-900); text-decoration: none; }
+.ha-dp__event:hover { background: var(--ha-paper-100); }
+.ha-dp__event:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-dp__event-date { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--ha-radius-md); background: var(--ha-sand-100); }
+.ha-dp__event-day { font-family: var(--ha-font-display); font-size: 20px; line-height: 22px; color: var(--ha-ink-900); font-variant-numeric: tabular-nums; }
+.ha-dp__event-month { font-size: 11px; line-height: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--ha-ink-500); }
+.ha-dp__event-icon { color: var(--ha-ink-500); display: flex; }

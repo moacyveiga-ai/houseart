@@ -95,6 +95,21 @@ export async function unreadMessages(me: number): Promise<number> {
   return r._sum.unread ?? 0
 }
 
+/**
+ * Conversations waiting on me: the last line is a person's message from the other side (system
+ * lines do not count). Who is waiting, by name, newest first — for the gallery's "Precisa de você".
+ */
+export async function unansweredConversations(me: number, take = 20): Promise<{ id: number; name: string }[]> {
+  const rows = await prisma.conversation.findMany({ where: { OR: [{ userAId: me }, { userBId: me }], lastMessageAt: { not: null } }, orderBy: { lastMessageAt: 'desc' }, take: 50, select: { id: true, userAId: true, userBId: true } })
+  if (!rows.length) return []
+  const last = await prisma.message.findMany({ where: { conversationId: { in: rows.map((r) => r.id) } }, orderBy: [{ conversationId: 'asc' }, { id: 'desc' }], distinct: ['conversationId'], select: { conversationId: true, senderUserId: true, kind: true } })
+  const waiting = new Set(last.filter((m) => m.kind === 'TEXT' && m.senderUserId != null && m.senderUserId !== me).map((m) => m.conversationId))
+  const out = rows.filter((r) => waiting.has(r.id)).slice(0, take)
+  const users = out.length ? await prisma.user.findMany({ where: { id: { in: out.map((r) => otherOf(r, me)) } }, select: { id: true, name: true, member: { select: { displayName: true } } } }) : []
+  const byUser = new Map(users.map((u) => [u.id, u.member?.displayName ?? u.name]))
+  return out.map((r) => ({ id: r.id, name: byUser.get(otherOf(r, me)) ?? 'Alguém' }))
+}
+
 async function requireParticipant(me: number, conversationId: number) {
   const c = await prisma.conversation.findUnique({ where: { id: conversationId }, include: { participants: true } })
   if (!c || !c.participants.some((p) => p.userId === me)) throw new ArtworkError('NOT_FOUND', 'Conversa não encontrada.', 404)

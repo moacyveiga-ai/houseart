@@ -74,6 +74,8 @@ const ADMIN: NavItem[] = [
   { key: 'deals', label: 'Negócios', icon: 'handshake', href: '/admin/deals' },
   { key: 'users', label: 'Usuários e contas', icon: 'manage_accounts', href: '/admin/users' },
   { key: 'kyc', label: 'KYC', icon: 'verified_user', href: '/admin/kyc' },
+  // Not in the design: the off-platform transfers and what each waits for (audit §5), 2026-10-26.
+  { key: 'transfers', label: 'Transferências', icon: 'swap_horiz', href: '/admin/transfers' },
   { key: 'audit', label: 'Auditoria', icon: 'history', href: '/admin/audit' },
   // Not in the design: the appraisal queue the team assigns and follows (audit §5), 2026-10-26.
   { key: 'appraisals', label: 'Laudos', icon: 'assignment', href: '/appraisals' },

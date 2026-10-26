@@ -70,6 +70,7 @@
 .ha-label--disabled { color: var(--ha-ink-300); }
 .ha-input--id { font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .ha-input::placeholder, .ha-textarea::placeholder, .ha-select:invalid { color: var(--ha-ink-300); }
+.ha-select option { color: var(--ha-fg); }
 .ha-input--num { font-variant-numeric: tabular-nums; }
 .ha-field-error { font-size: var(--ha-text-caption); color: var(--ha-alert-500); }
 .ha-divider { display: flex; align-items: center; gap: var(--ha-space-3); font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }

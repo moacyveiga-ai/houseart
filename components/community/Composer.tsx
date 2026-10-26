@@ -8,35 +8,48 @@ import { Modal } from '@/components/ds/Modal'
 import { hasContactLeak } from '@/lib/messaging/core'
 import { POLL_OPTIONS_MAX } from '@/lib/community/domain'
 import { COMPOSER_KINDS, draftPayload, draftReady, EMPTY_DRAFT, type ComposerDraft, type ComposerKind } from './community-core'
+import { captionOf, FORMAT_LABELS, INSTAGRAM_FORMATS, type InstagramFormat, type InstagramMode } from '@/lib/instagram/core'
+import Link from 'next/link'
 
-export interface ComposerArtwork { id: number; title: string; coverUrl: string | null }
+export interface ComposerArtwork { id: number; title: string; coverUrl: string | null; artist?: string }
+/** The composer's Instagram: OFF hides the switch; no handle offers to connect. */
+export interface ComposerInstagram { mode: InstagramMode; handle: string | null; defaultOn: boolean }
 
-export function Composer({ open, artworks, onClose, onPublished, onToast }: {
+export function Composer({ open, artworks, instagram, onClose, onPublished, onToast }: {
   open: boolean
   artworks: ComposerArtwork[]
+  instagram: ComposerInstagram
   onClose: () => void
-  onPublished: () => void
+  onPublished: (message?: string) => void
   onToast: (m: string) => void
 }) {
   const [d, setD] = useState<ComposerDraft>(EMPTY_DRAFT)
   const [sending, setSending] = useState(false)
+  const [igOn, setIgOn] = useState(!!instagram.handle && instagram.defaultOn)
+  const [igFormat, setIgFormat] = useState<InstagramFormat>('FEED')
   const set = (p: Partial<ComposerDraft>) => setD((x) => ({ ...x, ...p }))
   const ready = draftReady(d)
   const showArtworks = (d.kind === 'TEXT' || d.kind === 'PHOTO') && artworks.length > 0
+  // Instagram only takes a post with an image: a tagged artwork or the photo
+  const tagged = artworks.find((a) => a.id === d.artworkId) ?? null
+  const igImage = d.kind === 'PHOTO' && /^https?:\/\//.test(d.imageUrl.trim()) ? d.imageUrl.trim() : tagged?.coverUrl ?? null
+  const igKind = d.kind === 'TEXT' || d.kind === 'PHOTO'
+  const igSending = igOn && !!instagram.handle && igKind && !!igImage
 
-  function close() { setD(EMPTY_DRAFT); onClose() }
+  function close() { setD(EMPTY_DRAFT); setIgOn(!!instagram.handle && instagram.defaultOn); onClose() }
 
   async function publish() {
     if (!ready || sending) return
     const text = [d.body, ...d.pollOptions, d.event.title, d.event.venue].join('\n')
     if (hasContactLeak(text)) { onToast('Tire telefones, e-mails e links para publicar'); return }
     setSending(true)
-    const res = await fetch('/api/community/posts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(draftPayload(d)) })
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    const payload = { ...draftPayload(d), ...(igSending ? { instagram: { on: true, format: igFormat } } : {}) }
+    const res = await fetch('/api/community/posts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+    const data = (await res.json().catch(() => ({}))) as { error?: string; instagram?: { error?: string } | null }
     setSending(false)
     if (!res.ok) { onToast(data.error ?? 'Não foi possível publicar.'); return }
     setD(EMPTY_DRAFT)
-    onPublished()
+    onPublished(data.instagram?.error ? `Publicado na comunidade. Instagram: ${data.instagram.error}` : igSending ? `Publicado na comunidade e enviado a ${instagram.handle}` : undefined)
   }
 
   const kindLabel = (k: ComposerKind) => COMPOSER_KINDS.find((c) => c.key === k)!.label
@@ -98,6 +111,34 @@ export function Composer({ open, artworks, onClose, onPublished, onToast }: {
             </div>
             <textarea className="ha-cm-new__textarea" rows={3} value={d.body} onChange={(e) => set({ body: e.target.value })} maxLength={1500} aria-label="Convite" placeholder="Convite aos seguidores · opcional" />
           </>
+        ) : null}
+
+        {instagram.mode !== 'OFF' && igKind ? (
+          <div className="ha-cm-ig">
+            <button type="button" role="switch" aria-checked={igSending} className={`ha-cm-ig__switch${igSending ? ' ha-cm-ig__switch--on' : ''}`} disabled={!instagram.handle || !igImage} onClick={() => setIgOn((v) => !v)}>
+              <Icon name="photo_camera" size={22} />
+              <span className="ha-cm-ig__text">
+                <span className="ha-cm-ig__name">Publicar também no Instagram</span>
+                <span className="ha-cm-ig__sub">{!instagram.handle ? 'Conecte sua conta para publicar fora da HouseArt' : !igImage ? 'Marque uma obra ou poste uma foto: o Instagram precisa de imagem' : igSending ? `Vai para ${instagram.handle}` : `${instagram.handle} · desligado neste post`}</span>
+              </span>
+              <span className={`ha-toggle${igSending ? ' ha-toggle--on' : ''}`} aria-hidden="true" />
+            </button>
+            {!instagram.handle ? <Link className="ha-btn ha-btn--outline ha-btn--sm" href="/instagram">Conectar minha conta do Instagram</Link> : null}
+            {igSending ? (
+              <>
+                <div className="ha-cm-ig__formats" role="radiogroup" aria-label="Onde publicar no Instagram">
+                  {INSTAGRAM_FORMATS.map((f) => <button key={f} type="button" role="radio" aria-checked={igFormat === f} className={`ha-chip${igFormat === f ? ' ha-chip--on' : ''}`} onClick={() => setIgFormat(f)}>{FORMAT_LABELS[f]}</button>)}
+                </div>
+                <div className="ha-cm-ig__preview" aria-label="Prévia no Instagram">
+                  <div className="ha-cm-ig__head"><span className="ha-cm-ig__avatar" aria-hidden="true" />{instagram.handle}</div>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
+                  <div className="ha-cm-ig__img"><img src={igImage!} alt="" /></div>
+                  {igFormat !== 'STORIES' ? <p className="ha-cm-ig__caption"><strong>{instagram.handle}</strong> {captionOf({ body: d.body || 'Seu texto aparece aqui', artwork: tagged ? { title: tagged.title, artist: tagged.artist ?? '' } : null, artistHandle: null, tagArtist: false, link: null }).slice(0, 220)}</p> : null}
+                </div>
+                <span className="ha-cm-new__hint"><Icon name="link" size={16} /> {igFormat === 'STORIES' ? 'O Stories leva só a imagem.' : 'A legenda leva o link da página pública da obra (no Instagram ele não é clicável: o link também fica na sua bio).'}</span>
+              </>
+            ) : null}
+          </div>
         ) : null}
 
         <button type="button" className={`ha-cm-new__publish${ready ? ' ha-cm-new__publish--ready' : ''}`} aria-disabled={!ready} disabled={sending} onClick={publish}>

@@ -5,6 +5,7 @@ import { favoritesOf } from '@/lib/community/server'
 import { listPaymentMethods, payoutAccountOf } from '@/lib/payment-methods/server'
 import { PIX_KEY_TYPE_LABELS, type PixKeyType } from '@/lib/payment-methods/domain'
 import { initialsOf } from '@/lib/profiles/core'
+import { composerInstagram } from '@/lib/instagram/server'
 import { CollectorAccount, type CollectorAccountSection } from '@/components/collector/CollectorAccount'
 import '@/components/gallery/account.css'
 
@@ -15,12 +16,13 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export default async function CollectorAccountPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const { user } = await requirePanelPage('/account')
   const view = (await searchParams).view === 'data' ? 'data' : 'menu'
-  const [identity, prefs, favorites, cards, payout] = await Promise.all([
+  const [identity, prefs, favorites, cards, payout, ig] = await Promise.all([
     identityOf(user.id),
     readPreferences(user.id),
     favoritesOf(user.id).catch(() => []),
     listPaymentMethods(user.id).catch(() => []),
     user.memberId ? payoutAccountOf(user.memberId).catch(() => null) : null,
+    composerInstagram(user.id),
   ])
   const defaultCard = cards.find((c) => c.isDefault) ?? cards[0]
   const me = { name: user.name, email: user.email, emailVerified: identity.emailVerified, phoneMask: identity.phoneMask, phoneVerified: identity.phoneVerified, cpfMask: identity.cpfMask, city: identity.city }
@@ -39,6 +41,9 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
     { name: 'Pagamentos', items: [
       { kind: 'link', icon: 'credit_card', name: 'Carteira e cartões', sub: cards.length ? `${plural(cards.length, 'cartão', 'cartões')}${defaultCard ? ` · padrão ${defaultCard.brandLabel} •••• ${defaultCard.last4}` : ''}` : 'Nenhum cartão salvo', href: '/wallet/cards' },
       { kind: 'link', icon: 'account_balance', name: 'Pix para receber vendas', sub: payout ? `Cadastrado · ${PIX_KEY_TYPE_LABELS[payout.pixKeyType as PixKeyType] ?? payout.pixKeyType}` : 'Não cadastrado', href: '/sales/payout' },
+    ] },
+    { name: 'Redes sociais', items: [
+      { kind: 'link', icon: 'photo_camera', name: 'Instagram', sub: ig.mode === 'OFF' ? 'Em breve: postar também no seu Instagram' : ig.handle ? `${ig.handle} · conectado` : 'Conecte para postar também fora da HouseArt', href: '/instagram' },
     ] },
     { name: 'Segurança e privacidade', items: [
       { kind: 'link', icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', href: '/recover-password' },

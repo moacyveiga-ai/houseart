@@ -4,6 +4,7 @@ import { representedArtists } from '@/lib/gallery/artists-server'
 import { payoutAccountOf } from '@/lib/payment-methods/server'
 import { PIX_KEY_TYPE_LABELS, type PixKeyType } from '@/lib/payment-methods/domain'
 import { initialsOf } from '@/lib/profiles/core'
+import { composerInstagram } from '@/lib/instagram/server'
 import { AccountScreen, type AccountSection } from '@/components/gallery/AccountScreen'
 import '@/components/gallery/account.css'
 
@@ -13,10 +14,11 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export default async function GalleryAccountPage() {
   const { user, scope } = await requirePanelPage('/gallery/account')
-  const [people, artists, payout] = await Promise.all([
+  const [people, artists, payout, ig] = await Promise.all([
     teamOf(scope, user.id),
     representedArtists(scope).catch(() => []),
     user.memberId ? payoutAccountOf(user.memberId) : null,
+    composerInstagram(user.id),
   ])
   const members = people.filter((p) => p.kind === 'MEMBER').length
   const invites = people.length - members
@@ -39,6 +41,9 @@ export default async function GalleryAccountPage() {
     { name: 'Plano e pagamentos', items: [
       { icon: 'workspace_premium', name: 'Plano e cobrança', sub: 'Plano, uso do mês e faturas', href: '/billing' },
       { icon: 'account_balance_wallet', name: 'Carteira e cartões', sub: 'Cartão para plano e serviços', href: '/wallet/cards' },
+    ] },
+    { name: 'Redes sociais', items: [
+      { icon: 'photo_camera', name: 'Instagram', sub: ig.mode === 'OFF' ? 'Em breve: postar também no Instagram da galeria' : ig.handle ? `${ig.handle} · conectado` : 'Conecte para postar também fora da HouseArt', href: '/instagram' },
     ] },
     { name: 'Segurança', items: [
       { icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', href: '/recover-password' },

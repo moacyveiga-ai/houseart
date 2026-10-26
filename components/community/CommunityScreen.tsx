@@ -11,13 +11,14 @@ import type { FeedItem } from '@/lib/community/server'
 import { applyVote, COMMUNITY_TABS, filterTab, reactionTargetOf, sharePathOf, type CommunityTab } from './community-core'
 import { FeedCard, type CardActions } from './FeedCard'
 import { CommentsSheet } from './CommentsSheet'
-import { Composer, type ComposerArtwork } from './Composer'
+import { Composer, type ComposerArtwork, type ComposerInstagram } from './Composer'
 
-export function CommunityScreen({ items: initial, tab, me, artworks, compose }: {
+export function CommunityScreen({ items: initial, tab, me, artworks, instagram, compose }: {
   items: FeedItem[]
   tab: CommunityTab
   me: { initials: string; name: string; memberId: number | null }
   artworks: ComposerArtwork[]
+  instagram: ComposerInstagram
   /** The prompt line of the prototype ("Mostre uma obra da sua coleção…" / "Publique uma obra, abertura ou novidade…"). */
   compose: string
 }) {
@@ -116,7 +117,7 @@ export function CommunityScreen({ items: initial, tab, me, artworks, compose }: 
         ) : null}
       </div>
       <CommentsSheet key={commenting?.key ?? 'none'} item={commenting} me={me} onClose={() => setCommenting(null)} onCount={onCount} onToast={setToast} />
-      <Composer open={composing} artworks={artworks} onClose={() => setComposing(false)} onToast={setToast} onPublished={() => { setComposing(false); setToast('Publicado na comunidade'); void reload() }} />
+      <Composer open={composing} artworks={artworks} instagram={instagram} onClose={() => setComposing(false)} onToast={setToast} onPublished={(m) => { setComposing(false); setToast(m ?? 'Publicado na comunidade'); void reload() }} />
       <Toast message={toast} onDone={clearToast} />
     </div>
   )

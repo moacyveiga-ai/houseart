@@ -12,7 +12,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
   const { user, nav } = await requirePanelPage('/favorites')
   const sp = await searchParams
   const tab: FavoritesTab = sp.tab === 'liked' ? 'liked' : 'saved'
-  const panel = sp.work ? await collectorPanel(user.id, { work: sp.work }) : null
+  const panel = sp.work ? await collectorPanel(user, { work: sp.work }) : null
   const rows = (await favoritesOf(user.id)).map((r) => ({ ...r, priceCents: r.priceCents === null ? null : r.priceCents.toString(), at: undefined }))
   const summary = nav === 'collector' ? await collectionSummary(user) : null
   return <div className="ha-page">{summary ? <CollectionHeader s={summary} active={tab === 'liked' ? 'liked' : 'saved'} /> : null}<FavoritesScreen key={tab} rows={rows.map(({ at: _at, ...r }) => r)} tab={tab} bare={!!summary} />{panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref={tab === 'liked' ? '/favorites?tab=liked' : '/favorites'} /> : null}</div>

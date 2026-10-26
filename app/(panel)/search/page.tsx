@@ -16,7 +16,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const { user } = await requirePanelPage(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
   const [result, featured] = await Promise.all([search(q), q ? [] : listPublicArtists(null, 8)])
   const base = q ? `/search?q=${encodeURIComponent(q)}` : '/search'
-  const panel = sp.work ? await collectorPanel(user.id, { work: sp.work }) : null
+  const panel = sp.work ? await collectorPanel(user, { work: sp.work }) : null
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Busca</h1></div>

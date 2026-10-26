@@ -6,6 +6,7 @@
 // the market, or the owner's "Serviços" + "Vender esta obra" (the deed actions just above it).
 import Link from 'next/link'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { SidePanel } from '@/components/ds/SidePanel'
 import { Icon } from '@/components/ds/Icon'
@@ -35,7 +36,7 @@ export function CollectorArtworkPanel({ a, closeHref }: { a: CollectorPanelData;
     const data = await res.json().catch(() => ({})) as { on?: boolean; count?: number }
     if (!res.ok) { setSig(prev); setToast('Não foi possível registrar.'); return }
     if (kind === 'LIKE' && typeof data.count === 'number') setSig((s) => (s ? { ...s, liked: !!data.on, likes: data.count! } : s))
-    if (kind === 'SAVE') setToast(data.on ? 'Salva nos seus favoritos' : 'Removida dos favoritos')
+    if (kind === 'SAVE') { setSig((s) => (s ? { ...s, saved: !!data.on } : s)); setToast(data.on ? 'Salva nos seus favoritos' : 'Removida dos favoritos') }
   }
   async function share() {
     if (!a.publicId) return
@@ -69,7 +70,8 @@ export function CollectorArtworkPanel({ a, closeHref }: { a: CollectorPanelData;
       {sig ? <button type="button" className={`ha-sidepanel__back${sig.liked ? ' ha-cp__liked' : ''}`} aria-label={sig.liked ? 'Descurtir' : 'Curtir'} aria-pressed={sig.liked} onClick={() => react('LIKE')}><Icon name="favorite" size={24} filled={sig.liked} /></button> : null}
     </>
   )
-  const footer = (
+  const hasFooter = !!((a.market && (a.market.buyable || a.market.acceptsOffers) && a.publicId) || a.market?.reserved || o)
+  const footer = !hasFooter ? undefined : (
     <div className="ha-cp__foot">
       {a.market && (a.market.buyable || a.market.acceptsOffers) && a.publicId ? (
         <>
@@ -157,8 +159,9 @@ export function CollectorArtworkPanel({ a, closeHref }: { a: CollectorPanelData;
           <span><Icon name="contactless" size={16} />Na entrega, o toque na etiqueta transfere a escritura para o seu nome.</span>
         </div>
       )}
-      {o && sheet === 'sell' ? <SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents }} /> : null}
-      {o && sheet === 'services' ? <ServicesSheet open onClose={() => setSheet(null)} onDone={setToast} artworkId={a.id} title={a.title} sealGreen={o.sealGreen} /> : null}
+      {/* the sheets render on <body>: the panel's slide-in transform would make it their containing block */}
+      {o && sheet === 'sell' ? createPortal(<SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents }} />, document.body) : null}
+      {o && sheet === 'services' ? createPortal(<ServicesSheet open onClose={() => setSheet(null)} onDone={setToast} artworkId={a.id} title={a.title} sealGreen={o.sealGreen} />, document.body) : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </SidePanel>
   )

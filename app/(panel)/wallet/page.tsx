@@ -21,7 +21,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
     return { ...it, status: a?.status ?? 'AUTHENTICATED', sealGreen: a?.seal === 'GREEN', registeredCents: a?.listPriceCents?.toString() ?? null }
   })
   // the work opens in the side panel with the deed and the owner's actions (only a deed of this person)
-  const panel = sp.own ? await collectorPanel(user.id, { own: sp.own }) : null
+  const panel = sp.own ? await collectorPanel(user, { own: sp.own }) : null
   return (
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="works" /> : null}

@@ -32,7 +32,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const view = viewOf(p.view), chip = chipOf(p.cat)
   const items = (await exploreItems(user.id)).filter((i) => passesChip(i, chip))
   // the artwork opens in the side panel over the feed (Web Colecionador › obra)
-  const panel = p.work ? await collectorPanel(user.id, { work: p.work }) : null
+  const panel = p.work ? await collectorPanel(user, { work: p.work }) : null
   return (
     <div className="ha-page">
       <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} />

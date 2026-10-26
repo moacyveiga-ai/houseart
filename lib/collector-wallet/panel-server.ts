@@ -21,6 +21,18 @@ const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((
 const day = (d: Date | string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Bahia' })
 const fichaOf = (year: number | null, technique: string | null, dims: string) => [year ? String(year) : null, technique, dims !== '—' ? dims : null].filter(Boolean).join(' · ')
 
+/** The viewer HOLDS the work as a collector: an active deed in their name and the work in their own
+ *  COLLECTOR member. (The issuing artist/gallery also holds version 1 of its certificates — that is a
+ *  seller's work, not a collection item, so it opens in the market view.) */
+async function holdsAsCollector(userId: number, where: { artworkId: number } | { publicId: string }): Promise<number | null> {
+  const v = await prisma.certificateVersion.findFirst({
+    where: { holderUserId: userId, status: 'ACTIVE', certificate: 'artworkId' in where ? { artworkId: where.artworkId } : { publicId: where.publicId } },
+    select: { certificate: { select: { artworkId: true, artwork: { select: { member: { select: { userId: true, kind: true } } } } } } },
+  })
+  const m = v?.certificate.artwork.member
+  return v && m?.kind === 'COLLECTOR' && m.userId === userId ? v.certificate.artworkId : null
+}
+
 /** A work the viewer holds (by its deed): `artworkId` must be in the viewer's wallet. */
 async function ownerPanel(userId: number, artworkId: number): Promise<CollectorPanelData | null> {
   const w = (await walletOf(userId)).items.find((i) => i.artworkId === artworkId)
@@ -51,36 +63,46 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
   }
 }
 
-/** A public work (green seal): what the marketplace page shows, in the panel. */
-async function marketPanel(viewer: number, publicId: string): Promise<CollectorPanelData | null> {
+/** A public work: what the marketplace page shows, in the panel. Stolen / disputed works keep a public
+ *  page — the panel says so and offers nothing. The viewer's own listing (or their gallery's) has no
+ *  buy / offer / conversation. */
+async function marketPanel(viewer: { id: number; tenantId: number | null }, publicId: string): Promise<CollectorPanelData | null> {
   const p = await publicArtwork(publicId)
   if (!p) return null
-  const listed = p.status === 'LISTED'
-  const signals = await artworkSignals(viewer, p.id)
+  const seller = await prisma.artwork.findUnique({ where: { publicId }, select: { member: { select: { userId: true, tenantId: true } } } })
+  const mine = !!seller && (seller.member.userId === viewer.id || (viewer.tenantId !== null && seller.member.tenantId === viewer.tenantId))
+  const blocked = p.status === 'STOLEN' || p.status === 'DISPUTED'
+  const listed = p.status === 'LISTED' && !mine
+  const signals = blocked ? null : await artworkSignals(viewer.id, p.id)
   const place = [p.seller.city, p.seller.uf].filter(Boolean).join(', ')
   return {
     mode: 'market', id: p.id, publicId: p.publicId, title: p.title, artist: p.artist, artistSlug: p.artistSlug,
     ficha: fichaOf(p.year, p.technique, p.dimensions),
     images: p.media.map((m) => ({ url: m.url, label: MEDIA_LABELS[m.kind] ?? m.kind })),
-    priceLabel: !listed ? (p.status === 'IN_DEAL' ? 'Reservada' : 'Fora de venda') : p.priceCents === null ? 'Preço sob consulta' : p.fixedPrice ? 'Preço fixo' : 'Preço pedido · aceita ofertas',
-    price: listed && p.priceCents !== null ? formatBRL(p.priceCents) : '—',
+    priceLabel: blocked ? 'Fora de venda' : mine && p.status === 'LISTED' ? 'Seu preço pedido' : !listed ? (p.status === 'IN_DEAL' ? 'Reservada' : 'Fora de venda') : p.priceCents === null ? 'Preço sob consulta' : p.fixedPrice ? 'Preço fixo' : 'Preço pedido · aceita ofertas',
+    price: (listed || (mine && p.status === 'LISTED')) && p.priceCents !== null ? formatBRL(p.priceCents) : '—',
     priceSub: listed && p.priceCents !== null ? `ou 10× de ${formatBRL(p.priceCents / 10n)} sem juros` : '',
     signals,
-    certificate: { code: p.publicId, ok: p.certificateStatus === 'ACTIVE', text: p.certificateStatus === 'ACTIVE' ? `Etiqueta NFC no verso, assinada por ${p.artist} digitalmente. A escritura passa para o seu nome no toque da entrega.` : p.certificateStatus === 'CONTESTED' ? 'Certificado contestado: a equipe da HouseArt está analisando.' : 'Certificado indisponível.' },
+    certificate: blocked ? { code: p.publicId, ok: false, text: p.status === 'STOLEN' ? 'Obra registrada como roubada. Não negocie esta obra; se tiver informação, fale com a HouseArt.' : 'Titularidade em disputa: a equipe da HouseArt está analisando. A obra não pode ser negociada agora.' }
+      : { code: p.publicId, ok: p.certificateStatus === 'ACTIVE', text: p.certificateStatus === 'ACTIVE' ? `Etiqueta NFC no verso, assinada por ${p.artist} digitalmente. A escritura passa para o seu nome no toque da entrega.` : p.certificateStatus === 'CONTESTED' ? 'Certificado contestado: a equipe da HouseArt está analisando.' : 'Certificado indisponível.' },
     provenance: [...p.events.map((e) => ({ k: e.label, v: day(e.at) })), { k: 'Titular atual', v: p.seller.kind === 'GALLERY' ? `${p.seller.name}${p.seller.representsArtist ? ' · consignação do artista' : ''}` : 'Colecionador verificado' }],
-    seller: { name: p.seller.name, initials: initials(p.seller.name), sub: [p.seller.kind === 'GALLERY' ? 'Galeria' : 'Colecionador', place].filter(Boolean).join(' · ') },
-    market: { acceptsOffers: listed && p.acceptsOffers && !p.fixedPrice, buyable: listed && p.priceCents !== null, reserved: p.status === 'IN_DEAL' },
+    seller: mine || blocked ? null : { name: p.seller.name, initials: initials(p.seller.name), sub: [p.seller.kind === 'GALLERY' ? 'Galeria' : 'Colecionador', place].filter(Boolean).join(' · ') },
+    market: blocked || mine ? null : { acceptsOffers: listed && p.acceptsOffers && !p.fixedPrice, buyable: listed && p.priceCents !== null, reserved: p.status === 'IN_DEAL' },
     owner: null,
   }
 }
 
 /** The panel named by the page's query: `own=<artworkId>` (a deed of the viewer) or `work=<publicId>`. A public
  *  work the viewer holds opens in the owner view. */
-export async function collectorPanel(userId: number, q: { work?: string; own?: string }): Promise<CollectorPanelData | null> {
+export async function collectorPanel(viewer: { id: number; tenantId: number | null }, q: { work?: string; own?: string }): Promise<CollectorPanelData | null> {
   const own = Number(q.own)
-  if (Number.isInteger(own) && own > 0) return ownerPanel(userId, own)
+  if (Number.isInteger(own) && own > 0) {
+    if (await holdsAsCollector(viewer.id, { artworkId: own })) return ownerPanel(viewer.id, own)
+    const pub = await prisma.artwork.findUnique({ where: { id: own }, select: { publicId: true } })
+    return pub?.publicId ? marketPanel(viewer, pub.publicId) : null
+  }
   const work = typeof q.work === 'string' && isPublicId(q.work) ? q.work : null
   if (!work) return null
-  const mine = (await walletOf(userId)).items.find((i) => i.publicId === work)
-  return mine ? ownerPanel(userId, mine.artworkId) : marketPanel(userId, work)
+  const held = await holdsAsCollector(viewer.id, { publicId: work })
+  return held ? ownerPanel(viewer.id, held) : marketPanel(viewer, work)
 }

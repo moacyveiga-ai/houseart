@@ -4,7 +4,7 @@ import { Icon } from '@/components/ds/Icon'
 import { Stepper } from '@/components/ds/Stepper'
 import { Toast } from '@/components/ds/Toast'
 import { MediaStep } from './MediaStep'
-import { CONDITION_GRADES, CONDITION_GRADE_LABELS, CONDITION_REGIONS, CONDITION_REGION_LABELS, HISTORY_KINDS, HISTORY_KIND_LABELS, SALE_MODE_CARDS, WIZARD_STEPS } from '@/lib/artworks/domain'
+import { ARTWORK_CATEGORIES, ARTWORK_CATEGORY_LABELS, CONDITION_GRADES, CONDITION_GRADE_LABELS, CONDITION_REGIONS, CONDITION_REGION_LABELS, HISTORY_KINDS, HISTORY_KIND_LABELS, SALE_MODE_CARDS, WIZARD_STEPS } from '@/lib/artworks/domain'
 import { nextLabel, regionStateLabel, reviewLines, sheetPatch, STEP_COUNT, type WizardHistory, type WizardMedia, type WizardRegion, type WizardState } from './wizard-core'
 import { ReadingPanel } from './ReadingPanel'
 
@@ -163,7 +163,12 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
                 <fieldset disabled={locked} className="ha-form-grid">
                   <label className="ha-label ha-col-span">Título<input className={`ha-input${hl.has('title') ? ' ha-input--read' : ''}`} value={a.title} onChange={(e) => field('title', e.target.value)} /></label>
                   <label className="ha-label">Ano<input className={`ha-input ha-input--num${hl.has('year') ? ' ha-input--read' : ''}`} inputMode="numeric" value={a.year ?? ''} onChange={(e) => field('year', e.target.value)} /></label>
-                  <label className="ha-label">Técnica<input className={`ha-input${hl.has('technique') ? ' ha-input--read' : ''}`} value={a.technique ?? ''} onChange={(e) => field('technique', e.target.value)} /></label>
+                  <div className="ha-label ha-col-span" role="radiogroup" aria-label="Técnica">Técnica
+                    <span className="ha-row" style={{ flexWrap: 'wrap', gap: 'var(--ha-space-2)' }}>
+                      {ARTWORK_CATEGORIES.map((c) => <button type="button" key={c} role="radio" aria-checked={a.category === c} className={`ha-chip${a.category === c ? ' ha-chip--on' : ''}`} onClick={() => field('category', c)}>{ARTWORK_CATEGORY_LABELS[c]}</button>)}
+                    </span>
+                  </div>
+                  <label className="ha-label">Detalhe da técnica<input className={`ha-input${hl.has('technique') ? ' ha-input--read' : ''}`} placeholder="Óleo sobre linho" value={a.technique ?? ''} onChange={(e) => field('technique', e.target.value)} /></label>
                   <label className="ha-label ha-col-span">Materiais<input className={`ha-input${hl.has('materials') ? ' ha-input--read' : ''}`} value={a.materials ?? ''} onChange={(e) => field('materials', e.target.value)} /></label>
                   <label className="ha-label">Altura (cm)<input className="ha-input ha-input--num" inputMode="decimal" value={a.heightMm === null ? '' : a.heightMm / 10} onChange={(e) => field('heightMm', e.target.value)} /></label>
                   <label className="ha-label">Largura (cm)<input className="ha-input ha-input--num" inputMode="decimal" value={a.widthMm === null ? '' : a.widthMm / 10} onChange={(e) => field('widthMm', e.target.value)} /></label>

@@ -17,7 +17,7 @@ import { ArtworkOffer } from './ArtworkOffer'
 import { ShippingQuote } from './ShippingQuote'
 import { TalkToSellerButton } from './TalkToSellerButton'
 import { ShareButton } from './ShareSheet'
-import { ARTWORK_CATEGORY_LABELS, CONDITION_GRADE_LABELS, formatBRL } from '@/lib/artworks/domain'
+import { CATEGORY_LANGUAGE, categoryLabel, CONDITION_GRADE_LABELS, formatBRL } from '@/lib/artworks/domain'
 import type { MarketItem } from '@/lib/marketplace/filter-core'
 import type { PublicArtworkPage } from '@/lib/marketplace/public-server'
 import { installmentCents } from '@/lib/shipping/quote-core'
@@ -32,8 +32,7 @@ function mediaItemsOf(front: string | null, back: string | null): MediaItem[] {
   return out
 }
 
-const LANGUAGE_OF: Partial<Record<string, Language>> = { PAINTING: 'pintura', SCULPTURE: 'escultura', PHOTOGRAPHY: 'fotografia', WORK_ON_PAPER: 'literatura' }
-const categoryLabel = (c: string) => ARTWORK_CATEGORY_LABELS[c as keyof typeof ARTWORK_CATEGORY_LABELS] ?? c
+const LANGUAGE_OF: Partial<Record<string, Language>> = CATEGORY_LANGUAGE
 
 function badgeOf(a: PublicArtworkPage): ArtworkStatus {
   if (a.status === 'STOLEN') return 'stolen'

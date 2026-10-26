@@ -6,12 +6,12 @@
 // (LIKE em /api/community/reactions) quando `like` vem com a sessão; sem ela, leva ao login.
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
-import { formatBRL, ARTWORK_CATEGORY_LABELS } from '@/lib/artworks/domain'
+import { formatBRL, categoryLabel as labelOfCategory } from '@/lib/artworks/domain'
 import { SELLER_LABELS, type MarketItem } from '@/lib/marketplace/filter-core'
 import { MarketCardLike } from './MarketCardLike'
 
 export const priceLabel = (cents: bigint | null) => (cents === null ? 'Sob consulta' : formatBRL(cents))
-export const categoryLabel = (c: string) => ARTWORK_CATEGORY_LABELS[c as keyof typeof ARTWORK_CATEGORY_LABELS] ?? c
+export const categoryLabel = (c: string) => labelOfCategory(c)
 
 export interface MarketCardLikeState { signedIn: boolean; id: number | null; liked: boolean }
 

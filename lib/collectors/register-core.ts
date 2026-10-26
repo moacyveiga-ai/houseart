@@ -3,9 +3,9 @@
 // the chip groups of the sheet (prototype `cbGrupos`) and what is still missing.
 // The chips write the existing free-text columns (technique, materials, edition,
 // signatureLocation) and the category is derived from the technique.
-import type { ARTWORK_CATEGORIES } from '@/lib/artworks/domain'
+import type { ArtworkCategory } from '@/lib/artworks/domain'
 
-export type ArtworkCategory = (typeof ARTWORK_CATEGORIES)[number]
+export type { ArtworkCategory }
 
 export const REGISTER_STEPS = [
   { key: 'origin', title: 'Como a obra chegou até você?', lead: 'Isso define quais documentos e serviços fazem sentido para ela.' },
@@ -18,11 +18,12 @@ export type RegisterStepKey = (typeof REGISTER_STEPS)[number]['key']
 
 export const TECHNIQUE_CHIPS: { label: string; category: ArtworkCategory }[] = [
   { label: 'Pintura', category: 'PAINTING' },
-  { label: 'Desenho', category: 'WORK_ON_PAPER' },
-  { label: 'Gravura', category: 'WORK_ON_PAPER' },
+  { label: 'Desenho', category: 'DRAWING' },
+  { label: 'Gravura', category: 'PRINT' },
   { label: 'Fotografia', category: 'PHOTOGRAPHY' },
   { label: 'Escultura', category: 'SCULPTURE' },
-  { label: 'Técnica mista', category: 'OTHER' },
+  { label: 'Literatura', category: 'LITERATURE' },
+  { label: 'Técnica mista', category: 'MIXED_MEDIA' },
 ]
 export const SUPPORT_CHIPS = ['Tela', 'Papel', 'Madeira', 'Metal', 'Outro'] as const
 export const EDITION_CHIPS = ['Única', 'Múltiplo / tiragem', 'Prova de artista'] as const
@@ -97,6 +98,7 @@ export function techniqueChipOf(text: string | null | undefined): string | null 
   const direct = TECHNIQUE_CHIPS.find((c) => t.includes(fold(c.label)))
   if (direct) return direct.label
   if (/mista|mixed/.test(t)) return 'Técnica mista'
+  if (/livro|manuscrit|poema|poesia|caligraf|literatur/.test(t)) return 'Literatura'
   if (/oleo|acrilic|tempera|aquarela|guache|encaustica|pintura|paint/.test(t)) return 'Pintura'
   if (/grafite|carvao|nanquim|lapis|pastel|desenho|drawing/.test(t)) return 'Desenho'
   if (/xilo|serigraf|litograf|gravura|metal ?gravura|agua-forte|print/.test(t)) return 'Gravura'

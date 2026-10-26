@@ -13,7 +13,9 @@ describe('cadastro de obra do colecionador', () => {
     expect(sheetMessage([])).toBe('')
   })
   it('derives the category from the technique chip', () => {
-    expect(categoryOfTechnique('Gravura')).toBe('WORK_ON_PAPER')
+    expect(categoryOfTechnique('Gravura')).toBe('PRINT')
+    expect(categoryOfTechnique('Literatura')).toBe('LITERATURE')
+    expect(categoryOfTechnique('Técnica mista')).toBe('MIXED_MEDIA')
     expect(categoryOfTechnique('Óleo sobre tela')).toBeUndefined()
   })
   it('formats centimeters from millimeters', () => {

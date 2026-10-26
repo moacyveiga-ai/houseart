@@ -19,9 +19,26 @@ export const ARTWORK_STATUS_ICONS: Record<ArtworkStatus, string> = {
   SOLD: 'sell', ARCHIVED: 'inventory_2', STOLEN: 'report', DISPUTED: 'gavel',
 }
 
-export const ARTWORK_CATEGORIES = ['PAINTING', 'SCULPTURE', 'WORK_ON_PAPER', 'PHOTOGRAPHY', 'DIGITAL', 'OTHER'] as const
-export const ARTWORK_CATEGORY_LABELS: Record<(typeof ARTWORK_CATEGORIES)[number], string> = {
-  PAINTING: 'Pintura', SCULPTURE: 'Escultura', WORK_ON_PAPER: 'Obra sobre papel', PHOTOGRAPHY: 'Fotografia', DIGITAL: 'Digital', OTHER: 'Outro',
+/**
+ * The technique of an artwork — the seven of the handoff (§5: Pintura, Escultura, Fotografia, Literatura,
+ * Gravura, Desenho, Técnica mista), in that order. `technique` stays the free detail ("Óleo sobre linho").
+ * The categories of before (WORK_ON_PAPER, DIGITAL, OTHER) were moved by migration
+ * 20261026300000_artwork_technique_taxonomy; their labels stay readable for frozen certificate payloads.
+ */
+export const ARTWORK_CATEGORIES = ['PAINTING', 'SCULPTURE', 'PHOTOGRAPHY', 'LITERATURE', 'PRINT', 'DRAWING', 'MIXED_MEDIA'] as const
+export type ArtworkCategory = (typeof ARTWORK_CATEGORIES)[number]
+export const ARTWORK_CATEGORY_LABELS: Record<ArtworkCategory, string> = {
+  PAINTING: 'Pintura', SCULPTURE: 'Escultura', PHOTOGRAPHY: 'Fotografia', LITERATURE: 'Literatura', PRINT: 'Gravura', DRAWING: 'Desenho', MIXED_MEDIA: 'Técnica mista',
+}
+const LEGACY_CATEGORY_LABELS: Record<string, string> = { WORK_ON_PAPER: 'Obra sobre papel', DIGITAL: 'Digital', OTHER: 'Outro' }
+/** The label of any category ever stored (the seven, or one of before on a frozen certificate). */
+export function categoryLabel(c: string | null | undefined): string {
+  if (!c) return ''
+  return ARTWORK_CATEGORY_LABELS[c as ArtworkCategory] ?? LEGACY_CATEGORY_LABELS[c] ?? c
+}
+/** The four techniques with a brand language mark (`--ha-brand-*`, components/layout/HouseArtLogo LanguageMark). */
+export const CATEGORY_LANGUAGE: Partial<Record<string, 'pintura' | 'escultura' | 'fotografia' | 'literatura'>> = {
+  PAINTING: 'pintura', SCULPTURE: 'escultura', PHOTOGRAPHY: 'fotografia', LITERATURE: 'literatura',
 }
 
 export const CONDITION_GRADES = ['EXCELLENT', 'GOOD', 'FAIR', 'NEEDS_RESTORATION'] as const

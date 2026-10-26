@@ -8,6 +8,12 @@ import { useState } from 'react'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
+import { PixKeyForm } from '@/components/sales/PixKeyForm'
+import '@/components/sales/payout.css'
+
+/** "Cadastre o Pix para receber antes de aceitar" (App Colecionador › Vendas): when the seller has no way
+ *  to receive yet, Aceitar opens the Pix form first and accepts right after the key is saved. */
+export interface PayoutGate { ready: boolean; holderName: string; cpfMask: string | null }
 
 export interface OfferCardView {
   id: number; code: string; artworkId: number; artworkTitle: string; artworkCover: string | null; listPriceCents: string | null; currentCents: string
@@ -19,10 +25,12 @@ const pctTone = (p: number | null) => (p === null ? 'var(--ha-ink-500)' : p >= 9
 const digits = (s: string) => s.replace(/\D/g, '')
 const maskBRL = (s: string) => { const d = digits(s); return d ? Number(d).toLocaleString('pt-BR') : '' }
 
-export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, blockedReason }: { offers: OfferCardView[]; negotiatorLine: string; canAnswer?: boolean; blockedReason?: string }) {
+export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, blockedReason, payout }: { offers: OfferCardView[]; negotiatorLine: string; canAnswer?: boolean; blockedReason?: string; payout?: PayoutGate }) {
   const router = useRouter()
   const [offers, setOffers] = useState(initial)
   const [counter, setCounter] = useState<OfferCardView | null>(null)
+  const [payoutReady, setPayoutReady] = useState(payout?.ready ?? true)
+  const [pixFor, setPixFor] = useState<OfferCardView | null>(null)
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [toast, setToast] = useState('')
@@ -36,6 +44,11 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
     const mid = (cur + list) / 2n
     setAmount(maskBRL(String(mid / 100n)))
     setCounter(o)
+  }
+
+  function accept(o: OfferCardView) {
+    if (!payoutReady) { setPixFor(o); return }
+    void act(o, 'accept')
   }
 
   async function act(o: OfferCardView, action: 'accept' | 'refuse' | 'counter') {
@@ -93,7 +106,7 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
                   ? <span className="ha-offer__status">Contraproposta enviada · aguardando {o.buyerFirstName}</span>
                   : (
                     <div className="ha-offer__actions">
-                      <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" disabled={busy !== null} onClick={() => act(o, 'accept')}>{busy === `${o.id}:accept` ? 'Aceitando' : 'Aceitar'}</button>
+                      <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" disabled={busy !== null} onClick={() => accept(o)}>{busy === `${o.id}:accept` ? 'Aceitando' : 'Aceitar'}</button>
                       <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={busy !== null} onClick={() => startCounter(o)}>Contrapropor</button>
                       <button type="button" className="ha-btn ha-btn--sm ha-offer__refuse" disabled={busy !== null} onClick={() => act(o, 'refuse')}>{busy === `${o.id}:refuse` ? 'Recusando' : 'Recusar'}</button>
                     </div>
@@ -113,6 +126,12 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
         </label>
         <p id="ha-counter-hint" className="ha-caption">Sugerimos o meio-termo entre a oferta e o preço.</p>
       </Modal>
+      {payout ? (
+        <Modal open={!!pixFor} title="Cadastre o Pix para receber" onClose={() => setPixFor(null)}>
+          {pixFor ? <p className="ha-muted ha-sm">Antes de aceitar a oferta de {formatBRL(BigInt(pixFor.currentCents))} em <i>{pixFor.artworkTitle}</i>, diga para onde vai o valor da venda.</p> : null}
+          <PixKeyForm holderName={payout.holderName} cpfMask={payout.cpfMask} submitLabel="Cadastrar Pix e aceitar" onSaved={async () => { setPayoutReady(true); const o = pixFor; setPixFor(null); if (o) await act(o, 'accept') }} />
+        </Modal>
+      ) : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </div>
   )

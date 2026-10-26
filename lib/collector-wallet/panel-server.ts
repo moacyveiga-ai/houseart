@@ -10,6 +10,7 @@ import { walletOf } from './server'
 import { categoryLabel, formatBRL, formatDimensions } from '@/lib/artworks/domain'
 import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 import { flagOn } from '@/lib/flags'
+import { payoutReadiness } from '@/lib/payment-methods/payout-readiness-server'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import type { CollectorPanelData } from './panel-core'
 
@@ -42,7 +43,7 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
   if (!w) return null
   const a = await prisma.artwork.findUnique({
     where: { id: artworkId },
-    select: { id: true, publicId: true, title: true, year: true, technique: true, heightMm: true, widthMm: true, depthMm: true, status: true, seal: true, listPriceCents: true, category: true,
+    select: { id: true, publicId: true, title: true, year: true, technique: true, heightMm: true, widthMm: true, depthMm: true, status: true, seal: true, listPriceCents: true, category: true, memberId: true,
       artist: { select: { name: true, slug: true } },
       media: { where: { kind: { in: ['FRONT_COLOR_CARD', 'DETAIL', 'BACK'] } }, orderBy: { sortOrder: 'asc' }, select: { kind: true, publicUrl: true } },
       certificate: { select: { issuedAt: true, status: true, events: { orderBy: { seq: 'asc' }, select: { kind: true, occurredAt: true } } } } },
@@ -50,6 +51,8 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
   if (!a) return null
   const listed = a.status === 'LISTED'
   const signals = a.publicId && a.seal === 'GREEN' ? await artworkSignals(userId, a.id) : null
+  // "Publicar sem Pix abre o cadastro de Pix": the work is in the viewer's own COLLECTOR member (holdsAsCollector)
+  const payout = { ready: (await payoutReadiness(a.memberId)).ready, holderName: w.holderName, cpfMask: w.holderMask }
   return {
     mode: 'owner', id: a.id, publicId: a.publicId, title: a.title, artist: a.artist.name, artistSlug: a.artist.slug,
     ficha: fichaOf(a.year, a.technique ?? (categoryLabel(a.category) || null), formatDimensions(a)),
@@ -62,7 +65,7 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
       { k: 'Titular atual · você', v: `Desde ${w.acquiredAt}` },
     ],
     seller: null, market: null,
-    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), cover: w.cover },
+    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), payout, cover: w.cover },
   }
 }
 

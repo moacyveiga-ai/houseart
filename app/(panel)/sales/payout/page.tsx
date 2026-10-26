@@ -1,5 +1,6 @@
 import { requirePanelPage } from '../../_session'
 import { payoutAccountOf } from '@/lib/payment-methods/server'
+import { cpfMaskOf } from '@/lib/payment-methods/domain'
 import { PayoutAccountScreen } from '@/components/sales/PayoutAccountScreen'
 import { ConnectAccountCard } from '@/components/sales/ConnectAccountCard'
 import { connectAccountView, connectAvailable } from '@/lib/stripe/connect-server'
@@ -9,11 +10,6 @@ import '@/components/sales/payout.css'
 export const metadata = { title: 'Pix para receber vendas — HouseArt' }
 
 /** Only the digits 4–9 of the CPF show (same mask the prototype prints). */
-function cpfMaskOf(cpf: string | null): string | null {
-  const d = (cpf ?? '').replace(/\D/g, '')
-  return d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : null
-}
-
 export default async function SalesPayoutPage({ searchParams }: { searchParams: Promise<{ connect?: string }> }) {
   const { user } = await requirePanelPage('/sales/payout')
   const connectRaw = (await searchParams).connect

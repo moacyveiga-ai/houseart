@@ -9,5 +9,5 @@ export interface CollectorPanelData {
   provenance: { k: string; v: string }[]
   seller: { name: string; initials: string; sub: string } | null
   market: { acceptsOffers: boolean; buyable: boolean; reserved: boolean } | null
-  owner: { status: string; sealGreen: boolean; registeredCents: string | null; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; acquiredAt: string; version: number; transferOn: boolean; cover: string | null } | null
+  owner: { status: string; sealGreen: boolean; registeredCents: string | null; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; acquiredAt: string; version: number; transferOn: boolean; payout: { ready: boolean; holderName: string; cpfMask: string | null }; cover: string | null } | null
 }

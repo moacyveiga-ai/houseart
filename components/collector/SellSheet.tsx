@@ -14,13 +14,18 @@ import { Toggle } from '@/components/ds/Toggle'
 import { formatBRL } from '@/lib/artworks/domain'
 import { mandateProblems } from '@/lib/offers/mandate-core'
 import { ROYALTY_PCT, SECONDARY_BUYER_PCT, SECONDARY_SELLER_PCT, autoAcceptBps, formatThousands, reaisDigitsToCents, sellEstimate } from './seller-core'
+import { PixKeyForm } from '@/components/sales/PixKeyForm'
+import '@/components/sales/payout.css'
 import './collector-sheets.css'
 
 export interface SellArtwork { artworkId: number; title: string; artist: string; cover: string | null; status: string; sealGreen: boolean; registeredCents: string | null }
+/** "Publicar sem Pix abre o cadastro de Pix e depois publica" (prototype): who receives, and whether a way to receive exists. */
+export interface SellPayout { ready: boolean; holderName: string; cpfMask: string | null }
 
-export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: SellArtwork; open: boolean; onClose: () => void; onCertify: () => void }) {
+export function SellSheet({ artwork: a, open, onClose, onCertify, payout }: { artwork: SellArtwork; open: boolean; onClose: () => void; onCertify: () => void; payout?: SellPayout }) {
   const router = useRouter()
-  const [step, setStep] = useState<0 | 1>(0)
+  const [step, setStep] = useState<0 | 1 | 'pix'>(0)
+  const [payoutReady, setPayoutReady] = useState(payout?.ready ?? true)
   const [mode, setMode] = useState<'offers' | 'fixed'>('offers')
   const [price, setPrice] = useState('')
   const [min, setMin] = useState('')
@@ -47,6 +52,11 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
   const est = sellEstimate(listCents, registered)
   const blocked = !a.sealGreen || sealBlocked
   const listed = a.status === 'LISTED'
+
+  function tryPublish() {
+    if (!payoutReady) { setStep('pix'); return }
+    void publish()
+  }
 
   async function publish() {
     setBusy(true); setError('')
@@ -99,6 +109,14 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
             </div>
           </div>
           <div className="ha-cs__foot"><Link href={`/artworks/${a.artworkId}/listing`} className="ha-btn ha-btn--ink ha-btn--md ha-cs__cta"><Icon name="tune" size={18} />Gestão do anúncio</Link></div>
+        </>) : step === 'pix' && payout ? (<>
+          {head('Vender uma obra', 'Pix para receber')}
+          <h2 className="ha-cs__h">Cadastre o Pix para receber</h2>
+          <div className="ha-cs__body">
+            {work('O valor da venda cai nesta chave depois que o comprador confirma a entrega.')}
+            <PixKeyForm holderName={payout.holderName} cpfMask={payout.cpfMask} submitLabel="Cadastrar Pix e publicar" onSaved={async () => { setPayoutReady(true); setStep(1); await publish() }}
+              secondary={<button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" onClick={() => setStep(1)}>Voltar</button>} />
+          </div>
         </>) : step === 0 ? (<>
           {head('Vender uma obra', 'Passo 1 de 2')}
           <div className="ha-cs__segs"><span className="ha-cs__seg ha-cs__seg--on" /><span className="ha-cs__seg" /></div>
@@ -153,7 +171,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
           </div>
           <div className="ha-cs__foot ha-cs__cta-row">
             <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setStep(0)} disabled={busy}>Voltar</button>
-            <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={publish} disabled={busy} aria-busy={busy || undefined}>{busy ? 'Publicando…' : 'Publicar no marketplace'}</button>
+            <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={tryPublish} disabled={busy} aria-busy={busy || undefined}>{busy ? 'Publicando…' : 'Publicar no marketplace'}</button>
           </div>
         </>)}
       </div>

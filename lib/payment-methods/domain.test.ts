@@ -40,3 +40,12 @@ describe('pix keys', () => {
     expect(checkPixKey('X', 'abc', null)).toMatchObject({ ok: false })
   })
 })
+
+describe('cpfMaskOf', async () => {
+  const { cpfMaskOf } = await import('./domain')
+  it('masks the middle digits only, null without a CPF', () => {
+    expect(cpfMaskOf('123.456.789-09')).toBe('***.456.789-**')
+    expect(cpfMaskOf(null)).toBeNull()
+    expect(cpfMaskOf('12345')).toBeNull()
+  })
+})

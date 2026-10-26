@@ -21,8 +21,11 @@ export const MAX_RANGE_DAYS = 92
 
 export interface AuditQuery { entity: string; entityId: string; action: string; who: string; from: string; to: string; page: number }
 
+/** `who` as a number only when it fits an INT4 id (`#42` or `42`); anything else is a name. */
+export const whoIdOf = (who: string): number | null => { const m = /^#?(\d{1,9})$/.exec(who); return m ? Number(m[1]) : null }
+
 const clean = (v: string | undefined, max: number) => (v ?? '').trim().slice(0, max)
-const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v)
+const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime()) && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v)
 
 /** The URL → the query: text filters trimmed, days validated, the page ≥ 1. */
 export function parseQuery(sp: Record<string, string | undefined>): AuditQuery {
@@ -42,16 +45,15 @@ export const queryString = (q: Partial<AuditQuery>) => {
 export interface AuditRow {
   id: number; at: string; entity: string; entityLabel: string; entityId: string; action: string; actionLabel: string
   who: string | null; whoId: number | null; origin: string; originLabel: string; ip: string | null
-  /** Compact text of before/after (the stored JSON, already free of PII by the writers' rule). */
-  before: string | null; after: string | null
+  /** The stored JSON of before/after (already free of PII by the writers' rule): a preview for the closed row, the text (capped) for the open one. */
+  before: string | null; after: string | null; beforeFull: string | null; afterFull: string | null
   href: string | null
 }
 
-/** Where the entity opens for the desk, when a screen exists. */
+/** Where the entity opens for the desk, when a screen exists (the artwork has no desk screen yet: the inventory ignores `?open=` for the team). */
 export function hrefOf(entity: string, entityId: string): string | null {
   const id = /^\d+$/.test(entityId) ? entityId : null
   switch (entity) {
-    case 'artwork': return id ? `/artworks?open=${id}` : null
     case 'user': return id ? `/admin/users?q=%23${id}` : null
     case 'deal': case 'deal_split': return '/admin/deals?f=all'
     case 'kyc_verification': return '/admin/kyc?f=all'
@@ -62,7 +64,8 @@ export function hrefOf(entity: string, entityId: string): string | null {
   }
 }
 
-/** The stored JSON, shortened for the row (the full text opens on demand). */
+export const FULL_TEXT_MAX = 4000
+/** The stored JSON, shortened for the row (the open row shows up to FULL_TEXT_MAX). */
 export function compact(json: string | null, max = 160): string | null {
   if (!json) return null
   const s = json.replace(/\s+/g, ' ')

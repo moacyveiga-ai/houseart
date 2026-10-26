@@ -41,7 +41,7 @@ export function AuditAdmin({ query, page }: { query: AuditQuery; page: AuditPage
             <article key={r.id} className="ha-audit__row">
               <button type="button" className="ha-audit__head" aria-expanded={ab} onClick={() => setOpen(ab ? null : r.id)}>
                 <span className="ha-audit__when">{when(r.at)}</span>
-                <span className="ha-audit__what"><b>{r.who ?? (r.origin === 'ui' ? 'alguém sem nome' : r.originLabel)}</b> {r.actionLabel} <span className="ha-audit__entity">{r.entityLabel} #{r.entityId}</span></span>
+                <span className="ha-audit__what"><b>{r.who ?? (r.origin === 'ui' ? 'alguém sem nome' : r.originLabel)}</b> {r.actionLabel} <span className="ha-audit__entity">{r.entityLabel} #{r.entityId}</span>{r.after ? <span className="ha-audit__preview"> · {r.after}</span> : null}</span>
                 <span className="ha-audit__meta"><Badge tone="soft">{r.originLabel}</Badge>{r.action !== r.actionLabel ? null : <Badge tone="neutral">{r.action}</Badge>}</span>
                 <Icon name={ab ? 'expand_less' : 'expand_more'} size={22} />
               </button>
@@ -50,8 +50,8 @@ export function AuditAdmin({ query, page }: { query: AuditQuery; page: AuditPage
                   <dl className="ha-audit__facts">
                     <div><dt>Ação</dt><dd><code>{r.action}</code> em <code>{r.entity}</code>{r.href ? <> · <Link href={r.href} className="ha-link">abrir</Link></> : null}</dd></div>
                     <div><dt>Quem</dt><dd>{r.who ?? '—'}{r.whoId ? <> · <Link href={`/admin/users?q=%23${r.whoId}`} className="ha-link">conta #{r.whoId}</Link></> : null}{r.ip ? ` · ${r.ip}` : ''}</dd></div>
-                    {r.before ? <div><dt>Antes</dt><dd><code className="ha-audit__json">{r.before}</code></dd></div> : null}
-                    {r.after ? <div><dt>Depois</dt><dd><code className="ha-audit__json">{r.after}</code></dd></div> : null}
+                    {r.beforeFull ? <div><dt>Antes</dt><dd><code className="ha-audit__json">{r.beforeFull}</code></dd></div> : null}
+                    {r.afterFull ? <div><dt>Depois</dt><dd><code className="ha-audit__json">{r.afterFull}</code></dd></div> : null}
                   </dl>
                 </div>
               ) : null}

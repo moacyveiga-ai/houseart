@@ -11,6 +11,7 @@
 .ha-audit__when { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); font-variant-numeric: tabular-nums; }
 .ha-audit__what { font-size: var(--ha-text-body-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ha-audit__entity { color: var(--ha-fg-muted); }
+.ha-audit__preview { color: var(--ha-fg-muted); font-size: var(--ha-text-caption); }
 .ha-audit__meta { display: flex; gap: 4px; }
 .ha-audit__body { padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); border-top: var(--ha-border-w) solid var(--ha-border); }
 .ha-audit__facts { display: flex; flex-direction: column; gap: var(--ha-space-2); margin: 0; font-size: var(--ha-text-caption); }

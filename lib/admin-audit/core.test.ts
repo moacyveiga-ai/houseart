@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compact, hrefOf, parseQuery, queryString, rangeOf } from './core'
+import { compact, hrefOf, parseQuery, queryString, rangeOf, whoIdOf } from './core'
 
 describe('admin audit core', () => {
   it('parses the URL and prints it back', () => {
@@ -7,6 +7,8 @@ describe('admin audit core', () => {
     expect(q).toEqual({ entity: 'user', entityId: '42', action: 'block', who: 'Ana', from: '2026-10-01', to: '', page: 3 })
     expect(parseQuery({ page: '-4' }).page).toBe(1)
     expect(parseQuery({ page: '9999' }).page).toBe(200)
+    expect(parseQuery({ from: '2026-13-01', to: '2026-02-30' })).toMatchObject({ from: '', to: '' }) // not real days
+    expect(whoIdOf('#42')).toBe(42); expect(whoIdOf('42')).toBe(42); expect(whoIdOf('#99999999999')).toBeNull(); expect(whoIdOf('Ana')).toBeNull()
     expect(queryString(q)).toBe('?entity=user&id=42&action=block&who=Ana&from=2026-10-01&page=3')
     expect(queryString({ page: 1 })).toBe('')
   })
@@ -19,8 +21,7 @@ describe('admin audit core', () => {
     expect(rangeOf({ from: '', to: '' }, now)).toEqual({ from: null, to: null, cut: false })
   })
   it('links and compaction', () => {
-    expect(hrefOf('artwork', '7')).toBe('/artworks?open=7')
-    expect(hrefOf('artwork', 'abc')).toBeNull()
+    expect(hrefOf('artwork', '7')).toBeNull() // no desk screen for the artwork yet
     expect(hrefOf('user', '3')).toBe('/admin/users?q=%233')
     expect(hrefOf('kyc_verification', '9')).toBe('/admin/kyc?f=all')
     expect(hrefOf('whatever', '1')).toBeNull()

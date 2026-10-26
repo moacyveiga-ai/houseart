@@ -472,6 +472,7 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-reader__ring--idle .ha-icon { font-size: 44px; }
 .ha-reader__title { font-weight: 600; }
 .ha-reader--confirm .ha-reader__title { color: var(--ha-ink-900); }
+.ha-reader--confirm .ha-reader__sub { color: var(--ha-ink-500); max-width: 48ch; }
 .ha-reader__sub { font-size: var(--ha-text-caption); color: var(--ha-ink-300); margin-top: var(--ha-space-1); }
 
 /* ownership-wallet-item */

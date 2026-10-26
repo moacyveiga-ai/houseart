@@ -145,7 +145,10 @@ describe('represented artists, listing, panel', () => {
       expect(p.agenda[1]).toMatchObject({ icon: 'event_available', sub: 'Feira · Bienal · São Paulo/SP' })
       const unanswered = p.actions.find((a) => a.tag === 'responder')
       expect(unanswered).toMatchObject({ title: '1 mensagem sem resposta', href: '/messages' })
-      expect(p.actions.find((a) => a.tag === 'rascunho')).toMatchObject({ title: '1 obra sem certificado', href: '/artworks?filter=drafts' })
+      // the gallery's drafts: the one above plus whatever the scenario left in DRAFT (the advisor's artwork)
+      const drafts = await prisma.artwork.count({ where: { tenantId: a1.tenantId!, status: 'DRAFT' } })
+      expect(drafts).toBeGreaterThanOrEqual(1)
+      expect(p.actions.find((a) => a.tag === 'rascunho')).toMatchObject({ title: `${drafts} ${drafts === 1 ? 'obra' : 'obras'} sem certificado`, href: '/artworks?filter=drafts' })
       // without the person at the desk: no messages, no RSVPs
       const anon = await dayPanel(scope)
       expect(anon.actions.some((a) => a.tag === 'responder')).toBe(false)

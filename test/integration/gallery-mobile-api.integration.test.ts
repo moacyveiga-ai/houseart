@@ -49,7 +49,7 @@ describe('gallery mobile JSON routes', () => {
     expect(body.panel.dateLabel.length).toBeGreaterThan(5)
     expect(body.panel.kpis.map((k) => k.key)).toEqual(['sales', 'offers', 'escrow', 'views'])
     expect(body.panel.kpis.find((k) => k.key === 'views')?.value).toBe('1')
-    expect(body.panel.top).toEqual([{ id: s.a1.artworkId, title: 'Obra de Ana Ladeira', coverUrl: null, views7d: 1, openOffers: 0 }])
+    expect(body.panel.top).toEqual([{ id: s.a1.artworkId, title: 'Obra de Ana Ladeira', coverUrl: null, views7d: 1, openOffers: 0, likes: 0, saves: 0 }])
   }, 60_000)
 
   it('the inventory lists the scope with the listing flags, the chip counts and the summary', async () => {

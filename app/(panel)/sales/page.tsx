@@ -19,6 +19,8 @@ import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { galleryRoleOf } from '@/lib/offers/seller-role-server'
 import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
+import { payoutReadiness } from '@/lib/payment-methods/payout-readiness-server'
+import { cpfMaskOf } from '@/lib/payment-methods/domain'
 
 export const metadata = { title: 'Negócios — HouseArt' }
 
@@ -62,12 +64,14 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const summary = collector ? await collectionSummary(user) : null
   // Web Colecionador › Vendas: the works on the marketplace, under the offers (audit colecionador §12)
   const listings = collector && tab === 'offers' ? await activeListings(scope) : null
+  // "Cadastre o Pix para receber antes de aceitar": only the collector (the gallery's payout is the house's/admin's)
+  const payout = collector && tab === 'offers' && user.memberId ? { ready: (await payoutReadiness(user.memberId)).ready, holderName: user.name, cpfMask: cpfMaskOf(user.cpf) } : undefined
   return (
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="sales" /> : <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : 'Vendas e ofertas'}</h1></div>}
       <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
       {tab === 'offers' && cards ? (
-        <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} offers={offers.map((o) => ({
+        <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} payout={payout} offers={offers.map((o) => ({
           id: o.id, code: o.code, artworkId: o.artworkId, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),
           status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, buyerFirstName: o.buyerFirstName, buyerInitials: o.buyerInitials,
           expiresIn: o.expiresIn, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null, pctOfPrice: o.pctOfPrice, buyerMessage: o.buyerMessage,

@@ -107,3 +107,9 @@ export function toPaymentMethodView(r: { id: number; brand: string; last4: strin
   const brand = ((CARD_BRANDS as readonly string[]).includes(r.brand) ? r.brand : 'other') as CardBrand
   return { id: r.id, brand, brandLabel: CARD_BRAND_LABELS[brand], last4: r.last4, holderName: r.holderName, exp: `${String(r.expMonth).padStart(2, '0')}/${String(r.expYear).slice(-2)}`, isDefault: r.isDefault, label: maskCard(brand, r.last4) }
 }
+
+/** The holder's CPF as the Pix screens show it (`***.456.789-**`); null when the account has no CPF. */
+export function cpfMaskOf(cpf: string | null): string | null {
+  const d = (cpf ?? '').replace(/\D/g, '')
+  return d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : null
+}

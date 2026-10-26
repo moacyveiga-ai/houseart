@@ -14,13 +14,19 @@ import { Toggle } from '@/components/ds/Toggle'
 import { formatBRL } from '@/lib/artworks/domain'
 import { mandateProblems } from '@/lib/offers/mandate-core'
 import { ROYALTY_PCT, SECONDARY_BUYER_PCT, SECONDARY_SELLER_PCT, autoAcceptBps, formatThousands, reaisDigitsToCents, sellEstimate } from './seller-core'
+import { PixKeyForm } from '@/components/sales/PixKeyForm'
+import '@/components/sales/payout.css'
 import './collector-sheets.css'
 
 export interface SellArtwork { artworkId: number; title: string; artist: string; cover: string | null; status: string; sealGreen: boolean; registeredCents: string | null }
+/** "Publicar sem Pix abre o cadastro de Pix e depois publica" (prototype): who receives, and whether a way to receive exists. */
+export interface SellPayout { ready: boolean; holderName: string; cpfMask: string | null }
 
-export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: SellArtwork; open: boolean; onClose: () => void; onCertify: () => void }) {
+export function SellSheet({ artwork: a, open, onClose, onCertify, payout }: { artwork: SellArtwork; open: boolean; onClose: () => void; onCertify: () => void; payout?: SellPayout }) {
   const router = useRouter()
-  const [step, setStep] = useState<0 | 1>(0)
+  const [step, setStep] = useState<0 | 1 | 'pix'>(0)
+  const [payoutReady, setPayoutReady] = useState(payout?.ready ?? true)
+  const [pixSaving, setPixSaving] = useState(false)
   const [mode, setMode] = useState<'offers' | 'fixed'>('offers')
   const [price, setPrice] = useState('')
   const [min, setMin] = useState('')
@@ -32,10 +38,10 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !pixSaving) onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, pixSaving])
   if (!open) return null
 
   const registered = a.registeredCents && /^\d+$/.test(a.registeredCents) ? BigInt(a.registeredCents) : null
@@ -48,12 +54,19 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
   const blocked = !a.sealGreen || sealBlocked
   const listed = a.status === 'LISTED'
 
+  function tryPublish() {
+    if (!payoutReady) { setStep('pix'); return }
+    void publish()
+  }
+
   async function publish() {
     setBusy(true); setError('')
     const body = { listPriceCents: listCents.toString(), reservePriceCents: reserveCents.toString(), autoNegotiatorOn: mode === 'offers' && negotiator, autoAcceptMinBps: bps, fixedPrice: mode === 'fixed' }
-    const res = await fetch(`/api/collector/artworks/${a.artworkId}/sell`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-    const data = (await res.json().catch(() => ({}))) as { href?: string; error?: string; code?: string }
-    setBusy(false)
+    let res: Response, data: { href?: string; error?: string; code?: string }
+    try {
+      res = await fetch(`/api/collector/artworks/${a.artworkId}/sell`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      data = (await res.json().catch(() => ({}))) as { href?: string; error?: string; code?: string }
+    } catch { setError('Sem conexão. Tente de novo.'); return } finally { setBusy(false) }
     if (res.ok && data.href) { router.push(data.href); return }
     if (data.code === 'SEAL_REQUIRED') { setSealBlocked(true); return }
     setError(data.error ?? 'Não foi possível anunciar agora.')
@@ -62,7 +75,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
   const head = (title: string, stepTxt?: string) => (
     <div className="ha-cs__head">
       <span className="ha-cs__head-t"><span className="ha-cs__title">{title}</span>{stepTxt ? <span className="ha-cs__step">{stepTxt}</span> : null}</span>
-      <button type="button" className="ha-iconbtn ha-cs__x" onClick={onClose} aria-label="Fechar"><Icon name="close" size={24} /></button>
+      <button type="button" className="ha-iconbtn ha-cs__x" onClick={onClose} disabled={pixSaving} aria-label="Fechar"><Icon name="close" size={24} /></button>
     </div>
   )
   const work = (sub: string) => (
@@ -74,7 +87,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
   )
 
   return (
-    <div className="ha-scrim ha-cs-scrim" onClick={onClose} role="presentation">
+    <div className="ha-scrim ha-cs-scrim" onClick={() => { if (!pixSaving) onClose() }} role="presentation">
       <div className="ha-cs" role="dialog" aria-modal="true" aria-label="Vender uma obra" onClick={(e) => e.stopPropagation()}>
         <div className="ha-cs__grip"><span /></div>
         {blocked ? (<>
@@ -99,6 +112,14 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
             </div>
           </div>
           <div className="ha-cs__foot"><Link href={`/artworks/${a.artworkId}/listing`} className="ha-btn ha-btn--ink ha-btn--md ha-cs__cta"><Icon name="tune" size={18} />Gestão do anúncio</Link></div>
+        </>) : step === 'pix' && payout ? (<>
+          {head('Vender uma obra', 'Pix para receber')}
+          <h2 className="ha-cs__h">Cadastre o Pix para receber</h2>
+          <div className="ha-cs__body">
+            {work('O valor da venda cai nesta chave depois que o comprador confirma a entrega.')}
+            <PixKeyForm holderName={payout.holderName} cpfMask={payout.cpfMask} submitLabel="Cadastrar Pix e publicar" onSavingChange={setPixSaving} onSaved={async () => { setPayoutReady(true); setStep(1); await publish() }}
+              secondary={<button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" disabled={pixSaving} onClick={() => setStep(1)}>Voltar</button>} />
+          </div>
         </>) : step === 0 ? (<>
           {head('Vender uma obra', 'Passo 1 de 2')}
           <div className="ha-cs__segs"><span className="ha-cs__seg ha-cs__seg--on" /><span className="ha-cs__seg" /></div>
@@ -153,7 +174,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify }: { artwork: S
           </div>
           <div className="ha-cs__foot ha-cs__cta-row">
             <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setStep(0)} disabled={busy}>Voltar</button>
-            <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={publish} disabled={busy} aria-busy={busy || undefined}>{busy ? 'Publicando…' : 'Publicar no marketplace'}</button>
+            <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={tryPublish} disabled={busy} aria-busy={busy || undefined}>{busy ? 'Publicando…' : 'Publicar no marketplace'}</button>
           </div>
         </>)}
       </div>

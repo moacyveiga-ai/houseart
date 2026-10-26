@@ -10,6 +10,8 @@ import { walletOf } from './server'
 import { categoryLabel, formatBRL, formatDimensions } from '@/lib/artworks/domain'
 import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 import { flagOn } from '@/lib/flags'
+import { payoutReadiness } from '@/lib/payment-methods/payout-readiness-server'
+import { cpfMaskOf } from '@/lib/payment-methods/domain'
 import { restorationBlockReason } from './restore-core'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import type { CollectorPanelData } from './panel-core'
@@ -38,12 +40,13 @@ async function holdsAsCollector(userId: number, where: { artworkId: number } | {
 }
 
 /** A work the viewer holds (by its deed): `artworkId` must be in the viewer's wallet. */
-async function ownerPanel(userId: number, artworkId: number): Promise<CollectorPanelData | null> {
+async function ownerPanel(viewer: { id: number; name: string; cpf: string | null }, artworkId: number): Promise<CollectorPanelData | null> {
+  const userId = viewer.id
   const w = (await walletOf(userId)).items.find((i) => i.artworkId === artworkId)
   if (!w) return null
   const a = await prisma.artwork.findUnique({
     where: { id: artworkId },
-    select: { id: true, publicId: true, title: true, year: true, technique: true, heightMm: true, widthMm: true, depthMm: true, status: true, seal: true, listPriceCents: true, category: true,
+    select: { id: true, publicId: true, title: true, year: true, technique: true, heightMm: true, widthMm: true, depthMm: true, status: true, seal: true, listPriceCents: true, category: true, memberId: true,
       artist: { select: { name: true, slug: true } },
       media: { where: { kind: { in: ['FRONT_COLOR_CARD', 'DETAIL', 'BACK'] } }, orderBy: { sortOrder: 'asc' }, select: { kind: true, publicUrl: true } },
       certificate: { select: { issuedAt: true, status: true, events: { orderBy: { seq: 'asc' }, select: { kind: true, occurredAt: true } } } } },
@@ -51,6 +54,9 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
   if (!a) return null
   const listed = a.status === 'LISTED'
   const signals = a.publicId && a.seal === 'GREEN' ? await artworkSignals(userId, a.id) : null
+  // "Publicar sem Pix abre o cadastro de Pix": the work is in the viewer's own COLLECTOR member (holdsAsCollector)
+  // the same name and mask the Pix screen shows (the key is checked against the SESSION's CPF, never the deed's)
+  const payout = { ready: (await payoutReadiness(a.memberId)).ready, holderName: viewer.name, cpfMask: cpfMaskOf(viewer.cpf) }
   return {
     mode: 'owner', id: a.id, publicId: a.publicId, title: a.title, artist: a.artist.name, artistSlug: a.artist.slug,
     ficha: fichaOf(a.year, a.technique ?? (categoryLabel(a.category) || null), formatDimensions(a)),
@@ -63,7 +69,7 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
       { k: 'Titular atual · você', v: `Desde ${w.acquiredAt}` },
     ],
     seller: null, market: null,
-    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), restoreBlocked: restorationBlockReason(a.status, a.certificate?.status ?? null), cover: w.cover },
+    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), restoreBlocked: restorationBlockReason(a.status, a.certificate?.status ?? null), payout, cover: w.cover },
   }
 }
 
@@ -98,15 +104,15 @@ async function marketPanel(viewer: { id: number; tenantId: number | null }, publ
 
 /** The panel named by the page's query: `own=<artworkId>` (a deed of the viewer) or `work=<publicId>`. A public
  *  work the viewer holds opens in the owner view. */
-export async function collectorPanel(viewer: { id: number; tenantId: number | null }, q: { work?: string; own?: string }): Promise<CollectorPanelData | null> {
+export async function collectorPanel(viewer: { id: number; name: string; cpf: string | null; tenantId: number | null }, q: { work?: string; own?: string }): Promise<CollectorPanelData | null> {
   const own = Number(q.own)
   if (Number.isInteger(own) && own > 0) {
-    if (await holdsAsCollector(viewer.id, { artworkId: own })) return ownerPanel(viewer.id, own)
+    if (await holdsAsCollector(viewer.id, { artworkId: own })) return ownerPanel(viewer, own)
     const pub = await prisma.artwork.findUnique({ where: { id: own }, select: { publicId: true } })
     return pub?.publicId ? marketPanel(viewer, pub.publicId) : null
   }
   const work = typeof q.work === 'string' && isPublicId(q.work) ? q.work : null
   if (!work) return null
   const held = await holdsAsCollector(viewer.id, { publicId: work })
-  return held ? ownerPanel(viewer.id, held) : marketPanel(viewer, work)
+  return held ? ownerPanel(viewer, held) : marketPanel(viewer, work)
 }

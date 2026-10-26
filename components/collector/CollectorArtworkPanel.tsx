@@ -187,7 +187,7 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
         </div>
       )}
       {/* the sheets render on <body>: the panel's slide-in transform would make it their containing block */}
-      {o && sheet === 'sell' ? createPortal(<SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents }} />, document.body) : null}
+      {o && sheet === 'sell' ? createPortal(<SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} payout={o.payout} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents }} />, document.body) : null}
       {o && sheet === 'services' ? createPortal(<ServicesSheet open onClose={() => setSheet(null)} onDone={setToast} artworkId={a.id} title={a.title} sealGreen={o.sealGreen} />, document.body) : null}
       {o && sheet === 'restore' ? createPortal(
         <Modal open title="Registrar restauro" onClose={() => setSheet(null)} footer={<button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={submitRestoration}>{busy ? 'Registrando…' : 'Registrar na proveniência'}</button>}>

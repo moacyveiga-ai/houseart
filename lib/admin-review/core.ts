@@ -77,3 +77,23 @@ export function shareLabel(part: number, whole: number): string {
   const pct = (part / whole) * 100
   return `${pct.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% das obras`
 }
+
+// ── the queue's views (audit 2026-10-25 §5: history and filters) ────────────
+export const REVIEW_FILTERS = ['open', 'decided', 'mine'] as const
+export type ReviewFilter = (typeof REVIEW_FILTERS)[number]
+export const REVIEW_FILTER_LABELS: Record<ReviewFilter, string> = { open: 'Abertos', decided: 'Decididos', mine: 'Decididos por mim' }
+export function reviewFilterKey(raw: string | undefined): ReviewFilter {
+  return (REVIEW_FILTERS as readonly string[]).includes(raw ?? '') ? (raw as ReviewFilter) : 'open'
+}
+export function reviewKindKey(raw: string | undefined): ReviewKind | null {
+  return (REVIEW_KINDS as readonly string[]).includes(raw ?? '') ? (raw as ReviewKind) : null
+}
+/** The href of a chip: the filter and the kind travel in the URL. */
+export function reviewHref(filter: ReviewFilter, kind: ReviewKind | null): string {
+  const q = [filter !== 'open' ? `f=${filter}` : '', kind ? `kind=${kind}` : ''].filter(Boolean).join('&')
+  return `/admin/review${q ? `?${q}` : ''}`
+}
+/** "Aprovado por Ana · há 2 h" of a decided row. */
+export function decidedLine(decision: ReviewDecision, by: string | null, ago: string): string {
+  return `${decision === 'APPROVED' ? 'Aprovado' : 'Rejeitado'}${by ? ` por ${by}` : ''} · ${ago}`
+}

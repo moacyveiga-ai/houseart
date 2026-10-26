@@ -18,6 +18,7 @@ export function iconOf(kind: string): string {
     case 'royalty': return 'autorenew'
     case 'appraisal': return 'assignment'
     case 'billing': return 'receipt_long'
+    case 'review': return 'fact_check'
     default: return 'notifications'
   }
 }

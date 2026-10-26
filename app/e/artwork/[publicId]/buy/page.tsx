@@ -4,6 +4,7 @@ import '@/components/checkout/checkout.css'
 import { ButtonLink } from '@/components/ds/Button'
 import { CheckoutScreen } from '@/components/checkout/CheckoutScreen'
 import { getSession } from '@/lib/auth'
+import { defaultAddress } from '@/lib/addresses/server'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import { publicArtwork } from '@/lib/marketplace/public-server'
 
@@ -55,6 +56,7 @@ export default async function BuyArtworkPage({ params }: Params) {
   return (
     <CheckoutScreen
       buyerName={session.name}
+      defaultCep={(await defaultAddress(session.id).catch(() => null))?.cep ?? null}
       artwork={{
         publicId: a.publicId, title: a.title, year: a.year, artist: a.artist, technique: a.technique, dimensions: a.dimensions, cover: a.cover,
         certified: a.certificateStatus === 'ACTIVE', priceCents: a.priceCents.toString(),

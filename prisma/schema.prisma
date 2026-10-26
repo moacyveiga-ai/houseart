@@ -1496,3 +1496,24 @@ model InstagramPublication {
   @@index([userId, createdAt])
   @@index([status])
 }
+
+/// A delivery address of a person (handoff "Perfil · minha conta" › Endereços de entrega). The default one
+/// pre-fills the CEP of the checkout. Personal data: only the owner reads it.
+model ShippingAddress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  label      String // "Casa", "Escritório"
+  recipient  String
+  cep        String // 8 digits
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  uf         String // 2 letters
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}

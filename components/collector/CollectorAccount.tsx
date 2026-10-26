@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toggle } from '@/components/ds/Toggle'
+import { Modal } from '@/components/ds/Modal'
+import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
 import './collector-account.css'
 
 export interface AccountLinkItem { kind: 'link'; icon: string; name: string; sub: string; href: string }
@@ -18,6 +20,24 @@ export interface PersonalData { name: string; email: string; emailVerified: bool
 
 export function CollectorAccount({ initials, me, sections, view }: { initials: string; me: PersonalData; sections: CollectorAccountSection[]; view: 'menu' | 'data' }) {
   const [leaving, setLeaving] = useState(false)
+  const [sheet, setSheet] = useState<'logout' | 'delete' | null>(null)
+  const [blocker, setBlocker] = useState<string | null | undefined>(undefined)
+  const [typed, setTyped] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  async function openDelete() {
+    setSheet('delete'); setTyped(''); setDeleteError(null); setBlocker(undefined)
+    const r = await fetch('/api/account/delete', { cache: 'no-store' }).catch(() => null)
+    const j = (await r?.json().catch(() => ({}))) as { blocker?: string | null } | undefined
+    setBlocker(r?.ok ? j?.blocker ?? null : null)
+  }
+  async function confirmDelete() {
+    setDeleting(true); setDeleteError(null)
+    const r = await fetch('/api/account/delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ confirm: typed }) }).catch(() => null)
+    if (r?.ok) { window.location.assign('/e'); return }
+    const j = (await r?.json().catch(() => ({}))) as { error?: string } | undefined
+    setDeleting(false); setDeleteError(j?.error ?? 'Não foi possível excluir agora.')
+  }
   const [switches, setSwitches] = useState<Record<string, boolean>>(() => Object.fromEntries(sections.flatMap((g) => g.items.filter((i): i is AccountSwitchItem => i.kind === 'switch').map((i) => [i.key, i.on]))))
   const [city, setCity] = useState(me.city)
   const [saving, setSaving] = useState(false)
@@ -70,7 +90,7 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
         <span className="ha-stack ha-account-me__txt">
           <span className="ha-account-me__n">{me.name}</span>
           <span className="ha-account-me__e">{me.email}</span>
-          <span className={`ha-cacct__ver${verified ? ' ha-cacct__ver--ok' : ''}`}><Icon name={verified ? 'verified' : 'pending'} size={15} filled />{verified ? 'Conta verificada' : 'Verificação pendente'}</span>
+          <span className={`ha-cacct__ver${verified ? ' ha-cacct__ver--ok' : ''}`}><Icon name={verified ? 'verified_user' : 'pending'} size={15} filled />{verified ? (me.phoneMask ? 'E-mail e celular verificados' : 'E-mail verificado') : 'Verificação pendente'}</span>
         </span>
       </div>
       {sections.map((g) => (
@@ -94,8 +114,37 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
         </section>
       ))}
       {note ? <span className="ha-cacct__note" role="status">{note}</span> : null}
-      <button type="button" className="ha-account-logout" disabled={leaving} onClick={logout}><Icon name="logout" size={20} />Sair da conta</button>
-      <span className="ha-account-foot">HouseArt · <Link href="/terms">Termos de uso</Link> · <Link href="/privacy">Privacidade</Link></span>
+      <button type="button" className="ha-account-logout" disabled={leaving} onClick={() => setSheet('logout')}><Icon name="logout" size={20} />Sair da conta</button>
+      <button type="button" className="ha-cacct__danger" onClick={() => void openDelete()}>Excluir minha conta</button>
+      <span className="ha-account-foot">HouseArt 1.0 (2026.10) · <Link href="/terms">Termos de uso</Link> · <Link href="/privacy">Privacidade</Link></span>
+
+      <Modal open={sheet === 'logout'} title="Sair da conta?" onClose={() => setSheet(null)}>
+        <div className="ha-cacct__sheet">
+          <p className="ha-sm">Suas obras, ofertas e conversas continuam salvas. É só entrar de novo com o seu e-mail.</p>
+          <div className="ha-row" style={{ gap: 8 }}>
+            <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setSheet(null)}>Cancelar</button>
+            <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={leaving} onClick={logout}>Sair</button>
+          </div>
+        </div>
+      </Modal>
+      <Modal open={sheet === 'delete'} title="Excluir minha conta" onClose={() => setSheet(null)}>
+        <div className="ha-cacct__sheet">
+          {blocker === undefined ? <p className="ha-sm ha-muted">Conferindo suas negociações…</p> : blocker ? (
+            <>
+              <p className="ha-sm">{blocker}</p>
+              <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setSheet(null)}>Entendi</button>
+            </>
+          ) : (
+            <>
+              <p className="ha-sm">Ao excluir a conta:</p>
+              <ul className="ha-cacct__list">{DELETE_CONSEQUENCES.map((c) => <li key={c}>{c}</li>)}</ul>
+              <label className="ha-cacct__field">Digite {DELETE_WORD} para confirmar<input className="ha-input" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" autoCapitalize="characters" /></label>
+              {deleteError ? <p className="ha-cacct__err" role="alert">{deleteError}</p> : null}
+              <button type="button" className="ha-btn ha-btn--danger ha-btn--md" disabled={deleting || typed.trim().toUpperCase() !== DELETE_WORD} onClick={confirmDelete}>{deleting ? 'Excluindo…' : 'Excluir conta'}</button>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }

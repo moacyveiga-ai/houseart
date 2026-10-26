@@ -26,6 +26,9 @@
 .ha-btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .ha-btn--primary { background: var(--ha-sand-500); color: var(--ha-ink-900); }
 .ha-btn--primary:hover { background: var(--ha-sand-600); }
+/* destructive confirmation (Excluir conta): alert on paper */
+.ha-btn--danger { background: var(--ha-alert-500); color: var(--ha-paper-50); border-color: var(--ha-alert-500); }
+.ha-btn--danger:hover { filter: brightness(0.92); }
 .ha-btn--ink { background: var(--ha-ink-900); color: var(--ha-paper-50); }
 .ha-btn--ink:hover { background: var(--ha-ink-700); }
 .ha-btn--outline { background: transparent; color: var(--ha-fg); border-color: var(--ha-ink-900); }

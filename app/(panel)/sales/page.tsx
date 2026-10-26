@@ -4,6 +4,8 @@ import { negotiatorLabel } from '@/lib/offers/mandate-core'
 import { Tabs } from '@/components/ds/Tabs'
 import { OffersTable } from '@/components/offers/OffersTable'
 import { OfferCards } from '@/components/offers/OfferCards'
+import { collectionSummary } from '@/lib/collector-wallet/collection-server'
+import { CollectionHeader } from '@/components/collector/CollectionHeader'
 import { sellerDeals } from '@/lib/deals/server'
 import { DealTimeline } from '@/components/deals/DealTimeline'
 import { serializeDeal } from '@/components/deals/deal-view'
@@ -40,9 +42,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const desk = nav === 'gallery' || nav === 'advisor'
   const cards = desk || collector
   const negotiatorLine = mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'
+  const summary = collector ? await collectionSummary(user) : null
   return (
     <div className="ha-page">
-      <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : collector ? 'Vendas' : 'Vendas e ofertas'}</h1></div>
+      {summary ? <CollectionHeader s={summary} active="sales" /> : <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : 'Vendas e ofertas'}</h1></div>}
       <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
       {tab === 'offers' && cards ? (
         <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} offers={offers.map((o) => ({

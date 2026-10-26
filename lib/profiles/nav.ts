@@ -51,22 +51,16 @@ const GALLERY: NavItem[] = [
   { key: 'home', label: 'Galeria', icon: 'storefront', href: '/', also: ['/gallery', '/billing', '/certification', '/crm', '/royalty', '/wallet/cards', '/sales/payout'] },
 ]
 
-// Handoff "Web Colecionador": Explorar (feed · descobrir) opens the profile,
-// Favoritos e curtidos and Perfil · minha conta close it. "Vendas" (App
-// Colecionador › Vendas · oferta recebida) came with the collector as seller
-// (decision of 2026-10-22) and sits right after Compras.
+// Handoff "Web Colecionador" (out.tabs): Explorar · Coleção · Comunidade · Mensagens ·
+// Perfil. "Coleção" is "Minha coleção" with the tabs Obras · Favoritos · Curtidos ·
+// Compras · Vendas; payments, Pix and transfer live in the Perfil and the
+// collection (audit 2026-10-25: the old 11-item menu).
 const COLLECTOR: NavItem[] = [
-  { key: 'explore', label: 'Explorar', icon: 'explore', href: '/explore' },
-  { key: 'wallet', label: 'Carteira de escrituras', icon: 'account_balance_wallet', href: '/wallet' },
-  { key: 'cards', label: 'Carteira e cartões', icon: 'credit_card', href: '/wallet/cards' },
-  { key: 'purchases', label: 'Compras', icon: 'local_shipping', href: '/purchases' },
-  { key: 'sales', label: 'Vendas', icon: 'handshake', href: '/sales' },
-  { key: 'transfer', label: 'Transferir obra', icon: 'swap_horiz', href: '/transfer' },
-  { key: 'marketplace', label: 'Marketplace', icon: 'storefront', href: '/marketplace' },
-  { key: 'messages', label: 'Mensagens', icon: 'chat', href: '/messages' },
+  { key: 'explore', label: 'Explorar', icon: 'explore', href: '/explore', also: ['/marketplace', '/search'] },
+  { key: 'wallet', label: 'Coleção', icon: 'collections', href: '/wallet', also: ['/favorites', '/purchases', '/sales', '/transfer'] },
   { key: 'community', label: 'Comunidade', icon: 'forum', href: '/community' },
-  { key: 'favorites', label: 'Favoritos', icon: 'favorite', href: '/favorites' },
-  { key: 'account', label: 'Minha conta', icon: 'person', href: '/account' },
+  { key: 'messages', label: 'Mensagens', icon: 'chat_bubble', href: '/messages' },
+  { key: 'account', label: 'Perfil', icon: 'person', href: '/account', also: ['/wallet/cards', '/sales/payout', '/notifications'] },
 ]
 
 const APPRAISER: NavItem[] = [

@@ -12,7 +12,7 @@ import type { WalletItem } from '@/lib/collector-wallet/server'
 /** The deed plus what the seller sheets read: status, seal and the registered value (handoff App Colecionador › Vender uma obra / Serviços). */
 export type WalletScreenItem = WalletItem & { status: string; sealGreen: boolean; registeredCents: string | null }
 
-export function WalletScreen({ items, totalCents, holderName, transferOn }: { items: WalletScreenItem[]; totalCents: string; holderName: string; transferOn: boolean }) {
+export function WalletScreen({ items, totalCents, holderName, transferOn, inCollection = false }: { items: WalletScreenItem[]; totalCents: string; holderName: string; transferOn: boolean; inCollection?: boolean }) {
   const [sel, setSel] = useState(0)
   const [toast, setToast] = useState('')
   const [sheet, setSheet] = useState<'sell' | 'services' | null>(null)
@@ -34,8 +34,8 @@ export function WalletScreen({ items, totalCents, holderName, transferOn }: { it
     <div className={items.length ? 'ha-split' : 'ha-split ha-split--one'}>
       <section className="ha-stack">
         <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><span className="ha-row" style={{ gap: 'var(--ha-space-4)' }}><Link href="/wallet/register" className="ha-btn ha-btn--ink ha-btn--xs"><Icon name="add_photo_alternate" size={18} />Cadastrar obra</Link><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></span></div>
-        <h1 className="ha-h1">Carteira de escrituras</h1>
-        <div className="ha-row"><span className="ha-muted">Valor registrado · {items.length} obra(s)</span><b className="ha-num">{formatBRL(BigInt(totalCents))}</b></div>
+        {inCollection ? null : <h1 className="ha-h1">Carteira de escrituras</h1>}
+        {inCollection ? null : <div className="ha-row"><span className="ha-muted">Valor registrado · {items.length} obra(s)</span><b className="ha-num">{formatBRL(BigInt(totalCents))}</b></div>}
         <ul className="ha-list">
           {items.length === 0 ? <li className="ha-muted">Nenhuma escritura ainda. Uma obra que já é sua entra pela opção Cadastrar obra; a que você comprar na HouseArt chega aqui depois da entrega.</li> : null}
           {items.map((it, i) => (

@@ -223,14 +223,24 @@ export async function startAsyncPayment(i: { method: 'PIX' | 'BOLETO'; amountCen
   }
 }
 
-/** Cancels a Pix/boleto that was not paid (the deal expired). A PaymentIntent already paid is reported as such. */
-export async function cancelAsyncPayment(ref: string): Promise<'CANCELLED' | 'PAID'> {
+/**
+ * Cancels a Pix/boleto that was not paid (the deal expired). A PaymentIntent already paid is reported as such;
+ * one the bank is still clearing (`processing`, a boleto paid on its due day) is PROCESSING — not paid yet, not cancellable.
+ */
+export async function cancelAsyncPayment(ref: string): Promise<'CANCELLED' | 'PAID' | 'PROCESSING'> {
   try { await stripeGateway().cancelPaymentIntent(ref, `cancel-async:${ref}`); return 'CANCELLED' }
   catch (e) {
     let pi: GwPaymentIntent
     try { pi = await stripeGateway().retrievePaymentIntent(ref) } catch { throw stripeFailure(e) }
-    if (pi.status === 'succeeded' || pi.status === 'processing') return 'PAID'
+    if (pi.status === 'succeeded') return 'PAID'
+    if (pi.status === 'processing') return 'PROCESSING'
     if (pi.status === 'canceled') return 'CANCELLED'
     throw stripeFailure(e)
   }
+}
+
+/** Gives back a Pix/boleto paid for a deal that no longer waits for it (already paid another way, or cancelled). One refund per PaymentIntent. */
+export async function refundAsyncPayment(ref: string): Promise<void> {
+  try { await stripeGateway().refundPaymentIntent(ref, `refund-stray:${ref}`) }
+  catch (e) { throw stripeFailure(e) }
 }

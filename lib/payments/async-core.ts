@@ -13,6 +13,8 @@ export type EscrowMethod = (typeof ESCROW_METHODS)[number]
 /** Pix lives 24 h (the escrow window); a boleto 3 days (it clears in ~1 business day after paid). */
 export const PIX_TTL_SECONDS = 24 * 3600
 export const BOLETO_DAYS = 3
+/** After the boleto due date, how long the cron waits before undoing the deal: paid on the due day, it clears 1–2 business days later. */
+export const BOLETO_GRACE_DAYS = 3
 
 export function expiresAtFor(method: AsyncMethod, now: Date): Date {
   return new Date(now.getTime() + (method === 'PIX' ? PIX_TTL_SECONDS * 1000 : BOLETO_DAYS * 86_400_000))

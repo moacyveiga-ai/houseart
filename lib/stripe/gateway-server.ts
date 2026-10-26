@@ -62,6 +62,8 @@ export interface StripeGateway {
   cancelPaymentIntent(id: string, idempotencyKey: string): Promise<GwPaymentIntent>
   retrievePaymentIntent(id: string): Promise<GwPaymentIntent>
   createAsyncPaymentIntent(p: AsyncIntentInput, idempotencyKey: string): Promise<GwAsyncIntent>
+  /** Refunds a paid PaymentIntent in full (a Pix/boleto paid after its deal was settled or cancelled). */
+  refundPaymentIntent(id: string, idempotencyKey: string): Promise<{ id: string }>
   // Connect (Express, Brazil): the seller's account, its onboarding link, its state, the transfers that pay the split.
   createAccount(p: AccountInput, idempotencyKey: string): Promise<GwAccount>
   createAccountLink(p: { account: string; refresh_url: string; return_url: string }): Promise<{ url: string }>
@@ -123,6 +125,7 @@ export function realGateway(secretKey: string): StripeGateway {
       }, { idempotencyKey })
       return { id: pi.id, status: pi.status, nextAction: pi.next_action }
     },
+    async refundPaymentIntent(id, idempotencyKey) { const r = await s.refunds.create({ payment_intent: id }, { idempotencyKey }); return { id: r.id } },
     async createAccount(p, idempotencyKey) {
       return toAccount(await s.accounts.create({ type: 'express', country: 'BR', email: p.email, business_type: p.business_type, capabilities: { transfers: { requested: true } }, metadata: p.metadata }, { idempotencyKey }))
     },

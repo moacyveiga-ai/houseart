@@ -35,7 +35,7 @@ function accountOfEvent(o: Record<string, unknown>): GwAccount | null {
 }
 
 /** `onPaymentSucceeded`: injected by the route (lib/deals imports lib/stripe — never the reverse): the Pix/boleto escrow of a deal. Idempotent. */
-export interface WebhookHooks { onPaymentSucceeded?: (paymentIntentId: string) => Promise<unknown> }
+export interface WebhookHooks { onPaymentSucceeded?: (paymentIntentId: string, metadata: Record<string, string>) => Promise<unknown> }
 
 export async function handleStripeWebhook(rawBody: string, signature: string | null, nowMs = Date.now(), hooks: WebhookHooks = {}): Promise<WebhookResult> {
   const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].map((v) => (v ?? '').trim()).filter(Boolean)
@@ -57,7 +57,7 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   try {
     // First the deal (idempotent by CAS), then the event row: a failure here answers 500 and Stripe retries,
     // instead of a committed event row turning the retry into a duplicate that never settles.
-    if (type === 'payment_intent.succeeded' && hooks.onPaymentSucceeded) await hooks.onPaymentSucceeded(piId)
+    if (type === 'payment_intent.succeeded' && hooks.onPaymentSucceeded) await hooks.onPaymentSucceeded(piId, metadataOf(obj.metadata))
     await totalScope('stripe:webhook', () => prisma.$transaction(async (tx) => {
       await tx.stripeEvent.create({ data: { eventId: id, type, livemode: ev.livemode === true, objectId: piId } })
       await reconcile(tx, piId, type)
@@ -90,6 +90,12 @@ async function connectEvent(id: string, type: 'account.updated' | 'transfer.reve
     return { status: 500, body: { ok: false, error: 'Falha ao processar.' } }
   }
   return { status: 200, body: { ok: true } }
+}
+
+/** The PaymentIntent's metadata as strings only (what we wrote at creation). */
+function metadataOf(v: unknown): Record<string, string> {
+  if (!v || typeof v !== 'object') return {}
+  return Object.fromEntries(Object.entries(v as Record<string, unknown>).filter(([, x]) => typeof x === 'string')) as Record<string, string>
 }
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]

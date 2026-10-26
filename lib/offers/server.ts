@@ -517,12 +517,15 @@ async function buyNowAsync(i: BuyNowInput, method: 'PIX' | 'BOLETO', a: { id: nu
     })
   })
   await syncOpportunityFromOffer(offer.id)
-  const deal = await createDealFromOffer(offer.id)
+  // quiet: the buyer is told only once the Pix/boleto exists — a failure below undoes the deal without any message
+  const deal = await createDealFromOffer(offer.id, { quiet: true })
   if (!deal) return { ok: false, error: 'Não foi possível abrir o negócio.' }
   await prisma.deal.update({ where: { id: deal.id }, data: { shippingCents: quote.shippingCents, insuranceCents: insurance } })
   let started: Awaited<ReturnType<typeof startEscrowPayment>>
   try { started = await startEscrowPayment(i.buyerUserId, deal.id, method, i.billing ?? null) }
-  catch (e) { await cancelUnpaidDeal(deal.id, `Não foi possível gerar o ${method === 'PIX' ? 'Pix' : 'boleto'}`); throw e }
+  catch (e) { await cancelUnpaidDeal(deal.id, `Não foi possível gerar o ${method === 'PIX' ? 'Pix' : 'boleto'}`, null, { silent: true }); throw e }
+  const buyer = await prisma.user.findUnique({ where: { id: i.buyerUserId }, select: { email: true } })
+  await notify({ userId: i.buyerUserId, email: buyer?.email, kind: 'deal.created', title: `Compra em andamento · ${deal.code}`, body: method === 'PIX' ? 'Pague o Pix em até 24 h para garantir a obra.' : 'Pague o boleto até o vencimento para garantir a obra.', href: '/purchases', emailSubject: 'Sua compra na HouseArt começou' })
   const seller = await prisma.member.findUnique({ where: { id: a.memberId }, select: { userId: true, user: { select: { email: true } } } })
   await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.auto_accepted', title: `Compra direta · ${offer.code}`, body: `A obra foi reservada ao preço pedido; o comprador paga por ${method === 'PIX' ? 'Pix' : 'boleto'}.`, href: '/sales?tab=deals', emailSubject: 'Sua obra foi comprada' })
   void audit.event({ entity: 'offer', entityId: offer.id, action: 'buy_now', userId: i.buyerUserId, after: { code: offer.code, method } })

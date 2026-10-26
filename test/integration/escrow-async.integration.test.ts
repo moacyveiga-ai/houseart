@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { buyNow, listArtworkForSale } from '@/lib/offers/server'
-import { expireUnpaidEscrows, pendingEscrowOf, simulateEscrowPayment, startEscrowPayment } from '@/lib/deals/server'
+import { expireUnpaidEscrows, payEscrow, pendingEscrowOf, simulateEscrowPayment, startEscrowPayment } from '@/lib/deals/server'
 import { setStripeGatewayForTests } from '@/lib/stripe/gateway-server'
 import { signStripePayload } from '@/lib/stripe/mode-core'
 import { POST as webhookPOST } from '@/app/api/stripe/webhook/route'
@@ -30,8 +30,8 @@ function testMode() {
 }
 const buy = (method: 'PIX' | 'BOLETO', billing: typeof BILLING | null = null) => buyNow({ publicId: PUBLIC_ID, buyerUserId: buyerId, buyerName: 'Mariana Barreto', buyerEmail: 'mariana@col.test', buyerDocument: null, paymentMethodId: null, deliveryCep: '40140180', insurance: true, method, billing })
 
-async function sendSucceeded(piId: string, eventId: string) {
-  const body = JSON.stringify({ id: eventId, object: 'event', type: 'payment_intent.succeeded', livemode: false, data: { object: { id: piId, object: 'payment_intent', status: 'succeeded' } } })
+async function sendSucceeded(piId: string, eventId: string, metadata: Record<string, string> = {}) {
+  const body = JSON.stringify({ id: eventId, object: 'event', type: 'payment_intent.succeeded', livemode: false, data: { object: { id: piId, object: 'payment_intent', status: 'succeeded', metadata } } })
   const signature = signStripePayload(body, WHSEC, Math.floor(Date.now() / 1000))
   return webhookPOST(new Request('http://test/api/stripe/webhook', { method: 'POST', body, headers: { 'stripe-signature': signature } }))
 }
@@ -92,14 +92,54 @@ describe('Pix e boleto na garantia do negócio', () => {
     testMode()
     const r = await buy('PIX')
     if (!r.ok) throw new Error(r.error)
+    const ref = (await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })).escrowPendingRef!
+    expect(await expireUnpaidEscrows(new Date(Date.now() + 23 * 3600_000))).toBe(0)
     expect(await expireUnpaidEscrows(new Date(Date.now() + 25 * 3600_000))).toBe(1)
     const d = await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })
     expect(d.exceptionStatus).toBe('CANCELLED')
     expect((await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).status).toBe('LISTED')
     expect((await prisma.offer.findUniqueOrThrow({ where: { id: d.offerId } })).status).toBe('CANCELLED')
-    // a late webhook does not revive it
-    await sendSucceeded(d.escrowPendingRef ?? 'pi_none', 'evt_late')
+    // a late payment does not revive it — it is given back
+    fake.payAsync(ref)
+    expect((await sendSucceeded(ref, 'evt_late', { kind: 'deal_escrow', dealId: String(d.id) })).status).toBe(200)
     expect((await prisma.deal.findUniqueOrThrow({ where: { id: d.id } })).escrowPaidAt).toBeNull()
+    expect(fake.calls.filter((c) => c.op === 'refund')).toHaveLength(1)
+  })
+
+  it('switching from Pix to a card that fails keeps the deadline: the cron still lets the artwork go', async () => {
+    testMode()
+    const r = await buy('PIX')
+    if (!r.ok) throw new Error(r.error)
+    await expect(payEscrow(buyerId, r.dealId!)).rejects.toThrow()
+    const d = await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })
+    expect(d.escrowPendingRef).toBeNull()
+    expect(d.escrowExpiresAt).not.toBeNull()
+    expect(await expireUnpaidEscrows(new Date(Date.now() + 25 * 3600_000))).toBe(1)
+    expect((await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).status).toBe('LISTED')
+  })
+
+  it('a Pix asked again after a switch is a NEW PaymentIntent, never the cancelled one replayed', async () => {
+    testMode()
+    const r = await buy('PIX')
+    if (!r.ok) throw new Error(r.error)
+    const first = (await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })).escrowPendingRef
+    await startEscrowPayment(buyerId, r.dealId!, 'BOLETO', BILLING)
+    await startEscrowPayment(buyerId, r.dealId!, 'PIX')
+    const again = (await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })).escrowPendingRef
+    expect(again).not.toBe(first)
+    expect((await fake.retrievePaymentIntent(again!)).status).toBe('requires_action')
+  })
+
+  it('a boleto past its due date waits the grace; one clearing refuses a switch', async () => {
+    testMode()
+    const r = await buy('BOLETO', BILLING)
+    if (!r.ok) throw new Error(r.error)
+    const ref = (await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })).escrowPendingRef!
+    expect(await expireUnpaidEscrows(new Date(Date.now() + 4 * 86_400_000))).toBe(0)
+    fake.processAsync(ref)
+    await expect(startEscrowPayment(buyerId, r.dealId!, 'PIX')).rejects.toMatchObject({ code: 'PAYMENT_PROCESSING' })
+    expect(await expireUnpaidEscrows(new Date(Date.now() + 7 * 86_400_000))).toBe(0)
+    expect((await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })).exceptionStatus).toBeNull()
   })
 
   it('mock: codes drawn by us and "Simular pagamento" pays', async () => {

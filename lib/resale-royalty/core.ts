@@ -7,4 +7,4 @@ export function royaltyFor(saleCents: bigint, previousSaleCents: bigint, bps = R
   return { appreciationCents: appreciation, royaltyCents: (appreciation * BigInt(bps)) / 10000n }
 }
 
-export const ROYALTY_STATUS_LABELS: Record<string, string> = { PENDING: 'A receber', HELD: 'A receber', PAID: 'Repassado' }
+export const ROYALTY_STATUS_LABELS: Record<string, string> = { PENDING: 'A receber', HELD: 'A receber', PAID: 'Repassado', CANCELLED: 'Venda cancelada' }

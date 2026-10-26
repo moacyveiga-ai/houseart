@@ -9,9 +9,10 @@ import { audit } from '@/lib/audit'
 import { flagOn } from '@/lib/flags'
 import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
-import { cancelAsyncPayment, chargeNow, startAsyncPayment, stripeMode } from '@/lib/stripe/door'
+import { assertChargeAllowed, cancelAsyncPayment, chargeNow, refundAsyncPayment, startAsyncPayment, stripeMode } from '@/lib/stripe/door'
+import { syncOpportunityFromOffer } from '@/lib/crm/server'
 import QRCode from 'qrcode'
-import { BOLETO_DAYS, boletoBillingProblem, expiresAtFor, instructionsFromStripe, mockBoletoNumber, mockPixCode, parseInstructions, PIX_TTL_SECONDS, type AsyncMethod, type BoletoBilling, type EscrowMethod, type PaymentInstructions } from '@/lib/payments/async-core'
+import { BOLETO_DAYS, BOLETO_GRACE_DAYS, boletoBillingProblem, expiresAtFor, instructionsFromStripe, mockBoletoNumber, mockPixCode, parseInstructions, PIX_TTL_SECONDS, type AsyncMethod, type BoletoBilling, type EscrowMethod, type PaymentInstructions } from '@/lib/payments/async-core'
 import { payDealSplits } from '@/lib/stripe/connect-server'
 import { SPLIT_PAYOUT_LABELS, splitPayoutState, type ConnectAccountStatus, type SplitPayoutState } from '@/lib/stripe/connect-core'
 import { afterResponseOrNow } from '@/lib/after'
@@ -36,7 +37,7 @@ async function advance(dealId: number, from: DealPhase, title: string, descripti
 }
 
 /** Called after ANY accept (seller, buyer reply, negotiator) when FLAG_DEALS is on. Idempotent per offer. */
-export async function createDealFromOffer(offerId: number): Promise<{ id: number; code: string } | null> {
+export async function createDealFromOffer(offerId: number, opts: { quiet?: boolean } = {}): Promise<{ id: number; code: string } | null> {
   if (!flagOn('FLAG_DEALS')) return null
   return totalScope('deals:create', async () => {
     const o = await prisma.offer.findUnique({ where: { id: offerId }, include: { artwork: { include: { member: true, artist: true } }, deal: true } })
@@ -76,7 +77,7 @@ export async function createDealFromOffer(offerId: number): Promise<{ id: number
       await prisma.deal.update({ where: { id: deal.id }, data: { shippingCents: o.shippingCents, insuranceCents: o.insuranceCents } })
       await payEscrow(buyer.id, deal.id, `${o.guaranteeRef}:captured`)
     }
-    await notify({ userId: buyer.id, email: buyer.email, kind: 'deal.created', title: `Compra em andamento · ${o.artwork.title}`, body: guaranteed ? 'O valor reservado foi para a garantia. O vendedor já prepara o envio.' : 'Você tem 24 h para pagar em garantia.', href: '/purchases', emailSubject: 'Sua compra na HouseArt começou' })
+    if (!opts.quiet) await notify({ userId: buyer.id, email: buyer.email, kind: 'deal.created', title: `Compra em andamento · ${o.artwork.title}`, body: guaranteed ? 'O valor reservado foi para a garantia. O vendedor já prepara o envio.' : 'Você tem 24 h para pagar em garantia.', href: '/purchases', emailSubject: 'Sua compra na HouseArt começou' })
     void audit.event({ entity: 'deal', entityId: deal.id, action: 'create', after: { code: deal.code, amountCents: amount.toString(), guaranteed } })
     return { id: deal.id, code: deal.code }
   })
@@ -183,11 +184,22 @@ const PAID_TEXT: Record<EscrowMethod, string> = {
   BOLETO: 'Boleto compensado · valor retido na HouseArt',
 }
 
-/** The escrow is paid — ONE write by CAS (card, Pix/boleto webhook or the mock simulation), then the seller is told. */
+/**
+ * The escrow is paid — ONE transaction (the CAS on the unpaid state, the phase and its event: a webhook retry
+ * never finds it half applied), then the seller is told. A Pix/boleto still pending that is NOT the one
+ * paying (the card won a race against it) is released: cancelled, or refunded if the bank already paid it.
+ */
 async function markEscrowPaid(dealId: number, ref: string, method: EscrowMethod, actorKind: 'BUYER' | 'SYSTEM'): Promise<boolean> {
-  const r = await prisma.deal.updateMany({ where: { id: dealId, phase: 'OFFER_ACCEPTED', escrowPaidAt: null, exceptionStatus: null }, data: { escrowPaidAt: new Date(), escrowPaymentRef: ref, escrowMethod: method, escrowPendingRef: null, escrowExpiresAt: null } })
-  if (r.count === 0) return false
-  await advance(dealId, 'OFFER_ACCEPTED', 'Pagamento em garantia', PAID_TEXT[method], actorKind)
+  const replaced = await prisma.$transaction(async (tx) => {
+    const cur = await tx.deal.findUnique({ where: { id: dealId }, select: { escrowPendingRef: true } })
+    if (!cur) return false
+    const r = await tx.deal.updateMany({ where: { id: dealId, phase: 'OFFER_ACCEPTED', escrowPaidAt: null, exceptionStatus: null, escrowPendingRef: cur.escrowPendingRef }, data: { phase: nextPhase('OFFER_ACCEPTED')!, escrowPaidAt: new Date(), escrowPaymentRef: ref, escrowMethod: method, escrowPendingRef: null, escrowExpiresAt: null } })
+    if (r.count === 0) return false
+    await tx.dealPhaseEvent.create({ data: { dealId, phase: nextPhase('OFFER_ACCEPTED')!, title: 'Pagamento em garantia', description: PAID_TEXT[method], actorKind } })
+    return { other: cur.escrowPendingRef && cur.escrowPendingRef !== ref ? cur.escrowPendingRef : null }
+  })
+  if (!replaced) return false
+  if (replaced.other) await releaseAsync(replaced.other, dealId)
   const d = await prisma.deal.findUniqueOrThrow({ where: { id: dealId }, select: { code: true, sellerMemberId: true, buyerUserId: true } })
   const seller = await prisma.member.findUnique({ where: { id: d.sellerMemberId }, select: { userId: true, user: { select: { email: true } } } })
   await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'deal.escrow_paid', title: `Pagamento em garantia recebido · ${d.code}`, href: '/sales?tab=deals', emailSubject: 'O comprador pagou em garantia' })
@@ -196,17 +208,48 @@ async function markEscrowPaid(dealId: number, ref: string, method: EscrowMethod,
   return true
 }
 
+const isProviderRef = (ref: string) => !ref.startsWith('mock_') && stripeMode() !== 'mock'
+
+/**
+ * A Pix/boleto this deal no longer waits for: cancelled at the provider; already paid → refunded (one refund per
+ * PaymentIntent); still clearing → left for the webhook, which refunds it when it lands (settleEscrowByIntent).
+ * Best effort: never breaks the payment that won; a failure is audited for the team.
+ */
+async function releaseAsync(ref: string, dealId: number): Promise<void> {
+  if (!isProviderRef(ref)) return
+  try {
+    const r = await cancelAsyncPayment(ref)
+    if (r === 'PAID') await refundStray(ref, dealId)
+  } catch (e) {
+    void audit.event({ entity: 'deal', entityId: dealId, action: 'escrow_release_failed', after: { code: (e as { code?: string })?.code ?? (e as Error)?.name } })
+  }
+}
+
+async function refundStray(ref: string, dealId: number | null): Promise<void> {
+  try {
+    await refundAsyncPayment(ref)
+    void audit.event({ entity: 'deal', entityId: dealId ?? 0, action: 'escrow_stray_refunded' })
+  } catch (e) {
+    // boleto has no refund at the provider: the team gives it back by hand
+    void audit.event({ entity: 'deal', entityId: dealId ?? 0, action: 'escrow_stray_refund_failed', after: { code: (e as { code?: string })?.code ?? (e as Error)?.name } })
+    console.error('[deals] pagamento avulso sem estorno', dealId, (e as { code?: string })?.code ?? (e as Error)?.name)
+  }
+}
+
 /**
  * A Pix/boleto still waiting for this deal is dropped before another way of paying starts. If the bank
- * already paid it, the escrow is settled with it instead and 'PAID' comes back (nothing else is charged).
+ * already paid it, the escrow is settled with it instead and 'PAID' comes back (nothing else is charged);
+ * one still clearing refuses the switch. The reservation deadline (escrowExpiresAt) stays: a replacement
+ * that fails never leaves the artwork reserved without one.
  */
 async function dropPendingAsync(d: { id: number; escrowPendingRef: string | null; escrowMethod: string | null }): Promise<'NONE' | 'DROPPED' | 'PAID'> {
   if (!d.escrowPendingRef) return 'NONE'
-  if (!d.escrowPendingRef.startsWith('mock_') && stripeMode() !== 'mock') {
+  if (isProviderRef(d.escrowPendingRef)) {
     const r = await cancelAsyncPayment(d.escrowPendingRef)
+    if (r === 'PROCESSING') throw new ArtworkError('PAYMENT_PROCESSING', 'O banco está processando o seu pagamento. Aguarde a confirmação.', 409)
     if (r === 'PAID') { await markEscrowPaid(d.id, d.escrowPendingRef, (d.escrowMethod as EscrowMethod) ?? 'PIX', 'SYSTEM'); return 'PAID' }
   }
-  await prisma.deal.updateMany({ where: { id: d.id, escrowPendingRef: d.escrowPendingRef }, data: { escrowPendingRef: null, escrowExpiresAt: null, escrowInstructionsJson: null } })
+  await prisma.deal.updateMany({ where: { id: d.id, escrowPendingRef: d.escrowPendingRef }, data: { escrowPendingRef: null, escrowInstructionsJson: null } })
   return 'DROPPED'
 }
 
@@ -221,6 +264,7 @@ export async function payEscrow(userId: number, dealId: number, paymentRef: stri
   if (!ref && stripeMode() !== 'mock') {
     ref = (await chargeNow({ amountCents: d.amountCents + d.shippingCents + d.insuranceCents, description: `Garantia do negócio ${d.code}`, payerUserId: userId, idempotencyKey: `deal-escrow:${dealId}`, metadata: { kind: 'deal_escrow', dealId: String(dealId) } })).ref
   }
+  if (!ref) assertChargeAllowed() // mock in the real production pays nothing
   ref ??= process.env.STRIPE_ENV === 'live' ? null : `mock_pi_${dealId}_${Date.now()}`
   if (!ref) throw new ArtworkError('PAYMENT_REQUIRED', 'Pagamento real ainda não disponível.', 503)
   if (!(await markEscrowPaid(dealId, ref, 'CARD', 'BUYER'))) throw new ArtworkError('CHANGED', 'O negócio acabou de mudar.', 409)
@@ -238,7 +282,7 @@ export async function startEscrowPayment(userId: number, dealId: number, method:
   const current = parseInstructions(d.escrowInstructionsJson)
   if (d.escrowPendingRef && d.escrowMethod === method && current && d.escrowExpiresAt && d.escrowExpiresAt > now) return { instructions: current, paid: false }
   if (method === 'BOLETO') { const problem = boletoBillingProblem(billing ?? {}); if (problem) throw new ArtworkError('BILLING', problem, 400) }
-  const previous = d.escrowPendingRef
+  assertChargeAllowed() // mock in the real production pays nothing
   if ((await dropPendingAsync(d)) === 'PAID') return { instructions: null, paid: true }
   const amount = d.amountCents + d.shippingCents + d.insuranceCents
   const expiresAt = expiresAtFor(method, now)
@@ -256,19 +300,20 @@ export async function startEscrowPayment(userId: number, dealId: number, method:
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, email: true } })
     const pi = await startAsyncPayment({
       method, amountCents: amount, payerUserId: userId, description: `Garantia do negócio ${d.code}`,
-      // one PaymentIntent per (deal, method, the pending one it replaces): a double click returns the same Pix
-      idempotencyKey: `deal-escrow-async:${dealId}:${method}:${previous ?? 'first'}`,
+      // a fresh key per request: a Pix asked again after a switch must never replay one already cancelled;
+      // two requests at once both create, and the loser of the CAS below cancels its own
+      idempotencyKey: `deal-escrow-async:${dealId}:${method}:${now.getTime()}:${Math.random().toString(36).slice(2, 10)}`,
       metadata: { kind: 'deal_escrow', dealId: String(dealId), method },
       billing: billing ? { ...billing, name: billing.name || user.name, email: billing.email || user.email } : undefined,
       pixExpiresAfterSeconds: PIX_TTL_SECONDS, boletoExpiresAfterDays: BOLETO_DAYS,
     })
     ref = pi.ref
     instructions = instructionsFromStripe(method, amount, pi.nextAction, expiresAt)
-    if (!instructions) throw new ArtworkError('PAYMENT_FAILED', 'Não foi possível gerar o pagamento. Tente de novo.', 502)
+    if (!instructions) { await releaseAsync(ref, dealId); throw new ArtworkError('PAYMENT_FAILED', 'Não foi possível gerar o pagamento. Tente de novo.', 502) }
   }
   const deadline = new Date(instructions.expiresAt)
   const r = await prisma.deal.updateMany({ where: { id: dealId, phase: 'OFFER_ACCEPTED', escrowPaidAt: null, escrowPendingRef: null }, data: { escrowMethod: method, escrowPendingRef: ref, escrowExpiresAt: Number.isNaN(deadline.getTime()) ? expiresAt : deadline, escrowInstructionsJson: JSON.stringify(instructions) } })
-  if (r.count === 0) throw new ArtworkError('CHANGED', 'O negócio acabou de mudar. Atualize a página.', 409)
+  if (r.count === 0) { await releaseAsync(ref, dealId); throw new ArtworkError('CHANGED', 'O negócio acabou de mudar. Atualize a página.', 409) }
   void audit.event({ entity: 'deal', entityId: dealId, action: 'escrow_async_started', userId, after: { method } })
   return { instructions, paid: false }
 }
@@ -279,26 +324,40 @@ export async function pendingEscrowOf(userId: number, dealId: number): Promise<P
   return parseInstructions(d?.escrowInstructionsJson)
 }
 
-/** Webhook: a Pix/boleto PaymentIntent was paid → the escrow of its deal. Idempotent (CAS). */
-export async function settleEscrowByIntent(piId: string): Promise<boolean> {
+/**
+ * Webhook: a Pix/boleto PaymentIntent was paid → the escrow of its deal. Idempotent (CAS). A deal-escrow
+ * PaymentIntent that no deal waits for any more (paid another way, cancelled, replaced) is refunded — the
+ * money never stays silently on the platform.
+ */
+export async function settleEscrowByIntent(piId: string, metadata: Record<string, string> = {}): Promise<boolean> {
   return totalScope('deals:settle-async', async () => {
     const d = await prisma.deal.findFirst({ where: { escrowPendingRef: piId }, select: { id: true, escrowMethod: true } })
-    if (!d) return false
-    return markEscrowPaid(d.id, piId, (d.escrowMethod as EscrowMethod) ?? 'PIX', 'SYSTEM')
+    if (d && (await markEscrowPaid(d.id, piId, (d.escrowMethod as EscrowMethod) ?? 'PIX', 'SYSTEM'))) return true
+    if (metadata.kind !== 'deal_escrow') return false
+    if (await prisma.deal.count({ where: { escrowPaymentRef: piId } })) return false // the one that paid it
+    const dealId = Number(metadata.dealId) || null
+    await refundStray(piId, dealId)
+    const buyer = dealId ? await prisma.deal.findUnique({ where: { id: dealId }, select: { buyerUserId: true, code: true } }) : null
+    if (buyer) await notify({ userId: buyer.buyerUserId, kind: 'deal.refund', title: `Pagamento devolvido · ${buyer.code}`, body: 'Recebemos um pagamento que este negócio já não esperava; ele será devolvido.', href: '/purchases' })
+    return false
   })
 }
 
 /** Mock only: what the bank's confirmation does in test/live (the prototype's demo button). */
 export async function simulateEscrowPayment(userId: number, dealId: number): Promise<void> {
   if (stripeMode() !== 'mock') throw new ArtworkError('NOT_MOCK', 'A confirmação vem do banco.', 409)
+  assertChargeAllowed()
   const d = await buyerDeal(userId, dealId)
   if (!d.escrowPendingRef) throw new ArtworkError('NO_PENDING', 'Gere o Pix ou o boleto antes.', 409)
   if (!(await markEscrowPaid(dealId, d.escrowPendingRef, (d.escrowMethod as EscrowMethod) ?? 'PIX', 'SYSTEM'))) throw new ArtworkError('CHANGED', 'O negócio acabou de mudar.', 409)
 }
 
-/** Undoes a deal never paid: deal CANCELLED, offer CANCELLED, artwork back on sale, invoice cancelled, both told. CAS on the unpaid state. */
-export async function cancelUnpaidDeal(dealId: number, reason: string, pendingRef: string | null = null): Promise<boolean> {
-  const d = await prisma.deal.findUnique({ where: { id: dealId }, select: { id: true, code: true, offerId: true, artworkId: true, buyerUserId: true, sellerMemberId: true } })
+/**
+ * Undoes a deal never paid: deal CANCELLED, offer CANCELLED, artwork back on sale, invoice and resale royalty
+ * cancelled, CRM updated, both told (unless `silent`: the buy-now that could not even generate its Pix). CAS on the unpaid state.
+ */
+export async function cancelUnpaidDeal(dealId: number, reason: string, pendingRef: string | null = null, opts: { silent?: boolean } = {}): Promise<boolean> {
+  const d = await prisma.deal.findUnique({ where: { id: dealId }, select: { id: true, code: true, offerId: true, artworkId: true, buyerUserId: true, sellerMemberId: true, escrowPendingRef: true } })
   if (!d) return false
   const cancelled = await prisma.$transaction(async (tx) => {
     const u = await tx.deal.updateMany({ where: { id: d.id, phase: 'OFFER_ACCEPTED', escrowPaidAt: null, exceptionStatus: null, ...(pendingRef ? { escrowPendingRef: pendingRef } : {}) }, data: { exceptionStatus: 'CANCELLED', escrowPendingRef: null } })
@@ -308,9 +367,13 @@ export async function cancelUnpaidDeal(dealId: number, reason: string, pendingRe
     await tx.offerEvent.create({ data: { offerId: d.offerId, kind: 'CANCELLED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ reason }) } })
     await tx.artwork.updateMany({ where: { id: d.artworkId, status: 'IN_DEAL' }, data: { status: 'LISTED' } })
     await tx.invoice.updateMany({ where: { dealId: d.id, status: 'HELD_IN_SPLIT' }, data: { status: 'CANCELLED' } })
+    await tx.royaltyPayment.updateMany({ where: { dealId: d.id, status: { in: ['PENDING', 'HELD'] } }, data: { status: 'CANCELLED' } })
     return true
   })
   if (!cancelled) return false
+  await syncOpportunityFromOffer(d.offerId)
+  void audit.event({ entity: 'deal', entityId: d.id, action: 'cancel_unpaid', after: { reason } })
+  if (opts.silent) return true
   await notify({ userId: d.buyerUserId, kind: 'deal.cancelled', title: `Pagamento não identificado · ${d.code}`, body: 'O prazo do pagamento acabou e a reserva da obra foi desfeita.', href: '/purchases' })
   const seller = await prisma.member.findUnique({ where: { id: d.sellerMemberId }, select: { userId: true } })
   await notify({ userId: seller?.userId ?? null, kind: 'deal.cancelled', title: `Venda cancelada · ${d.code}`, body: 'O comprador não pagou; a obra voltou a ficar à venda.', href: '/sales?tab=deals' })
@@ -318,20 +381,25 @@ export async function cancelUnpaidDeal(dealId: number, reason: string, pendingRe
 }
 
 /**
- * Cron: a Pix/boleto not paid by its deadline lets the artwork go — the deal is cancelled, the offer
- * too, the artwork is listed again and both sides are told. A payment the bank confirmed meanwhile settles instead.
+ * Cron: a reservation not paid by its deadline lets the artwork go — the deal is cancelled, the offer too,
+ * the artwork is listed again and both sides are told. A payment the bank confirmed meanwhile settles instead;
+ * one still clearing waits; a boleto gets BOLETO_GRACE_DAYS after its due date (paid on the due day, it clears later).
+ * The deadline stays after a switch of method, so a deal whose replacement failed is still collected here.
  */
 export async function expireUnpaidEscrows(now = new Date()): Promise<number> {
   return totalScope('deals:expire-async', async () => {
-    const rows = await prisma.deal.findMany({ where: { phase: 'OFFER_ACCEPTED', escrowPaidAt: null, exceptionStatus: null, escrowPendingRef: { not: null }, escrowExpiresAt: { lt: now } }, select: { id: true, code: true, offerId: true, artworkId: true, buyerUserId: true, sellerMemberId: true, escrowPendingRef: true, escrowMethod: true } })
+    const rows = await prisma.deal.findMany({ where: { phase: 'OFFER_ACCEPTED', escrowPaidAt: null, exceptionStatus: null, escrowExpiresAt: { lt: now } }, select: { id: true, escrowPendingRef: true, escrowMethod: true, escrowExpiresAt: true } })
     let n = 0
     for (const d of rows) {
-      if (!d.escrowPendingRef!.startsWith('mock_') && stripeMode() !== 'mock') {
-        const r = await cancelAsyncPayment(d.escrowPendingRef!).catch(() => null)
-        if (r === 'PAID') { await markEscrowPaid(d.id, d.escrowPendingRef!, (d.escrowMethod as EscrowMethod) ?? 'PIX', 'SYSTEM'); continue }
-        if (r === null) continue // the provider did not answer: next run
+      if (d.escrowMethod === 'BOLETO' && d.escrowExpiresAt!.getTime() + BOLETO_GRACE_DAYS * 86_400_000 > now.getTime()) continue
+      const ref = d.escrowPendingRef
+      if (ref && isProviderRef(ref)) {
+        const r = await cancelAsyncPayment(ref).catch(() => null)
+        if (r === 'PAID') { await markEscrowPaid(d.id, ref, (d.escrowMethod as EscrowMethod) ?? 'PIX', 'SYSTEM'); continue }
+        if (r === null || r === 'PROCESSING') continue // the provider did not answer, or the money is clearing: next run
       }
-      if (await cancelUnpaidDeal(d.id, d.escrowMethod === 'BOLETO' ? 'Boleto vencido sem pagamento' : 'Pix expirado sem pagamento', d.escrowPendingRef)) n++
+      const reason = d.escrowMethod === 'BOLETO' ? 'Boleto vencido sem pagamento' : d.escrowMethod === 'PIX' ? 'Pix expirado sem pagamento' : 'Prazo do pagamento encerrado'
+      if (await cancelUnpaidDeal(d.id, reason, ref)) n++
     }
     return n
   })

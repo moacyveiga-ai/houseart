@@ -18,7 +18,7 @@ import { royaltyFor } from '@/lib/resale-royalty/core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { contentHashOf, sha256Hex } from '@/lib/certificates/core'
 import { publicBaseUrl } from '@/lib/public-url'
-import { mockMasterKey, verifySun } from '@/lib/physical-markers/sun-core'
+import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
 import { catalogPriceCents, placeOrder } from '@/lib/orders/server'
 import { chargeNow, stripeMode } from '@/lib/stripe/door'
 
@@ -158,9 +158,7 @@ export async function buyerTap(token: string, sun: { uid: string; ctr: number; c
     if (!t || t.status !== 'AWAITING_TAP' || !t.toUserId) return { ok: false, error: 'A transferência não está aguardando o toque.' }
     const marker = await prisma.physicalMarker.findFirst({ where: { artworkId: t.artworkId, status: 'LINKED' } })
     if (!marker) return { ok: false, error: 'A obra não tem etiqueta vinculada.' }
-    let valid = false
-    if (sun) valid = sun.uid.toLowerCase() === marker.uid && verifySun({ master: mockMasterKey(), uid: marker.uid, counter: sun.ctr, cmac: sun.cmac, lastCounter: marker.readCounter }).ok
-    else if ((process.env.MARKER_VENDOR ?? 'mock') === 'mock') valid = true
+    const valid = await verifyBuyerTap(marker, sun)
     const read = await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun?.ctr ?? marker.readCounter, cmacValid: valid, purpose: 'TRANSFER_CONFIRM', userId: t.toUserId } })
     if (!valid) return { ok: false, error: 'Leitura inválida.' }
     const prev = await prisma.certificateVersion.findFirst({ where: { certificateId: t.certificateId, status: 'ACTIVE' } })

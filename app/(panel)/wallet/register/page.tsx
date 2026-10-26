@@ -24,7 +24,9 @@ export default async function RegisterArtworkPage({ searchParams }: { searchPara
       acquisitionYear: a.acquisitionYear, acquisitionFrom: a.acquisitionFrom, acquisitionNote: a.acquisitionNote,
       acquisitionPriceCents: a.acquisitionPriceCents === null ? null : a.acquisitionPriceCents.toString(),
       media: a.media.map((m) => ({ kind: m.kind, publicUrl: m.publicUrl, quality: m.quality })),
+      completed: a.wizardStep >= 5,
     }
   }
-  return <div className="ha-page"><RegisterArtworkScreen draft={draft} /></div>
+  // keyed by the draft: going from one draft to another (or to a new register) starts the screen over
+  return <div className="ha-page"><RegisterArtworkScreen key={draft?.id ?? 'new'} draft={draft} /></div>
 }

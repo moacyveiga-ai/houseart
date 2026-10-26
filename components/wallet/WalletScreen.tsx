@@ -51,8 +51,8 @@ export function WalletScreen({ items, totalCents, holderName, inCollection = fal
               {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
               <span className="ha-wall ha-wall--40">{d.cover ? <img src={d.cover} alt="" /> : null}</span>
               <span style={{ textAlign: 'left' }}><b>{d.title}</b><br /><span className="ha-muted ha-sm">{d.artist}</span></span>
-              {d.href ? <span className="ha-link ha-sm">Continuar</span> : <span />}
-              <Badge tone={d.href ? 'neutral' : 'pending'}>{d.href ? 'Rascunho' : 'Em certificação'}</Badge>
+              {d.href ? <span className="ha-link ha-sm">{d.completed ? 'Ver' : 'Continuar'}</span> : <span />}
+              <Badge tone={d.href ? 'neutral' : 'pending'}>{!d.href ? 'Em certificação' : d.completed ? 'Cadastrada' : 'Rascunho'}</Badge>
             </>)
             const style = { gridTemplateColumns: '40px 1fr auto auto', width: '100%', color: 'inherit', textDecoration: 'none' }
             return <li key={d.id}>{d.href ? <Link href={d.href} className="ha-list__row ha-list__btn" style={style}>{row}</Link> : <span className="ha-list__row" style={style}>{row}</span>}</li>

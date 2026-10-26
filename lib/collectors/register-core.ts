@@ -46,7 +46,7 @@ const positiveCm = (v: string) => { const n = Number(v.replace(',', '.')); retur
 /** What the sheet still lacks to go on (prototype `okInfo`: title, technique, height and width). */
 export function sheetProblems(s: SheetState): string[] {
   const out: string[] = []
-  if (!s.title.trim()) out.push('o título')
+  if (!s.title.trim() || s.title.trim() === 'Nova obra') out.push('o título')
   if (!s.technique) out.push('a técnica')
   if (!positiveCm(s.heightCm) || !positiveCm(s.widthCm)) out.push('altura e largura')
   return out
@@ -78,7 +78,68 @@ export const NEXT_STEPS = [
   { title: 'Certifique para vender', sub: 'Com etiqueta NFC e escritura em seu nome', icon: 'verified', done: false },
 ] as const
 
-/** The step a draft resumes at: photos until the front exists, then the sheet. */
-export function resumeStep(hasFront: boolean): number {
+/** The step a draft resumes at: photos until the front exists, then the sheet; a concluded one opens on the review. */
+export function resumeStep(hasFront: boolean, completed = false): number {
+  if (completed && hasFront) return 4
   return hasFront ? 3 : 2
+}
+
+const fold = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+/**
+ * What the photo reading wrote (free text — "Óleo sobre tela", "Verso, canto inferior") brought to the
+ * chips of the sheet. Technique by keyword; support by the material named; edition and signature by
+ * their tell-tale words. Nothing recognised → null (the chip stays empty for the person to choose).
+ */
+export function techniqueChipOf(text: string | null | undefined): string | null {
+  if (!text) return null
+  const t = fold(text)
+  const direct = TECHNIQUE_CHIPS.find((c) => t.includes(fold(c.label)))
+  if (direct) return direct.label
+  if (/mista|mixed/.test(t)) return 'Técnica mista'
+  if (/oleo|acrilic|tempera|aquarela|guache|encaustica|pintura|paint/.test(t)) return 'Pintura'
+  if (/grafite|carvao|nanquim|lapis|pastel|desenho|drawing/.test(t)) return 'Desenho'
+  if (/xilo|serigraf|litograf|gravura|metal ?gravura|agua-forte|print/.test(t)) return 'Gravura'
+  if (/fotograf|photo|gelatina|pigmento mineral|c-print/.test(t)) return 'Fotografia'
+  if (/bronze|marmore|escultura|ceramica|resina|sculpt/.test(t)) return 'Escultura'
+  return null
+}
+
+export function supportChipOf(text: string | null | undefined): string | null {
+  if (!text) return null
+  const t = fold(text)
+  if (/tela|canvas|linho/.test(t)) return 'Tela'
+  if (/papel|paper|cartao/.test(t)) return 'Papel'
+  if (/madeira|wood|eucatex|compensado/.test(t)) return 'Madeira'
+  if (/metal|aluminio|cobre|aco/.test(t)) return 'Metal'
+  return 'Outro'
+}
+
+export function editionChipOf(text: string | null | undefined): string | null {
+  if (!text) return null
+  const t = fold(text)
+  if (/prova|p\.?a\.?\b|artist proof|\bap\b/.test(t)) return 'Prova de artista'
+  if (/unica|unique|1\/1\b/.test(t)) return 'Única'
+  if (/\d+\s*\/\s*\d+|tiragem|multiplo|edicao/.test(t)) return 'Múltiplo / tiragem'
+  return null
+}
+
+export function signatureChipOf(text: string | null | undefined): string | null {
+  if (!text) return null
+  const t = fold(text)
+  if (/sem assinatura|nao assinad|unsigned/.test(t)) return 'Sem assinatura'
+  if (/verso|back|reverso/.test(t)) return 'Verso'
+  if (/inferior direit|baixo direit|lower right|bottom right/.test(t)) return 'Frente · inferior direita'
+  return 'Frente · outra posição'
+}
+
+/** A four-digit year the schema takes (1000–2100), or null. */
+export function yearOf(v: string): number | null {
+  return /^\d{4}$/.test(v) && Number(v) >= 1000 && Number(v) <= 2100 ? Number(v) : null
+}
+
+/** The year as the PATCH gets it: empty field → null (clears), a valid year → it, anything else → undefined (keeps what is saved). */
+export function yearPatch(v: string): number | null | undefined {
+  if (!v.trim()) return null
+  return yearOf(v) ?? undefined
 }

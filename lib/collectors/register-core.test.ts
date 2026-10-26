@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { categoryOfTechnique, cmOf, dimensionsLabel, REGISTER_STEPS, resumeStep, sheetMessage, sheetProblems } from './register-core'
+import { categoryOfTechnique, cmOf, dimensionsLabel, editionChipOf, REGISTER_STEPS, resumeStep, sheetMessage, sheetProblems, signatureChipOf, supportChipOf, techniqueChipOf, yearOf, yearPatch } from './register-core'
 
 describe('cadastro de obra do colecionador', () => {
   it('has the five steps of the prototype', () => {
@@ -25,5 +25,30 @@ describe('cadastro de obra do colecionador', () => {
   it('resumes at the photos until the front exists', () => {
     expect(resumeStep(false)).toBe(2)
     expect(resumeStep(true)).toBe(3)
+    expect(resumeStep(true, true)).toBe(4)
+    expect(resumeStep(false, true)).toBe(2)
+  })
+  it('brings what the photo reading wrote to the chips', () => {
+    expect(techniqueChipOf('Óleo sobre tela')).toBe('Pintura')
+    expect(techniqueChipOf('Xilogravura')).toBe('Gravura')
+    expect(techniqueChipOf('Técnica mista sobre papel')).toBe('Técnica mista')
+    expect(techniqueChipOf('algo estranho')).toBeNull()
+    expect(supportChipOf('Tela de algodão')).toBe('Tela')
+    expect(supportChipOf('vidro')).toBe('Outro')
+    expect(editionChipOf('12/30')).toBe('Múltiplo / tiragem')
+    expect(editionChipOf('P.A.')).toBe('Prova de artista')
+    expect(editionChipOf('Única')).toBe('Única')
+    expect(signatureChipOf('canto inferior direito')).toBe('Frente · inferior direita')
+    expect(signatureChipOf('No verso')).toBe('Verso')
+  })
+  it('never erases a saved year with a half-typed one', () => {
+    expect(yearOf('1998')).toBe(1998)
+    expect(yearOf('199')).toBeNull()
+    expect(yearPatch('')).toBeNull()
+    expect(yearPatch('199')).toBeUndefined()
+    expect(yearPatch('2019')).toBe(2019)
+  })
+  it('the default draft title is no title', () => {
+    expect(sheetProblems({ title: 'Nova obra', technique: 'Pintura', heightCm: '10', widthCm: '10' })).toEqual(['o título'])
   })
 })

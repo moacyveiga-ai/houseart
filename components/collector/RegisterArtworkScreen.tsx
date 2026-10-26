@@ -8,7 +8,7 @@
 // the acquisition and "Preencher com as fotos") · 5 Revisão → "Concluir cadastro" → Pronto with the
 // next steps and the services. Out (no domain yet): reading an existing HouseArt tag on step 1 and
 // the documents of the prototype (nota fiscal, certificado anterior, catálogo, foto antiga).
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
@@ -16,7 +16,7 @@ import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { MediaStep } from '@/components/artworks/MediaStep'
 import { ACQUISITION_KIND_CARDS, CONDITION_GRADES, CONDITION_GRADE_LABELS, REQUIRED_MEDIA_SLOTS, type AcquisitionKind } from '@/lib/artworks/domain'
-import { categoryOfTechnique, cmOf, dimensionsLabel, EDITION_CHIPS, NEXT_STEPS, REGISTER_STEPS, resumeStep, sheetMessage, sheetProblems, SIGNATURE_CHIPS, SUPPORT_CHIPS, TECHNIQUE_CHIPS } from '@/lib/collectors/register-core'
+import { categoryOfTechnique, cmOf, dimensionsLabel, EDITION_CHIPS, editionChipOf, NEXT_STEPS, REGISTER_STEPS, resumeStep, sheetMessage, sheetProblems, SIGNATURE_CHIPS, signatureChipOf, SUPPORT_CHIPS, supportChipOf, TECHNIQUE_CHIPS, techniqueChipOf, yearOf, yearPatch } from '@/lib/collectors/register-core'
 import { digitsOf, formatThousands, reaisDigitsToCents } from './seller-core'
 import { ServicesSheet } from './ServicesSheet'
 import './register-artwork.css'
@@ -30,7 +30,13 @@ export interface RegisterDraft {
   edition: string | null; signatureLocation: string | null; conditionGrade: string | null
   acquisitionYear: number | null; acquisitionFrom: string | null; acquisitionNote: string | null; acquisitionPriceCents: string | null
   media: DraftMedia[]
+  /** concluded before (wizardStep 5): opens on the review */
+  completed: boolean
 }
+
+const TECHNIQUES = TECHNIQUE_CHIPS.map((t) => t.label)
+/** A saved value on its chip: the chip itself, or what the free text points to. */
+const chipOf = (v: string | null | undefined, list: readonly string[], map: (t: string) => string | null) => (!v ? null : list.includes(v) ? v : map(v))
 
 const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('')
 const paidOf = (cents: string | null) => (cents && cents !== '0' ? formatThousands(String(BigInt(cents) / 100n)) : '')
@@ -56,7 +62,10 @@ function Chips({ label, options, value, onChange }: { label: string; options: re
 export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }) {
   const router = useRouter()
   const [id, setId] = useState<number | null>(draft?.id ?? null)
-  const [step, setStep] = useState(draft ? resumeStep(draft.media.some((m) => m.kind === FRONT)) : 0)
+  const [step, setStep] = useState(draft ? resumeStep(draft.media.some((m) => m.kind === FRONT), draft.completed) : 0)
+  // "Editar" on the review: the step goes back to the review when it is done
+  const [fromReview, setFromReview] = useState(false)
+  const creating = useRef(false)
   const [done, setDone] = useState(false)
   const [kind, setKind] = useState<AcquisitionKind | null>((draft?.acquisitionKind as AcquisitionKind) ?? null)
   // artist (step 2): fixed once the draft exists
@@ -70,10 +79,10 @@ export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }
   // sheet (step 4)
   const [title, setTitle] = useState(draft?.title ?? '')
   const [year, setYear] = useState(draft?.year ? String(draft.year) : '')
-  const [technique, setTechnique] = useState<string | null>(draft?.technique ?? null)
-  const [support, setSupport] = useState<string | null>(draft?.materials ?? null)
-  const [edition, setEdition] = useState<string | null>(draft?.edition ?? null)
-  const [signature, setSignature] = useState<string | null>(draft?.signatureLocation ?? null)
+  const [technique, setTechnique] = useState<string | null>(chipOf(draft?.technique, TECHNIQUES, techniqueChipOf))
+  const [support, setSupport] = useState<string | null>(chipOf(draft?.materials, SUPPORT_CHIPS, supportChipOf))
+  const [edition, setEdition] = useState<string | null>(chipOf(draft?.edition, EDITION_CHIPS, editionChipOf))
+  const [signature, setSignature] = useState<string | null>(chipOf(draft?.signatureLocation, SIGNATURE_CHIPS, signatureChipOf))
   const [condition, setCondition] = useState<string | null>(draft?.conditionGrade ?? null)
   const [h, setH] = useState(cmOf(draft?.heightMm ?? null))
   const [w, setW] = useState(cmOf(draft?.widthMm ?? null))
@@ -110,15 +119,15 @@ export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }
   const requiredDone = REQUIRED_MEDIA_SLOTS.filter((s) => media.some((m) => m.kind === s.kind)).length
   const problems = sheetProblems({ title, technique, heightCm: h, widthCm: w })
   const cover = media.find((m) => m.kind === FRONT)?.publicUrl ?? null
-  const fourDigits = (v: string) => (/^\d{4}$/.test(v) && Number(v) > 1000 && Number(v) < 2101 ? Number(v) : null)
 
   /** Step 2 → the draft is born with the origin and the artist; the URL keeps it. */
   async function createDraft() {
-    if (!kind || artistName.length < 2) return
+    if (!kind || artistName.length < 2 || creating.current) return
+    creating.current = true
     setBusy(true); setError('')
     const { res, data } = await api('/api/collector/artworks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ acquisitionKind: kind, artistName }) })
     setBusy(false)
-    if (!res.ok || typeof data.id !== 'number') { setError(String(data.error ?? 'Não foi possível começar o cadastro agora.')); return }
+    if (!res.ok || typeof data.id !== 'number') { creating.current = false; setError(String(data.error ?? 'Não foi possível começar o cadastro agora.')); return }
     setId(data.id); setPicked(artistName); setStep(2)
     router.replace(`/wallet/register?draft=${data.id}`, { scroll: false })
   }
@@ -133,10 +142,10 @@ export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }
   }
 
   const sheetBody = () => ({
-    title: title.trim() || undefined, year: fourDigits(year), technique, materials: support, edition, signatureLocation: signature,
+    title: title.trim() && title.trim() !== 'Nova obra' ? title.trim() : undefined, year: yearPatch(year), technique, materials: support, edition, signatureLocation: signature,
     conditionGrade: condition, heightMm: h || null, widthMm: w || null, depthMm: d || null,
     ...(categoryOfTechnique(technique) ? { category: categoryOfTechnique(technique) } : {}),
-    acquisitionKind: kind, acquisitionYear: fourDigits(acqYear), acquisitionFrom: from.trim() || null, acquisitionNote: note.trim() || null,
+    acquisitionKind: kind, acquisitionYear: yearPatch(acqYear), acquisitionFrom: from.trim() || null, acquisitionNote: note.trim() || null,
     acquisitionPriceCents: digitsOf(paid) ? reaisDigitsToCents(paid).toString() : null,
   })
 
@@ -164,28 +173,30 @@ export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }
     const a = (data.applied ?? {}) as Record<string, unknown>
     if (typeof a.title === 'string' && !title.trim()) setTitle(a.title)
     if (typeof a.year === 'number' && !year) setYear(String(a.year))
-    if (typeof a.technique === 'string' && !technique) setTechnique(a.technique)
-    if (typeof a.materials === 'string' && !support) setSupport(a.materials)
-    if (typeof a.edition === 'string' && !edition) setEdition(a.edition)
-    if (typeof a.signatureLocation === 'string' && !signature) setSignature(a.signatureLocation)
+    // the reading writes free text; the sheet keeps chips ("Óleo sobre tela" → Pintura)
+    if (typeof a.technique === 'string' && !technique) setTechnique(techniqueChipOf(a.technique))
+    if (typeof a.materials === 'string' && !support) setSupport(supportChipOf(a.materials))
+    if (typeof a.edition === 'string' && !edition) setEdition(editionChipOf(a.edition))
+    if (typeof a.signatureLocation === 'string' && !signature) setSignature(signatureChipOf(a.signatureLocation))
     setToast(String(data.toast ?? 'Leitura concluída · confira os campos'))
   }
 
   async function next() {
     setError('')
-    if (step === 0) { if (!kind) return; if (id) { if (!(await patch({ acquisitionKind: kind }))) return; setStep(2); return } setStep(1); return }
-    if (step === 1) { if (id) { setStep(2); return } await createDraft(); return }
-    if (step === 2) { if (!hasFront) { setError('Fotografe ao menos a frente da obra (com o cartão de cor) para seguir.'); return } setStep(3); return }
+    const go = (to: number) => { if (fromReview) { setFromReview(false); setStep(4) } else setStep(to) }
+    if (step === 0) { if (!kind) return; if (id) { if (!(await patch({ acquisitionKind: kind }))) return; go(2); return } setStep(1); return }
+    if (step === 1) { if (id) { go(2); return } await createDraft(); return }
+    if (step === 2) { if (!hasFront) { setError('Fotografe ao menos a frente da obra (com o cartão de cor) para seguir.'); return } go(3); return }
     if (step === 3) {
       if (problems.length) { setTried(true); setError(sheetMessage(problems)); return }
-      if (await patch(sheetBody())) { setTried(false); setStep(4) }
+      if (await patch(sheetBody())) { setTried(false); setFromReview(false); setStep(4) }
       return
     }
-    // the sheet was saved on the way to the review: concluding is the Pronto screen
-    if (step === 4) setDone(true)
+    // the sheet was saved on the way to the review; concluding marks the register done (Coleção › Em cadastro says "Cadastrada")
+    if (step === 4 && (await patch({ wizardStep: 5 }))) setDone(true)
   }
 
-  const back = () => { setError(''); setStep(step === 2 && id ? 0 : step - 1) }
+  const back = () => { setError(''); if (fromReview) { setFromReview(false); setStep(4); return } setStep(step === 2 && id ? 0 : step - 1) }
 
   if (done) {
     return (
@@ -319,7 +330,7 @@ export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }
             <span className="ha-stack" style={{ gap: 4 }}>
               <span className="ha-reg__sugg-s">{artistName}</span>
               <b className="ha-reg__rev-t">{title.trim() || 'Sem título'}</b>
-              <span className="ha-reg__sugg-s">{[fourDigits(year), [technique, support && `sobre ${support.toLowerCase()}`].filter(Boolean).join(' '), dimensionsLabel(Math.round(Number(h.replace(',', '.')) * 10), Math.round(Number(w.replace(',', '.')) * 10), d ? Math.round(Number(d.replace(',', '.')) * 10) : null)].filter(Boolean).join(' · ')}</span>
+              <span className="ha-reg__sugg-s">{[yearOf(year), [technique, support && `sobre ${support.toLowerCase()}`].filter(Boolean).join(' '), dimensionsLabel(Math.round(Number(h.replace(',', '.')) * 10), Math.round(Number(w.replace(',', '.')) * 10), d ? Math.round(Number(d.replace(',', '.')) * 10) : null)].filter(Boolean).join(' · ')}</span>
             </span>
           </div>
           <ul className="ha-reg__lines">
@@ -327,9 +338,9 @@ export function RegisterArtworkScreen({ draft }: { draft: RegisterDraft | null }
               ['Origem', ACQUISITION_KIND_CARDS.find((c) => c.key === kind)?.name ?? '—', 0],
               ['Fotos', `${media.length} de 10 · ${requiredDone} de ${REQUIRED_MEDIA_SLOTS.length} obrigatórias para certificar`, 2],
               ['Ficha', [edition, signature, condition ? CONDITION_GRADE_LABELS[condition as keyof typeof CONDITION_GRADE_LABELS] : null].filter(Boolean).join(' · ') || 'Técnica e dimensões preenchidas', 3],
-              ['Aquisição', [from.trim(), fourDigits(acqYear)].filter(Boolean).join(' · ') || 'Sem dados', 3],
+              ['Aquisição', [from.trim(), yearOf(acqYear)].filter(Boolean).join(' · ') || 'Sem dados', 3],
             ].map(([k, v, to]) => (
-              <li key={String(k)}><span className="ha-reg__sugg-s">{k}</span><span>{v}</span><button type="button" className="ha-link ha-link--quiet ha-sm" onClick={() => setStep(Number(to))}>Editar</button></li>
+              <li key={String(k)}><span className="ha-reg__sugg-s">{k}</span><span>{v}</span><button type="button" className="ha-link ha-link--quiet ha-sm" onClick={() => { setFromReview(true); setStep(Number(to)) }}>Editar</button></li>
             ))}
           </ul>
           {requiredDone < REQUIRED_MEDIA_SLOTS.length ? <span className="ha-reg__hint"><Icon name="info" size={18} />Para certificar e vender, complete as {REQUIRED_MEDIA_SLOTS.length} fotos obrigatórias. Você pode concluir o cadastro agora e voltar depois.</span> : null}

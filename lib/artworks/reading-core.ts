@@ -54,7 +54,8 @@ export function applyReading(sheet: SheetLike, s: ReadingSuggestions): { patch: 
   const patch: Partial<SheetLike> = {}
   const filled: ReadingField[] = []
   const empty = (v: unknown) => v === null || v === undefined || (typeof v === 'string' && !v.trim())
-  if (empty(sheet.title) && s.title) { patch.title = s.title; filled.push('title') }
+  // the default title of a new draft ('Nova obra') is no title at all
+  if ((empty(sheet.title) || sheet.title === 'Nova obra') && s.title) { patch.title = s.title; filled.push('title') }
   if (empty(sheet.year) && s.year) { patch.year = s.year; filled.push('year') }
   if (empty(sheet.technique) && s.technique) { patch.technique = s.technique; filled.push('technique') }
   if (empty(sheet.materials) && s.materials) { patch.materials = s.materials; filled.push('materials') }

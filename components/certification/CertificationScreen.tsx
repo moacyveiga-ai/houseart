@@ -5,15 +5,15 @@ import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { Badge } from '@/components/ds/Badge'
-import { CERT_STAGES } from '@/lib/physical-markers/domain'
+import { CERT_STAGES, MARKER_KIT_MAX, MARKER_KIT_MIN } from '@/lib/physical-markers/domain'
 
 export interface CertItem { id: number; certificateId: number | null; title: string; publicId: string | null; cover: string | null; stage: number; label: string; action: string; status: string }
 export interface CertOrder { id: number; quantity: number; status: string }
 
-export function CertificationScreen({ items: initialItems, orders: initialOrders, canOrder, kitUnitCents = '1500' }: { items: CertItem[]; orders: CertOrder[]; canOrder: boolean; kitUnitCents?: string }) {
+export function CertificationScreen({ items: initialItems, orders: initialOrders, canOrder, kitUnitCents = '1500', initialQty }: { items: CertItem[]; orders: CertOrder[]; canOrder: boolean; kitUnitCents?: string; initialQty?: number }) {
   const [items, setItems] = useState(initialItems)
   const [orders, setOrders] = useState(initialOrders)
-  const [qty, setQty] = useState(10)
+  const [qty, setQty] = useState(initialQty ? Math.min(MARKER_KIT_MAX, Math.max(MARKER_KIT_MIN, initialQty)) : 10)
   const [signing, setSigning] = useState<CertItem | null>(null)
   const [signStep, setSignStep] = useState(0)
   const [toast, setToast] = useState('')

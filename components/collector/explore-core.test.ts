@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chipOf, deckCounter, exploreHref, marketLabel, passesChip, sellerSubOf, sheetLineOf, viewOf, type ExploreItem } from './explore-core'
+import { chipOf, deckCounter, discoverOrder, likedNote, exploreHref, marketLabel, passesChip, sellerSubOf, sheetLineOf, viewOf, type ExploreItem } from './explore-core'
 
 const item = (over: Partial<ExploreItem> = {}): ExploreItem => ({ id: 1, publicId: 'HA-1', title: 'T', year: 2024, artist: 'A', category: 'PAINTING', priceCents: '500000', saleMode: 'FIXED_WITH_OFFERS', cover: null, technique: 'Óleo', dimensions: '50 × 40 cm', seller: 'G', sellerKind: 'GALLERY', market: 'PRIMARY', uf: 'BA', liked: false, saved: false, likes: 0, comments: 0, city: 'Salvador', sellerHref: null, ...over })
 
@@ -30,5 +30,18 @@ describe('explore-core', () => {
     expect(sellerSubOf(item({ sellerKind: 'PRIVATE', city: null, uf: null }))).toBe('Colecionador')
     expect(marketLabel('SECONDARY')).toBe('Revenda')
     expect(marketLabel('PRIMARY')).toBe('Primário')
+  })
+
+  it('Descobrir: artists of liked works first, liked and saved out of the deck', () => {
+    const a = item({ id: 1, artist: 'Ana', liked: true })
+    const b = item({ id: 2, artist: 'Bia' })
+    const c = item({ id: 3, artist: 'Ana' })
+    const d = item({ id: 4, artist: 'Bia', saved: true })
+    const e = item({ id: 5, artist: 'Ana' })
+    expect(discoverOrder([a, b, c, d, e]).map((i) => i.id)).toEqual([3, 5, 2])
+    expect(discoverOrder([b, c]).map((i) => i.id)).toEqual([2, 3])
+    expect(likedNote([b, c])).toBeNull()
+    expect(likedNote([a, b])).toBe('1 obra curtida. Artistas das obras curtidas aparecem primeiro no Descobrir.')
+    expect(likedNote([a, item({ liked: true })])).toBe('2 obras curtidas. Artistas das obras curtidas aparecem primeiro no Descobrir.')
   })
 })

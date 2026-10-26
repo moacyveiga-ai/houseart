@@ -20,7 +20,7 @@ export async function adminAudit(q: AuditQuery, now = new Date()): Promise<Audit
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
     const page = Math.min(q.page, pages) // a page beyond the end shows the last one
     const [rows, today, week, byEntity] = await Promise.all([
-      prisma.auditLog.findMany({ where, orderBy: { id: 'desc' }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE, select: { id: true, createdAt: true, entity: true, entityId: true, action: true, userName: true, userId: true, origin: true, ip: true, before: true, after: true } }),
+      prisma.auditLog.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE, select: { id: true, createdAt: true, entity: true, entityId: true, action: true, userName: true, userId: true, origin: true, ip: true, before: true, after: true } }),
       prisma.auditLog.count({ where: { createdAt: { gte: dayAgo } } }),
       prisma.auditLog.count({ where: { createdAt: { gte: weekAgo } } }),
       prisma.auditLog.groupBy({ by: ['entity'], where: { createdAt: { gte: weekAgo } }, _count: { _all: true }, orderBy: { _count: { entity: 'desc' } }, take: 5 }),

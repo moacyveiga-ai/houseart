@@ -9,17 +9,19 @@ import type { ActiveListingRow } from '@/lib/collectors/listings-server'
 import './active-listings.css'
 
 export function ActiveListings({ rows }: { rows: ActiveListingRow[] }) {
+  // a paused listing keeps status LISTED but is out of the marketplace: listed here as "pausado", not counted as on sale
+  const live = rows.filter((r) => !r.paused).length
   return (
     <section className="ha-alist" aria-labelledby="ha-alist-title">
       <div className="ha-alist__head">
         <h2 id="ha-alist-title" className="ha-alist__title">Anúncios ativos</h2>
-        <span className="ha-alist__count">{rows.length} {rows.length === 1 ? 'obra à venda' : 'obras à venda'}</span>
+        <span className="ha-alist__count">{live} {live === 1 ? 'obra à venda' : 'obras à venda'}{rows.length > live ? ` · ${rows.length - live} ${rows.length - live === 1 ? 'pausada' : 'pausadas'}` : ''}</span>
       </div>
       {rows.length === 0 ? <p className="ha-muted ha-sm">Nenhuma obra sua está no marketplace agora.</p> : (
         <ul className="ha-alist__list">
           {rows.map((r) => (
             <li key={r.id}>
-              <Link href={`/wallet?own=${r.id}`} className="ha-alist__row" aria-label={`Abrir ${r.title}`}>
+              <Link href={`/wallet?own=${r.id}`} className="ha-alist__row">
                 <span className="ha-alist__wall">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
                   {r.coverUrl ? <img src={r.coverUrl} alt="" /> : <Icon name="imagesmode" size={24} />}</span>
                 <span className="ha-alist__body">

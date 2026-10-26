@@ -1,12 +1,12 @@
 // Admin review queue — the pure part (labels, tones, effect of each decision,
 // relative time). The server (server.ts) applies the effects; the screen shows
 // these texts before the staff confirms, so both read the same table.
-export const REVIEW_KINDS = ['DUPLICATE', 'CONTESTATION', 'NEW_ISSUER', 'MARKER_REMOVED', 'EXPORT_RESTRICTION'] as const
+export const REVIEW_KINDS = ['DUPLICATE', 'CONTESTATION', 'NEW_ISSUER', 'MARKER_REMOVED', 'EXPORT_RESTRICTION', 'MESSAGE_REPORT'] as const
 export type ReviewKind = (typeof REVIEW_KINDS)[number]
 export type ReviewDecision = 'APPROVED' | 'REJECTED'
 
 export const REVIEW_KIND_LABELS: Record<ReviewKind, string> = {
-  DUPLICATE: 'Duplicidade', CONTESTATION: 'Contestação', NEW_ISSUER: 'Emissor novo', MARKER_REMOVED: 'Etiqueta removida', EXPORT_RESTRICTION: 'Restrição IPHAN',
+  DUPLICATE: 'Duplicidade', CONTESTATION: 'Contestação', NEW_ISSUER: 'Emissor novo', MARKER_REMOVED: 'Etiqueta removida', EXPORT_RESTRICTION: 'Restrição IPHAN', MESSAGE_REPORT: 'Denúncia em conversa',
 }
 
 /** Badge colours of the prototype (Admin · Obras e certificados), as token names. */
@@ -16,6 +16,7 @@ export const REVIEW_KIND_TONES: Record<ReviewKind, { bg: string; fg: string }> =
   NEW_ISSUER: { bg: '--ha-paper-200', fg: '--ha-ink-900' },
   MARKER_REMOVED: { bg: '--ha-alert-500', fg: '--ha-paper-50' },
   EXPORT_RESTRICTION: { bg: '--ha-paper-200', fg: '--ha-ink-900' },
+  MESSAGE_REPORT: { bg: '--ha-alert-100', fg: '--ha-alert-500' },
 }
 
 /** What each decision DOES — shown in the confirmation and applied by decideReviewItem. */
@@ -39,6 +40,10 @@ export const REVIEW_EFFECTS: Record<ReviewKind, Record<ReviewDecision, string>> 
   EXPORT_RESTRICTION: {
     APPROVED: 'Restrição confirmada. Fica registrada na obra.',
     REJECTED: 'Sem restrição. Fica registrado que a obra foi conferida.',
+  },
+  MESSAGE_REPORT: {
+    APPROVED: 'A denúncia procede. A decisão fica registrada aqui e a equipe fala com a pessoa denunciada.',
+    REJECTED: 'A denúncia não procede. Fica arquivada.',
   },
 }
 

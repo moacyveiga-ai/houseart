@@ -11,8 +11,16 @@ import { averageOpenHours, needsReason, openedAgo, REVIEW_KIND_LABELS, REVIEW_KI
 
 export { REVIEW_KINDS, REVIEW_KIND_LABELS, type ReviewKind }
 
-export async function openReviewItem(opt: { kind: ReviewKind; artworkId?: number | null; tenantId?: number | null; reason: string; refId?: number | null }) {
+export async function openReviewItem(opt: { kind: ReviewKind; artworkId?: number | null; tenantId?: number | null; reason: string; refId?: number | null; reporterUserId?: number | null }) {
   return totalScope('review:open', async () => {
+    // A report in a conversation is one per (conversation, person who reports) while open AND for a day after a
+    // decision — each side keeps its own report, and a rejected one is not refiled at once.
+    if (opt.kind === 'MESSAGE_REPORT') {
+      const since = new Date(Date.now() - 86_400_000)
+      const mine = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null, OR: [{ status: 'OPEN' }, { createdAt: { gte: since } }] }, orderBy: { id: 'desc' } })
+      if (mine) return mine
+      return prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null } })
+    }
     // One open item per (kind, artwork) — per check for duplicates: two lookalikes are two decisions.
     const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN', ...(opt.kind === 'DUPLICATE' && opt.refId != null ? { refId: opt.refId } : {}) } })
     if (existing) return existing

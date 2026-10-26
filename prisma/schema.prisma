@@ -491,7 +491,8 @@ model ReviewQueueItem {
   artworkId       Int?
   tenantId        Int?
   reason          String
-  refId           Int? // DuplicateCheck / MarkerRead id when relevant
+  refId           Int? // DuplicateCheck / MarkerRead id when relevant (MESSAGE_REPORT: the conversation)
+  reporterUserId  Int? // MESSAGE_REPORT: who reported (one report per person and conversation)
   status          String    @default("OPEN") // OPEN | APPROVED | REJECTED
   decidedByUserId Int?
   decidedAt       DateTime?

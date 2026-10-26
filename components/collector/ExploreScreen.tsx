@@ -6,14 +6,14 @@
 // Comprar) and the deck of Descobrir (one card, drag right to like, left to pass; buttons
 // Passar · Salvar · Curtir · Ver obra). Reactions by POST /api/community/reactions.
 import Link from 'next/link'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { ShareSheet } from '@/components/public/ShareSheet'
 import { categoryLabel, formatBRL } from '@/lib/artworks/domain'
 import { installmentCents } from '@/lib/shipping/quote-core'
 import { CommentsSheet, type CommentSubject } from '@/components/community/CommentsSheet'
-import { acceptsOffers, deckCounter, exploreHref, exploreWorkHref, marketLabel, sellerSubOf, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
+import { acceptsOffers, deckCounter, discoverOrder, exploreHref, exploreWorkHref, marketLabel, sellerSubOf, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
 import './explore.css'
 
 const initialsOf = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
@@ -136,9 +136,11 @@ function DiscoverDeck({ items, react, onShare, workHref }: { items: ExploreItem[
   const [drag, setDrag] = useState<number | null>(null)
   const [fly, setFly] = useState<0 | 1 | -1 | 2>(0)
   const start = useRef<number | null>(null)
-  const deck = items.filter((i) => !decided[i.id])
+  const [order] = useState(() => discoverOrder(items).map((i) => i.id))
+  const ordered = useMemo(() => order.map((id) => items.find((i) => i.id === id)).filter((i): i is ExploreItem => !!i), [order, items])
+  const deck = ordered.filter((i) => !decided[i.id])
   const top = deck[0]
-  const total = items.length
+  const total = ordered.length
 
   function decide(kind: 'pass' | 'like' | 'save') {
     if (!top || fly) return

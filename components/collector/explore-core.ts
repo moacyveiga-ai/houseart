@@ -65,6 +65,14 @@ export function deckCounter(index: number, total: number): string {
   return `${Math.min(index + 1, total)} de ${total} · arraste para a direita para curtir`
 }
 
+/** Descobrir (§61 of the handoff): works by artists the viewer already liked come first, stably;
+ *  everything else keeps the marketplace order (the prototype's `descLista`). */
+export function discoverOrder<T extends Pick<ExploreItem, 'artist' | 'liked'>>(items: T[]): T[] {
+  const likedArtists = new Set(items.filter((i) => i.liked).map((i) => i.artist))
+  if (likedArtists.size === 0) return items
+  return [...items.filter((i) => likedArtists.has(i.artist)), ...items.filter((i) => !likedArtists.has(i.artist))]
+}
+
 /** The technical line of the card: technique · dimensions (what the prototype's `ficha` shows). */
 export function sheetLineOf(item: Pick<ExploreItem, 'technique' | 'dimensions'>, fallback: string): string {
   return [item.technique ?? fallback, item.dimensions !== '—' ? item.dimensions : null].filter(Boolean).join(' · ')

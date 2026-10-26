@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import '@/app/ds/public.css'
 import { PublicHeader } from '@/components/public/PublicHeader'
 import { PublicFooter } from '@/components/public/PublicFooter'
+import { publicAccount } from '@/app/e/_shared/public-account'
 import { Verify, type VerifyQuery } from '@/components/public/Verify'
 import { searchCertificates } from '@/lib/certificates/server'
 
@@ -20,7 +21,7 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
   const results = searched ? await searchCertificates(q.modo === 'id' ? { id: q.id } : { artist: q.artista, title: q.titulo, year: q.ano }) : []
   return (
     <div className="hp">
-      <PublicHeader />
+      <PublicHeader account={await publicAccount()} />
       <main><Verify q={q} searched={searched} results={results} /></main>
       <PublicFooter />
     </div>

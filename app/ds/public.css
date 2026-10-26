@@ -65,5 +65,11 @@
 .hp-header--light .hp-nav__link:hover { color: var(--ha-ink-900); }
 .hp-header--light .hp-nav__link--on { color: var(--ha-ink-900); box-shadow: inset 0 -2px 0 var(--ha-ink-900); }
 .hp-header--light .hp-header__verify, .hp-header--light .hp-header__enter { color: var(--ha-ink-900); }
+/* the search box of the light header (catalogue pages): "Obra, artista ou ID" */
+.hp-header__search { flex: 0 1 240px; min-width: 0; display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-sm); color: var(--ha-ink-500); background: var(--ha-paper-50); }
+.hp-header__search:focus-within { border-color: var(--ha-ink-900); }
+.hp-header__search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: var(--ha-text-body-sm); color: var(--ha-ink-900); }
+.hp-header__search input::placeholder { color: var(--ha-ink-500); }
+@media (max-width: 900px) { .hp-header__search { order: 2; flex: 1 1 160px; } }
 .hp-header--light .hp-header__login { border-color: var(--ha-ink-900); color: var(--ha-ink-900); }
 .hp-header--light .hp-header__login:hover { background: var(--ha-paper-100); color: var(--ha-ink-900); }

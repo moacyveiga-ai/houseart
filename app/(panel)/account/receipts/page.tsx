@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { requirePanelPage } from '../../_session'
+import { accountHrefOf } from '@/lib/profiles/nav'
+import { tenantOfScope } from '@/lib/scope/core'
 import { receiptKindLabel, receiptsOf } from '@/lib/accounts/receipts-server'
 import { Icon } from '@/components/ds/Icon'
 import '@/components/gallery/account.css'
@@ -11,12 +13,12 @@ const day = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 
 
 /** Notas e comprovantes (Perfil › Pagamentos): every payment the person made, newest first. */
 export default async function ReceiptsPage() {
-  const { user } = await requirePanelPage('/account/receipts')
-  const rows = await receiptsOf(user.id)
+  const { user, scope, nav } = await requirePanelPage('/account/receipts')
+  const rows = await receiptsOf(user.id, tenantOfScope(scope))
   return (
     <div className="ha-page">
       <div className="ha-account ha-cacct">
-        <div className="ha-cacct__bar"><Link href="/account" className="ha-iconbtn ha-cacct__back" aria-label="Voltar"><Icon name="arrow_back" size={24} /></Link><span className="ha-cacct__bar-t">Notas e comprovantes</span></div>
+        <div className="ha-cacct__bar"><Link href={accountHrefOf(nav)} className="ha-iconbtn ha-cacct__back" aria-label="Voltar"><Icon name="arrow_back" size={24} /></Link><span className="ha-cacct__bar-t">Notas e comprovantes</span></div>
         {rows.length === 0 ? <p className="ha-sm ha-muted">Nenhum pagamento ainda. Compras, serviços e taxas pagos aparecem aqui.</p> : null}
         <div className="ha-receipts">
           {rows.map((r) => {

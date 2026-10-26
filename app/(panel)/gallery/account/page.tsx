@@ -9,6 +9,7 @@ import { galleryAccount } from '@/lib/gallery/account-server'
 import { addressLine, planLine, splitLine } from '@/lib/gallery/account-core'
 import { usageOf } from '@/lib/plans/server'
 import { priceLabel } from '@/lib/plans/core'
+import { ScopeNotApplied } from '@/lib/scope/extension-core'
 import { AccountScreen, type AccountSection } from '@/components/gallery/AccountScreen'
 import '@/components/gallery/account.css'
 
@@ -24,7 +25,8 @@ export default async function GalleryAccountPage() {
     user.memberId ? payoutAccountOf(user.memberId) : null,
     composerInstagram(user.id),
     galleryAccount(user, scope),
-    usageOf(scope).catch(() => null),
+    // the plan line is decoration: a failure zeroes it, but a query without owner is never swallowed
+    usageOf(scope).catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return null }),
   ])
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null
   const members = people.filter((p) => p.kind === 'MEMBER').length

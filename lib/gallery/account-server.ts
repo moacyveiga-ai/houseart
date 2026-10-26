@@ -17,7 +17,7 @@ export interface GalleryAccountView {
   /** the editable fields (public profile); null when the gallery has no public profile row yet */
   data: { email: string; phone: string; city: string; summary: string }
   /** Endereço e horários (read here, edited in /gallery/public). */
-  address: { street: string | null; district: string | null; city: string | null; hours: string | null } | null
+  address: { street: string | null; district: string | null; hours: string | null } | null
   isAdmin: boolean
 }
 
@@ -40,7 +40,7 @@ export async function galleryAccount(user: { id: number; tenantRole: string | nu
     cnpjMask: tenant.galleryProfile?.cnpjMask ?? null,
     verified: { cnpj: !!tenant.galleryProfile?.cnpjHash, email: !!me?.emailVerifiedAt, phone: !!me?.phoneVerifiedAt },
     data: { email: p?.email ?? '', phone: p?.phone ?? '', city: p?.city ?? '', summary: p?.summary ?? '' },
-    address: p ? { street: p.street, district: p.district, city: p.city, hours: p.hours } : null,
+    address: p ? { street: p.street, district: p.district, hours: p.hours } : null,
     isAdmin,
   }
 }

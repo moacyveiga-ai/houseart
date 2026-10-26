@@ -17,12 +17,21 @@ export function SidePanel({ title, closeHref, children, footer, actions }: { tit
     ref.current?.focus({ preventScroll: true })
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
+      // Esc while typing clears the field, never throws away what was typed in the panel
+      const t = e.target as HTMLElement | null
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return
       // a dialog opened from inside the panel closes first
       if (document.querySelector('.ha-scrim')) return
       router.replace(closeHref, { scroll: false })
     }
     window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('keydown', onKey); if (back && document.contains(back)) back.focus({ preventScroll: true }) }
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      // switching rows: focus the row now open (marked aria-current) so the next close comes back to it
+      const current = document.querySelector<HTMLElement>('a[aria-current="true"]')
+      const to = current ?? (back && document.contains(back) ? back : null)
+      to?.focus({ preventScroll: true })
+    }
   }, [closeHref, router, title])
   return (
     <aside ref={ref} className="ha-sidepanel" role="dialog" aria-modal="false" aria-label={title} tabIndex={-1}>

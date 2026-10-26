@@ -27,7 +27,8 @@ export function ArtworkPanel({ a, closeHref, listing, rules, canManage, blockedR
     <>
       {a.status === 'LISTED' && a.publicId ? <Link href={`/e/artwork/${a.publicId}`} className="ha-sd__btn ha-sd__btn--primary"><Icon name="open_in_new" size={20} />Ver página pública</Link> : null}
       {a.status === 'IN_CERTIFICATION' && !a.publicId ? <Link href={`/certification/link/${a.id}`} className="ha-sd__btn ha-sd__btn--primary"><Icon name="contactless" size={20} />Vincular etiqueta</Link> : null}
-      <Link href={`/artworks/${a.id}/edit`} className="ha-sd__btn"><Icon name="edit" size={20} />Editar cadastro</Link>
+      {a.status === 'IN_CERTIFICATION' && a.publicId ? <Link href="/certification" className="ha-sd__btn ha-sd__btn--primary"><Icon name="draw" size={20} />Assinar e emitir o certificado</Link> : null}
+      {['DRAFT', 'IN_CERTIFICATION', 'AUTHENTICATED'].includes(a.status) ? <Link href={`/artworks/${a.id}/edit`} className="ha-sd__btn"><Icon name="edit" size={20} />Editar cadastro</Link> : null}
     </>
   )
   return (

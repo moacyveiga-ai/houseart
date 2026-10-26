@@ -24,7 +24,7 @@ export const metadata = { title: 'Negócios — HouseArt' }
 function financeOf(d: DealView) {
   const finance = saleFinance({ amountCents: d.amountCents, market: d.market, sellerKind: d.sellerKind, artistName: d.artist, split: d.split })
   const mine = d.split.filter((s) => (s.party === 'GALLERY' || s.party === 'ARTIST') && s.payoutLabel)
-  const payoutNote = mine.length ? mine.map((s) => `${s.party === 'GALLERY' ? 'Galeria' : d.sellerKind === 'GALLERY_STAFF' ? d.artist : 'Seu repasse'}: ${s.payoutLabel}`).join(' · ') + '.' : null
+  const payoutNote = mine.length ? mine.map((s) => `${s.party === 'ARTIST' && d.sellerKind !== 'ARTIST' ? d.artist : d.sellerKind === 'GALLERY_STAFF' ? 'Galeria' : 'Seu repasse'}: ${s.payoutLabel}`).join(' · ') + '.' : null
   return { finance: finance.map((l) => ({ label: l.label, cents: l.cents.toString(), sign: l.sign, strong: l.strong })), payoutNote }
 }
 
@@ -78,7 +78,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           // "Vendas até o repasse": compact rows; the sale opens in the side panel (?sale=), the list stays behind.
           <>
             <SaleRows deals={deals.map(serializeDeal)} openId={open1?.id ?? null} hrefOf={(id) => `/sales?tab=deals&sale=${id}`} />
-            {open1 ? <SaleDetail key={open1.id} deal={serializeDeal(open1)} {...financeOf(open1)} canAnswer={can.answerOffers} closeHref="/sales?tab=deals" workHref={desk ? `/artworks?open=${open1.artworkId}` : null} /> : null}
+            {open1 ? <SaleDetail key={open1.id} deal={serializeDeal(open1)} {...financeOf(open1)} canAnswer={can.answerOffers} closeHref="/sales?tab=deals" workHref={desk && open1.phase !== 'COMPLETED' ? `/artworks?open=${open1.artworkId}` : null} /> : null}
           </>
         )
       )}

@@ -42,7 +42,7 @@ export function saleAction(d: { phase: DealPhase; sellerSigned: boolean; excepti
     case 'ESCROW': return d.sellerSigned ? { label: 'Aguardando comprador', tone: 'wait', kind: null } : { label: 'Assinar termo', tone: 'pending', kind: 'sign' }
     case 'DOCUMENTS': return { label: 'Registrar envio', tone: 'pending', kind: 'ship' }
     case 'SHIPPING': return { label: 'Acompanhar', tone: 'wait', kind: null }
-    case 'DELIVERY': case 'TRANSFER': return { label: 'Aguardando comprador', tone: 'wait', kind: null }
+    case 'DELIVERY': case 'TRANSFER': return { label: 'Emitindo escritura', tone: 'wait', kind: null }
     case 'COMPLETED': return { label: 'Concluída', tone: 'done', kind: null }
   }
 }
@@ -64,7 +64,7 @@ export function saleSegments(phase: DealPhase): ('on' | 'done' | 'off')[] {
 /** The vertical steps of the detail: done (green check), current (sand), todo (outlined). */
 export function saleSteps(phase: DealPhase): { stage: SaleStage; state: 'done' | 'on' | 'todo' }[] {
   const s = saleStage(phase)
-  return SALE_STAGES.map((stage, i) => ({ stage, state: s === 5 || i <= s ? 'done' : i === s + 1 ? 'on' : 'todo' }))
+  return SALE_STAGES.map((stage, i) => ({ stage, state: s === 5 || i < s ? 'done' : i === s ? 'on' : 'todo' }))
 }
 
 export interface FinanceLine { label: string; cents: bigint; sign: '' | '−'; strong: boolean }
@@ -83,15 +83,16 @@ export function saleFinance(d: { amountCents: bigint; market: string; sellerKind
   if (platform > 0n) out.push({ label: `Comissão HouseArt · ${pct(platform)}`, cents: platform, sign: '−', strong: false })
   const royalty = d.split.filter((s) => s.party === 'ARTIST_ROYALTY').reduce((a, s) => a + s.amountCents, 0n)
   if (royalty > 0n) out.push({ label: `Direito de sequência · ${d.artistName}`, cents: royalty, sign: '−', strong: false })
-  if (gallerySale) {
-    const artist = d.split.filter((s) => s.party === 'ARTIST').reduce((a, s) => a + s.amountCents, 0n)
-    const gallery = d.split.filter((s) => s.party === 'GALLERY').reduce((a, s) => a + s.amountCents, 0n)
+  const artist = d.split.filter((s) => s.party === 'ARTIST').reduce((a, s) => a + s.amountCents, 0n)
+  if (d.sellerKind === 'ARTIST') {
+    out.push({ label: 'Você recebe', cents: artist, sign: '', strong: true })
+  } else {
+    // a gallery, an advisor or a collector sells: the GALLERY line is the seller's; an ARTIST line is
+    // the consignment share paid to the artist (deducted here)
+    const seller = d.split.filter((s) => s.party === 'GALLERY').reduce((a, s) => a + s.amountCents, 0n)
     const net = d.amountCents - platform - royalty
     if (artist > 0n) out.push({ label: `Repasse a ${d.artistName}${net > 0n ? ` · ${Math.round(Number((artist * 100n) / net))}% do líquido` : ''}`, cents: artist, sign: '−', strong: false })
-    out.push({ label: 'Galeria recebe', cents: gallery, sign: '', strong: true })
-  } else {
-    const mine = d.split.filter((s) => s.party === 'ARTIST' || s.party === 'GALLERY').reduce((a, s) => a + s.amountCents, 0n)
-    out.push({ label: 'Você recebe', cents: mine, sign: '', strong: true })
+    out.push({ label: gallerySale ? 'Galeria recebe' : 'Você recebe', cents: seller, sign: '', strong: true })
   }
   return out
 }

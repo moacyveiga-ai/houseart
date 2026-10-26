@@ -10,7 +10,8 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { Dossier, QueueItem } from '@/lib/appraisal/server'
-import { CANCEL_NOTE_MAX, canIssue, canTake, daysLeft, DESK_STATE_LABELS, dueLabel, isOpen, type Actor, type DeskFilter, type DeskState } from '@/lib/appraisal/desk-core'
+import { CANCEL_NOTE_MAX, canIssue, canTake, daysLeft, DESK_STATE_LABELS, dueLabel, isOpen, rangeRuler, reaisInput, type Actor, type DeskFilter, type DeskState } from '@/lib/appraisal/desk-core'
+import { validRange } from '@/lib/appraisal/estimate-core'
 
 const reais = (cents: string) => String(Math.round(Number(cents) / 100))
 const toCents = (v: string) => Math.round(Number(v.replace(/\D/g, '')) * 100)
@@ -88,7 +89,8 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
     applyRow(dossier.request.id, { status: 'ISSUED', state: 'ISSUED', stateLabel: DESK_STATE_LABELS.ISSUED, overdue: false, issuedCode: data.code ?? null, assignedAppraiserId: actor.userId })
     setToast(`Laudo ${data.code} emitido`)
   }
-  const pct = (v: string) => { const a = Number(min || 0), b = Number(max || 0), x = Number(v || 0); return b > a ? Math.max(0, Math.min(100, Math.round(((x - a) / (b - a)) * 100))) : 50 }
+  const ruler = rangeRuler(Number(min || 0), Number(sug || 0), Number(max || 0))
+  const rangeError = min && sug && max ? validRange({ minCents: BigInt(toCents(min)), suggestedCents: BigInt(toCents(sug)), maxCents: BigInt(toCents(max)) }) : null
   const row = sel ? { id: sel.id, status: sel.status, dueOn: sel.dueOnIso, assignedAppraiserId: sel.assignedAppraiserId } : null
   const mayIssue = row ? canIssue(actor, row) : false
   const mayTake = row ? canTake(actor, row) : false
@@ -107,7 +109,9 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
           {rows.map((q) => (
             <li key={q.id}>
               <Link href={`/appraisals?f=${filter}&pedido=${q.id}`} className="ha-list__row ha-list__btn ha-adesk__row" style={{ borderColor: sel?.id === q.id ? 'var(--ha-ink-900)' : undefined }}>
-                <span className="ha-adesk__main"><b>{q.title}</b><span className="ha-muted ha-sm">{q.who} · prazo {q.dueOn}{isOpen(q.status) ? ` · ${dueLabel(q.dueOnIso, now, q.status)}` : ''}</span><span className="ha-muted ha-sm">{q.assignedName ? <><Icon name="person" /> {q.assignedAppraiserId === actor.userId ? 'você' : q.assignedName}</> : isOpen(q.status) ? 'sem avaliador' : q.issuedCode ?? ''}</span></span>
+                {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
+                <span className="ha-adesk__thumb" aria-hidden>{q.cover ? <img src={q.cover} alt="" /> : null}</span>
+                <span className="ha-adesk__main"><span className="ha-adesk__title"><i>{q.artworkTitle}</i> · {q.artist}</span><span className="ha-muted ha-sm">{q.who} · prazo {q.dueOn}{isOpen(q.status) ? ` · ${dueLabel(q.dueOnIso, now, q.status)}` : ''}</span><span className="ha-muted ha-sm">{q.assignedName ? <><Icon name="person" /> {q.assignedAppraiserId === actor.userId ? 'você' : q.assignedName}</> : isOpen(q.status) ? 'sem avaliador' : q.issuedCode ?? ''}</span></span>
                 <Badge tone={TONE[q.state]}>{q.stateLabel}</Badge>
               </Link>
             </li>
@@ -158,15 +162,23 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
           ) : (
             <fieldset disabled={busy || !mayIssue} className="ha-stack">
               <div className="ha-grid-cards ha-grid-cards--3">
-                <label className="ha-label">Mínimo (R$)<input className="ha-input ha-input--num" inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))} /></label>
-                <label className="ha-label">Sugerido (R$)<input className="ha-input ha-input--num" inputMode="numeric" value={sug} onChange={(e) => setSug(e.target.value.replace(/\D/g, ''))} /></label>
-                <label className="ha-label">Máximo (R$)<input className="ha-input ha-input--num" inputMode="numeric" value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ''))} /></label>
+                <label className="ha-label">Mínimo<ReaisField className="ha-input ha-input--num" value={min} onChange={setMin} /></label>
+                <label className="ha-label">Sugerido<ReaisField className="ha-input ha-input--num ha-adesk__sug" value={sug} onChange={setSug} /></label>
+                <label className="ha-label">Máximo<ReaisField className="ha-input ha-input--num" value={max} onChange={setMax} /></label>
               </div>
-              <div className="ha-progress" aria-hidden><span style={{ width: `${pct(sug)}%` }} /></div>
+              {ruler ? (
+                <div className="ha-adesk__ruler" aria-hidden>
+                  <span className="ha-adesk__ruler-range" style={{ left: `${ruler.left}%`, right: `${ruler.right}%` }} />
+                  {ruler.marker !== null ? <span className="ha-adesk__ruler-mark" style={{ left: `${ruler.marker}%` }} /> : null}
+                </div>
+              ) : null}
+              <p className="ha-adesk__err" aria-live="polite">{rangeError ?? ''}</p>
               {dossier.estimate ? <p className="ha-muted ha-sm">Estimativa de referência com base em {dossier.estimate.count} venda(s) comparável(is). Não é laudo.</p> : null}
               <label className="ha-label">Metodologia<textarea className="ha-input" rows={3} value={method} onChange={(e) => setMethod(e.target.value)} /></label>
-              <div className="ha-callout"><Icon name="qr_code_2" /><div>Laudo assinado · PDF com QR para a página pública{manage && heldByOther ? ` · assinado por você em nome da equipe, não por ${sel.assignedName}` : ''}</div></div>
-              <div className="ha-row ha-row--end"><button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={issue} disabled={busy || !mayIssue}>Assinar e emitir laudo</button></div>
+              <div className="ha-adesk__foot">
+                <span className="ha-muted ha-sm">Laudo assinado · PDF com QR para a página pública{manage && heldByOther ? ` · assinado por você em nome da equipe, não por ${sel.assignedName}` : ''}</span>
+                <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={issue} disabled={busy || !mayIssue || !min || !sug || !max || !!rangeError}>Assinar e emitir laudo</button>
+              </div>
             </fieldset>
           )}
         </section>
@@ -178,5 +190,20 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
       </Modal>
       <Toast message={toast} onDone={() => setToast('')} />
     </div>
+  )
+}
+
+/**
+ * A whole-reais field: while focused it holds the bare digits (the cursor stays
+ * where the person types, backspace removes a digit), on blur it reads "R$ 48.000".
+ * A paste with cents keeps the reais ("R$ 48.000,50" → 48000); past 12 digits the
+ * change is refused instead of cutting the end.
+ */
+function ReaisField({ value, onChange, className }: { value: string; onChange: (digits: string) => void; className: string }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <input className={className} inputMode="numeric" value={focused ? value : reaisInput(value)}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      onChange={(e) => { const d = e.target.value.split(',')[0].replace(/\D/g, '').replace(/^0+/, ''); if (d.length <= 12) onChange(d) }} />
   )
 }

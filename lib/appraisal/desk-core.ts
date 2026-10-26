@@ -92,3 +92,21 @@ export function parseDueDay(raw: unknown, now: Date): string | null {
   if (delta < 0 || delta > MAX_DUE_DAYS) return null
   return raw
 }
+
+/**
+ * The range ruler under the three values (audit web-app §17): a track with the
+ * min–max segment and a marker on the suggested value, as the design draws it.
+ * The track runs 35 % of the span past each end, so the segment sits in the
+ * middle (≈ 21 %–79 %) and a suggestion outside the range still shows where it
+ * fell (clamped to the track). Null while min and max do not make a range.
+ */
+export function rangeRuler(min: number, suggested: number, max: number): { left: number; right: number; marker: number | null } | null {
+  if (!(min > 0) || !(max > min)) return null
+  const pad = (max - min) * 0.35
+  const lo = min - pad, span = max + pad - lo
+  const at = (v: number) => Math.round(Math.max(0, Math.min(100, ((v - lo) / span) * 100)) * 10) / 10
+  return { left: at(min), right: Math.round((100 - at(max)) * 10) / 10, marker: suggested > 0 ? at(suggested) : null }
+}
+
+/** "48000" → "R$ 48.000" for the money inputs (digits in, digits kept in state). */
+export const reaisInput = (digits: string) => (digits ? `R$ ${Number(digits).toLocaleString('pt-BR')}` : '')

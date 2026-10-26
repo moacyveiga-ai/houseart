@@ -3,7 +3,7 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
-import { ARTWORK_CATEGORIES, formatDimensions } from '@/lib/artworks/domain'
+import { ARTWORK_CATEGORIES, formatDimensions, PUBLIC_MEDIA_KINDS } from '@/lib/artworks/domain'
 import { sizeKeyOf, type MarketItem } from './filter-core'
 import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 
@@ -56,7 +56,7 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       include: {
         artist: { select: { id: true, name: true, slug: true, birthYear: true, tenantId: true, profile: { select: { birthPlace: true, livesIn: true, bio: true } } } },
         member: { select: { kind: true, displayName: true, city: true, uf: true, tenantId: true, tenant: { select: { status: true } } } },
-        media: { where: { kind: { in: ['FRONT_COLOR_CARD', 'BACK', 'DETAIL'] } }, orderBy: { sortOrder: 'asc' } },
+        media: { where: { kind: { in: [...PUBLIC_MEDIA_KINDS] } }, orderBy: { sortOrder: 'asc' } },
         historyItems: { orderBy: { sortOrder: 'asc' } },
         mandates: { where: { status: 'ACTIVE' }, select: { fixedPrice: true } },
         certificate: { select: { status: true, issuedAt: true, events: { orderBy: { seq: 'asc' }, select: { kind: true, occurredAt: true } } } },

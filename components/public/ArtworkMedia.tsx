@@ -1,11 +1,12 @@
 'use client'
 // Media of the public artwork page: stage (Obra · Ver em parede), thumbnails
-// (Frente · Verso e etiqueta · Detalhe 1 · Detalhe 2 — the details are the
-// front itself at scale 2.4, as in the prototype) and the lightbox (Esc closes).
+// (Frente · Verso e etiqueta · Detalhe · Assinatura · Na parede — the real photos;
+// `artwork-media-core.ts` decides the strip) and the lightbox (Esc closes).
 import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import type { MediaItem } from './artwork-media-core'
 
-export interface MediaItem { label: string; src: string; view: 'front' | 'back' | 'detail'; origin?: string }
+export type { MediaItem } from './artwork-media-core'
 
 interface WallScale { heightMm: number; widthMm: number; dimensions: string }
 
@@ -38,7 +39,7 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
             <div className="hp-artwork__wall-floor" />
             <div className="hp-artwork__wall-work" style={{ height: `${wallHeightPct}%`, aspectRatio: `${wall.widthMm} / ${wall.heightMm}` }}>
               {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
-              <img src={items[0].src} alt="" />
+              <img src={(items.find((m) => m.view === 'front') ?? items[0]).src} alt="" />
             </div>
             <div className="hp-artwork__wall-sofa" />
             <div className="hp-artwork__wall-leg hp-artwork__wall-leg--l" />

@@ -132,6 +132,8 @@ export const MEDIA_SLOTS: MediaSlot[] = [
   { kind: 'IN_SITU', name: 'Na parede', hint: 'Ajuda o comprador a entender a escala. Inclua um móvel ou a porta.', icon: 'chair', required: false },
 ]
 export const REQUIRED_MEDIA_SLOTS = MEDIA_SLOTS.filter((s) => s.required)
+/** The kinds the PUBLIC artwork page shows, in the order of its strip (the macros stay with the certificate). */
+export const PUBLIC_MEDIA_KINDS = ['FRONT_COLOR_CARD', 'BACK', 'DETAIL', 'SIGNATURE', 'IN_SITU'] as const
 export const CAPTURE_TIPS: { icon: string; text: string }[] = [
   { icon: 'wb_sunny', text: 'Luz natural indireta, perto de uma janela. Evite sol direto e flash.' },
   { icon: 'straighten', text: 'Celular paralelo à obra, na altura do centro dela.' },

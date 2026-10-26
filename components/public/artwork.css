@@ -15,7 +15,7 @@
 .hp-artwork__view:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
 .hp-artwork__view img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
 .hp-artwork__view--front img { box-shadow: var(--ha-shadow-wall); }
-.hp-artwork__view--back img { box-shadow: var(--ha-shadow-sm); }
+.hp-artwork__view--back img, .hp-artwork__view--photo img { box-shadow: var(--ha-shadow-sm); }
 .hp-artwork__view--detail { padding: 0; overflow: hidden; }
 .hp-artwork__view--detail img { max-width: 100%; max-height: 100%; }
 @media (max-width: 720px) { .hp-artwork__stage { height: 68vw; min-height: 320px; } .hp-artwork__view { padding: var(--ha-space-6); } }

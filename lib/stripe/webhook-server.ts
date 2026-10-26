@@ -10,6 +10,7 @@
 // secret: STRIPE_CONNECT_WEBHOOK_SECRET; the same URL serves both) and
 // `transfer.reversed` (a platform event, the normal endpoint) — connect-server.ts.
 import 'server-only'
+import { recordWebhookFailure } from '@/lib/job-runs/server'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { isHandledEvent, nextGuaranteeStatus, nextOrderStatus, stripeModeOf, verifyStripeSignature, type HandledEvent } from './mode-core'
@@ -64,7 +65,9 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
     }))
   } catch (e) {
     if ((e as { code?: string })?.code === 'P2002') return { status: 200, body: { ok: true, duplicate: true } }
-    console.error('[stripe] webhook falhou', type, (e as { code?: string })?.code ?? (e as Error)?.name)
+    const code = (e as { code?: string })?.code ?? (e as Error)?.name ?? 'unknown'
+    console.error('[stripe] webhook falhou', type, code)
+    await recordWebhookFailure(`stripe:${type}`, String(code))
     return { status: 500, body: { ok: false, error: 'Falha ao processar.' } }
   }
   return { status: 200, body: { ok: true } }
@@ -86,7 +89,9 @@ async function connectEvent(id: string, type: 'account.updated' | 'transfer.reve
     })
   } catch (e) {
     if ((e as { code?: string })?.code === 'P2002') return { status: 200, body: { ok: true, duplicate: true } }
-    console.error('[stripe] webhook falhou', type, (e as { code?: string })?.code ?? (e as Error)?.name)
+    const code = (e as { code?: string })?.code ?? (e as Error)?.name ?? 'unknown'
+    console.error('[stripe] webhook falhou', type, code)
+    await recordWebhookFailure(`stripe:${type}`, String(code))
     return { status: 500, body: { ok: false, error: 'Falha ao processar.' } }
   }
   return { status: 200, body: { ok: true } }

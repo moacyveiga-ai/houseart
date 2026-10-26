@@ -9,7 +9,8 @@ export const REACTION_TARGETS = ['POST', 'NEWS', 'EVENT', 'COMMENT', 'MEMBER', '
 export type ReactionTarget = (typeof REACTION_TARGETS)[number]
 export const REACTION_KINDS = ['LIKE', 'SAVE', 'RSVP', 'FOLLOW'] as const
 export type ReactionKind = (typeof REACTION_KINDS)[number]
-export const COMMENT_TARGETS = ['POST', 'NEWS'] as const
+export const COMMENT_TARGETS = ['POST', 'NEWS', 'ARTWORK'] as const
+export const isCommentTarget = (v: unknown): v is CommentTarget => typeof v === 'string' && (COMMENT_TARGETS as readonly string[]).includes(v)
 export type CommentTarget = (typeof COMMENT_TARGETS)[number]
 
 export const POST_BODY_MAX = 1500

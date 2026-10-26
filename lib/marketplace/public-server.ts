@@ -113,14 +113,17 @@ export async function marketItems(take = 500): Promise<MarketItem[]> {
   return totalScope('marketplace:items', async () => {
     const rows = await prisma.artwork.findMany({
       where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null },
-      select: { publicId: true, title: true, year: true, category: true, technique: true, heightMm: true, widthMm: true, depthMm: true, listPriceCents: true, saleMode: true, market: true, updatedAt: true, artist: { select: { name: true, slug: true } }, member: { select: { displayName: true, kind: true, uf: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
+      select: { publicId: true, title: true, year: true, category: true, technique: true, heightMm: true, widthMm: true, depthMm: true, listPriceCents: true, saleMode: true, market: true, updatedAt: true, artist: { select: { name: true, slug: true } }, member: { select: { displayName: true, kind: true, uf: true, city: true, tenantId: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
       orderBy: { updatedAt: 'desc' }, take,
     })
+    const galleryTenants = [...new Set(rows.filter((r) => r.member.kind === 'GALLERY_STAFF').map((r) => r.member.tenantId))]
+    const slugs = new Map((galleryTenants.length ? await prisma.galleryPublicProfile.findMany({ where: { tenantId: { in: galleryTenants } }, select: { tenantId: true, slug: true } }) : []).map((g) => [g.tenantId, g.slug]))
     return rows.map((r) => ({
       publicId: r.publicId!, artist: r.artist.name, artistSlug: r.artist.slug, title: r.title, year: r.year, category: r.category, technique: r.technique, dimensions: formatDimensions(r), sizeKey: sizeKeyOf(r.heightMm, r.widthMm),
       priceCents: r.saleMode === 'ON_REQUEST' ? null : r.listPriceCents, saleMode: r.saleMode,
       seller: r.member.kind === 'GALLERY_STAFF' ? r.member.displayName : 'Colecionador particular', sellerKind: r.member.kind === 'GALLERY_STAFF' ? 'GALLERY' : 'PRIVATE',
       market: r.market === 'PRIMARY' || r.market === 'SECONDARY' ? r.market : null, uf: r.member.uf, cover: r.media[0]?.publicUrl ?? null, updatedAt: r.updatedAt.getTime(),
+      city: r.member.city, sellerSlug: r.member.kind === 'GALLERY_STAFF' ? slugs.get(r.member.tenantId) ?? null : null,
     }))
   })
 }

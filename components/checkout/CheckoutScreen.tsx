@@ -21,15 +21,15 @@ export interface CheckoutArtwork {
   seller: { name: string; kind: 'GALLERY' | 'PRIVATE'; city: string | null; uf: string | null }
 }
 
-interface Props { artwork: CheckoutArtwork; buyerName: string }
+interface Props { artwork: CheckoutArtwork; buyerName: string; /** the CEP of the buyer's default delivery address (Perfil › Endereços) */ defaultCep?: string | null }
 
 type Quote = { cep: string; shippingCents: number; insuranceCents: number }
 const brl = (c: number) => formatBRL(c)
 
-export function CheckoutScreen({ artwork, buyerName }: Props) {
+export function CheckoutScreen({ artwork, buyerName, defaultCep = null }: Props) {
   const price = Number(artwork.priceCents)
   const [delivery, setDelivery] = useState<DeliveryMode>('CARRIER')
-  const [cep, setCep] = useState('')
+  const [cep, setCep] = useState(defaultCep ? maskCep(defaultCep) : '')
   const [quote, setQuote] = useState<Quote | null>(null)
   const [insurance, setInsurance] = useState(true)
   const [cards, setCards] = useState<PaymentMethodView[] | null>(null)

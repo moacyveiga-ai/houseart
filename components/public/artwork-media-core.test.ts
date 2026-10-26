@@ -11,6 +11,7 @@ describe('mediaItemsOf', () => {
     expect(items.map((i) => i.label)).toEqual(['Frente', 'Verso e etiqueta', 'Detalhe 1', 'Detalhe 2'])
     expect(items[2]).toMatchObject({ src: 'f', view: 'detail', origin: '30% 25%' })
     expect(mediaItemsOf([{ kind: 'FRONT_COLOR_CARD', url: 'f' }, { kind: 'DETAIL', url: 'd' }]).map((i) => i.label)).toEqual(['Frente', 'Detalhe'])
+    expect(mediaItemsOf([{ kind: 'FRONT_COLOR_CARD', url: 'f' }, { kind: 'SIGNATURE', url: 's' }]).map((i) => i.label)).toEqual(['Frente', 'Assinatura'])
     expect(mediaItemsOf([{ kind: 'BACK', url: 'b' }]).map((i) => i.label)).toEqual(['Verso e etiqueta'])
     expect(mediaItemsOf([])).toEqual([])
   })

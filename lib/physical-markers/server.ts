@@ -186,20 +186,24 @@ export async function recordPublicRead(publicId: string, sun: { uid?: string; ct
     const marker = await prisma.physicalMarker.findUnique({ where: { uid: sun.uid.toLowerCase() } })
     const artwork = marker?.artworkId ? await prisma.artwork.findUnique({ where: { id: marker.artworkId }, select: { publicId: true, id: true, tenantId: true } }) : null
     if (!marker || !artwork || artwork.publicId !== publicId) return { authenticated: false, tamper: false, reason: 'MARKER_MISMATCH' }
-    let verdict: SunVerdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter })
+    const initial: SunVerdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter })
     // The counter is consumed by compare-and-swap, as in `verifyBuyerTap`: two requests
     // carrying the same ctr (a double load, a link opened twice at once) never both pass —
-    // the one that loses the swap is a replay.
-    if (verdict.ok) {
-      const consumed = await prisma.physicalMarker.updateMany({ where: { id: marker.id, readCounter: { lt: sun.ctr ?? -1 } }, data: { readCounter: sun.ctr, lastReadAt: new Date() } })
-      if (consumed.count !== 1) verdict = { ok: false, reason: 'REPLAY' }
-    }
-    const tamper = tamperOf(!!sun.tt, verdict)
-    await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: verdict.ok, tamperFlag: tamper, ipHash, purpose } })
-    if (tamper && marker.status === 'LINKED') {
-      await prisma.physicalMarker.update({ where: { id: marker.id }, data: { status: 'REMOVED' } })
-      await openReviewItem({ kind: 'MARKER_REMOVED', artworkId: artwork.id, tenantId: artwork.tenantId, reason: 'Leitura indicou violação do chip' })
-    }
+    // the one that loses the swap is a replay. Consuming, recording the read and taking the
+    // marker out of LINKED go in one transaction: a failure never spends the counter without
+    // the read (and its tamper signal) on record.
+    const { verdict, tamper, removed } = await prisma.$transaction(async (tx) => {
+      let v = initial
+      if (v.ok) {
+        const consumed = await tx.physicalMarker.updateMany({ where: { id: marker.id, readCounter: { lt: sun.ctr ?? -1 } }, data: { readCounter: sun.ctr, lastReadAt: new Date() } })
+        if (consumed.count !== 1) v = { ok: false, reason: 'REPLAY' }
+      }
+      const t = tamperOf(!!sun.tt, v)
+      await tx.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: v.ok, tamperFlag: t, ipHash, purpose } })
+      const r = t ? (await tx.physicalMarker.updateMany({ where: { id: marker.id, status: 'LINKED' }, data: { status: 'REMOVED' } })).count === 1 : false
+      return { verdict: v, tamper: t, removed: r }
+    })
+    if (removed) await openReviewItem({ kind: 'MARKER_REMOVED', artworkId: artwork.id, tenantId: artwork.tenantId, reason: 'Leitura indicou violação do chip' })
     return { authenticated: verdict.ok, tamper, reason: verdict.ok ? undefined : verdict.reason }
   })
 }

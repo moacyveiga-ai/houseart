@@ -9,7 +9,7 @@ import { listingsOf } from '@/lib/gallery/listing-server'
 import { InventoryList } from '@/components/gallery/InventoryList'
 import { chipCounts, chipKey, filterInventory, type InventoryItem } from '@/components/gallery/inventory-core'
 
-export const metadata = { title: 'Minhas obras — HouseArt' }
+export const metadata = { title: 'Obras — HouseArt' }
 
 /** "Acervo" of the gallery: the whole inventory loaded once, chips and search applied here (listArtworks has no q). */
 async function GalleryInventory({ scope, chip, q }: { scope: Parameters<typeof listArtworks>[0]; chip: string; q: string }) {

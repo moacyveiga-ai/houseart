@@ -3,6 +3,7 @@ import { negotiatorOf, sellerOffers } from '@/lib/offers/server'
 import { negotiatorLabel } from '@/lib/offers/mandate-core'
 import { Tabs } from '@/components/ds/Tabs'
 import { OffersTable } from '@/components/offers/OffersTable'
+import { OfferCards } from '@/components/offers/OfferCards'
 import { sellerDeals } from '@/lib/deals/server'
 import { DealTimeline } from '@/components/deals/DealTimeline'
 import { serializeDeal } from '@/components/deals/deal-view'
@@ -12,7 +13,7 @@ import { Icon } from '@/components/ds/Icon'
 import { galleryRoleOf } from '@/lib/offers/seller-role-server'
 import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
 
-export const metadata = { title: 'Vendas e ofertas — HouseArt' }
+export const metadata = { title: 'Negócios — HouseArt' }
 
 export default async function SalesPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { scope, user, nav } = await requirePanelPage('/sales')
@@ -35,11 +36,21 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   // The gallery team role: Acervo does not answer proposals, only Admin changes the rules (the API refuses the rest).
   const can = sellerPermissions(await galleryRoleOf(scope))
   const live = flagOn('FLAG_DEALS') ? (await sellerDeals(scope)).filter((d) => d.phase !== 'COMPLETED').length : offers.filter((o) => o.status === 'ACCEPTED' || o.status === 'IN_DEAL').length
+  // The gallery desk and the collector use the prototype's offer cards (Web Galeria › Negócios; App Colecionador › Vendas).
+  const desk = nav === 'gallery' || nav === 'advisor'
+  const cards = desk || collector
+  const negotiatorLine = mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'
   return (
     <div className="ha-page">
-      <div className="ha-page__head"><h1 className="ha-h1">{collector ? 'Vendas' : 'Vendas e ofertas'}</h1></div>
-      <Tabs active={tab} items={[{ key: 'offers', label: 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
-      {tab === 'offers' ? (
+      <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : collector ? 'Vendas' : 'Vendas e ofertas'}</h1></div>
+      <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
+      {tab === 'offers' && cards ? (
+        <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} offers={offers.map((o) => ({
+          id: o.id, code: o.code, artworkId: o.artworkId, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),
+          status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, buyerFirstName: o.buyerFirstName, buyerInitials: o.buyerInitials, buyerUserId: o.buyerUserId,
+          expiresIn: o.expiresIn, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null, pctOfPrice: o.pctOfPrice, buyerMessage: o.buyerMessage,
+        }))} />
+      ) : tab === 'offers' ? (
         <OffersTable canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={mandate ? negotiatorLabel(mandate) : 'Negociador automático: nenhuma obra listada.'} offers={offers.map((o) => ({
           id: o.id, code: o.code, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),
           status: o.status, statusLabel: o.statusLabel, buyer: o.buyer, expiresIn: o.expiresIn, differenceLabel: o.differenceLabel, open: o.open, lastAuthor: o.rounds[o.rounds.length - 1]?.author ?? null,

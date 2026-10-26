@@ -4,8 +4,7 @@ import { activeNavKey, homeOf, NAV } from './nav'
 describe('NAV per profile (from the design)', () => {
   it('keeps the item count of the design', () => {
     expect(NAV.artist.map((i) => i.label)).toEqual(['Início', 'Minhas obras', 'Nova obra', 'Certificação', 'Vendas e ofertas', 'Pix para receber', 'Mensagens', 'Comunidade', 'Direito de sequência', 'Cobrança'])
-    expect(NAV.gallery).toHaveLength(14)
-    expect(NAV.gallery.slice(11).map((i) => i.href)).toEqual(['/gallery/team', '/gallery/artists', '/gallery/account'])
+    expect(NAV.gallery.map((i) => i.label)).toEqual(['Acervo', 'Negócios', 'Comunidade', 'Mensagens', 'Galeria'])
     expect(NAV.collector).toHaveLength(11)
     expect(NAV.collector.slice(3, 5).map((i) => i.href)).toEqual(['/purchases', '/sales'])
     expect(NAV.collector[0].href).toBe('/explore')
@@ -15,6 +14,16 @@ describe('NAV per profile (from the design)', () => {
     expect(NAV.admin).toHaveLength(4)
     expect(NAV.admin.map((i) => i.href)).toContain('/admin/content')
     expect(NAV.advisor).toBe(NAV.gallery)
+  })
+  it('the gallery desk: painel do dia is home, inner screens light "Galeria", payout beats Negócios', () => {
+    expect(homeOf('gallery')).toBe('/')
+    expect(homeOf('advisor')).toBe('/')
+    expect(activeNavKey('gallery', '/')).toBe('home')
+    expect(activeNavKey('gallery', '/gallery/team')).toBe('home')
+    expect(activeNavKey('gallery', '/billing')).toBe('home')
+    expect(activeNavKey('gallery', '/sales/payout')).toBe('home')
+    expect(activeNavKey('gallery', '/sales/rules')).toBe('sales')
+    expect(activeNavKey('gallery', '/artworks/new')).toBe('artworks')
   })
   it('homeOf and activeNavKey', () => {
     expect(homeOf('collector')).toBe('/explore')
@@ -30,8 +39,8 @@ describe('NAV per profile (from the design)', () => {
     expect(activeNavKey('collector', '/sales')).toBe('sales')
     expect(activeNavKey('artist', '/sales/payout')).toBe('payout')
     expect(activeNavKey('artist', '/sales')).toBe('sales')
-    expect(activeNavKey('gallery', '/gallery/team')).toBe('team')
-    expect(activeNavKey('gallery', '/gallery/account')).toBe('account')
+    expect(activeNavKey('gallery', '/gallery/team')).toBe('home')
+    expect(activeNavKey('gallery', '/gallery/account')).toBe('home')
     expect(activeNavKey('gallery', '/sales/rules')).toBe('sales')
     expect(activeNavKey('collector', '/messages/12')).toBe('messages')
     expect(activeNavKey('artist', '/community')).toBe('community')

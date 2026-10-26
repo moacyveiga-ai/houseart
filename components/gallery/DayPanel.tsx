@@ -16,6 +16,11 @@ export function DayPanel({ data, who, top }: { data: DayPanelData; who: { initia
       <div className="ha-dp__head">
         <span className="ha-dp__avatar" aria-hidden="true">{who.initials}</span>
         <span className="ha-dp__who"><span className="ha-dp__date">{who.dateLabel}</span><h1 className="ha-dp__name">{who.name}</h1></span>
+        <span className="ha-dp__tools">
+          <Link href="/search" className="ha-btn ha-btn--ghost ha-btn--xs" aria-label="Buscar"><Icon name="search" /></Link>
+          <Link href="/notifications" className="ha-btn ha-btn--ghost ha-btn--xs" aria-label="Avisos"><Icon name="notifications" /></Link>
+          <Link href="/gallery/account" className="ha-btn ha-btn--ghost ha-btn--xs" aria-label="Conta da galeria"><Icon name="settings" /></Link>
+        </span>
       </div>
       <div className="ha-dp__kpis">
         {data.kpis.map((k) => (
@@ -52,6 +57,8 @@ export function DayPanel({ data, who, top }: { data: DayPanelData; who: { initia
       </section>
       <div className="ha-dp__shortcuts">
         <Link href="/artworks/new" className="ha-dp__shortcut"><Icon name="add_photo_alternate" size={22} />Nova obra</Link>
+        <Link href="/community" className="ha-dp__shortcut"><Icon name="edit_square" size={22} />Publicar post</Link>
+        <Link href="/community?tab=events" className="ha-dp__shortcut"><Icon name="event" size={22} />Criar evento</Link>
         <Link href="/e/marketplace" className="ha-dp__shortcut"><Icon name="storefront" size={22} />Ver marketplace</Link>
       </div>
     </div>

@@ -26,6 +26,13 @@ export default async function GalleryAccountPage() {
       { icon: 'palette', name: 'Artistas representados', sub: `${plural(artists.length, 'artista', 'artistas')} · ${plural(artists.filter((a) => a.contract).length, 'contrato ativo', 'contratos ativos')}`, href: '/gallery/artists' },
       { icon: 'public', name: 'Perfil público', sub: 'Página da galeria no site: sobre, endereço, equipe, fotos e publicações', href: '/gallery/public' },
     ] },
+    // the desk screens that left the menu (audit 2026-10-25: five entries, as in Web Galeria)
+    { name: 'Operação', items: [
+      { icon: 'verified', name: 'Certificação', sub: 'Etiquetas, assinatura e emissão dos certificados', href: '/certification' },
+      { icon: 'rule', name: 'Regras de ofertas', sub: 'Recusa automática, avisos e prazo de resposta', href: '/sales/rules' },
+      { icon: 'view_kanban', name: 'Colecionadores', sub: 'Interessados e conversas em andamento', href: '/crm' },
+      { icon: 'autorenew', name: 'Direito de sequência', sub: 'Repasses aos artistas nas revendas', href: '/royalty' },
+    ] },
     { name: 'Recebimentos', items: [
       { icon: 'account_balance', name: 'Pix para repasses', sub: payout ? `${PIX_KEY_TYPE_LABELS[payout.pixKeyType as PixKeyType] ?? payout.pixKeyType} · ${payout.pixKeyMask}` : 'Não cadastrado', href: '/sales/payout' },
     ] },

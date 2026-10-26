@@ -9,6 +9,12 @@ export interface OfferRow {
   offeredCents: bigint; currentCents: bigint; status: OfferStatus; statusLabel: string; buyer: string; expiresIn: string; differenceLabel: string
   open: boolean; rounds: { number: number; author: string; amountCents: bigint; message: string | null; at: string }[]
   createdAt: string
+  /** the buyer for the offer card (gallery and collector desks): first name, initials, whether the account is verified */
+  buyerFirstName: string; buyerInitials: string; buyerUserId: number | null; buyerVerified: boolean
+  /** share of the asking price, integer % (null without a price) */
+  pctOfPrice: number | null
+  /** the buyer's own words: the message of the last buyer round */
+  buyerMessage: string | null
 }
 
 type Row = {
@@ -33,6 +39,11 @@ export function toSellerRow(o: Row, now: Date): OfferRow {
     open: status === 'RECEIVED' || status === 'BELOW_RESERVE' || status === 'NEGOTIATING',
     rounds: o.rounds.map((r) => ({ number: r.number, author: r.author, amountCents: r.amountCents, message: r.message, at: r.createdAt.toISOString() })),
     createdAt: o.createdAt.toISOString(),
+    buyerFirstName: o.buyerName.trim().split(/\s+/)[0] ?? o.buyerName,
+    buyerInitials: o.buyerName.trim().split(/\s+/).filter(Boolean).map((w, i, a) => (i === 0 || i === a.length - 1 ? w[0] : '')).join('').toUpperCase().slice(0, 2),
+    buyerUserId: o.buyerUserId, buyerVerified: !!o.buyerUserId,
+    pctOfPrice: o.artwork.listPriceCents && o.artwork.listPriceCents > 0n ? Number((currentCents * 100n) / o.artwork.listPriceCents) : null,
+    buyerMessage: [...o.rounds].reverse().find((r) => r.author === 'BUYER' && r.message)?.message ?? null,
   }
 }
 

@@ -10,7 +10,8 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams
   const back = (q: string) => NextResponse.redirect(`${publicBaseUrl()}/instagram?ig=${q}`)
   const u = await getSession()
-  if (!u) return NextResponse.redirect(`${publicBaseUrl()}/login?next=/instagram`)
+  // without a session the middleware already answers 401 to /api/*; same here (the route guard)
+  if (!u) return NextResponse.json({ ok: false, error: 'Não autenticado' }, { status: 401 })
   if (sp.get('error')) return back('cancelado')
   const r = await completeConnect(u.id, sp.get('code'), sp.get('state'))
   return back(r.ok ? 'conectado' : r.error)

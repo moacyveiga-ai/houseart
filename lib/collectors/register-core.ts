@@ -7,6 +7,8 @@ import type { ArtworkCategory } from '@/lib/artworks/domain'
 
 export type { ArtworkCategory }
 
+export interface RegisterStep { key: 'origin' | 'artist' | 'photos' | 'sheet' | 'review'; title: string; lead: string }
+
 export const REGISTER_STEPS = [
   { key: 'origin', title: 'Como a obra chegou até você?', lead: 'Isso define quais documentos e serviços fazem sentido para ela.' },
   { key: 'artist', title: 'Quem é o artista?', lead: 'Busque pelo nome. Se não estiver na lista, escreva o nome como aparece na assinatura.' },

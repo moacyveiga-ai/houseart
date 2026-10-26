@@ -9,6 +9,8 @@ import { changeListPrice, listingOf, recordView, setAcceptsOffers, setPaused } f
 import { dayPanel } from '@/lib/gallery/panel-server'
 import { galleryAccount } from '@/lib/gallery/account-server'
 import { PATCH as accountPatch } from '@/app/api/gallery/account/route'
+import { POST as registerPost } from '@/app/api/gallery/artworks/route'
+import { galleryRegisterDraft } from '@/lib/gallery/register-server'
 import { listPublicArtworks } from '@/lib/marketplace/public-server'
 import { hashPassword } from '@/lib/auth'
 import { createScenario, type Scenario } from './fixtures'
@@ -184,6 +186,44 @@ describe('gallery account data', () => {
     await signIn(sales.id, 'GALLERY')
     const denied = await accountPatch(new Request('http://t/api/gallery/account', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city: 'Rio' }) }))
     expect(denied.status).toBe(403)
+    signOut()
+  }, 60_000)
+})
+
+describe('gallery register (Cadastrar obra)', () => {
+  const post = (body: unknown) => registerPost(new Request('http://t/api/gallery/artworks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }))
+  it('the draft is born with the origin and the artist; resumes; refuses what is not the gallery\'s', async () => {
+    await signIn(s.a1.userId, 'GALLERY')
+    expect((await post({ sourceKind: 'HERANCA', artistName: 'X' })).status).toBe(422)
+    expect((await post({ sourceKind: 'CONSIGNMENT' })).status).toBe(422)
+    // a represented artist of the gallery, by id
+    const tomas = await prisma.artist.findFirstOrThrow({ where: { slug: 'tomas-rezende' } })
+    const r1 = await post({ sourceKind: 'CONSIGNMENT', artistId: tomas.id })
+    expect(r1.status).toBe(201)
+    const b1 = (await r1.json()) as { id: number; href: string }
+    expect(b1.href).toBe(`/artworks/register?draft=${b1.id}`)
+    expect(await prisma.artwork.findUnique({ where: { id: b1.id }, select: { status: true, acquisitionKind: true, artistId: true } })).toEqual({ status: 'DRAFT', acquisitionKind: 'CONSIGNMENT', artistId: tomas.id })
+    // a name that is nowhere: an artist of the tenant without a contract
+    const r2 = await post({ sourceKind: 'OWN_STOCK', artistName: 'Bia Cordeiro' })
+    expect(r2.status).toBe(201)
+    const b2 = (await r2.json()) as { id: number }
+    const bia = await prisma.artist.findFirstOrThrow({ where: { name: 'Bia Cordeiro' }, select: { id: true, tenantId: true, memberId: true } })
+    expect(bia).toMatchObject({ tenantId: s.galleryTenantId, memberId: null })
+    expect(await prisma.artistContract.count({ where: { artistId: bia.id } })).toBe(0)
+    // an artist of another tenant with no public account is out of reach
+    const alien = await prisma.artist.create({ data: { tenantId: s.b.tenantId, name: 'Alheio', slug: 'alheio' } })
+    expect((await post({ sourceKind: 'OTHER', artistId: alien.id })).status).toBe(404)
+    signOut()
+    await asPanel(s.a1.userId, async ({ scope }) => {
+      const d = await galleryRegisterDraft(scope, b2.id)
+      expect(d).toMatchObject({ id: b2.id, acquisitionKind: 'OWN_STOCK', artistName: 'Bia Cordeiro', title: '', completed: false })
+      // the scenario's own draft was not born here (no origin): not a register draft
+      expect(await galleryRegisterDraft(scope, s.a1.artworkId)).toBeNull()
+    })
+    // a collector's door is /wallet/register: the gallery route refuses
+    const collector = await prisma.user.create({ data: { email: 'col@teste.test', name: 'Col', profile: 'collector', active: true, profiles: { create: { kind: 'COLLECTOR', isDefault: true } } } })
+    await signIn(collector.id, 'COLLECTOR')
+    expect((await post({ sourceKind: 'OTHER', artistName: 'Qualquer' })).status).toBe(403)
     signOut()
   }, 60_000)
 })

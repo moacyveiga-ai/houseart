@@ -1,0 +1,43 @@
+/* Instagram (handoff Web Galeria › Instagram). The gradient is Instagram's own mark, not a HouseArt colour. */
+.ha-ig { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 32px; }
+.ha-ig__bar { display: flex; align-items: center; gap: 8px; }
+.ha-ig__back { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--ha-ink-900); border-radius: var(--ha-radius-full); }
+.ha-ig__back:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); }
+.ha-ig__title { margin: 0; font-size: 16px; font-weight: 600; color: var(--ha-ink-900); }
+.ha-ig__hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 16px 8px 4px; }
+.ha-ig__mark { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: var(--ha-paper-50); background: var(--ha-ig-gradient); }
+.ha-ig__mark--sm { width: 44px; height: 44px; border-radius: 12px; flex: none; }
+.ha-ig__lead { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: 24px; line-height: 32px; color: var(--ha-ink-900); text-wrap: balance; }
+.ha-ig__text { margin: 0; font-size: var(--ha-text-body); line-height: 21px; color: var(--ha-ink-500); }
+.ha-ig__benefits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ha-ig__benefits li { display: flex; gap: 10px; align-items: flex-start; font-size: var(--ha-text-body); line-height: 20px; color: var(--ha-ink-700); }
+.ha-ig__connect { height: 50px; border: 0; border-radius: var(--ha-radius-md); background: var(--ha-ig-gradient); color: var(--ha-paper-50); font-weight: 600; font-size: var(--ha-text-body); font-family: inherit; cursor: pointer; }
+.ha-ig__connect:disabled { background: var(--ha-paper-200); color: var(--ha-ink-500); cursor: default; }
+.ha-ig__connect:focus-visible, .ha-ig__disconnect:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-ig__fine { margin: 0; font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-ink-500); text-align: center; }
+.ha-ig__account { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-ig__who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ha-ig__handle { font-weight: 600; color: var(--ha-ink-900); }
+.ha-ig__meta { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-ig__ok { display: inline-flex; align-items: center; gap: 4px; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-verified-500); }
+.ha-ig__warn { margin: 0; padding: 10px 12px; border-radius: var(--ha-radius-md); background: var(--ha-alert-100); font-size: var(--ha-text-caption); color: var(--ha-ink-900); }
+.ha-ig__card { display: flex; flex-direction: column; gap: 4px; padding: 4px 12px; border: 1px solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-ig__pref { display: flex; align-items: center; gap: 12px; min-height: 60px; border-bottom: 1px solid var(--ha-paper-200); }
+.ha-ig__pref:last-child { border-bottom: 0; }
+.ha-ig__pref-text { flex: 1; display: flex; flex-direction: column; }
+.ha-ig__pref-name { font-size: var(--ha-text-body); font-weight: 600; color: var(--ha-ink-900); }
+.ha-ig__pref-sub { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-ig__section { padding-top: 10px; font-size: var(--ha-text-body); font-weight: 600; color: var(--ha-ink-900); }
+.ha-ig__empty { padding: 8px 0 12px; font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-ig__post { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--ha-paper-200); }
+.ha-ig__post:last-child { border-bottom: 0; }
+.ha-ig__thumb { width: 52px; height: 52px; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: 6px; color: var(--ha-ink-500); }
+.ha-ig__thumb img { max-width: 100%; max-height: 100%; display: block; }
+.ha-ig__post-text { display: flex; flex-direction: column; min-width: 0; }
+.ha-ig__post-title { font-size: var(--ha-text-body); color: var(--ha-ink-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-ig__post-stats { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-ig__post-stats--bad { color: var(--ha-alert-500); }
+.ha-ig__soon { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: var(--ha-radius-md); background: var(--ha-sand-100); }
+.ha-ig__soon-title { display: flex; align-items: center; gap: 6px; font-size: var(--ha-text-body); font-weight: 600; color: var(--ha-ink-900); }
+.ha-ig__soon-text { font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-ink-700); }
+.ha-ig__disconnect { height: 44px; border: 1px solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: none; color: var(--ha-alert-500); font-weight: 600; font-size: var(--ha-text-body); font-family: inherit; cursor: pointer; }

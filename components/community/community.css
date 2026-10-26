@@ -124,3 +124,20 @@
 .ha-cm-new__publish--ready:hover { background: var(--ha-sand-600); }
 .ha-cm-new__publish:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 @media (max-width: 480px) { .ha-cm-new__row { grid-template-columns: 1fr; } .ha-cm-photo__wall { padding: var(--ha-space-5); } }
+
+/* "Publicar também no Instagram" (handoff Web Galeria › Novo post) */
+.ha-cm-ig { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-cm-ig__switch { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; color: var(--ha-ink-900); font-family: inherit; }
+.ha-cm-ig__switch:disabled { cursor: default; }
+.ha-cm-ig__switch:disabled .ha-toggle { opacity: .5; }
+.ha-cm-ig__switch:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; border-radius: var(--ha-radius-sm); }
+.ha-cm-ig__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ha-cm-ig__name { font-size: var(--ha-text-body); font-weight: 600; }
+.ha-cm-ig__sub { font-size: var(--ha-text-caption); line-height: 16px; color: var(--ha-ink-500); }
+.ha-cm-ig__formats { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-cm-ig__preview { border: 1px solid var(--ha-paper-200); border-radius: var(--ha-radius-md); overflow: hidden; background: var(--ha-paper-50); }
+.ha-cm-ig__head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-900); }
+.ha-cm-ig__avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--ha-paper-200); }
+.ha-cm-ig__img { aspect-ratio: 1; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.ha-cm-ig__img img { max-width: 100%; max-height: 100%; display: block; }
+.ha-cm-ig__caption { margin: 0; padding: 8px 10px 10px; font-size: var(--ha-text-caption); line-height: 17px; color: var(--ha-ink-700); white-space: pre-line; }

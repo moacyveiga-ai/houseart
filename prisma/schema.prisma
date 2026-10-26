@@ -1445,3 +1445,53 @@ model MarketQuote {
   source      String // awesomeapi | bcb-ptax | platform
   updatedAt   DateTime @updatedAt
 }
+
+/// The person's own Instagram professional account (handoff "Instagram · conectar e postar"), one per user.
+/// The token is a long-lived Instagram token (60 days), encrypted; it never leaves the server.
+model InstagramConnection {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique
+  mode           String // MOCK | LIVE
+  igUserId       String
+  handle         String // "@galerialadeira"
+  accountType    String? // BUSINESS | MEDIA_CREATOR
+  followers      Int?
+  tokenEnc       String
+  tokenExpiresAt DateTime?
+  defaultOn      Boolean   @default(false)
+  includeLink    Boolean   @default(true)
+  tagArtist      Boolean   @default(true)
+  status         String    @default("CONNECTED") // CONNECTED | ERROR
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([tokenExpiresAt])
+}
+
+/// A community post sent to Instagram: one row per post. `code` is the short link in the caption that counts the visits.
+model InstagramPublication {
+  id           Int       @id @default(autoincrement())
+  postId       Int       @unique
+  userId       Int
+  connectionId Int
+  format       String // FEED | STORIES | BOTH
+  status       String    @default("PENDING") // PENDING | PUBLISHED | FAILED
+  attempts     Int       @default(0)
+  error        String?
+  feedMediaId  String?
+  storyMediaId String?
+  feedContainerId  String? // saved BEFORE media_publish: a resend asks its status and never publishes twice
+  storyContainerId String?
+  code         String    @unique
+  targetPath   String
+  reach        Int       @default(0)
+  clicks       Int       @default(0)
+  publishedAt  DateTime?
+  insightsAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+}

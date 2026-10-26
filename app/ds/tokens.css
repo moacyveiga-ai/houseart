@@ -8,6 +8,8 @@
   --ha-verified-100:#E3F0E9;--ha-pending-100:#F7EAD9;--ha-alert-100:#F5E1DE;
   /* sub-brands of language (handoff 2026-10-21): ONLY on the language marks, never on UI */
   --ha-brand-pintura:#F0A050;--ha-brand-escultura:#F07860;--ha-brand-fotografia:#D84870;--ha-brand-literatura:#B04898;--ha-brand-grafite:#484848;
+  /* third-party mark (handoff Web Galeria › Instagram): ONLY on the Instagram button and mark */
+  --ha-ig-gradient:linear-gradient(45deg,#F58529,#DD2A7B 50%,#8134AF);
 
   /* semantic (switch in dark) */
   --ha-bg:var(--ha-paper-50);--ha-surface:var(--ha-paper-100);--ha-border:var(--ha-paper-200);

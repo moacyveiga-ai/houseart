@@ -18,6 +18,10 @@
     {
       "path": "/api/cron/market-indicators",
       "schedule": "5 * * * *"
+    },
+    {
+      "path": "/api/cron/instagram",
+      "schedule": "50 */6 * * *"
     }
   ]
 }

@@ -10,20 +10,12 @@ import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
 import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, publicIdOf, UID_RE, type ReadPurpose } from './domain'
-import { mockMasterKey, mockSunMessage, verifySun } from './sun-core'
+import { mockSunMessage, verifySun } from './sun-core'
+import { markerMasterKey } from './tap-server'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
 
-function masterKey(): Buffer {
-  const vendor = process.env.MARKER_VENDOR ?? 'mock'
-  if (vendor === 'mock') return mockMasterKey()
-  // The 16-byte master key in base64 (HSM/KMS integration is a J item).
-  const raw = process.env.MARKER_MASTER_KEY?.trim()
-  if (!raw) throw new ArtworkError('MARKER_KEY', 'MARKER_MASTER_KEY não configurada.', 503)
-  const key = Buffer.from(raw, 'base64')
-  if (key.length !== 16) throw new ArtworkError('MARKER_KEY', 'Chave mestra inválida.', 503)
-  return key
-}
+const masterKey = markerMasterKey
 
 // ── staff: batches ────────────────────────────────────────────────────────
 export async function createBatch(opt: { code: string; quantity: number; destination: string; tenantId?: number | null; uids?: string[] }, actor: { userId: number; name: string }) {

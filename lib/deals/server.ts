@@ -21,7 +21,7 @@ import { ensureCollectorUser } from '@/lib/accounts/collector-server'
 import { computeSplit, SPLIT_PARTY_LABELS, type SplitLine } from '@/lib/commission/split-core'
 import { royaltyFor } from '@/lib/resale-royalty/core'
 import { recordEvent } from '@/lib/certificate-events/server'
-import { verifySun, mockMasterKey } from '@/lib/physical-markers/sun-core'
+import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
 import { dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
 
 /** Default gallery share of the seller's part until the Consignment agreement exists (HOUSEART_BUILD.md §J). */
@@ -448,14 +448,10 @@ export async function confirmDelivery(userId: number, dealId: number, sun: { uid
   if (d.phase !== 'SHIPPING') throw new ArtworkError('WRONG_PHASE', 'A entrega só é confirmada depois do envio.', 409)
   const marker = await prisma.physicalMarker.findFirst({ where: { artworkId: d.artworkId, status: 'LINKED' } })
   if (!marker) throw new ArtworkError('NO_MARKER', 'A obra não tem etiqueta vinculada.', 409)
-  let valid = false
-  if (sun) {
-    if (sun.uid.toLowerCase() !== marker.uid) throw new ArtworkError('BAD_READ', 'Esta etiqueta não é desta obra.', 422)
-    valid = verifySun({ master: mockMasterKey(), uid: marker.uid, counter: sun.ctr, cmac: sun.cmac, lastCounter: marker.readCounter }).ok
-  } else if ((process.env.MARKER_VENDOR ?? 'mock') === 'mock') valid = true
+  if (sun && sun.uid.toLowerCase() !== marker.uid) throw new ArtworkError('BAD_READ', 'Esta etiqueta não é desta obra.', 422)
+  const valid = await verifyBuyerTap(marker, sun)
   const read = await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun?.ctr ?? marker.readCounter, cmacValid: valid, purpose: 'DELIVERY_CONFIRM', userId } })
   if (!valid) throw new ArtworkError('BAD_READ', 'Leitura inválida.', 422)
-  if (sun) await prisma.physicalMarker.update({ where: { id: marker.id }, data: { readCounter: sun.ctr, lastReadAt: new Date() } })
   await prisma.deal.update({ where: { id: dealId }, data: { deliveredAt: new Date(), deliveryMarkerReadId: read.id } })
   await advance(dealId, 'SHIPPING', 'Entrega e leitura da etiqueta', 'Leitura válida · posse confirmada', 'BUYER')
   await completeTransfer(dealId)

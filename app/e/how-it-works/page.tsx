@@ -45,5 +45,5 @@ export default async function HowItWorksPage() {
     ...galleries.map((g) => ({ href: `/e/gallery/${g.slug}`, name: g.name, meta: `Galeria · ${g.city.includes('/') || !g.uf ? g.city : `${g.city}/${g.uf}`} · ${g.works} ${g.works === 1 ? 'obra autenticada' : 'obras autenticadas'}` })),
     ...artists.map((a) => ({ href: `/e/artist/${a.slug}`, name: a.name, meta: `Artista${a.meta ? ` · ${a.meta}` : ''} · ${a.count} ${a.count === 1 ? 'obra autenticada' : 'obras autenticadas'}` })),
   ]
-  return <Site hero={hero} audienceImages={audienceImages} plans={plans} fees={feeGroups(services)} users={users} />
+  return <Site hero={hero} audienceImages={audienceImages} plans={plans} fees={feeGroups(services)} users={users} supportEmail={process.env.SUPPORT_EMAIL?.trim() || null} />
 }

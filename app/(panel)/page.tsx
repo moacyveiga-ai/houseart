@@ -29,7 +29,8 @@ async function GalleryDay({ scope, userName, now }: { scope: Parameters<typeof d
 
 export default async function DashboardPage() {
   const { user, scope, nav } = await requirePanelPage('/')
-  if (nav !== 'artist' && nav !== 'gallery' && nav !== 'advisor' && nav !== 'admin') redirect(homeOf(nav))
+  // the house team opens on its review queue (audit 2026-10-25), never on a gallery dashboard
+  if (nav !== 'artist' && nav !== 'gallery' && nav !== 'advisor') redirect(homeOf(nav))
   const now = new Date()
   if (nav === 'gallery' || nav === 'advisor') return <GalleryDay scope={scope} userName={user.name} now={now} />
   const [counts, recent] = await Promise.all([dashboardCounts(scope, now), listArtworks(scope, { take: 6 })])

@@ -47,7 +47,11 @@
 .ha-btn--primary[disabled], .ha-btn--ink[disabled], .ha-btn--primary.ha-btn--disabled, .ha-btn--ink.ha-btn--disabled { background: var(--ha-paper-200); color: var(--ha-ink-300); }
 .ha-btn--outline[disabled], .ha-btn--outline.ha-btn--disabled { border-color: var(--ha-ink-300); color: var(--ha-ink-300); background: transparent; }
 .ha-btn--ghost[disabled], .ha-btn--ghost.ha-btn--disabled, .ha-btn--paper[disabled], .ha-btn--outline-paper[disabled] { color: var(--ha-ink-300); }
-.ha-btn--loading { pointer-events: none; }
+.ha-btn--loading { pointer-events: none; cursor: progress; }
+.ha-btn--primary.ha-btn--loading[disabled] { background: var(--ha-sand-500); color: var(--ha-ink-900); }
+.ha-btn--ink.ha-btn--loading[disabled] { background: var(--ha-ink-900); color: var(--ha-paper-50); }
+.ha-btn--outline.ha-btn--loading[disabled] { border-color: var(--ha-ink-900); color: var(--ha-ink-900); }
+.ha-btn--ghost.ha-btn--loading[disabled] { color: var(--ha-fg); }
 .ha-link { background: transparent; border: 0; padding: 0; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); cursor: pointer; }
 .ha-link--quiet { font-weight: 400; }
 .ha-iconbtn { border: 0; background: transparent; cursor: pointer; padding: 0; color: var(--ha-fg); display: inline-flex; }
@@ -207,7 +211,20 @@
 .ha-sidebar__foot a, .ha-sidebar__foot button { color: var(--ha-fg-muted); background: transparent; border: 0; padding: 0; text-align: left; cursor: pointer; font-size: var(--ha-text-caption); text-decoration: none; }
 .ha-main { flex: 1; min-width: 0; padding: var(--ha-space-8) var(--ha-space-8) var(--ha-space-16); }
 .ha-main__inner { max-width: var(--ha-max); margin: 0 auto; }
-@media (max-width: 900px) { .ha-sidebar { display: none; } .ha-main { padding: var(--ha-space-5) var(--ha-space-4) var(--ha-space-12); } .ha-topbar__search { display: none; } }
+.ha-menubtn { display: none; }
+/* below ~1024 px the side panel layout stacks (handoff §7): the sidebar becomes the drawer */
+@media (max-width: 1023px) { .ha-sidebar { display: none; } .ha-menubtn { display: inline-flex; } .ha-topbar__brand { width: auto; } .ha-topbar { gap: var(--ha-space-3); } .ha-main { padding: var(--ha-space-6) var(--ha-space-5) var(--ha-space-12); } }
+@media (max-width: 900px) { .ha-main { padding: var(--ha-space-5) var(--ha-space-4) var(--ha-space-12); } .ha-topbar__search { display: none; } }
+.ha-drawer { position: fixed; inset: 0; z-index: 85; }
+.ha-drawer__scrim { position: absolute; inset: 0; border: 0; padding: 0; background: var(--ha-scrim); cursor: default; animation: ha-fade var(--ha-dur-panel) var(--ha-ease) both; }
+.ha-drawer__panel { position: absolute; top: 0; bottom: 0; left: 0; width: min(300px, 86vw); background: var(--ha-bg); box-shadow: var(--ha-shadow-lg); display: flex; flex-direction: column; gap: var(--ha-space-2); padding: calc(var(--ha-space-3) + env(safe-area-inset-top, 0px)) var(--ha-space-3) calc(var(--ha-space-4) + env(safe-area-inset-bottom, 0px)) calc(var(--ha-space-3) + env(safe-area-inset-left, 0px)); overflow-y: auto; animation: ha-drawer-in var(--ha-dur-panel) var(--ha-ease) both; }
+@keyframes ha-drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.ha-drawer__head { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--ha-space-1) 0 var(--ha-space-3); }
+.ha-drawer__search { display: flex; align-items: center; gap: var(--ha-space-2); margin: var(--ha-space-1) 0 var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-sm); color: var(--ha-fg-muted); }
+.ha-drawer__search:focus-within { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
+.ha-drawer__nav { display: flex; flex-direction: column; gap: var(--ha-space-1); }
+.ha-drawer .ha-nav-item { min-height: 44px; }
+.ha-topbar__search:focus-within { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
 @media (max-width: 600px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
 
 /* ── overlays ───────────────────────────────────────────────────────────── */
@@ -472,3 +489,15 @@ a.ha-card { color: inherit; text-decoration: none; }
 /* index-ticker (molécula): a faixa do handoff tem padding 8/16 e começa à esquerda */
 .ha-ticker--left { justify-content: flex-start; padding: var(--ha-space-2) var(--ha-space-4); }
 .ha-login__brand { display: inline-flex; align-self: flex-start; }
+
+/* global focus ring of the handoff (§4.3): sand 2 px, offset 2 px, always visible on keyboard focus */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+
+/* state screens: not found, error (components/layout/StatusScreen.tsx) */
+.ha-status { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--ha-space-3); max-width: 480px; margin: var(--ha-space-16) auto; padding: 0 var(--ha-space-4); }
+.ha-status__icon { width: 56px; height: 56px; border-radius: 50%; background: var(--ha-paper-100); color: var(--ha-ink-500); display: inline-flex; align-items: center; justify-content: center; }
+.ha-status__title { margin: var(--ha-space-2) 0 0; }
+.ha-status__text { margin: 0; }
+.ha-status__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ha-space-3); margin-top: var(--ha-space-3); }
+.ha-status__code { margin: var(--ha-space-2) 0 0; }
+.ha-status-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-4); padding: var(--ha-space-12) var(--ha-space-4); background: var(--ha-bg); }

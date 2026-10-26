@@ -93,7 +93,15 @@ export const NAV: Record<ProfileKind, readonly NavItem[]> = {
   admin: ADMIN,
 }
 
-/** First screen of each profile (what "Escolha de perfil" opens). */
+/** "Minha conta" of each profile: the gallery desk has its own account screen. */
+export function accountHrefOf(profile: ProfileKind): string {
+  return profile === 'gallery' || profile === 'advisor' ? '/gallery/account' : '/account'
+}
+
+/** "Ajuda" of the sidebar footer: the public "Como funciona" until a help center exists. */
+export const HELP_HREF = '/e/how-it-works'
+
+/** First screen of each profile (where the profile switcher lands). */
 export function homeOf(profile: ProfileKind): string {
   return NAV[profile][0].href
 }

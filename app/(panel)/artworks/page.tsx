@@ -32,8 +32,8 @@ async function panelOf(scope: Scope, id: number) {
     price: rowPrice({ saleMode: a.saleMode, listPriceCents: a.listPriceCents?.toString() ?? null }),
     images: front.map((m) => ({ url: m.publicUrl!, label: slotName.get(m.kind as never) ?? m.kind })),
     facts: [
-      ['Técnica', [a.technique, a.materials].filter(Boolean).join(' · ')], ['Dimensões', formatDimensions(a)],
-      ['Técnica', categoryLabel(a.category)], ['Edição', a.edition ?? ''], ['ID público', a.publicId ?? ''],
+      ['Técnica', [categoryLabel(a.category), a.technique, a.materials].filter(Boolean).join(' · ')], ['Dimensões', formatDimensions(a)],
+      ['Edição', a.edition ?? ''], ['ID público', a.publicId ?? ''],
     ].filter(([, v]) => v && v !== '—').map(([k, v]) => ({ k: k!, v: v! })),
     certificate: cert ? { issuedAt: cert.issuedAt, status: cert.status } : null,
     provenance: (cert?.events ?? []).map((e) => ({ label: e.label, at: e.at })),

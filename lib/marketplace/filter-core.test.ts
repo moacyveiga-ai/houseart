@@ -30,6 +30,7 @@ describe('marketplace filter core', () => {
     const sel = toggleIn(toggleIn(EMPTY_SELECTION, 'category', 'PAINTING'), 'uf', 'BA')
     expect(paramsOf(sel, 'mar', 'recent')).toBe('?category=PAINTING&uf=BA&q=mar&sort=recent')
     expect(selectionFromParams({ category: 'PAINTING,SCULPTURE', uf: 'BA' })).toEqual({ ...EMPTY_SELECTION, category: ['PAINTING', 'SCULPTURE'], uf: ['BA'] })
+    expect(selectionFromParams({ category: 'WORK_ON_PAPER,PRINT' }).category).toEqual(['PRINT'])
     expect(toggleIn(sel, 'uf', 'BA').uf).toEqual([])
   })
 })

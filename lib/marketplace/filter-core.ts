@@ -2,6 +2,7 @@
 // price ranges, seller kind, market, size, UF — multi-select per group, with the
 // count of each option computed against the OTHER groups (as the prototype does).
 // Pure: the page loads the listed set once and filters here.
+import { ARTWORK_CATEGORIES } from '@/lib/artworks/domain'
 export interface MarketItem {
   publicId: string; artist: string; artistSlug: string; title: string; year: number | null; category: string; technique: string | null; dimensions: string; sizeKey: 'SMALL' | 'MEDIUM' | 'LARGE' | null
   priceCents: bigint | null; saleMode: string | null; seller: string; sellerKind: 'GALLERY' | 'PRIVATE'; market: 'PRIMARY' | 'SECONDARY' | null; uf: string | null; cover: string | null; updatedAt: number
@@ -73,7 +74,8 @@ export function countFor(items: MarketItem[], sel: Selection, q: string, g: Grou
 /** Read the selection from URL search params (`?category=PAINTING,SCULPTURE&price=upto10`). */
 export function selectionFromParams(p: Record<string, string | string[] | undefined>): Selection {
   const read = (k: GroupKey) => { const v = p[k]; const s = Array.isArray(v) ? v.join(',') : v ?? ''; return s.split(',').map((x) => x.trim()).filter(Boolean) }
-  return { category: read('category'), price: read('price'), seller: read('seller'), market: read('market'), size: read('size'), uf: read('uf') }
+  // only the seven techniques: an old link (?category=WORK_ON_PAPER) would filter to nothing, with a filter the panel cannot untick
+  return { category: read('category').filter((c) => (ARTWORK_CATEGORIES as readonly string[]).includes(c)), price: read('price'), seller: read('seller'), market: read('market'), size: read('size'), uf: read('uf') }
 }
 
 export function toggleIn(sel: Selection, g: GroupKey, value: string): Selection {

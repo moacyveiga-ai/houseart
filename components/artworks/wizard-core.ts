@@ -1,6 +1,6 @@
 // Wizard decisions — PURE (tested): what each step saves, the review lines,
 // the next-button label, the media summary.
-import { categoryLabel, CONDITION_GRADE_LABELS, CONDITION_STATE_LABELS, formatBRL, formatDimensions, MEDIA_SLOTS, REQUIRED_MEDIA_SLOTS, WIZARD_STEPS } from '@/lib/artworks/domain'
+import { ARTWORK_CATEGORIES, categoryLabel, CONDITION_GRADE_LABELS, CONDITION_STATE_LABELS, formatBRL, formatDimensions, MEDIA_SLOTS, REQUIRED_MEDIA_SLOTS, WIZARD_STEPS } from '@/lib/artworks/domain'
 
 export interface WizardMedia { id: number; kind: string; publicUrl: string | null; quality: string | null }
 export interface WizardRegion { region: string; note: string; state: string }
@@ -50,7 +50,9 @@ export function regionStateLabel(state: string): string {
 /** The PATCH body of the sheet (step 1) — only the sheet fields. */
 export function sheetPatch(s: WizardState) {
   return {
-    title: s.title, year: s.year, category: s.category, technique: s.technique, materials: s.materials,
+    title: s.title, year: s.year, technique: s.technique, materials: s.materials,
+    // a category of before still on the row is not sent (the schema takes only the seven): the sheet still saves
+    ...((ARTWORK_CATEGORIES as readonly string[]).includes(s.category) ? { category: s.category } : {}),
     heightMm: s.heightMm === null ? null : s.heightMm / 10, widthMm: s.widthMm === null ? null : s.widthMm / 10, depthMm: s.depthMm === null ? null : s.depthMm / 10,
     edition: s.edition, signatureLocation: s.signatureLocation, series: s.series,
   }

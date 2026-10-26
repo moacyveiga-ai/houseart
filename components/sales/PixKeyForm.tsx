@@ -18,9 +18,12 @@ const TYPES: { key: PixFormType; name: string; icon: string; label: string; plac
 const fCpf = (v: string) => v.replace(/\D/g, '').slice(0, 11).replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1-$2')
 const fPhone = (v: string) => { const d = v.replace(/\D/g, '').slice(0, 11); if (d.length < 3) return d; if (d.length < 8) return `(${d.slice(0, 2)}) ${d.slice(2)}`; return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` }
 
-export function PixKeyForm({ holderName, cpfMask, intro, submitLabel, onSaved, secondary }: {
+export function PixKeyForm({ holderName, cpfMask, intro, submitLabel, onSaved, onSavingChange, secondary }: {
   holderName: string; cpfMask: string | null; intro?: string; submitLabel: string
+  /** Runs AFTER the key is saved; what it does (accept, publish…) is the caller's, with its own errors. */
   onSaved: (account: PayoutAccountView) => void | Promise<void>
+  /** The caller locks its own close/back while the PUT flies (a save that lands after the sheet closed would still act). */
+  onSavingChange?: (saving: boolean) => void
   /** Buttons beside the submit (Cancelar, Remover…). */
   secondary?: React.ReactNode
 }) {
@@ -35,18 +38,22 @@ export function PixKeyForm({ holderName, cpfMask, intro, submitLabel, onSaved, s
   async function paste() {
     try { const v = await navigator.clipboard.readText(); if (v) onKey(v.trim()) } catch { setError('Não foi possível ler a área de transferência. Cole a chave no campo.') }
   }
+  function setBusy(v: boolean) { setSaving(v); onSavingChange?.(v) }
   async function save() {
     if (!key.trim()) { setError(''); return }
     const local = checkPixKey(type, key, null)
     if (!local.ok) { setError(local.error); return }
-    setSaving(true)
+    setBusy(true)
+    let account: PayoutAccountView
     try {
       const res = await fetch('/api/member/payout-account', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type, key: key.trim(), holderName }) })
       const data = await res.json().catch(() => ({})) as { account?: PayoutAccountView; error?: string }
       if (!res.ok || !data.account) { setError(data.error ?? 'Não foi possível cadastrar a chave.'); return }
-      setKey('')
-      await onSaved(data.account)
-    } catch { setError('Não foi possível cadastrar a chave agora.') } finally { setSaving(false) }
+      account = data.account
+    } catch { setError('Não foi possível cadastrar a chave agora.'); return } finally { setBusy(false) }
+    setKey('')
+    // the key IS saved: whatever the caller does next fails on its own terms, never as "não foi possível cadastrar"
+    void onSaved(account)
   }
 
   const holderLine = cpfMask ? `${holderName} · CPF ${cpfMask}` : holderName

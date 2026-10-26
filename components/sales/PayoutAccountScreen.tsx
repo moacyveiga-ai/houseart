@@ -13,6 +13,7 @@ export function PayoutAccountScreen({ account: initial, holderName, cpfMask }: {
   const [account, setAccount] = useState(initial)
   const [editing, setEditing] = useState(initial === null)
   const [toast, setToast] = useState('')
+  const [formKey, setFormKey] = useState(0)
   const clearToast = useCallback(() => setToast(''), [])
 
   function saved(a: PayoutAccountView) {
@@ -26,6 +27,7 @@ export function PayoutAccountScreen({ account: initial, holderName, cpfMask }: {
     if (!res.ok) { setToast('Não foi possível remover a chave.'); return }
     setAccount(null)
     setEditing(true)
+    setFormKey((k) => k + 1) // the form starts over (CPF, empty) as it always did
     setToast('Chave Pix removida · cadastre outra para receber vendas')
   }
 
@@ -54,7 +56,7 @@ export function PayoutAccountScreen({ account: initial, holderName, cpfMask }: {
           </>
         ) : (
           <>
-            <PixKeyForm
+            <PixKeyForm key={formKey}
               holderName={holderName} cpfMask={cpfMask}
               intro={account ? 'Troque a chave onde você recebe o valor das vendas. Repasses em andamento vão para a chave anterior.' : 'É para esta chave que enviamos o valor das suas vendas, depois que o comprador confirma a entrega.'}
               submitLabel={account ? 'Salvar nova chave' : 'Cadastrar chave Pix'} onSaved={saved}

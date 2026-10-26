@@ -31,6 +31,7 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
   const [counter, setCounter] = useState<OfferCardView | null>(null)
   const [payoutReady, setPayoutReady] = useState(payout?.ready ?? true)
   const [pixFor, setPixFor] = useState<OfferCardView | null>(null)
+  const [pixSaving, setPixSaving] = useState(false)
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [toast, setToast] = useState('')
@@ -54,9 +55,11 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
   async function act(o: OfferCardView, action: 'accept' | 'refuse' | 'counter') {
     const body = action === 'counter' ? { amountCents: Number(digits(amount)) * 100 } : {}
     setBusy(`${o.id}:${action}`)
-    const res = await fetch(`/api/offers/${o.id}/${action}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-    const data = await res.json().catch(() => ({})) as { error?: string }
-    setBusy(null)
+    let res: Response, data: { error?: string }
+    try {
+      res = await fetch(`/api/offers/${o.id}/${action}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      data = await res.json().catch(() => ({})) as { error?: string }
+    } catch { setToast('Sem conexão. Tente de novo.'); return } finally { setBusy(null) }
     if (!res.ok) { setToast(data.error ?? 'Não foi possível responder.'); return }
     setOffers(offers.map((x) => (x.id === o.id ? { ...x, open: action === 'counter', status: action === 'accept' ? 'ACCEPTED' : action === 'refuse' ? 'REFUSED' : 'NEGOTIATING', statusLabel: action === 'accept' ? 'Aceita · venda em andamento' : action === 'refuse' ? 'Recusada' : 'Contraproposta enviada', lastAuthor: action === 'counter' ? 'SELLER' : x.lastAuthor, currentCents: action === 'counter' ? String(Number(digits(amount)) * 100) : x.currentCents } : x)))
     setCounter(null)
@@ -127,9 +130,9 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
         <p id="ha-counter-hint" className="ha-caption">Sugerimos o meio-termo entre a oferta e o preço.</p>
       </Modal>
       {payout ? (
-        <Modal open={!!pixFor} title="Cadastre o Pix para receber" onClose={() => setPixFor(null)}>
+        <Modal open={!!pixFor} title="Cadastre o Pix para receber" onClose={() => { if (!pixSaving) setPixFor(null) }}>
           {pixFor ? <p className="ha-muted ha-sm">Antes de aceitar a oferta de {formatBRL(BigInt(pixFor.currentCents))} em <i>{pixFor.artworkTitle}</i>, diga para onde vai o valor da venda.</p> : null}
-          <PixKeyForm holderName={payout.holderName} cpfMask={payout.cpfMask} submitLabel="Cadastrar Pix e aceitar" onSaved={async () => { setPayoutReady(true); const o = pixFor; setPixFor(null); if (o) await act(o, 'accept') }} />
+          <PixKeyForm holderName={payout.holderName} cpfMask={payout.cpfMask} submitLabel="Cadastrar Pix e aceitar" onSavingChange={setPixSaving} onSaved={async () => { setPayoutReady(true); const o = pixFor; setPixFor(null); if (o) await act(o, 'accept') }} />
         </Modal>
       ) : null}
       <Toast message={toast} onDone={() => setToast('')} />

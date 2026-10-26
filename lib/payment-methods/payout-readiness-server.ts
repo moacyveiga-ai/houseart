@@ -5,14 +5,16 @@
 // (a sale with no payout account simply waits as RELEASED for the Pix, as it always did).
 import { prisma } from '@/lib/prisma'
 import { stripeModeOf } from '@/lib/stripe/mode-core'
+import { connectAvailable } from '@/lib/stripe/connect-server'
 
 export type PayoutReadiness = { ready: true; via: 'stripe' | 'pix' } | { ready: false; via: null }
 
 export async function payoutReadiness(memberId: number): Promise<PayoutReadiness> {
+  // the same gate the payout itself has (`payDealSplits`): Connect counts only where it is available
   const m = stripeModeOf(process.env)
   const [pix, stripe] = await Promise.all([
     prisma.payoutAccount.count({ where: { memberId, status: 'ACTIVE' } }),
-    m === 'mock' ? Promise.resolve(0) : prisma.stripeConnectAccount.count({ where: { memberId, mode: m, status: 'ENABLED' } }),
+    connectAvailable() ? prisma.stripeConnectAccount.count({ where: { memberId, mode: m, status: 'ENABLED' } }) : Promise.resolve(0),
   ])
   if (stripe > 0) return { ready: true, via: 'stripe' }
   if (pix > 0) return { ready: true, via: 'pix' }

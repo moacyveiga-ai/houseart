@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AGENDA_FILTERS, dayPartsOf, filterAgenda, initialMonth, monthKeyOf, monthTabs, newsDateLabel } from './home-core'
+import { AGENDA_FILTERS, dayPartsOf, filterAgenda, heroCaption, initialMonth, monthKeyOf, monthTabs, newsDateLabel } from './home-core'
 
 describe('home-core', () => {
   it('month key follows the house timezone (UTC−3), not UTC', () => {
@@ -29,5 +29,11 @@ describe('home-core', () => {
   it('news date label', () => {
     expect(newsDateLabel(new Date('2026-10-18T00:00:00Z'))).toBe('18 out 2026') // calendar date at midnight UTC never slides a day
     expect(newsDateLabel(new Date('2026-01-05T00:00:00Z'))).toBe('5 jan 2026')
+  })
+
+  it('hero caption: room · gallery · foto ilustrativa, nothing without a photo', () => {
+    expect(heroCaption(null)).toBeNull()
+    expect(heroCaption({ url: '/x', gallery: 'Galeria Sul', room: 'Sala 2' })).toBe('Sala 2 · Galeria Sul · foto ilustrativa')
+    expect(heroCaption({ url: '/x', gallery: 'Galeria Sul', room: null })).toBe('Sala de exposição · Galeria Sul · foto ilustrativa')
   })
 })

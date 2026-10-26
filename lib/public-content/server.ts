@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { formatDimensions } from '@/lib/artworks/domain'
 import { jsonList, lifeSpan, paragraphsOf, type ArtistEntryKind } from './domain'
+import type { HeroPhoto } from './home-core'
 
 // a seller suspended by the house is out of every public list
 const LISTED = { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, member: { tenant: { status: 'ACTIVE' } } } as const
@@ -127,6 +128,30 @@ export async function publicGallery(slug: string): Promise<PublicGalleryPage | n
       artworks: works.map(workOf),
       artistList: artists.map((a) => ({ slug: a.slug, name: a.name, meta: [lifeSpan(a.birthYear, a.deathYear) ?? jsonList(a.profile?.languagesJson)[0], a.profile?.livesIn].filter(Boolean).join(' · '), photoUrl: a.profile?.photoUrl ?? null })),
     }
+  })
+}
+
+/** The Home hero photo: the first exhibition room (lowest sortOrder) of the active gallery that saved
+ *  its profile last (the editor rewrites the items, so ids follow the last save) — never a work
+ *  (handoff §4.5): a "room" whose URL is the photo of an artwork is skipped, since the demo data and
+ *  a careless editor can point a room at a work. Without rooms, the newest gallery cover under the
+ *  same rule; without either, null (the Home shows the gradient alone). */
+export async function homeHeroPhoto(): Promise<HeroPhoto | null> {
+  return totalScope('public:hero', async () => {
+    const rooms = await prisma.galleryItem.findMany({ where: { kind: 'ROOM', url: { not: null } }, orderBy: [{ sortOrder: 'asc' }, { id: 'desc' }], take: 20, select: { title: true, url: true, tenantId: true } })
+    const covers = await prisma.galleryPublicProfile.findMany({ where: { coverUrl: { not: null }, tenant: { status: 'ACTIVE' } }, orderBy: { id: 'desc' }, take: 5, select: { coverUrl: true, name: true } })
+    const urls = [...rooms.map((r) => r.url!), ...covers.map((c) => c.coverUrl!)]
+    if (urls.length === 0) return null
+    const [galleries, artworkPhotos] = await Promise.all([
+      prisma.galleryPublicProfile.findMany({ where: { tenantId: { in: [...new Set(rooms.map((r) => r.tenantId))] }, tenant: { status: 'ACTIVE' } }, select: { tenantId: true, name: true } }),
+      prisma.artworkMedia.findMany({ where: { publicUrl: { in: urls } }, select: { publicUrl: true } }),
+    ])
+    const isWork = new Set(artworkPhotos.map((m) => m.publicUrl))
+    const byTenant = new Map(galleries.map((g) => [g.tenantId, g.name]))
+    const room = rooms.find((r) => byTenant.has(r.tenantId) && !isWork.has(r.url!))
+    if (room) return { url: room.url!, gallery: byTenant.get(room.tenantId)!, room: room.title || null }
+    const cover = covers.find((c) => !isWork.has(c.coverUrl!))
+    return cover ? { url: cover.coverUrl!, gallery: cover.name, room: null } : null
   })
 }
 

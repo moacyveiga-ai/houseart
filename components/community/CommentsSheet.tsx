@@ -47,8 +47,8 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
 
   if (!item) return null
   const it = item
-  const authorKey = it.author.memberId != null ? `m${it.author.memberId}` : `n${it.author.name}`
-  const isAuthor = (c: CommentRow) => (c.author.memberId != null ? `m${c.author.memberId}` : `n${c.author.name}`) === authorKey
+  // the server decides who is the author of the thread (never by the name, which anyone can copy)
+  const isAuthor = (c: CommentRow) => c.byOwner
 
   async function send() {
     const body = text.trim()
@@ -101,7 +101,7 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
                 <span className="ha-cm-comment__text">{c.body}</span>
                 <span className="ha-cm-comment__links">
                   <button type="button" className="ha-cm-comment__link" onClick={() => reply(c)}>Responder</button>
-                  {c.mine ? <button type="button" className="ha-cm-comment__link" onClick={() => remove(c)}>Apagar</button> : null}
+                  {c.canDelete ? <button type="button" className="ha-cm-comment__link" onClick={() => remove(c)}>Apagar</button> : null}
                 </span>
               </div>
               <button type="button" className={`ha-cm-comment__like${c.liked ? ' ha-cm-comment__like--on' : ''}`} aria-label={c.liked ? 'Descurtir comentário' : 'Curtir comentário'} aria-pressed={c.liked} onClick={() => like(c)}><Icon name="favorite" filled={c.liked} /></button>

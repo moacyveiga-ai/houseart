@@ -177,7 +177,11 @@ export async function toggleReaction(userId: number, target: string, targetId: n
   }
   if (target === 'NEWS' && !(await prisma.newsArticle.findFirst({ where: { id: targetId, publishedAt: { not: null, lte: new Date() } }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Notícia não encontrada.', 404)
   if (target === 'EVENT' && !(await prisma.agendaEvent.findUnique({ where: { id: targetId }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Evento não encontrado.', 404)
-  if (target === 'COMMENT' && !(await prisma.postComment.findFirst({ where: { id: targetId, hiddenAt: null }, select: { id: true } }))) throw new ArtworkError('NOT_FOUND', 'Comentário não encontrado.', 404)
+  if (target === 'COMMENT') {
+    const c = await prisma.postComment.findFirst({ where: { id: targetId, hiddenAt: null }, select: { targetKind: true, targetId: true } })
+    // a comment on an artwork is reachable only while the artwork's page is public
+    if (!c || (c.targetKind === 'ARTWORK' && !(await publicArtworkOwner(c.targetId)))) throw new ArtworkError('NOT_FOUND', 'Comentário não encontrado.', 404)
+  }
   const col = kind === 'LIKE' ? 'likeCount' : kind === 'SAVE' ? 'saveCount' : kind === 'RSVP' ? 'rsvpCount' : null
   const result = await prisma.$transaction(async (tx) => {
     // Two taps in flight on the same reaction wait for each other (the unique index would 500 the second).
@@ -195,15 +199,27 @@ export async function toggleReaction(userId: number, target: string, targetId: n
   return result
 }
 
-export interface CommentRow { id: number; author: FeedAuthor; body: string; when: string; likes: number; liked: boolean; mine: boolean }
+/** `byOwner`: written by who posted (POST) or who sells (ARTWORK) — decided here, never by the name on screen.
+ *  `canDelete`: the writer, or the post author / the seller moderating their own thread. */
+export interface CommentRow { id: number; author: FeedAuthor; body: string; when: string; likes: number; liked: boolean; mine: boolean; byOwner: boolean; canDelete: boolean }
 
 export async function commentsOf(viewer: number | null, target: CommentTarget, targetId: number): Promise<CommentRow[]> {
   // an artwork's comments are read only while its page is public
-  if (target === 'ARTWORK' && !(await publicArtworkOwner(targetId))) return []
+  let owner: number | null = null
+  if (target === 'ARTWORK') {
+    const a = await publicArtworkOwner(targetId)
+    if (!a) return []
+    owner = a.ownerUserId
+  }
+  if (target === 'POST') owner = (await prisma.post.findUnique({ where: { id: targetId }, select: { authorUserId: true } }))?.authorUserId ?? null
   const rows = await prisma.postComment.findMany({ where: { targetKind: target, targetId, hiddenAt: null }, orderBy: { id: 'asc' }, take: 200 })
   const authors = await authorsOf(rows.map((r) => r.userId), viewer)
   const mine = await myReactions(viewer, rows.map((r) => ({ kind: 'COMMENT' as const, id: r.id })))
-  return rows.map((r) => ({ id: r.id, author: authors.get(r.userId)!, body: r.body, when: whenLabel(r.createdAt), likes: r.likeCount, liked: mine.has(`COMMENT:${r.id}:LIKE`), mine: r.userId === viewer }))
+  const moderates = viewer != null && owner === viewer
+  return rows.map((r) => ({
+    id: r.id, author: authors.get(r.userId)!, body: r.body, when: whenLabel(r.createdAt), likes: r.likeCount, liked: mine.has(`COMMENT:${r.id}:LIKE`), mine: r.userId === viewer,
+    byOwner: owner != null && r.userId === owner, canDelete: r.userId === viewer || moderates,
+  }))
 }
 
 export async function addComment(userId: number, target: string, targetId: number, raw: unknown): Promise<{ id: number }> {
@@ -226,8 +242,10 @@ export async function addComment(userId: number, target: string, targetId: numbe
 }
 
 export async function deleteComment(userId: number, commentId: number): Promise<void> {
-  const c = await prisma.postComment.findUnique({ where: { id: commentId }, select: { userId: true, postId: true, hiddenAt: true, post: { select: { authorUserId: true } } } })
-  if (!c || c.hiddenAt || (c.userId !== userId && c.post?.authorUserId !== userId)) throw new ArtworkError('NOT_FOUND', 'Comentário não encontrado.', 404)
+  const c = await prisma.postComment.findUnique({ where: { id: commentId }, select: { userId: true, postId: true, hiddenAt: true, targetKind: true, targetId: true, post: { select: { authorUserId: true } } } })
+  // the seller moderates the thread of their own artwork, like a post author does
+  const seller = c && c.targetKind === 'ARTWORK' ? (await prisma.artwork.findUnique({ where: { id: c.targetId }, select: { member: { select: { userId: true } } } }))?.member.userId ?? null : null
+  if (!c || c.hiddenAt || (c.userId !== userId && c.post?.authorUserId !== userId && seller !== userId)) throw new ArtworkError('NOT_FOUND', 'Comentário não encontrado.', 404)
   await prisma.$transaction(async (tx) => {
     await tx.postComment.update({ where: { id: commentId }, data: { hiddenAt: new Date() } })
     if (c.postId) await tx.post.update({ where: { id: c.postId }, data: { commentCount: { decrement: 1 } } })
@@ -292,7 +310,8 @@ export async function artworkCounts(artworkIds: number[]): Promise<Map<number, {
 
 /** A commentable artwork: public page with the green seal; who to tell is the user of the member that holds it. */
 async function publicArtworkOwner(artworkId: number): Promise<{ title: string; publicId: string; ownerUserId: number | null } | null> {
-  const a = await prisma.artwork.findFirst({ where: { id: artworkId, publicId: { not: null }, seal: 'GREEN' }, select: { title: true, publicId: true, member: { select: { userId: true } } } })
+  // the same rule as the public page (lib/marketplace/public-server.ts): green seal and a status that shows it; an archived work is gone
+  const a = await prisma.artwork.findFirst({ where: { id: artworkId, publicId: { not: null }, seal: 'GREEN', status: { in: ['LISTED', 'IN_DEAL', 'SOLD', 'AUTHENTICATED'] } }, select: { title: true, publicId: true, member: { select: { userId: true } } } })
   return a ? { title: a.title, publicId: a.publicId!, ownerUserId: a.member.userId } : null
 }
 

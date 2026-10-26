@@ -135,5 +135,23 @@ describe('comments on an artwork', () => {
     await deleteComment(buyerId, c.id)
     expect((await artworkCounts([s.a1.artworkId])).get(s.a1.artworkId)).toEqual({ likes: 1, comments: 0 })
   }, 60_000)
+
+  it('the seller is the thread author by id, moderates it, and an archived work closes it', async () => {
+    const own = await addComment(s.a1.userId, 'ARTWORK', s.a1.artworkId, 'Obrigada!')
+    const other = await addComment(buyerId, 'ARTWORK', s.a1.artworkId, 'spam')
+    // a buyer named like the gallery does not become the author
+    await prisma.user.update({ where: { id: buyerId }, data: { name: 'Ana Ladeira' } })
+    const asBuyer = await commentsOf(buyerId, 'ARTWORK', s.a1.artworkId)
+    expect(asBuyer.map((r) => [r.byOwner, r.canDelete])).toEqual([[true, false], [false, true]])
+    const asSeller = await commentsOf(s.a1.userId, 'ARTWORK', s.a1.artworkId)
+    expect(asSeller.every((r) => r.canDelete)).toBe(true)
+    await deleteComment(s.a1.userId, other.id)
+    expect((await commentsOf(null, 'ARTWORK', s.a1.artworkId)).map((r) => r.id)).toEqual([own.id])
+    // archived: the page is gone, so the thread is too (read, write and like)
+    await prisma.artwork.update({ where: { id: s.a1.artworkId }, data: { status: 'ARCHIVED' } })
+    expect(await commentsOf(null, 'ARTWORK', s.a1.artworkId)).toEqual([])
+    await expect(addComment(buyerId, 'ARTWORK', s.a1.artworkId, 'oi')).rejects.toMatchObject({ status: 404 })
+    await expect(toggleReaction(buyerId, 'COMMENT', own.id, 'LIKE')).rejects.toMatchObject({ status: 404 })
+  }, 60_000)
 })
 

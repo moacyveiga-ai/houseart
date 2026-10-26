@@ -77,6 +77,8 @@ const ADMIN: NavItem[] = [
   { key: 'tenants', label: 'Galerias e contas', icon: 'storefront', href: '/admin/tenants' },
   { key: 'kyc', label: 'KYC', icon: 'verified_user', href: '/admin/kyc' },
   { key: 'audit', label: 'Auditoria', icon: 'history', href: '/admin/audit' },
+  // Not in the design: the appraisal queue the team assigns and follows (audit §5), 2026-10-26.
+  { key: 'appraisals', label: 'Laudos', icon: 'assignment', href: '/appraisals' },
   // Not in the design: the editors of the public site (news and agenda), 2026-10-22.
   { key: 'content', label: 'Conteúdo do site', icon: 'newspaper', href: '/admin/content' },
   { key: 'billing', label: 'Cobrança', icon: 'receipt_long', href: '/billing' },

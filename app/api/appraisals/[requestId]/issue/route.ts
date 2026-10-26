@@ -16,6 +16,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ requestId: str
     if (!id) return NextResponse.json({ error: 'Pedido não encontrado.' }, { status: 404 })
     const parsed = schema.safeParse(await req.json().catch(() => ({})))
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
-    return json(await issueAppraisal({ userId: u.id, name: u.name }, id, parsed.data), { status: 201 })
+    return json(await issueAppraisal({ userId: u.id, name: u.name, profile: u.profile }, id, parsed.data), { status: 201 })
   } catch (e) { return artworkErrorResponse(e) }
 }

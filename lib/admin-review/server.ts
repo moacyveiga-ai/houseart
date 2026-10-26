@@ -7,7 +7,9 @@ import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { audit } from '@/lib/audit'
 import { diaNoFuso } from '@/lib/timezone'
-import { averageOpenHours, needsReason, openedAgo, REVIEW_KIND_LABELS, REVIEW_KINDS, shareLabel, type ReviewDecision, type ReviewKind } from './core'
+import { averageOpenHours, needsReason, openedAgo, REVIEW_KIND_LABELS, REVIEW_KINDS, shareLabel, type ReviewDecision, type ReviewFilter, type ReviewKind } from './core'
+import { notify } from '@/lib/notifications/server'
+import { afterResponseOrNow } from '@/lib/after'
 
 export { REVIEW_KINDS, REVIEW_KIND_LABELS, type ReviewKind }
 
@@ -19,13 +21,23 @@ export async function openReviewItem(opt: { kind: ReviewKind; artworkId?: number
       const since = new Date(Date.now() - 86_400_000)
       const mine = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null, OR: [{ status: 'OPEN' }, { createdAt: { gte: since } }] }, orderBy: { id: 'desc' } })
       if (mine) return mine
-      return prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null } })
+      return created(await prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null, reporterUserId: opt.reporterUserId ?? null } }))
     }
     // One open item per (kind, artwork) — per check for duplicates: two lookalikes are two decisions.
     const existing = await prisma.reviewQueueItem.findFirst({ where: { kind: opt.kind, artworkId: opt.artworkId ?? null, status: 'OPEN', ...(opt.kind === 'DUPLICATE' && opt.refId != null ? { refId: opt.refId } : {}) } })
     if (existing) return existing
-    return prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null } })
+    return created(await prisma.reviewQueueItem.create({ data: { kind: opt.kind, artworkId: opt.artworkId ?? null, tenantId: opt.tenantId ?? null, reason: opt.reason, refId: opt.refId ?? null } }))
   })
+}
+
+/** A NEW item tells the desk (admin and manager, the profiles that decide) — after the response, never in the caller's path. */
+function created<T extends { id: number; kind: string; reason: string }>(item: T): T {
+  afterResponseOrNow(`review:notice:${item.id}`, async () => {
+    const staff = await prisma.user.findMany({ where: { profile: { in: ['admin', 'manager'] }, active: true }, select: { id: true } })
+    const title = `Fila de revisão · ${REVIEW_KIND_LABELS[item.kind as ReviewKind] ?? item.kind}`
+    for (const u of staff) await notify({ userId: u.id, kind: 'review.opened', title, body: item.reason.slice(0, 200), href: '/admin/review' })
+  })
+  return item
 }
 
 /** Open items — the badge of "Obras e certificados" in the admin menu. */
@@ -35,30 +47,39 @@ export async function openReviewCount(): Promise<number> {
 
 const monthName = (d: Date) => new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'America/Bahia' }).format(d)
 
-export async function reviewQueue(now = new Date()) {
+/** `filter` open (the queue, oldest first) · decided (the last 200, newest first) · mine (decided by `userId`); `kind` narrows. */
+export async function reviewQueue(now = new Date(), opt: { filter?: ReviewFilter; kind?: ReviewKind | null; userId?: number | null } = {}) {
   return totalScope('review:queue', async () => {
     const month = diaNoFuso(now)!.slice(0, 7)
     const monthStart = new Date(`${month}-01T03:00:00.000Z`)
-    const [items, certified, certifiedThisMonth, contested] = await Promise.all([
-      prisma.reviewQueueItem.findMany({ where: { status: 'OPEN' }, orderBy: { createdAt: 'asc' }, take: 200 }),
+    const filter = opt.filter ?? 'open'
+    const kindWhere = opt.kind ? { kind: opt.kind } : {}
+    const where = filter === 'open' ? { status: 'OPEN', ...kindWhere } : { status: { in: ['APPROVED', 'REJECTED'] }, ...kindWhere, ...(filter === 'mine' ? { decidedByUserId: opt.userId ?? -1 } : {}) }
+    const [items, certified, certifiedThisMonth, contested, openCount] = await Promise.all([
+      prisma.reviewQueueItem.findMany({ where, orderBy: filter === 'open' ? { createdAt: 'asc' } : { decidedAt: 'desc' }, take: 200 }),
       prisma.artwork.count({ where: { status: { in: ['AUTHENTICATED', 'LISTED', 'IN_DEAL', 'SOLD'] } } }),
       prisma.certificate.count({ where: { issuedAt: { gte: monthStart } } }),
       prisma.reviewQueueItem.count({ where: { status: 'OPEN', kind: 'CONTESTATION' } }),
+      prisma.reviewQueueItem.count({ where: { status: 'OPEN' } }),
     ])
+    const deciderIds = [...new Set(items.map((i) => i.decidedByUserId).filter((x): x is number => x !== null))]
+    const deciders = deciderIds.length ? await prisma.user.findMany({ where: { id: { in: deciderIds } }, select: { id: true, name: true } }) : []
+    const deciderName = new Map(deciders.map((u) => [u.id, u.name]))
     const artworks = await prisma.artwork.findMany({ where: { id: { in: items.map((i) => i.artworkId).filter((x): x is number => x !== null) } }, select: { id: true, title: true, year: true, publicId: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } })
     const byId = new Map(artworks.map((a) => [a.id, a]))
-    const avg = averageOpenHours(now, items.map((i) => i.createdAt))
+    const avg = averageOpenHours(now, filter === 'open' && !opt.kind ? items.map((i) => i.createdAt) : [])
     return {
       kpis: {
-        certified, open: items.length, contested,
+        certified, open: openCount, contested,
         certifiedNote: `+${certifiedThisMonth.toLocaleString('pt-BR')} em ${monthName(now)}`,
-        openNote: avg === null ? 'fila em dia' : `tempo médio ${avg} h`,
+        openNote: avg === null ? (openCount ? 'abertos agora' : 'fila em dia') : `tempo médio ${avg} h`,
         contestedNote: shareLabel(contested, certified),
       },
       items: items.map((i) => {
         const a = i.artworkId ? byId.get(i.artworkId) : undefined
         return {
           id: i.id, kind: i.kind as ReviewKind, reason: i.reason, createdAt: i.createdAt, ago: openedAgo(now, i.createdAt),
+          decided: i.status === 'APPROVED' || i.status === 'REJECTED' ? { decision: i.status as ReviewDecision, by: i.decidedByUserId ? deciderName.get(i.decidedByUserId) ?? null : null, ago: i.decidedAt ? openedAgo(now, i.decidedAt) : '', note: i.decisionNote } : null,
           artwork: a ? { id: a.id, title: a.title, year: a.year, publicId: a.publicId, artist: a.artist.name, cover: a.media[0]?.publicUrl ?? null } : null,
         }
       }),

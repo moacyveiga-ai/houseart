@@ -25,4 +25,13 @@ describe('admin review core', () => {
     expect(shareLabel(3, 18402)).toBe('0,02% das obras')
     expect(shareLabel(0, 0)).toBe('0% das obras')
   })
+  it('filters, kinds and hrefs of the chips; the decided line', async () => {
+    const { reviewFilterKey, reviewKindKey, reviewHref, decidedLine } = await import('./core')
+    expect(reviewFilterKey('decided')).toBe('decided'); expect(reviewFilterKey('x')).toBe('open'); expect(reviewFilterKey(undefined)).toBe('open')
+    expect(reviewKindKey('CONTESTATION')).toBe('CONTESTATION'); expect(reviewKindKey('nope')).toBeNull()
+    expect(reviewHref('open', null)).toBe('/admin/review')
+    expect(reviewHref('mine', 'DUPLICATE')).toBe('/admin/review?f=mine&kind=DUPLICATE')
+    expect(decidedLine('APPROVED', 'Ana', 'há 2 h')).toBe('Aprovado por Ana · há 2 h')
+    expect(decidedLine('REJECTED', null, 'há 1 dia')).toBe('Rejeitado · há 1 dia')
+  })
 })

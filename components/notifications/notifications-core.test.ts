@@ -4,6 +4,7 @@ import { iconOf, toneOf, vapidKeyBytes, whenShort } from './notifications-core'
 describe('avisos — ícone, tom e carimbo', () => {
   it('o ícone segue o prefixo do kind', () => {
     expect(iconOf('offer.received')).toBe('handshake')
+    expect(iconOf('review.opened')).toBe('fact_check')
     expect(iconOf('message.received')).toBe('chat_bubble')
     expect(iconOf('community.liked')).toBe('forum')
     expect(iconOf('deal.shipped')).toBe('local_shipping')

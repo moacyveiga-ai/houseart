@@ -7,16 +7,18 @@ import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
-import { needsReason, REVIEW_EFFECTS, REVIEW_KIND_LABELS, REVIEW_KIND_TONES, type ReviewDecision, type ReviewKind } from '@/lib/admin-review/core'
+import { decidedLine, needsReason, REVIEW_EFFECTS, REVIEW_KIND_LABELS, REVIEW_KIND_TONES, type ReviewDecision, type ReviewKind } from '@/lib/admin-review/core'
 
 export interface QueueItem {
   id: number; kind: ReviewKind; reason: string; ago: string
   artwork: { id: number; title: string; year: number | null; publicId: string | null; artist: string; cover: string | null } | null
+  /** The history views: who decided, when, and the note. */
+  decided?: { decision: ReviewDecision; by: string | null; ago: string; note: string | null } | null
 }
 
 const DECISION_LABELS: Record<ReviewDecision, string> = { APPROVED: 'Aprovar', REJECTED: 'Rejeitar' }
 
-export function ReviewQueue({ items }: { items: QueueItem[] }) {
+export function ReviewQueue({ items, readOnly = false }: { items: QueueItem[]; readOnly?: boolean }) {
   const [decided, setDecided] = useState<Record<number, ReviewDecision>>({})
   const [pending, setPending] = useState<{ item: QueueItem; decision: ReviewDecision } | null>(null)
   const [note, setNote] = useState('')
@@ -43,8 +45,8 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
     <>
       <div className="ha-review" role="table" aria-label="Fila de revisão">
         <div className="ha-review__inner">
-          <div className="ha-review__head" role="row"><span role="columnheader">Tipo</span><span role="columnheader">Obra</span><span role="columnheader">Motivo</span><span role="columnheader">Aberto</span><span role="columnheader"><span className="ha-sr">Ações</span></span></div>
-          {items.length === 0 ? <div className="ha-review__empty">A fila está vazia. Novos itens aparecem aqui quando o sistema detecta duplicidade, contestação, emissor novo ou etiqueta removida.</div> : null}
+          <div className="ha-review__head" role="row"><span role="columnheader">Tipo</span><span role="columnheader">Obra</span><span role="columnheader">Motivo</span><span role="columnheader">Aberto</span><span role="columnheader">{readOnly ? 'Decisão' : <span className="ha-sr">Ações</span>}</span></div>
+          {items.length === 0 ? <div className="ha-review__empty">{readOnly ? 'Nenhuma decisão neste filtro.' : 'A fila está vazia. Novos itens aparecem aqui quando o sistema detecta duplicidade, contestação, emissor novo ou etiqueta removida.'}</div> : null}
           {items.map((i) => {
             const tone = REVIEW_KIND_TONES[i.kind]
             const done = decided[i.id]
@@ -66,7 +68,9 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
                 <span role="cell" className="ha-review__reason">{i.reason}</span>
                 <span role="cell" className="ha-review__ago">{i.ago}</span>
                 <span role="cell" className="ha-review__actions">
-                  {done ? <span className="ha-review__done">{done === 'APPROVED' ? 'Aprovado' : 'Rejeitado'}</span> : (<>
+                  {i.decided ? (
+                    <span className="ha-review__done" title={i.decided.note ?? undefined}>{decidedLine(i.decided.decision, i.decided.by, i.decided.ago)}{i.decided.note ? <span className="ha-review__who">“{i.decided.note}”</span> : null}</span>
+                  ) : done ? <span className="ha-review__done">{done === 'APPROVED' ? 'Aprovado' : 'Rejeitado'}</span> : readOnly ? null : (<>
                     <button type="button" className="ha-btn ha-btn--outline ha-btn--xs" onClick={() => setPending({ item: i, decision: 'REJECTED' })}>Rejeitar</button>
                     <button type="button" className="ha-btn ha-btn--ink ha-btn--xs" onClick={() => setPending({ item: i, decision: 'APPROVED' })}>Aprovar</button>
                   </>)}

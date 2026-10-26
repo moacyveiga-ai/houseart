@@ -2,6 +2,8 @@
 // data disappears; nothing is invented. The works filter is server-side (?obras=),
 // the exhibition tabs are a small client island.
 import Link from 'next/link'
+import { PublicReactButton } from './PublicReactButton'
+import { ArtistShare } from './ArtistShare'
 import { Icon } from '@/components/ds/Icon'
 import { StatusBadge } from '@/components/ds/StatusBadge'
 import type { PublicArtistPage, PublicWork } from '@/lib/public-content/server'
@@ -31,7 +33,7 @@ function WorkCard({ w }: { w: PublicWork }) {
   )
 }
 
-export function Artist({ a, filter }: { a: PublicArtistPage; filter: WorkFilter }) {
+export function Artist({ a, filter, viewer = { signedIn: false, following: false } }: { a: PublicArtistPage; filter: WorkFilter; viewer?: { signedIn: boolean; following: boolean } }) {
   const e = a.entries
   const works = a.works.filter((w) => passesWorkFilter(w.status, filter))
   const counts = Object.fromEntries(WORK_FILTERS.map((f) => [f.key, a.works.filter((w) => passesWorkFilter(w.status, f.key)).length])) as Record<WorkFilter, number>
@@ -82,9 +84,12 @@ export function Artist({ a, filter }: { a: PublicArtistPage; filter: WorkFilter 
           {a.languages.length ? <div className="hp-artist-langs">{a.languages.map((l) => <span key={l} className="hp-artist-lang">{l}</span>)}</div> : null}
           {a.quote ? <blockquote className="hp-artist-quote">“{a.quote}”</blockquote> : null}
           <div className="hp-artist-actions">
-            <button type="button" className="hp-artist-follow" aria-disabled="true" title="Em breve"><Icon name="notifications" size={20} />Seguir e receber novas obras</button>
+            {a.followMemberId ? (
+              <PublicReactButton target="MEMBER" targetId={a.followMemberId} kind="FOLLOW" on={viewer.following} signedIn={viewer.signedIn} className="hp-artist-follow" onClass="hp-artist-follow--on"
+                onChildren={<><Icon name="notifications_active" size={20} />Seguindo · você recebe as novas obras</>}><Icon name="notifications" size={20} />Seguir e receber novas obras</PublicReactButton>
+            ) : null}
             {a.works.length ? <a href="#obras" className="hp-artist-works-link">Ver {a.works.length} {a.works.length === 1 ? 'obra' : 'obras'}</a> : null}
-            <button type="button" className="hp-artist-share" aria-label="Compartilhar" aria-disabled="true" title="Em breve"><Icon name="ios_share" size={20} /></button>
+            <ArtistShare name={a.name} slug={a.slug} />
           </div>
         </div>
       </section>

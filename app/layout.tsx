@@ -4,6 +4,7 @@ import './globals.css'
 import './ds/tokens.css'
 import './ds/cells.css'
 import { antiFlashScript } from '@/lib/theme-routes'
+import { publicBaseUrl } from '@/lib/public-url'
 
 // Fraunces (display) + Inter (UI), exposed as --font-fraunces / --font-inter
 // and consumed by --ha-font-display / --ha-font-ui (app/ds/tokens.css).
@@ -14,8 +15,11 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' }
 
 export const metadata: Metadata = {
+  // absolute Open Graph and canonical URLs for every page (audit 2026-10-25: shared links had relative images)
+  metadataBase: new URL(publicBaseUrl()),
   title: 'HouseArt — Obras autenticadas',
   description: 'Certificação, proveniência e venda de obras de arte com escritura digital.',
+  openGraph: { siteName: 'HouseArt', locale: 'pt_BR', type: 'website', images: [{ url: '/brand/marca_houseart_full_horiz_color.png', alt: 'HouseArt' }] },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

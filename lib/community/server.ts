@@ -272,3 +272,10 @@ export async function newsSignals(viewer: number | null, newsId: number): Promis
   const [counts, mine, comments] = await Promise.all([countsOf('NEWS', [newsId]), myReactions(viewer, [{ kind: 'NEWS', id: newsId }]), commentCounts('NEWS', [newsId])])
   return { likes: counts.get(`${newsId}:LIKE`) ?? 0, liked: mine.has(`NEWS:${newsId}:LIKE`), saved: mine.has(`NEWS:${newsId}:SAVE`), comments: comments.get(newsId) ?? 0 }
 }
+
+/** Which of `ids` the viewer already reacted to with `kind` (public pages: "Seguindo", "Salvo"). */
+export async function reactedIds(viewer: number | null, targetKind: string, kind: string, ids: number[]): Promise<Set<number>> {
+  if (!viewer || !ids.length) return new Set()
+  const rows = await prisma.reaction.findMany({ where: { userId: viewer, targetKind, kind, targetId: { in: ids } }, select: { targetId: true } })
+  return new Set(rows.map((r) => r.targetId))
+}

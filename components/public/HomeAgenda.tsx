@@ -1,15 +1,16 @@
 'use client'
 // Agenda of the Home (HouseArt Home.dc.html › Home · Agenda): kind chips,
 // month tabs and the list, filtered in local state over the events the server
-// loaded. "Salvar" has no action yet (aria-disabled, "Em breve").
+// loaded. "Salvar" is the SAVE reaction on the event (shows in the Comunidade › Salvos).
 import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import { PublicReactButton } from './PublicReactButton'
 import { AGENDA_FILTERS, AGENDA_KIND_STYLE, dayPartsOf, filterAgenda, initialMonth, isAgendaKind, type MonthTab } from '@/lib/public-content/home-core'
 import { AGENDA_KIND_LABELS, type AgendaKind } from '@/lib/public-content/domain'
 
 export interface HomeAgendaEvent { id: number; kind: string; title: string; venue: string; city: string; startsOn: string; period: string | null }
 
-export function HomeAgenda({ tabs, events }: { tabs: MonthTab[]; events: HomeAgendaEvent[] }) {
+export function HomeAgenda({ tabs, events, savedIds = [], signedIn = false }: { tabs: MonthTab[]; events: HomeAgendaEvent[]; savedIds?: number[]; signedIn?: boolean }) {
   const [month, setMonth] = useState(() => initialMonth(tabs, events))
   const [kind, setKind] = useState<AgendaKind | null>(null)
   const shown = filterAgenda(events, month, kind)
@@ -45,7 +46,8 @@ export function HomeAgenda({ tabs, events }: { tabs: MonthTab[]; events: HomeAge
                   <span className="hp-home-event__title">{e.title}</span>
                   <span className="hp-home-event__place"><Icon name="location_on" size={16} />{e.venue} · {e.city}</span>
                 </div>
-                <button type="button" className="hp-home-event__save" aria-disabled="true" title="Em breve"><Icon name="event" size={18} />Salvar</button>
+                <PublicReactButton target="EVENT" targetId={e.id} kind="SAVE" on={savedIds.includes(e.id)} signedIn={signedIn} className="hp-home-event__save" onClass="hp-home-event__save--on"
+                  onChildren={<><Icon name="event_available" size={18} />Salvo</>}><Icon name="event" size={18} />Salvar</PublicReactButton>
               </div>
             )
           })}

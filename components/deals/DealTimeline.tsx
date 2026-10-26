@@ -54,13 +54,13 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
           <h3 className="ha-h3">Repartição dos valores</h3>
           <div className="ha-kv">{deal.split.map((s) => [<span key={`k${s.party}`}>{s.label}{s.party === 'PLATFORM' ? ` · ${deal.market === 'PRIMARY' ? '12%' : '4%'}` : ''}</span>, <span key={`v${s.party}`} className="ha-num">{formatBRL(BigInt(s.amountCents))}{s.payoutLabel ? ` · ${s.payoutLabel}` : s.status === 'RELEASED' ? ' · liberado' : ''}</span>])}</div>
           {deal.shipping ? <p className="ha-muted ha-sm">Transporte {deal.shipping.carrier} · rastreio {deal.shipping.tracking}{deal.shipping.insurer ? ` · seguro de trânsito ${deal.shipping.insurer}` : ''}</p> : null}
-          {deal.phase === 'ESCROW' && !deal.sellerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
+          {deal.phase === 'ESCROW' && !deal.sellerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'DOCUMENTS' ? (
             <div className="ha-row">
               <input className="ha-input" placeholder="Transportadora" value={ship.carrier} onChange={(e) => setShip({ ...ship, carrier: e.target.value })} />
               <input className="ha-input" placeholder="Rastreio" value={ship.tracking} onChange={(e) => setShip({ ...ship, tracking: e.target.value })} />
               <input className="ha-input" placeholder="Seguradora (opcional)" value={ship.insurer} onChange={(e) => setShip({ ...ship, insurer: e.target.value })} />
-              <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" disabled={!ship.carrier || !ship.tracking} onClick={() => post('shipping', { carrier: ship.carrier, tracking: ship.tracking, insurer: ship.insurer || undefined })}>Registrar envio</button>
+              <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" disabled={busy || !ship.carrier || !ship.tracking} onClick={() => post('shipping', { carrier: ship.carrier, tracking: ship.tracking, insurer: ship.insurer || undefined })}>Registrar envio</button>
             </div>
           ) : null}
         </div>
@@ -75,7 +75,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
           </div>
           {deal.phase === 'OFFER_ACCEPTED' && !deal.exception ? <EscrowPay dealId={deal.id} totalCents={(amount + extras).toString()} pending={deal.escrowPending} /> : null}
           {deal.exception === 'CANCELLED' ? <p className="ha-muted">Negócio cancelado: o pagamento não foi identificado no prazo e a reserva da obra foi desfeita.</p> : null}
-          {deal.phase === 'ESCROW' && !deal.buyerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
+          {deal.phase === 'ESCROW' && !deal.buyerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'ESCROW' && deal.buyerSigned && !deal.sellerSigned ? <p className="ha-muted">Aguardando a assinatura do vendedor.</p> : null}
           {/* Compras › cartão de recebimento (HouseArt Web App.dc.html: "A obra chegou?" → "Escritura emitida em seu nome") */}
           {done ? (
@@ -94,7 +94,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
               <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => { void post('confirm-delivery') }}><Icon name="contactless" size={18} />Confirmar recebimento</button>
             </TagReader>
           ) : deal.phase === 'DELIVERY' || deal.phase === 'TRANSFER' ? (
-            <div className="ha-callout"><Icon name="contract" /><p className="ha-sm" style={{ margin: 0 }}>Leitura válida · posse confirmada. A escritura está sendo emitida em seu nome.</p></div>
+            <div className="ha-callout"><Icon name="contract" /><p className="ha-sm" style={{ margin: 0 }}>Leitura registrada. Se a escritura não aparecer em seu nome em instantes, fale com a HouseArt.</p></div>
           ) : null}
         </div>
       )}

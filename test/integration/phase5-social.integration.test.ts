@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
-import { listConversations, openConversation, readConversation, sendMessage, unreadMessages } from '@/lib/messaging/server'
+import { listConversations, openConversation, readConversation, reportConversation, sendMessage, unreadMessages } from '@/lib/messaging/server'
 import { addComment, artworkCounts, artworkSignals, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
 import { isExpoEndpoint, pushConfig, savePushSubscription } from '@/lib/notifications/push'
 import { createScenario, type Scenario } from './fixtures'
@@ -14,7 +14,7 @@ let buyerId: number
 beforeEach(async () => {
   process.env.FLAG_TENANT_SCOPE = '1'
   s = await createScenario()
-  await truncateTables(['Mandate', 'Offer', 'Deal', 'Contact', 'Notification', 'Conversation', 'Post', 'PostComment', 'Reaction', 'PollVote', 'PushSubscription', 'NewsArticle', 'AgendaEvent', 'rate_limit_bucket'])
+  await truncateTables(['Mandate', 'Offer', 'Deal', 'Contact', 'Notification', 'Conversation', 'Post', 'PostComment', 'Reaction', 'PollVote', 'PushSubscription', 'NewsArticle', 'AgendaEvent', 'ReviewQueueItem', 'rate_limit_bucket'])
   await prisma.artwork.update({ where: { id: s.a1.artworkId }, data: { status: 'AUTHENTICATED', seal: 'GREEN', publicId: 'HA-2026-TEST-0007' } })
   await asPanel(s.a1.userId, async ({ scope, user }) => {
     await listArtworkForSale(scope, s.a1.artworkId, { listPriceCents: 1_000_000n, reservePriceCents: 600_000n, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false }, { userId: user.id })
@@ -115,6 +115,35 @@ describe('artwork favorites and search', () => {
     expect((await search('ha-2026-test-0007')).artworks).toHaveLength(1)
     expect((await search('')).total).toBe(0)
   })
+})
+
+describe('conversation header and report', () => {
+  it('my side comes from who holds the artwork; Ofertar only for the buyer; a report goes to the staff queue once', async () => {
+    const id = await openConversation(buyerId, s.a1.artworkId)
+    // signing up as a gallery does not make it verified; the team's approval does
+    expect((await readConversation(buyerId, id)).header.other.verified).toBe(false)
+    await prisma.member.update({ where: { id: s.a1.memberId }, data: { approvedAt: new Date() } })
+    const asBuyer = await readConversation(buyerId, id)
+    expect(asBuyer.header).toMatchObject({ myRole: 'buyer', artworkPrice: expect.stringContaining('R$'), other: { verified: true } })
+    const asSeller = await readConversation(s.a1.userId, id)
+    expect(asSeller.header).toMatchObject({ myRole: 'seller', canOffer: false, other: { verified: false } })
+    await expect(reportConversation(buyerId, id, { reason: 'NOPE' })).rejects.toMatchObject({ status: 422 })
+    const r1 = await reportConversation(buyerId, id, { reason: 'OFF_PLATFORM', note: 'pediu Pix direto no 71 99999-1234' })
+    const r2 = await reportConversation(buyerId, id, { reason: 'SCAM' })
+    expect(r2.id).toBe(r1.id)
+    // the other side keeps its own report while the first is open
+    const counter = await reportConversation(s.a1.userId, id, { reason: 'SCAM' })
+    expect(counter.id).not.toBe(r1.id)
+    // a decided report is not refiled the same day
+    await prisma.reviewQueueItem.update({ where: { id: r1.id }, data: { status: 'REJECTED' } })
+    expect((await reportConversation(buyerId, id, { reason: 'ABUSE' })).id).toBe(r1.id)
+    const item = await prisma.reviewQueueItem.findUniqueOrThrow({ where: { id: r1.id } })
+    expect(item).toMatchObject({ kind: 'MESSAGE_REPORT', status: 'REJECTED', refId: id, artworkId: s.a1.artworkId, reporterUserId: buyerId })
+    expect(item.reason).toContain('pediu Pix direto')
+    expect(item.reason).not.toContain('99999')
+    // someone outside the conversation cannot report it
+    await expect(reportConversation(s.b.userId, id, { reason: 'ABUSE' })).rejects.toMatchObject({ status: 404 })
+  }, 60_000)
 })
 
 describe('comments on an artwork', () => {

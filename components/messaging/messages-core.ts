@@ -7,7 +7,11 @@ export const MESSAGES_DESKTOP_MIN = 1024
 
 export type MessageRole = 'buyer' | 'seller'
 
-export interface ConversationView { id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null; other: { id: number; name: string; initials: string; sub: string }; preview: string; when: string; unread: number }
+export interface ConversationView {
+  id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null
+  other: { id: number; name: string; initials: string; sub: string; verified?: boolean }; preview: string; when: string; unread: number
+  myRole?: MessageRole; artworkPrice?: string | null; canOffer?: boolean
+}
 export interface MessageView { id: number; mine: boolean; kind: MessageKind; body: string; at: string; offerId: number | null }
 
 /** The quick replies of the prototype, by the side of the counter. */
@@ -15,6 +19,22 @@ export const QUICK_REPLIES: Record<MessageRole, readonly string[]> = {
   buyer: ['Ainda disponível?', 'Posso ver ao vivo?', 'Como fica o frete?', 'Tem o condition report?'],
   seller: ['Sim, segue disponível', 'Quinta às 15h funciona?', 'Envio o condition report', 'Frete grátis em Salvador'],
 }
+
+/** "Obra minha" of the Web Colecionador (`cvRapidas`): the collector selling their own artwork. */
+export const COLLECTOR_SELLER_REPLIES = ['Posso enviar mais fotos', 'Aceito retirada na galeria', 'O certificado está público'] as const
+
+/**
+ * The quick replies of a conversation: by MY side in it (the server says, from who holds the artwork),
+ * not by my profile — a collector selling their own work answers as the seller.
+ */
+export function quickRepliesOf(profileRole: MessageRole, conversationRole: MessageRole | undefined): readonly string[] {
+  const side = conversationRole ?? profileRole
+  if (side === 'buyer') return QUICK_REPLIES.buyer
+  return profileRole === 'buyer' ? COLLECTOR_SELLER_REPLIES : QUICK_REPLIES.seller
+}
+
+/** "Galeria · verificado pela HouseArt" — the sub line of the header. */
+export const headerSubOf = (other: ConversationView['other']) => (other.verified ? `${other.sub} · verificado pela HouseArt` : other.sub)
 
 /** The nav profile → which side of the counter writes (collector = buyer; the rest sell). */
 export function roleOfProfile(profile: string): MessageRole {

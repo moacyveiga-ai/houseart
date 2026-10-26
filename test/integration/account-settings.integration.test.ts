@@ -61,4 +61,17 @@ describe('excluir minha conta', () => {
     expect(rows[0]).toMatchObject({ kind: 'ORDER', amount: expect.stringContaining('500') })
     expect(await receiptsOf(s.b.userId)).toEqual([])
   }, 60_000)
+
+  it('only a collector closes the account here; an offer made by e-mail before login also blocks', async () => {
+    await expect(requestAccountDeletion(s.b.userId, 'EXCLUIR')).rejects.toMatchObject({ status: 403 })
+    await prisma.offer.create({ data: { code: 'OFR-2026-000002', artworkId: s.a1.artworkId, sellerMemberId: s.a1.memberId, memberId: s.a1.memberId, buyerUserId: null, buyerName: 'Lia', buyerEmail: 'lia@col.test', offeredCents: 100_000n, status: 'NEGOTIATING', expiresAt: new Date(Date.now() + 86_400_000) } })
+    expect(await openNegotiations(buyerId)).toMatchObject({ offers: 1 })
+    await expect(requestAccountDeletion(buyerId, 'EXCLUIR')).rejects.toMatchObject({ status: 409 })
+  }, 60_000)
+
+  it('a transfer fee paid as an order is not listed again as a service', async () => {
+    await prisma.order.create({ data: { code: 'ORD-T-9', userId: buyerId, payerKind: 'BUYER', serviceCode: 'TRANSFER_FEE', description: 'Taxa de transferência', amountCents: 19_900n, status: 'PAID', paidAt: new Date(), transferId: 999 } })
+    expect((await receiptsOf(buyerId)).filter((r) => r.kind === 'ORDER')).toEqual([])
+  }, 60_000)
 })
+

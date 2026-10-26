@@ -23,6 +23,8 @@ export async function saveAddress(userId: number, raw: Record<string, unknown>, 
   const chk = checkAddress(raw)
   if (!chk.ok) throw new ArtworkError('BAD_ADDRESS', chk.error, 422)
   return prisma.$transaction(async (tx) => {
+    // one person's saves wait for each other: the default switch and the count stay consistent (no 500 on the index)
+    await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
     const current = id != null ? await tx.shippingAddress.findFirst({ where: { id, userId } }) : null
     if (id != null && !current) throw new ArtworkError('NOT_FOUND', 'Endereço não encontrado.', 404)
     const count = await tx.shippingAddress.count({ where: { userId } })
@@ -39,6 +41,7 @@ export async function saveAddress(userId: number, raw: Record<string, unknown>, 
 
 export async function deleteAddress(userId: number, id: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
     const a = await tx.shippingAddress.findFirst({ where: { id, userId } })
     if (!a) throw new ArtworkError('NOT_FOUND', 'Endereço não encontrado.', 404)
     await tx.shippingAddress.delete({ where: { id } })

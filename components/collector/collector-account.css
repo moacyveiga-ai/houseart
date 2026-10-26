@@ -28,7 +28,6 @@
 .ha-cacct__list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: var(--ha-text-body-sm); color: var(--ha-fg-body); }
 .ha-cacct__danger { border: 0; background: none; color: var(--ha-alert-500); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; align-self: center; padding: 8px; }
 .ha-cacct__danger:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
-.ha-btn--danger { background: var(--ha-alert-500); color: var(--ha-paper-50); border-color: var(--ha-alert-500); }
 .ha-receipts { display: flex; flex-direction: column; }
 .ha-receipt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ha-paper-200); color: inherit; text-decoration: none; }
 .ha-receipt__k { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }

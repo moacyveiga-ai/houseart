@@ -6,9 +6,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
-import { CONTACT_GUARD, hasContactLeak, MESSAGE_MAX } from '@/lib/messaging/core'
 import { Modal } from '@/components/ds/Modal'
-import { REPORT_NOTE_MAX, REPORT_REASONS, type ReportReason } from '@/lib/messaging/core'
+import { CONTACT_GUARD, hasContactLeak, MESSAGE_MAX, REPORT_NOTE_MAX, REPORT_REASONS, type ReportReason } from '@/lib/messaging/core'
 import { bubbleTime, headerSubOf, lastIdOf, mergeMessages, quickRepliesOf, type ConversationView, type MessageRole, type MessageView } from './messages-core'
 
 const POLL_MS = 5000

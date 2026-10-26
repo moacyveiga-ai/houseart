@@ -67,10 +67,22 @@ export function sideOfConversation(input: { artworkMemberUserId: number | null; 
   return 'buyer'
 }
 
-/** "verificado pela HouseArt": an active member (artist, gallery, advisor) or a collector the team confirmed or who proved e-mail and phone. */
-export function verifiedByHouse(u: { memberKind: string | null; memberStatus: string | null; collectorVerifiedAt: Date | null; emailVerifiedAt: Date | null; phoneVerifiedAt: Date | null }): boolean {
-  if (u.memberKind && u.memberKind !== 'COLLECTOR' && u.memberStatus === 'ACTIVE') return true
+/**
+ * "verificado pela HouseArt": someone the house vouches for — a member the team approved, a collector the team
+ * confirmed, or anyone who proved e-mail AND phone. Signing up as a gallery alone proves nothing (members are born
+ * ACTIVE without approval), so the member kind never grants the badge by itself.
+ */
+export function verifiedByHouse(u: { memberStatus: string | null; memberApprovedAt: Date | null; collectorVerifiedAt: Date | null; emailVerifiedAt: Date | null; phoneVerifiedAt: Date | null }): boolean {
+  if (u.memberStatus === 'ACTIVE' && u.memberApprovedAt) return true
   return !!u.collectorVerifiedAt || (!!u.emailVerifiedAt && !!u.phoneVerifiedAt)
+}
+
+/** The report note keeps no contact: e-mails, links and long digit runs (phone, CPF, Pix key) are blanked out. */
+export function redactContacts(text: string): string {
+  return text
+    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[contato removido]')
+    .replace(/\b(?:https?:\/\/|www\.)\S+/gi, '[contato removido]')
+    .replace(/\+?\d[\d\s().\-/]{6,}\d/g, '[contato removido]')
 }
 
 /** Denunciar (handoff Web/App Colecionador › Conversa › flag): the reasons the person picks. */

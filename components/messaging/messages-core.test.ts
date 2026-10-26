@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { redactContacts, verifiedByHouse } from '@/lib/messaging/core'
 import { bubbleTime, COLLECTOR_SELLER_REPLIES, conversationIdOfPath, headerSubOf, mergeMessages, QUICK_REPLIES, quickRepliesOf, roleOfProfile, touchRow, type ConversationView, type MessageView } from './messages-core'
 
 const m = (id: number): MessageView => ({ id, mine: false, kind: 'TEXT', body: `m${id}`, at: '2026-10-22T13:00:00.000Z', offerId: null })
@@ -41,5 +42,15 @@ describe('messages-core', () => {
     expect(out.map((r) => r.id)).toEqual([2, 1])
     expect(out[0]).toMatchObject({ unread: 0, preview: 'Você: oi' })
     expect(touchRow([row(1)], row(5), {}).map((r) => r.id)).toEqual([5, 1])
+  })
+
+  it('verified needs the house, never the member kind alone; the report note keeps no contact', () => {
+    const none = { memberStatus: 'ACTIVE', memberApprovedAt: null, collectorVerifiedAt: null, emailVerifiedAt: null, phoneVerifiedAt: null }
+    expect(verifiedByHouse(none)).toBe(false)
+    expect(verifiedByHouse({ ...none, memberApprovedAt: new Date() })).toBe(true)
+    expect(verifiedByHouse({ ...none, emailVerifiedAt: new Date() })).toBe(false)
+    expect(verifiedByHouse({ ...none, emailVerifiedAt: new Date(), phoneVerifiedAt: new Date() })).toBe(true)
+    expect(redactContacts('me liga 71 99999-1234 ou a@b.com, site www.x.com')).toBe('me liga [contato removido] ou [contato removido], site [contato removido]')
+    expect(redactContacts('pediu R$ 300 de sinal')).toBe('pediu R$ 300 de sinal')
   })
 })

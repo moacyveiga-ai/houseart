@@ -42,7 +42,7 @@ export const REVIEW_EFFECTS: Record<ReviewKind, Record<ReviewDecision, string>> 
     REJECTED: 'Sem restrição. Fica registrado que a obra foi conferida.',
   },
   MESSAGE_REPORT: {
-    APPROVED: 'A denúncia procede. Fica registrada na conta denunciada e a equipe fala com a pessoa.',
+    APPROVED: 'A denúncia procede. A decisão fica registrada aqui e a equipe fala com a pessoa denunciada.',
     REJECTED: 'A denúncia não procede. Fica arquivada.',
   },
 }

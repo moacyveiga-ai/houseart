@@ -120,17 +120,27 @@ describe('artwork favorites and search', () => {
 describe('conversation header and report', () => {
   it('my side comes from who holds the artwork; Ofertar only for the buyer; a report goes to the staff queue once', async () => {
     const id = await openConversation(buyerId, s.a1.artworkId)
+    // signing up as a gallery does not make it verified; the team's approval does
+    expect((await readConversation(buyerId, id)).header.other.verified).toBe(false)
+    await prisma.member.update({ where: { id: s.a1.memberId }, data: { approvedAt: new Date() } })
     const asBuyer = await readConversation(buyerId, id)
     expect(asBuyer.header).toMatchObject({ myRole: 'buyer', artworkPrice: expect.stringContaining('R$'), other: { verified: true } })
     const asSeller = await readConversation(s.a1.userId, id)
     expect(asSeller.header).toMatchObject({ myRole: 'seller', canOffer: false, other: { verified: false } })
     await expect(reportConversation(buyerId, id, { reason: 'NOPE' })).rejects.toMatchObject({ status: 422 })
-    const r1 = await reportConversation(buyerId, id, { reason: 'OFF_PLATFORM', note: 'pediu Pix direto' })
+    const r1 = await reportConversation(buyerId, id, { reason: 'OFF_PLATFORM', note: 'pediu Pix direto no 71 99999-1234' })
     const r2 = await reportConversation(buyerId, id, { reason: 'SCAM' })
     expect(r2.id).toBe(r1.id)
+    // the other side keeps its own report while the first is open
+    const counter = await reportConversation(s.a1.userId, id, { reason: 'SCAM' })
+    expect(counter.id).not.toBe(r1.id)
+    // a decided report is not refiled the same day
+    await prisma.reviewQueueItem.update({ where: { id: r1.id }, data: { status: 'REJECTED' } })
+    expect((await reportConversation(buyerId, id, { reason: 'ABUSE' })).id).toBe(r1.id)
     const item = await prisma.reviewQueueItem.findUniqueOrThrow({ where: { id: r1.id } })
-    expect(item).toMatchObject({ kind: 'MESSAGE_REPORT', status: 'OPEN', refId: id, artworkId: s.a1.artworkId })
+    expect(item).toMatchObject({ kind: 'MESSAGE_REPORT', status: 'REJECTED', refId: id, artworkId: s.a1.artworkId, reporterUserId: buyerId })
     expect(item.reason).toContain('pediu Pix direto')
+    expect(item.reason).not.toContain('99999')
     // someone outside the conversation cannot report it
     await expect(reportConversation(s.b.userId, id, { reason: 'ABUSE' })).rejects.toMatchObject({ status: 404 })
   }, 60_000)

@@ -8,7 +8,7 @@ import { notify } from '@/lib/notifications/server'
 import { ArtworkError } from '@/lib/artworks/server'
 import { formatBRL } from '@/lib/artworks/domain'
 import { openReviewItem } from '@/lib/admin-review/server'
-import { checkMessage, isReportReason, otherOf, pairOf, previewOf, REPORT_NOTE_MAX, reportReasonLabel, sideOfConversation, verifiedByHouse, whenLabel, type MessageKind } from './core'
+import { checkMessage, isReportReason, otherOf, pairOf, previewOf, redactContacts, REPORT_NOTE_MAX, reportReasonLabel, sideOfConversation, verifiedByHouse, whenLabel, type MessageKind } from './core'
 
 export interface ConversationRow {
   id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null
@@ -104,17 +104,19 @@ async function requireParticipant(me: number, conversationId: number) {
 export async function readConversation(me: number, conversationId: number, afterId = 0): Promise<{ header: ConversationRow; messages: MessageRow[] }> {
   const c = await requireParticipant(me, conversationId)
   const other = otherOf(c, me)
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: other }, select: { id: true, name: true, collectorVerifiedAt: true, emailVerifiedAt: true, phoneVerifiedAt: true, member: { select: { displayName: true, kind: true, status: true } } } })
+  const u = await prisma.user.findUniqueOrThrow({ where: { id: other }, select: { id: true, name: true, collectorVerifiedAt: true, emailVerifiedAt: true, phoneVerifiedAt: true, member: { select: { displayName: true, kind: true, status: true, approvedAt: true } } } })
   const meRow = await prisma.user.findUniqueOrThrow({ where: { id: me }, select: { tenantId: true, member: { select: { kind: true } } } })
   const a = c.artworkId ? await prisma.artwork.findUnique({ where: { id: c.artworkId }, select: { title: true, publicId: true, status: true, seal: true, saleMode: true, listPriceCents: true, listingPausedAt: true, member: { select: { userId: true, tenantId: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : null
-  const myRole = a ? sideOfConversation({ artworkMemberUserId: a.member.userId, artworkTenantId: a.member.tenantId, me, myTenantId: meRow.tenantId, myMemberKind: meRow.member?.kind ?? null }) : undefined
+  // the artwork's member lost its login (SetNull): the tenant ADMIN answers for it, as in counterpartOfArtwork
+  const answerer = a ? a.member.userId ?? (await prisma.user.findFirst({ where: { tenantId: a.member.tenantId, tenantRole: 'ADMIN', active: true }, select: { id: true }, orderBy: { id: 'asc' } }))?.id ?? null : null
+  const myRole = a ? sideOfConversation({ artworkMemberUserId: answerer, artworkTenantId: a.member.tenantId, me, myTenantId: meRow.tenantId, myMemberKind: meRow.member?.kind ?? null }) : undefined
   const listed = !!a && a.status === 'LISTED' && a.seal === 'GREEN' && !!a.publicId && !a.listingPausedAt
   const artworkPrice = !listed ? null : a!.saleMode === 'ON_REQUEST' || a!.listPriceCents === null ? 'Sob consulta' : formatBRL(a!.listPriceCents)
   const msgs = await prisma.message.findMany({ where: { conversationId, id: { gt: afterId } }, orderBy: { id: 'asc' }, take: 200 })
   await prisma.conversationParticipant.updateMany({ where: { conversationId, userId: me }, data: { unread: 0, lastReadAt: new Date() } })
   const name = u.member?.displayName ?? u.name
   return {
-    header: { id: c.id, artworkId: c.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null, other: { id: u.id, name, initials: initials(name), sub: await subOf(u.id), verified: verifiedByHouse({ memberKind: u.member?.kind ?? null, memberStatus: u.member?.status ?? null, collectorVerifiedAt: u.collectorVerifiedAt, emailVerifiedAt: u.emailVerifiedAt, phoneVerifiedAt: u.phoneVerifiedAt }) }, preview: c.lastPreview ?? '', when: c.lastMessageAt ? whenLabel(c.lastMessageAt) : '', unread: 0,
+    header: { id: c.id, artworkId: c.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null, other: { id: u.id, name, initials: initials(name), sub: await subOf(u.id), verified: verifiedByHouse({ memberStatus: u.member?.status ?? null, memberApprovedAt: u.member?.approvedAt ?? null, collectorVerifiedAt: u.collectorVerifiedAt, emailVerifiedAt: u.emailVerifiedAt, phoneVerifiedAt: u.phoneVerifiedAt }) }, preview: c.lastPreview ?? '', when: c.lastMessageAt ? whenLabel(c.lastMessageAt) : '', unread: 0,
       myRole, artworkPrice, canOffer: listed && myRole === 'buyer' && a!.saleMode === 'FIXED_WITH_OFFERS' },
     messages: msgs.map((m) => ({ id: m.id, mine: m.senderUserId === me, kind: m.kind as MessageKind, body: m.body, at: m.createdAt.toISOString(), offerId: m.offerId })),
   }
@@ -158,7 +160,7 @@ export async function systemLine(opts: { buyerUserId: number | null; artworkId: 
 export async function reportConversation(me: number, conversationId: number, raw: { reason?: unknown; note?: unknown }): Promise<{ id: number }> {
   const c = await requireParticipant(me, conversationId)
   if (!isReportReason(raw.reason)) throw new ArtworkError('BAD_REASON', 'Escolha o motivo da denúncia.', 422)
-  const note = typeof raw.note === 'string' ? raw.note.replace(/\s+/g, ' ').trim().slice(0, REPORT_NOTE_MAX) : ''
+  const note = typeof raw.note === 'string' ? redactContacts(raw.note.replace(/\s+/g, ' ').trim()).slice(0, REPORT_NOTE_MAX) : ''
   const otherId = otherOf(c, me)
   const [reporter, reported] = await Promise.all([
     prisma.user.findUnique({ where: { id: me }, select: { name: true } }),
@@ -171,6 +173,6 @@ export async function reportConversation(me: number, conversationId: number, raw
     `conversa #${conversationId}`,
     note ? `“${note}”` : null,
   ].filter(Boolean).join(' · ')
-  const item = await openReviewItem({ kind: 'MESSAGE_REPORT', artworkId: c.artworkId, tenantId: reported?.tenantId ?? null, reason, refId: conversationId })
+  const item = await openReviewItem({ kind: 'MESSAGE_REPORT', artworkId: c.artworkId, tenantId: reported?.tenantId ?? null, reason, refId: conversationId, reporterUserId: me })
   return { id: item.id }
 }

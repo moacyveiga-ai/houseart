@@ -96,9 +96,16 @@ export async function sellOwnArtwork(userId: number, artworkId: number, m: { lis
 export const ARTWORK_SERVICE_CODES = ['CERTIFICATION', 'APPRAISAL_SIGNED', 'PROVENANCE_CHECK', 'APPRAISAL_FORENSIC', 'COLLECTION_INSURANCE', 'TRANSIT_INSURANCE', 'SHIPPING', 'PARTNER_SERVICE'] as const
 export type ArtworkServiceCode = (typeof ARTWORK_SERVICE_CODES)[number]
 
+/**
+ * What the "Serviços para esta obra" sheet lists: everything above except the certification, which
+ * left the list in the new prototype (the collector certifies by registering the artwork). Ordering
+ * CERTIFICATION stays accepted — the app's "Certifique primeiro" asks for it directly.
+ */
+export const LISTED_ARTWORK_SERVICE_CODES = ARTWORK_SERVICE_CODES.filter((c) => c !== 'CERTIFICATION')
+
 export async function artworkServices(): Promise<{ code: string; name: string; description: string; priceCents: bigint; unit: string }[]> {
   const rows = await catalog()
-  return rows.filter((r) => (ARTWORK_SERVICE_CODES as readonly string[]).includes(r.code)).map((r) => ({ code: r.code, name: r.name, description: r.description ?? '', priceCents: r.priceCents, unit: r.unit }))
+  return rows.filter((r) => (LISTED_ARTWORK_SERVICE_CODES as readonly string[]).includes(r.code)).map((r) => ({ code: r.code, name: r.name, description: r.description ?? '', priceCents: r.priceCents, unit: r.unit }))
 }
 
 /** Orders a service for an artwork the person holds (certificate) or registered as theirs. */

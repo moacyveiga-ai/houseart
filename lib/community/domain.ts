@@ -43,7 +43,8 @@ export function checkPost(raw: Record<string, unknown>): PostCheck {
   if (!POST_KINDS.includes(kind)) return { ok: false, error: 'Tipo de post inválido.' }
   const body = str(raw.body, POST_BODY_MAX)
   const artworkId = typeof raw.artworkId === 'number' && Number.isInteger(raw.artworkId) && raw.artworkId > 0 ? raw.artworkId : null
-  const imageUrl = typeof raw.imageUrl === 'string' && /^https?:\/\//.test(raw.imageUrl) ? raw.imageUrl.slice(0, 500) : null
+  // the photo of the post is one uploaded to the house (absolute, or the relative route of the media store)
+  const imageUrl = typeof raw.imageUrl === 'string' && /^(https?:\/\/|\/api\/public\/media\/|\/uploads\/)/.test(raw.imageUrl) ? raw.imageUrl.slice(0, 500) : null
   if (kind === 'PHOTO' && !imageUrl && !artworkId) return { ok: false, error: 'Um post de foto precisa de uma imagem ou de uma obra.' }
   if (kind === 'TEXT' && !body) return { ok: false, error: 'Escreva alguma coisa.' }
   let pollOptions: string[] | undefined

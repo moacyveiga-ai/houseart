@@ -10,6 +10,8 @@ import { Toast } from '@/components/ds/Toast'
 import { brandOf, checkCard, CARD_BRAND_LABELS, type CardBrand, type PaymentMethodView } from '@/lib/payment-methods/domain'
 import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
 import { StripeCardForm } from './StripeCardForm'
+import type { WalletLedgerView } from '@/lib/payment-methods/ledger-server'
+import { dataBR } from '@/lib/timezone'
 import { brandMark, cardPreviewNumber, EMPTY_CARD_FORM, expiresSoon, expiryForApi, formatCardNumber, formatCep, formatCvc, formatExpiry, maskedNumber, type NewCardForm } from './cards-core'
 
 const MARKS: CardBrand[] = ['visa', 'mastercard', 'amex', 'elo']
@@ -46,7 +48,7 @@ function CardFace({ brand, number, holder, exp, tag, small }: { brand: CardBrand
 }
 
 /** `stripe` (test/live): the sheet is Stripe Elements; null keeps the mock form of the prototype. */
-export function CardsScreen({ methods: initial, holderName, payout, stripe = null }: { methods: PaymentMethodView[]; holderName: string; payout: { href: string; registered: boolean } | null; stripe?: { publishableKey: string } | null }) {
+export function CardsScreen({ methods: initial, holderName, payout, stripe = null, ledger = null }: { methods: PaymentMethodView[]; holderName: string; payout: { href: string; registered: boolean } | null; stripe?: { publishableKey: string } | null; ledger?: WalletLedgerView | null }) {
   const [methods, setMethods] = useState(initial)
   const [open, setOpen] = useState<number | null>(null)
   const [sheet, setSheet] = useState(false)
@@ -116,6 +118,12 @@ export function CardsScreen({ methods: initial, holderName, payout, stripe = nul
             <p className="ha-sm ha-muted" style={{ margin: 0 }}>Um cartão salvo deixa a compra direta e a pré-autorização das ofertas prontas em um toque.</p>
           </div>
         )}
+        {ledger ? (
+          <div className="ha-cards-balances">
+            <div className="ha-cards-balance"><span className="ha-cards-balance__k"><Icon name="lock" size={16} />Em garantia</span><span className="ha-cards-balance__v">{ledger.escrow.amount}</span><span className="ha-cards-balance__n">{ledger.escrow.note}</span></div>
+            {ledger.receivable ? <div className="ha-cards-balance"><span className="ha-cards-balance__k"><Icon name="south_west" size={16} />A receber</span><span className="ha-cards-balance__v">{ledger.receivable.amount}</span><span className="ha-cards-balance__n">{ledger.receivable.note}</span></div> : null}
+          </div>
+        ) : null}
         {payout ? (
           <div className="ha-stack ha-stack--3">
             <h2 className="ha-cards__title">Recebimentos das vendas</h2>
@@ -160,6 +168,21 @@ export function CardsScreen({ methods: initial, holderName, payout, stripe = nul
           {methods.length === 0 ? <span className="ha-cards-empty">Nenhum cartão salvo.</span> : null}
           <button type="button" className="ha-cards-add" onClick={openSheet}><Icon name="add_card" size={20} />Adicionar cartão</button>
         </div>
+        {ledger ? (
+          <>
+            <h2 className="ha-cards__title">Movimentações</h2>
+            <div className="ha-cards-moves">
+              {ledger.movements.map((m) => (
+                <div key={m.key} className="ha-cards-move">
+                  <span className={`ha-cards-move__ic ha-cards-move__ic--${m.tone}`}><Icon name={m.icon} size={18} /></span>
+                  <span className="ha-stack ha-cards-move__txt"><span className="ha-cards-move__t">{m.title}</span><span className="ha-cards-move__s">{m.sub} · {dataBR(m.at)}</span></span>
+                  <span className={`ha-cards-move__v ha-cards-move__v--${m.tone}`}>{m.amount}</span>
+                </div>
+              ))}
+              {ledger.movements.length === 0 ? <span className="ha-cards-empty">Nenhuma movimentação ainda.</span> : null}
+            </div>
+          </>
+        ) : null}
       </section>
 
       {stripe ? (

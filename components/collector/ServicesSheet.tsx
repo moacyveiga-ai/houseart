@@ -1,8 +1,8 @@
 'use client'
 // "Serviços para uma obra" (handoff "HouseArt App Colecionador" › Serviços para uma obra, step
 // `cbP4` of `CB_SERV`): the catalog services a collector can order for ONE artwork, multi-select,
-// price or "Sob orçamento" (the catalog has no deadlines: none is shown). Certification comes
-// first and reads "Necessária para vender" while the artwork has no green seal. Confirm →
+// price or "Sob orçamento" (the catalog has no deadlines: none is shown). Certification left the
+// list, as in the new prototype (the collector certifies by registering the artwork). Confirm →
 // POST /api/collector/artworks/<id>/services per service → the caller's toast.
 import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
@@ -12,10 +12,9 @@ import './collector-sheets.css'
 
 export interface ServiceItem { code: string; name: string; description: string; priceCents: string; unit: string }
 
-export function ServicesSheet({ artworkId, title, sealGreen, open, onClose, onDone }: { artworkId: number; title: string; sealGreen: boolean; open: boolean; onClose: () => void; onDone: (message: string) => void }) {
+export function ServicesSheet({ artworkId, title, open, onClose, onDone }: { artworkId: number; title: string; sealGreen?: boolean; open: boolean; onClose: () => void; onDone: (message: string) => void }) {
   const [items, setItems] = useState<ServiceItem[] | null>(null)
-  // The sheet is mounted when it opens (the wallet keys it by artwork and open), so the initial selection is enough.
-  const [sel, setSel] = useState<Record<string, boolean>>((): Record<string, boolean> => (sealGreen ? {} : { CERTIFICATION: true }))
+  const [sel, setSel] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -71,13 +70,12 @@ export function ServicesSheet({ artworkId, title, sealGreen, open, onClose, onDo
           {items === null ? <span className="ha-muted ha-sm">Carregando…</span> : null}
           {items?.map((s) => {
             const on = !!sel[s.code]
-            const need = s.code === 'CERTIFICATION' && !sealGreen
             return (
               <div key={s.code} className={`ha-cs__svc${on ? ' ha-cs__svc--on' : ''}`}>
                 <button type="button" className="ha-cs__svc-btn" role="checkbox" aria-checked={on} onClick={() => setSel({ ...sel, [s.code]: !on })}>
                   <span className="ha-cs__svc-i"><Icon name={SERVICE_ICONS[s.code] ?? 'home_repair_service'} size={20} /></span>
                   <span className="ha-cs__svc-txt">
-                    <span className="ha-cs__svc-n">{s.name}{need ? <span className="ha-cs__svc-tag ha-cs__svc-tag--need">Necessária para vender</span> : null}</span>
+                    <span className="ha-cs__svc-n">{s.name}</span>
                     {s.description ? <span className="ha-cs__svc-d">{s.description}</span> : null}
                     <span className="ha-cs__svc-p">{servicePriceLabel(s, formatBRL)}</span>
                   </span>

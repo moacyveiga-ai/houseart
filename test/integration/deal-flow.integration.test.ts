@@ -219,7 +219,9 @@ describe('deal flow', () => {
     expect(ownRow.artist.name).toBe('Joana Teixeira')
     await expect(registerOwnArtwork(helena.id, { artistName: '', acquisitionKind: 'BOUGHT_OUTSIDE' })).rejects.toMatchObject({ code: 'NO_ARTIST' })
     // services for an artwork the person holds
-    expect((await artworkServices()).map((x) => x.code)).toContain('APPRAISAL_SIGNED')
+    const listed = (await artworkServices()).map((x) => x.code)
+    expect(listed).toContain('APPRAISAL_SIGNED')
+    expect(listed).not.toContain('CERTIFICATION')
     expect(await orderArtworkService(helena.id, s.b.artworkId, 'SHIPPING')).toEqual({ quote: true })
     await expect(orderArtworkService(buyer.id, s.b.artworkId, 'APPRAISAL_SIGNED')).rejects.toMatchObject({ code: 'NOT_OWNER' })
     await expect(orderArtworkService(helena.id, s.b.artworkId, 'TAG_KIT')).rejects.toMatchObject({ code: 'BAD_SERVICE' })

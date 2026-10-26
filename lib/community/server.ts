@@ -7,6 +7,7 @@ import { ArtworkError } from '@/lib/artworks/server'
 import { notify } from '@/lib/notifications/server'
 import { whenLabel } from '@/lib/messaging/core'
 import { publicUrlHosts } from '@/lib/public-url'
+import { formatBRL } from '@/lib/artworks/domain'
 import { checkComment, checkPost, dayMonthOf, pollResult, reactionAllowed, type CommentTarget, type ReactionKind, type ReactionTarget } from './domain'
 
 export interface FeedAuthor { name: string; initials: string; sub: string; memberId: number | null; memberSlug: string | null; following: boolean }
@@ -18,7 +19,7 @@ export interface FeedItem {
   when: string
   body: string
   imageUrl: string | null
-  artwork: { publicId: string; title: string } | null
+  artwork: { publicId: string; title: string; artist: string; price: string | null } | null
   // news
   title?: string; summary?: string | null; format?: string | null; href?: string
   // event / agenda
@@ -78,7 +79,7 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
   ])
   const authors = await authorsOf(posts.map((p) => p.authorUserId), viewer)
   const artIds = posts.map((p) => p.artworkId).filter((v): v is number => v != null)
-  const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds } }, select: { id: true, publicId: true, title: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
+  const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds } }, select: { id: true, publicId: true, title: true, status: true, saleMode: true, listPriceCents: true, listingPausedAt: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
   const byArt = new Map(arts.map((a) => [a.id, a]))
   const mine = await myReactions(viewer, [...posts.map((p) => ({ kind: 'POST' as const, id: p.id })), ...news.map((n) => ({ kind: 'NEWS' as const, id: n.id })), ...agenda.map((e) => ({ kind: 'EVENT' as const, id: e.id }))])
   const [newsCounts, eventCounts, newsComments] = await Promise.all([countsOf('NEWS', news.map((n) => n.id)), countsOf('EVENT', agenda.map((e) => e.id)), commentCounts('NEWS', news.map((n) => n.id))])
@@ -92,7 +93,7 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
     const art = p.artworkId ? byArt.get(p.artworkId) : null
     const item: FeedItem = {
       key: `P${p.id}`, kind: p.kind as FeedItem['kind'], id: p.id, author: a, when: whenLabel(p.createdAt), body: p.body,
-      imageUrl: p.imageUrl ?? art?.media[0]?.publicUrl ?? null, artwork: art ? { publicId: art.publicId ?? '', title: art.title } : null,
+      imageUrl: p.imageUrl ?? art?.media[0]?.publicUrl ?? null, artwork: art ? { publicId: art.publicId ?? '', title: art.title, artist: art.artist.name, price: art.status === 'LISTED' && !art.listingPausedAt && art.saleMode !== 'ON_REQUEST' && art.listPriceCents != null ? formatBRL(art.listPriceCents) : null } : null,
       likes: p.likeCount, liked: mine.has(`POST:${p.id}:LIKE`), saved: mine.has(`POST:${p.id}:SAVE`), comments: p.commentCount, canComment: true,
     }
     if (p.kind === 'EVENT' && p.eventStartsOn) Object.assign(item, { ...dayMonthOf(p.eventStartsOn), title: p.eventTitle ?? '', venue: p.eventVenue ?? '', startsAt: p.eventStartsAt, going: p.rsvpCount, iAmGoing: mine.has(`POST:${p.id}:RSVP`) })
@@ -127,6 +128,8 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
 
 /** A post image is only one the house serves: the public media route or the Blob store. */
 function isOwnImageUrl(url: string): boolean {
+  // uploaded by POST /api/community/images: the media route of the house (relative) or the public Blob
+  if (url.startsWith('/api/public/media/') || url.startsWith('/uploads/')) return true
   try {
     const u = new URL(url)
     return publicUrlHosts().includes(u.host) || /\.public\.blob\.vercel-storage\.com$/.test(u.host)

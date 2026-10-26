@@ -12,6 +12,7 @@ import { applyVote, COMMUNITY_TABS, filterTab, reactionTargetOf, sharePathOf, ty
 import { FeedCard, type CardActions } from './FeedCard'
 import { CommentsSheet } from './CommentsSheet'
 import { Composer, type ComposerArtwork, type ComposerInstagram } from './Composer'
+import { ShareSheet } from '@/components/public/ShareSheet'
 
 export function CommunityScreen({ items: initial, tab, me, artworks, instagram, compose }: {
   items: FeedItem[]
@@ -27,6 +28,7 @@ export function CommunityScreen({ items: initial, tab, me, artworks, instagram, 
   const [toast, setToast] = useState('')
   const [commenting, setCommenting] = useState<FeedItem | null>(null)
   const [composing, setComposing] = useState(false)
+  const [sharing, setSharing] = useState<FeedItem | null>(null)
   const clearToast = useCallback(() => setToast(''), [])
 
   const patch = (key: string, p: Partial<FeedItem> | ((i: FeedItem) => Partial<FeedItem>)) =>
@@ -76,6 +78,8 @@ export function CommunityScreen({ items: initial, tab, me, artworks, instagram, 
       if (!res.ok) { patch(item.key, { poll: before }); setToast('Não foi possível votar.') }
     },
     onShare: async (item) => {
+      // A post with an artwork shares the artwork's public page through the sheet; the rest copies the link.
+      if (item.artwork?.publicId) { setSharing(item); return }
       const url = `${window.location.origin}${sharePathOf(item)}`
       try { await navigator.clipboard.writeText(url); setToast('Copiado') } catch { setToast(url) }
     },
@@ -118,6 +122,9 @@ export function CommunityScreen({ items: initial, tab, me, artworks, instagram, 
       </div>
       <CommentsSheet key={commenting?.key ?? 'none'} item={commenting} me={me} onClose={() => setCommenting(null)} onCount={onCount} onToast={setToast} />
       <Composer open={composing} artworks={artworks} instagram={instagram} onClose={() => setComposing(false)} onToast={setToast} onPublished={(m) => { setComposing(false); setToast(m ?? 'Publicado na comunidade'); void reload() }} />
+      {sharing?.artwork?.publicId ? (
+        <ShareSheet key={sharing.key} open artwork={{ publicId: sharing.artwork.publicId, title: sharing.artwork.title, artist: sharing.artwork.artist, year: null, cover: sharing.imageUrl, price: sharing.artwork.price }} onClose={() => setSharing(null)} onDone={(m) => setToast(m)} />
+      ) : null}
       <Toast message={toast} onDone={clearToast} />
     </div>
   )

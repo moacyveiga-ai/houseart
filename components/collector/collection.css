@@ -1,0 +1,13 @@
+/* "Minha coleção" header (HouseArt Web Colecionador.dc.html › Coleção) */
+.ha-col { display: flex; flex-direction: column; gap: var(--ha-space-3); margin-bottom: var(--ha-space-2); }
+.ha-col__top { display: flex; align-items: center; gap: var(--ha-space-3); }
+.ha-col__title { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.ha-col__add { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--ha-ink-900); color: var(--ha-paper-50); display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: background var(--ha-dur-fast); }
+.ha-col__add:hover { background: var(--ha-ink-700); color: var(--ha-paper-50); }
+.ha-col__kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 220px)); gap: var(--ha-space-2); }
+.ha-col__kpi { display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: var(--ha-space-2) var(--ha-space-2) 9px; border-radius: var(--ha-radius-md); background: var(--ha-paper-100); color: var(--ha-ink-900); }
+.ha-col__kpi .ha-icon { color: var(--ha-ink-500); }
+.ha-col__kpi b { font-size: var(--ha-text-body); line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ha-col__kpi span:last-child { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-col__tabs { overflow-x: auto; scrollbar-width: none; }
+@media (max-width: 600px) { .ha-col__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -16,7 +16,8 @@ export type FavoritesTab = 'saved' | 'liked'
 const available = (r: FavoriteRow) => r.status === 'LISTED'
 const priceOf = (r: FavoriteRow) => (!available(r) ? 'Indisponível' : r.priceCents === null ? 'Sob consulta' : formatBRL(BigInt(r.priceCents)))
 
-export function FavoritesScreen({ rows: initial, tab }: { rows: FavoriteRow[]; tab: FavoritesTab }) {
+/** `bare`: inside "Minha coleção", whose header already has the title and the Favoritos/Curtidos tabs. */
+export function FavoritesScreen({ rows: initial, tab, bare = false }: { rows: FavoriteRow[]; tab: FavoritesTab; bare?: boolean }) {
   const [rows, setRows] = useState(initial)
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState<number | null>(null)
@@ -36,11 +37,11 @@ export function FavoritesScreen({ rows: initial, tab }: { rows: FavoriteRow[]; t
 
   return (
     <div className="ha-fav">
-      <div className="ha-page__head"><h1 className="ha-h1">Favoritos e curtidos</h1></div>
-      <nav className="ha-tabs" aria-label="Abas">
+      {bare ? null : <div className="ha-page__head"><h1 className="ha-h1">Favoritos e curtidos</h1></div>}
+      {bare ? null : <nav className="ha-tabs" aria-label="Abas">
         <Link href="/favorites" className={`ha-tab${tab === 'saved' ? ' ha-tab--on' : ''}`} aria-current={tab === 'saved' ? 'page' : undefined}>Favoritos · {saved.length}</Link>
         <Link href="/favorites?tab=liked" className={`ha-tab${tab === 'liked' ? ' ha-tab--on' : ''}`} aria-current={tab === 'liked' ? 'page' : undefined}>Curtidos · {liked.length}</Link>
-      </nav>
+      </nav>}
 
       {tab === 'saved' ? (
         <div className="ha-fav__list">

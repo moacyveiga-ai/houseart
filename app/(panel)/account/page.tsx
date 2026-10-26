@@ -30,10 +30,11 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
       { kind: 'link', icon: 'verified_user', name: 'E-mail e celular', sub: `${identity.emailVerified ? 'E-mail verificado' : 'E-mail não verificado'}${identity.phoneMask ? ` · celular ${identity.phoneVerified ? 'verificado' : 'não verificado'}` : ''}`, href: '/account?view=data' },
     ] },
     { name: 'Coleção', items: [
-      { kind: 'link', icon: 'account_balance_wallet', name: 'Carteira de escrituras', sub: 'As obras no seu nome', href: '/wallet' },
+      { kind: 'link', icon: 'collections', name: 'Minha coleção', sub: 'As obras e escrituras no seu nome', href: '/wallet' },
       { kind: 'link', icon: 'add_photo_alternate', name: 'Cadastrar obra', sub: 'Uma obra que já é sua, para certificar e vender', href: '/wallet/register' },
       { kind: 'link', icon: 'favorite', name: 'Favoritos e curtidos', sub: `${plural(favorites.filter((f) => f.saved).length, 'favorito', 'favoritos')} · ${plural(favorites.filter((f) => f.liked).length, 'curtida', 'curtidas')}`, href: '/favorites' },
       { kind: 'link', icon: 'local_shipping', name: 'Compras', sub: 'Ofertas, pagamentos e entregas', href: '/purchases' },
+      { kind: 'link', icon: 'swap_horiz', name: 'Transferir uma obra', sub: 'Venda feita fora da HouseArt, registrada na escritura', href: '/transfer' },
     ] },
     { name: 'Pagamentos', items: [
       { kind: 'link', icon: 'credit_card', name: 'Carteira e cartões', sub: cards.length ? `${plural(cards.length, 'cartão', 'cartões')}${defaultCard ? ` · padrão ${defaultCard.brandLabel} •••• ${defaultCard.last4}` : ''}` : 'Nenhum cartão salvo', href: '/wallet/cards' },

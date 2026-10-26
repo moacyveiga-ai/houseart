@@ -12,7 +12,6 @@ const PUBLIC_EXACT = new Set<string>([
   '/recover-password',
   '/reset-password',
   '/signup',                     // member signup (artist, gallery, advisor) by e-mail code
-  '/collector/access',           // collector entry by e-mail code
   '/api/version',                // deploy probe
   '/api/stripe/webhook',         // signed by Stripe (Stripe-Signature over the raw body, checked in lib/stripe/webhook-server.ts)
   '/privacy',
@@ -28,7 +27,6 @@ const PUBLIC_PREFIXES = [
   '/api/auth/',
   '/reset-password/',           // password link by token (legacy mode) — the token is the credential
   '/api/signup/',               // start/verify/resend of the member code
-  '/api/collector/access/',     // start/verify/resend of the collector code — NARROW prefix: /api/collector/* stays logged
   '/api/jobs/',
   '/api/cron/',
   '/api/kyc/webhook/',           // signed by the KYC provider
@@ -60,13 +58,14 @@ export const PUBLIC_HOME = '/e'
 
 /**
  * Where someone without a session goes when hitting a protected route. The
- * root goes to the public market WITHOUT `next`; the collector area has its
- * own code-based door; the rest goes to /login with `next`.
+ * root goes to the public market WITHOUT `next`; the rest goes to /login with
+ * `next`. (The collector once had a door of its own at /collector/access; the
+ * page never shipped — the collector enters by /login like everyone — and the
+ * dead door sent them to a 404.)
  */
 export function unauthenticatedDestination(pathname: string, search: string): { pathname: string; search: string } {
   // `/` without a session is the public Home (handoff Fase 7).
   if (pathname === '/') return { pathname: PUBLIC_HOME, search: '' }
-  const collectorArea = pathname === '/collector' || pathname.startsWith('/collector/')
   const next = new URLSearchParams({ next: pathname + search })
-  return { pathname: collectorArea ? '/collector/access' : '/login', search: `?${next}` }
+  return { pathname: '/login', search: `?${next}` }
 }

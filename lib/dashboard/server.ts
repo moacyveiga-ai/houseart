@@ -11,14 +11,16 @@ export async function dashboardCounts(scope: Scope, now = new Date()): Promise<D
     prisma.artwork.count({ where: { ...where, status: { in: ['AUTHENTICATED', 'LISTED', 'IN_DEAL', 'SOLD'] } } }),
     prisma.artwork.count({ where: { ...where, status: { in: ['LISTED', 'IN_DEAL'] } } }),
     prisma.artwork.count({ where: { ...where, status: { notIn: ['ARCHIVED', 'SOLD'] } } }),
-    prisma.artwork.aggregate({ where: { ...where, status: 'SOLD', updatedAt: { gte: yearStart } }, _count: { _all: true }, _sum: { listPriceCents: true } }),
+    // "Vendidas em {ano}" = the deals COMPLETED this year with this member as seller (the same source as the
+    // chart): a sold work leaves the seller's scope and becomes the buyer's AUTHENTICATED, never SOLD here
+    prisma.deal.aggregate({ where: { ...where, phase: 'COMPLETED', completedAt: { gte: yearStart } }, _count: { _all: true }, _sum: { amountCents: true } }),
     prisma.artwork.count({ where: { ...where, certificate: { is: { stage: 3 } } } }),
     prisma.artwork.findMany({ where: { ...where, status: 'DRAFT' }, select: { media: { select: { kind: true } } } }),
   ])
   const pendingMedia = drafts.filter((d) => !d.media.some((m) => m.kind === 'FRONT_COLOR_CARD') || !d.media.some((m) => m.kind === 'BACK')).length
   return {
     authenticated, listed, inventory, consigned: 0, openOffers: 0, royaltyCents: 0n,
-    soldThisYear: sold._count._all, soldThisYearCents: sold._sum.listPriceCents ?? 0n,
+    soldThisYear: sold._count._all, soldThisYearCents: sold._sum.amountCents ?? 0n,
     awaitingSignature, pendingMedia, markersToLink: 0,
   }
 }

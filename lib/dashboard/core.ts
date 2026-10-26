@@ -59,12 +59,14 @@ export function dateLabel(now: Date, tz = 'America/Bahia'): string {
 // current month, the current one in sand; the caption "R$ 268 mil em 11 obras".
 export const MONTH_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'] as const
 
-/** "R$ 980", "R$ 12 mil", "R$ 268 mil", "R$ 1,2 mi" — the short reais of the chart. */
+/** "R$ 980", "R$ 1,5 mil", "R$ 12 mil", "R$ 268 mil", "R$ 1,2 mi" — the short reais of the chart; the band is chosen AFTER rounding (R$ 999.999 is "R$ 1 mi", never "R$ 1.000 mil"). */
 export function shortBRL(cents: bigint): string {
   const reais = Number(cents / 100n)
-  if (reais >= 1_000_000) return `R$ ${(reais / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
-  if (reais >= 1_000) return `R$ ${Math.round(reais / 1_000).toLocaleString('pt-BR')} mil`
-  return `R$ ${reais.toLocaleString('pt-BR')}`
+  const mi = Math.round(reais / 100_000) / 10
+  if (mi >= 1) return `R$ ${mi.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
+  if (reais < 1_000) return `R$ ${reais.toLocaleString('pt-BR')}`
+  const mil = reais < 10_000 ? Math.round(reais / 100) / 10 : Math.round(reais / 1_000)
+  return `R$ ${mil.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`
 }
 
 export interface SalesBar { month: string; count: number; cents: bigint; label: string; pct: number; current: boolean }

@@ -20,6 +20,9 @@ import type { CollectorPanelData } from '@/lib/collector-wallet/panel-core'
 import './collector-panel.css'
 import '@/components/sales/sales-progress.css'
 
+/** Today's day as the browser sees it: only the `max` of the date field (the server is the rule, in the house timezone). */
+const todayIso = () => new Date().toISOString().slice(0, 10)
+
 export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: CollectorPanelData; closeHref: string; meInitials: string }) {
   const router = useRouter()
   const [photo, setPhoto] = useState(0)
@@ -173,7 +176,7 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
             {o.transferOn ? <Link href={`/transfer?artworkId=${a.id}`} className="ha-btn ha-btn--outline ha-btn--sm">Transferir</Link> : null}
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={o.insured || busy} onClick={() => post(`/api/wallet/${a.id}/insure`, {}, (d) => `Cotação aceita · ${d.insurer} — apólice emitida`)}>Segurar</button>
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={busy} onClick={() => post('/api/appraisals', { artworkId: a.id, purpose: 'INSURANCE', requesterLabel: 'Colecionador' }, (d) => `Laudo pedido · avaliador credenciado em até 5 dias${d.orderCode ? ` · pedido ${d.orderCode}` : ''}`)}>Pedir laudo</button>
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={busy} onClick={() => { setRestoreError(''); setSheet('restore') }}>Registrar restauro</button>
+            {o.restoreBlocked ? null : <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={busy} onClick={() => { setRestoreError(''); setSheet('restore') }}>Registrar restauro</button>}
             {a.publicId ? <Link href={`/verify/${a.publicId}`} className="ha-btn ha-btn--outline ha-btn--sm">Compartilhar certificado</Link> : null}
           </div>
         </div>
@@ -192,7 +195,7 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
           <label className="ha-label">O que foi feito<textarea className="ha-textarea" rows={4} maxLength={RESTORATION_DESCRIPTION_MAX} value={restore.description} onChange={(e) => setRestore({ ...restore, description: e.target.value })} placeholder="Limpeza da superfície, reentelamento e verniz refeito" /></label>
           <span className="ha-muted ha-sm">{restore.description.trim().length} de {RESTORATION_DESCRIPTION_MAX} · mínimo {RESTORATION_DESCRIPTION_MIN}</span>
           <label className="ha-label">Restaurador ou ateliê · opcional<input className="ha-input" maxLength={120} value={restore.restorer} onChange={(e) => setRestore({ ...restore, restorer: e.target.value })} /></label>
-          <label className="ha-label">Data do restauro · opcional<input className="ha-input" type="date" value={restore.on} onChange={(e) => setRestore({ ...restore, on: e.target.value })} /></label>
+          <label className="ha-label">Data do restauro · opcional<input className="ha-input" type="date" max={todayIso()} value={restore.on} onChange={(e) => setRestore({ ...restore, on: e.target.value })} /></label>
           {restoreError ? <p className="ha-field-error" role="alert">{restoreError}</p> : null}
         </Modal>, document.body) : null}
       {sheet === 'comments' && sig ? (

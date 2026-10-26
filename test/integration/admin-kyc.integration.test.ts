@@ -75,4 +75,22 @@ describe('admin kyc', () => {
     expect((await call(pending.id, { action: 'reject', note: 'de novo' })).status).toBe(403)
     expect((await call(pending.id, { action: 'approve' })).status).toBe(200) // the desk reconsiders
   })
+
+  it('only the latest verification counts: an older approval in force never overrides a rejection, and the mock provider does not re-approve a rejected person', async () => {
+    const old = await prisma.kycVerification.create({ data: { userId: buyerId, provider: 'mock', status: 'APPROVED', verifiedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) } })
+    const last = await prisma.kycVerification.create({ data: { userId: buyerId, provider: 'mock', status: 'APPROVED', verifiedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) } })
+    await signIn(s.staff.userId)
+    expect((await call(old.id, { action: 'reject', note: 'x' })).status).toBe(403) // history
+    expect((await call(last.id, { action: 'reject', note: 'nome diverge do CPF' })).status).toBe(200)
+    process.env.KYC_PROVIDER = 'mock'
+    expect(await verifyIdentity(buyerId, 'h1')).toBe('PENDING')
+    expect((await adminKyc({ profile: 'admin' })).rows.map((r) => [r.state, r.latest])).toEqual([['PENDING', true], ['REJECTED', false], ['APPROVED', false]])
+    // revalidate on a fresh approval, with an older one still in force: the next check asks again
+    const fresh = (await adminKyc({ profile: 'admin' })).rows[0]
+    expect((await call(fresh.id, { action: 'approve' })).status).toBe(200)
+    expect(await verifyIdentity(buyerId, 'h1')).toBe('APPROVED')
+    expect((await call(fresh.id, { action: 'revalidate' })).status).toBe(200)
+    expect(await verifyIdentity(buyerId, 'h1')).toBe('APPROVED') // mock: a new approval on the spot (the desk did not reject)
+    expect(await prisma.kycVerification.count({ where: { userId: buyerId } })).toBe(4)
+  })
 })

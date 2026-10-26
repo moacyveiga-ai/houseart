@@ -50,3 +50,31 @@
 .ha-reg__cta { height: 50px; }
 .ha-reg__two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ha-space-2); }
 @media (max-width: 420px) { .ha-reg__two { grid-template-columns: 1fr; } }
+/* chips of the sheet (prototype cbGrupos), dimensions, review and the Pronto screen */
+.ha-reg__chips { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); }
+.ha-reg__chip { height: 36px; padding: 0 14px; border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-bg); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 500; color: var(--ha-fg); cursor: pointer; }
+.ha-reg__chip--on { background: var(--ha-ink-900); border-color: var(--ha-ink-900); color: var(--ha-paper-50); }
+.ha-reg__chip:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-reg__three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ha-space-2); }
+.ha-reg__dim { display: flex; flex-direction: column; gap: 4px; font-size: var(--ha-text-caption); font-weight: 500; color: var(--ha-fg-muted); }
+.ha-reg__field--bad .ha-input, .ha-reg__field--bad .ha-reg__chips, .ha-reg__dim.ha-reg__field--bad .ha-input { border-color: var(--ha-alert-500); }
+.ha-reg__field--bad .ha-reg__chips { border: var(--ha-border-w) solid var(--ha-alert-500); border-radius: var(--ha-radius-md); padding: 6px; }
+.ha-reg__sub { font-family: var(--ha-font-display); font-size: 18px; font-weight: 400; margin: var(--ha-space-2) 0 0; color: var(--ha-fg); }
+.ha-reg__ia { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; padding: 12px 14px; border: var(--ha-border-w) solid var(--ha-sand-500); border-radius: var(--ha-radius-md); background: var(--ha-sand-100); text-align: left; font: inherit; color: var(--ha-fg); cursor: pointer; }
+.ha-reg__ia:disabled { opacity: .6; cursor: progress; }
+.ha-reg__ia:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-reg__rev { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-reg__rev-pic { width: 96px; height: 96px; }
+.ha-reg__rev-pic img { width: 100%; height: 100%; object-fit: contain; }
+.ha-reg__rev-t { font-family: var(--ha-font-display); font-size: 20px; font-weight: 400; }
+.ha-reg__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-reg__lines li { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: 12px 14px; border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
+.ha-reg__lines li:last-child { border-bottom: 0; }
+.ha-reg__hint { display: flex; gap: var(--ha-space-2); align-items: flex-start; padding: 10px 14px; border-radius: var(--ha-radius-md); background: var(--ha-paper-100); font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-reg--done { align-items: stretch; max-width: 560px; margin: 0 auto; padding-top: var(--ha-space-6); }
+.ha-reg__seal { align-self: center; width: 96px; height: 96px; border-radius: 50%; border: 4px solid var(--ha-pending-500); display: flex; align-items: center; justify-content: center; color: var(--ha-fg); }
+.ha-reg__next { list-style: none; margin: var(--ha-space-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ha-space-3); }
+.ha-reg__next-i { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-reg__next-dot { width: 32px; height: 32px; border-radius: 50%; border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; color: var(--ha-ink-900); }
+.ha-reg__next-i--done .ha-reg__next-dot { background: var(--ha-verified-500); border-color: var(--ha-verified-500); color: var(--ha-paper-50); }
+.ha-reg__next-i--on .ha-reg__next-dot { background: var(--ha-sand-500); border-color: var(--ha-sand-500); }

@@ -84,7 +84,8 @@ export async function createDraft(scope: Scope, opt: { artistId?: number | null;
 export async function openBlankDraft(scope: Scope) {
   const memberId = memberOfScope(scope)
   if (memberId) {
-    const blank = await prisma.artwork.findFirst({ where: { memberId, status: 'DRAFT', title: 'Nova obra', media: { none: {} } }, orderBy: { id: 'desc' } })
+    // a collector's "Cadastrar obra" draft (it carries the origin) is never adopted by the artist wizard
+    const blank = await prisma.artwork.findFirst({ where: { memberId, status: 'DRAFT', title: 'Nova obra', acquisitionKind: null, media: { none: {} } }, orderBy: { id: 'desc' } })
     if (blank) return blank
   }
   return createDraft(scope)

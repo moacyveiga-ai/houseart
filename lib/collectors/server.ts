@@ -5,7 +5,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
 import { ensureCollectorMember } from '@/lib/tenant/member-server'
-import { createDraft, patchArtwork, ArtworkError } from '@/lib/artworks/server'
+import { createDraft, getArtwork, patchArtwork, ArtworkError } from '@/lib/artworks/server'
 import { scopeOfUser, type Scope } from '@/lib/scope/core'
 import { ACQUISITION_KINDS, type AcquisitionKind } from '@/lib/artworks/domain'
 import { listArtworkForSale } from '@/lib/offers/server'
@@ -23,11 +23,46 @@ export interface RegisterOwnArtworkInput { title?: string; artistId?: number | n
 export async function registerOwnArtwork(userId: number, i: RegisterOwnArtworkInput): Promise<{ id: number; scope: Scope }> {
   if (!ACQUISITION_KINDS.includes(i.acquisitionKind)) throw new ArtworkError('BAD_ORIGIN', 'Diga como a obra chegou até você.', 422)
   if (!i.artistId && !i.artistName?.trim()) throw new ArtworkError('NO_ARTIST', 'Informe o artista da obra.', 422)
+  // an artist or a gallery registers works in the panel wizard; this door is the collector's own member
+  const current = await prisma.user.findUnique({ where: { id: userId }, select: { member: { select: { kind: true } } } })
+  if (current?.member && current.member.kind !== 'COLLECTOR') throw new ArtworkError('NOT_COLLECTOR', 'Cadastre a obra pelo Acervo.', 403)
   const { memberId, tenantId } = await ensureCollectorMember(userId)
   const scope = scopeOfUser({ profile: 'collector', memberId, tenantId, tenantRole: 'ADMIN' }, () => false)
   const a = await createDraft(scope, { title: i.title, artistId: i.artistId ?? null, artistName: i.artistName ?? null })
   await patchArtwork(scope, a.id, { acquisitionKind: i.acquisitionKind, acquisitionYear: i.acquisitionYear ?? null, acquisitionFrom: i.acquisitionFrom ?? null, acquisitionNote: i.acquisitionNote ?? null, acquisitionPriceCents: i.acquisitionPriceCents ?? null })
   return { id: a.id, scope }
+}
+
+/** A draft of "Cadastrar obra" the collector resumes (/wallet/register?draft=<id>): theirs, still DRAFT, registered as an own artwork. */
+export async function collectorDraft(userId: number, artworkId: number) {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { memberId: true, member: { select: { kind: true } } } })
+  if (!u?.memberId || u.member?.kind !== 'COLLECTOR') return null
+  const scope = await collectorScope(userId)
+  if (!scope) return null
+  const a = await withScope(scope, 'collector:draft', () => getArtwork(scope, artworkId))
+  // the collector's OWN member only (never a colleague's draft through a wider tenant scope)
+  if (!a || a.memberId !== u.memberId || a.status !== 'DRAFT' || !a.acquisitionKind) return null
+  return a
+}
+
+/** `completed`: the register was concluded (wizardStep 5) — the work waits for photos/certification, not for the sheet. */
+export interface CollectorDraftRow { id: number; title: string; artist: string; cover: string | null; status: string; completed: boolean; href: string | null }
+
+/**
+ * "Em cadastro" of Minha coleção: the collector's own artworks without a deed yet — a DRAFT resumes
+ * the register, one sent to certification only shows its state (the deed arrives when it is issued).
+ */
+export async function collectorDrafts(userId: number): Promise<CollectorDraftRow[]> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { memberId: true, member: { select: { kind: true } } } })
+  if (!u?.memberId || u.member?.kind !== 'COLLECTOR') return []
+  const scope = await collectorScope(userId)
+  if (!scope) return []
+  const rows = await withScope(scope, 'collector:drafts', () => prisma.artwork.findMany({
+    where: { memberId: u.memberId!, status: { in: ['DRAFT', 'IN_CERTIFICATION'] }, acquisitionKind: { not: null } },
+    select: { id: true, title: true, status: true, wizardStep: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
+    orderBy: { updatedAt: 'desc' }, take: 50,
+  }))
+  return rows.map((r) => ({ id: r.id, title: r.title, artist: r.artist.name, cover: r.media[0]?.publicUrl ?? null, status: r.status, completed: r.wizardStep >= 5, href: r.status === 'DRAFT' ? `/wallet/register?draft=${r.id}` : null }))
 }
 
 /** The scope of the collector's own member (null until they own or register something). */

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { PATCH } from '@/app/api/appraisals/[requestId]/route'
 import { appraisalQueue, appraisersList, issueAppraisal, requestAppraisal } from '@/lib/appraisal/server'
+import { setStripeGatewayForTests, type StripeGateway } from '@/lib/stripe/gateway-server'
 import { createScenario, type Scenario } from './fixtures'
 import { signIn, signOut } from './session'
 import { truncateTables } from './db'
@@ -71,9 +72,10 @@ describe('appraisal desk', () => {
     expect(await d.json()).toMatchObject({ dueDay: day })
     expect((await prisma.appraisalRequest.findUniqueOrThrow({ where: { id: req.id } })).dueOn.toISOString()).toBe(new Date(`${day}T23:59:59-03:00`).toISOString())
     expect(await prisma.notification.count({ where: { userId: avaId, kind: 'appraisal.due_changed' } })).toBe(1)
-    // the team issues on the appraiser's behalf: the signer is the staff account
+    // the team issues on the appraiser's behalf: the signer is the staff account; the request keeps the assigned appraiser
     const issued = await issueAppraisal({ userId: s.staff.userId, name: 'Equipe', profile: 'admin' }, req.id, range)
     expect((await prisma.appraisal.findUniqueOrThrow({ where: { requestId: req.id } })).appraiserUserId).toBe(s.staff.userId)
+    expect((await prisma.appraisalRequest.findUniqueOrThrow({ where: { id: req.id } })).assignedAppraiserId).toBe(avaId)
     expect((await appraisalQueue(new Date(), { all: true }))[0]).toMatchObject({ id: req.id, state: 'ISSUED', issuedCode: issued.code })
     // a closed request takes no action
     expect((await call(req.id, { action: 'assign', appraiserUserId: null })).status).toBe(409)
@@ -92,7 +94,7 @@ describe('appraisal desk', () => {
     // the assigned appraiser issues
     await issueAppraisal({ userId: avaId, name: 'Rui Avaliador', profile: 'appraiser' }, req.id, range)
 
-    // a second request, cancelled by the team: note required; the OPEN order is cancelled; the requester is told
+    // a second request, cancelled by the team: note required; the paid order is refunded (mock: nothing to give back) and reads CANCELLED; the requester is told
     const req2 = await ask()
     await signIn(avaId)
     expect((await call(req2.id, { action: 'cancel', note: 'x' })).status).toBe(403)
@@ -100,18 +102,22 @@ describe('appraisal desk', () => {
     expect((await call(req2.id, { action: 'cancel', note: '' })).status).toBe(422)
     const c = await call(req2.id, { action: 'cancel', note: 'Obra retirada pelo colecionador' })
     expect(c.status).toBe(200)
-    expect(await c.json()).toMatchObject({ status: 'CANCELLED', orderStatus: 'CANCELLED' })
+    expect(await c.json()).toMatchObject({ status: 'CANCELLED', orderStatus: 'CANCELLED', refunded: true })
     expect((await prisma.appraisalRequest.findUniqueOrThrow({ where: { id: req2.id } })).status).toBe('CANCELLED')
     expect((await prisma.order.findFirstOrThrow({ where: { appraisalRequestId: req2.id } })).status).toBe('CANCELLED')
     expect(await prisma.notification.count({ where: { userId: collectorId, kind: 'appraisal.cancelled' } })).toBe(1)
     const a = await prisma.auditLog.findFirstOrThrow({ where: { entity: 'appraisal_request', entityId: String(req2.id), action: 'cancel' } })
     expect(a.after).toContain('"refundPending":false')
+    expect(a.after).toContain('"refunded":true')
     expect((await call(req2.id, { action: 'cancel', note: 'de novo' })).status).toBe(409)
-    // cancelling a request already paid leaves the order PAID and flags the refund
+    // a refund the gateway refuses leaves the order PAID and flags it for finance
     const req3 = await ask()
-    await prisma.order.updateMany({ where: { appraisalRequestId: req3.id }, data: { status: 'PAID', paidAt: new Date() } })
+    await prisma.order.updateMany({ where: { appraisalRequestId: req3.id }, data: { paymentRef: 'pi_test_refused' } })
+    process.env.STRIPE_ENV = 'test'; process.env.STRIPE_SECRET_KEY = 'sk_test_x'
+    setStripeGatewayForTests({ refundPaymentIntent: async () => { throw Object.assign(new Error('refused'), { type: 'StripeInvalidRequestError' }) } } as unknown as StripeGateway)
     const c3 = await call(req3.id, { action: 'cancel', note: 'Pedido em duplicidade' })
-    expect(await c3.json()).toMatchObject({ orderStatus: 'PAID' })
+    setStripeGatewayForTests(null); process.env.STRIPE_ENV = 'mock'; delete process.env.STRIPE_SECRET_KEY
+    expect(await c3.json()).toMatchObject({ orderStatus: 'PAID', refunded: false })
     expect((await prisma.auditLog.findFirstOrThrow({ where: { entity: 'appraisal_request', entityId: String(req3.id), action: 'cancel' } })).after).toContain('"refundPending":true')
     expect((await prisma.order.findFirstOrThrow({ where: { appraisalRequestId: req3.id } })).status).toBe('PAID')
   })

@@ -25,9 +25,10 @@ export interface DeskRow {
 
 export const isOpen = (status: string) => status === 'QUEUED' || status === 'IN_PROGRESS'
 
+/** One criterion for "late": the calendar day in the house zone has passed (the same day `daysLeft` and `dueLabel` count). */
 export function stateOf(r: Pick<DeskRow, 'status' | 'dueOn'>, now: Date): DeskState {
   if (r.status === 'ISSUED' || r.status === 'CANCELLED') return r.status
-  if (new Date(r.dueOn) < now) return 'OVERDUE'
+  if (daysLeft(r.dueOn, now) < 0) return 'OVERDUE'
   return r.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'QUEUED'
 }
 

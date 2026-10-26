@@ -10,13 +10,13 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { Dossier, QueueItem } from '@/lib/appraisal/server'
-import { CANCEL_NOTE_MAX, canIssue, canTake, DESK_STATE_LABELS, dueLabel, isOpen, type Actor, type DeskFilter, type DeskState } from '@/lib/appraisal/desk-core'
+import { CANCEL_NOTE_MAX, canIssue, canTake, daysLeft, DESK_STATE_LABELS, dueLabel, isOpen, type Actor, type DeskFilter, type DeskState } from '@/lib/appraisal/desk-core'
 
 const reais = (cents: string) => String(Math.round(Number(cents) / 100))
 const toCents = (v: string) => Math.round(Number(v.replace(/\D/g, '')) * 100)
 const TONE: Record<DeskState, BadgeTone> = { QUEUED: 'pending', IN_PROGRESS: 'ink', OVERDUE: 'alert', ISSUED: 'verified', CANCELLED: 'neutral' }
 type Patch = { action: 'take' } | { action: 'assign'; appraiserUserId: number | null } | { action: 'due'; dueDay: string } | { action: 'cancel'; note: string }
-type PatchReply = { error?: string; assignedAppraiserId?: number | null; assignedName?: string | null; status?: string; dueOn?: string; dueDay?: string; dueOnIso?: string; orderStatus?: string | null }
+type PatchReply = { error?: string; assignedAppraiserId?: number | null; assignedName?: string | null; status?: string; dueOn?: string; dueDay?: string; dueOnIso?: string; orderStatus?: string | null; refunded?: boolean }
 
 export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor, manage, appraisers, filter, filters }: {
   queue: QueueItem[]; dossier: Dossier | null; selected: QueueItem | null; actor: Actor; manage: boolean
@@ -67,15 +67,15 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
   }
   async function due() {
     const d = await patch({ action: 'due', dueDay: day }); if (!d || !sel) return
-    const overdue = false
-    applyRow(sel.id, { dueOn: d.dueOn ?? sel.dueOn, dueDay: d.dueDay ?? sel.dueDay, dueOnIso: d.dueOnIso ?? sel.dueOnIso, overdue, state: sel.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'QUEUED', stateLabel: sel.status === 'IN_PROGRESS' ? DESK_STATE_LABELS.IN_PROGRESS : DESK_STATE_LABELS.QUEUED, daysLeft: 0 })
+    const iso = d.dueOnIso ?? sel.dueOnIso
+    applyRow(sel.id, { dueOn: d.dueOn ?? sel.dueOn, dueDay: d.dueDay ?? sel.dueDay, dueOnIso: iso, overdue: false, state: sel.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'QUEUED', stateLabel: sel.status === 'IN_PROGRESS' ? DESK_STATE_LABELS.IN_PROGRESS : DESK_STATE_LABELS.QUEUED, daysLeft: daysLeft(iso, new Date()) })
     setToast(`Prazo: ${d.dueOn}`)
   }
   async function cancel() {
     const d = await patch({ action: 'cancel', note }); if (!d || !sel) return
     applyRow(sel.id, { status: 'CANCELLED', state: 'CANCELLED', stateLabel: DESK_STATE_LABELS.CANCELLED, overdue: false })
     setCancelOpen(false); setNote('')
-    setToast(d.orderStatus === 'PAID' ? 'Pedido cancelado · o pedido pago fica para o financeiro estornar' : 'Pedido cancelado')
+    setToast(d.refunded ? 'Pedido cancelado · valor estornado' : d.orderStatus === 'PAID' ? 'Pedido cancelado · o estorno não saiu: fica para o financeiro' : 'Pedido cancelado')
   }
   async function issue() {
     if (!dossier) return
@@ -131,7 +131,7 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
             <div className="ha-adesk__team">
               <div className="ha-eyebrow">Equipe</div>
               <div className="ha-adesk__ctl">
-                <label className="ha-label">Avaliador<select className="ha-input" value={who} onChange={(e) => setWho(e.target.value)} disabled={busy}><option value="">— sem avaliador (na fila)</option>{appraisers.map((a) => <option key={a.id} value={a.id}>{a.name}{a.open ? ` · ${a.open} aberto${a.open === 1 ? '' : 's'}` : ''}</option>)}</select></label>
+                <label className="ha-label">Avaliador<select className="ha-input" value={who} onChange={(e) => setWho(e.target.value)} disabled={busy}><option value="">— sem avaliador (na fila)</option>{sel.assignedAppraiserId !== null && !appraisers.some((a) => a.id === sel.assignedAppraiserId) ? <option value={sel.assignedAppraiserId} disabled>{sel.assignedName} · inativo</option> : null}{appraisers.map((a) => <option key={a.id} value={a.id}>{a.name}{a.open ? ` · ${a.open} aberto${a.open === 1 ? '' : 's'}` : ''}</option>)}</select></label>
                 <button type="button" className="ha-btn ha-btn--secondary ha-btn--md" onClick={assign} disabled={busy || (who ? Number(who) : null) === sel.assignedAppraiserId}>{who ? 'Atribuir' : 'Liberar para a fila'}</button>
               </div>
               <div className="ha-adesk__ctl">
@@ -172,7 +172,7 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
         </section>
       ) : <section className="ha-stack"><p className="ha-muted">Selecione um pedido da fila.</p></section>}
       <Modal open={cancelOpen} title="Cancelar pedido de laudo" onClose={() => { if (!busy) setCancelOpen(false) }} footer={<><button type="button" className="ha-btn ha-btn--ghost ha-btn--md" onClick={() => setCancelOpen(false)} disabled={busy}>Voltar</button><button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={cancel} disabled={busy || !note.trim()}>Cancelar pedido</button></>}>
-        <p>Quem pediu recebe o aviso. Se o pedido já foi pago, o valor fica para o financeiro estornar; se ainda está em aberto, a cobrança é cancelada junto.</p>
+        <p>Quem pediu recebe o aviso e o valor pago é estornado pelo mesmo meio; se o estorno não sair, a auditoria marca o pedido para o financeiro.</p>
         <label className="ha-adesk__field">Motivo<textarea className="ha-input" rows={3} maxLength={CANCEL_NOTE_MAX} value={note} onChange={(e) => setNote(e.target.value)} /></label>
         {err ? <p className="ha-adesk__err" role="alert">{err}</p> : null}
       </Modal>

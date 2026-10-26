@@ -9,6 +9,8 @@ describe('appraisal desk core', () => {
     expect(stateOf(row(), now)).toBe('QUEUED')
     expect(stateOf(row({ status: 'IN_PROGRESS' }), now)).toBe('IN_PROGRESS')
     expect(stateOf(row({ dueOn: '2026-10-25T12:00:00Z' }), now)).toBe('OVERDUE')
+    // the day of the deadline is never late, whatever the hour of the instant stored
+    expect(stateOf(row({ dueOn: '2026-10-26T10:00:00Z' }), now)).toBe('QUEUED')
     expect(stateOf(row({ status: 'ISSUED', dueOn: '2026-10-25T12:00:00Z' }), now)).toBe('ISSUED')
     expect(stateOf(row({ status: 'CANCELLED' }), now)).toBe('CANCELLED')
   })

@@ -17,12 +17,18 @@ import { notify } from '@/lib/notifications/server'
 import { placeOrder } from '@/lib/orders/server'
 import { signJws, sha256OfBytes } from '@/lib/certificates/signing'
 import { savePrivateFile } from '@/lib/storage/private-vault'
+import { refundOrderPayment } from '@/lib/stripe/door'
 import { publicBaseUrl } from '@/lib/public-url'
 import { appraisalHash, type AppraisalContent } from './core'
 import { estimateFromComparables, validRange, type Estimate } from './estimate-core'
 import { APPRAISAL_DUE_DAYS, appraisalCode, isPurpose, PURPOSE_LABELS, SOURCE_LABELS, type AppraisalPurpose, type ComparableSource } from './domain'
 import { CANCEL_NOTE_MAX, canAssign, canCancel, canIssue, canTake, daysLeft, DESK_STATE_LABELS, isOpen, parseDueDay, stateOf, type Actor, type DeskState } from './desk-core'
 import { renderAppraisalPdf } from './pdf'
+
+const BAHIA = { timeZone: 'America/Bahia' } as const
+const dayOf = (d: Date) => new Date(d.getTime() - 3 * 3_600_000).toISOString().slice(0, 10)
+/** The deadline is a calendar day in the house zone: stored as its last instant, so "late" starts the next morning. */
+const endOfDueDay = (d: Date) => new Date(`${dayOf(d)}T23:59:59-03:00`)
 
 export interface Comparable { id: number | null; label: string; dimensions: string | null; priceCents: bigint; soldOn: Date; source: ComparableSource }
 
@@ -57,7 +63,7 @@ export async function requestAppraisal(actor: { userId: number; name: string; sc
   if (!holds && !reaches) throw new ArtworkError('NOT_FOUND', 'Obra não encontrada.', 404)
   const open = await prisma.appraisalRequest.count({ where: { artworkId: a.id, status: { in: ['QUEUED', 'IN_PROGRESS'] } } })
   if (open) throw new ArtworkError('OPEN_REQUEST', 'Já existe um laudo em andamento para esta obra.', 409)
-  const dueOn = new Date(Date.now() + APPRAISAL_DUE_DAYS * 86_400_000)
+  const dueOn = endOfDueDay(new Date(Date.now() + APPRAISAL_DUE_DAYS * 86_400_000))
   const tenantId = actor.scope ? tenantOfScope(actor.scope) : null
   const memberId = actor.scope ? memberOfScope(actor.scope) : null
   const req = await prisma.appraisalRequest.create({ data: { artworkId: a.id, tenantId: reaches ? a.tenantId ?? tenantId : null, memberId: reaches ? a.memberId : memberId, requestedByUserId: actor.userId, requesterLabel: i.requesterLabel.slice(0, 40), purpose: i.purpose, dueOn } })
@@ -79,14 +85,15 @@ export interface QueueItem {
   requestedAt: string
 }
 
-const BAHIA = { timeZone: 'America/Bahia' } as const
-const dayOf = (d: Date) => new Date(d.getTime() - 3 * 3_600_000).toISOString().slice(0, 10)
 
 /** The open requests by deadline; with `all`, also the issued and cancelled ones (newest first, after the open). */
 export async function appraisalQueue(now = new Date(), opts: { all?: boolean } = {}): Promise<QueueItem[]> {
   return totalScope('appraisal:queue', async () => {
-    const where = opts.all ? {} : { status: { in: ['QUEUED', 'IN_PROGRESS'] } }
-    const rows = await prisma.appraisalRequest.findMany({ where, include: { artwork: { include: { artist: true } }, appraisal: { select: { verificationCode: true, status: true } } }, orderBy: [{ dueOn: 'asc' }, { id: 'asc' }], take: opts.all ? 300 : 100 })
+    const include = { artwork: { include: { artist: true } }, appraisal: { select: { verificationCode: true, status: true } } } as const
+    // the open ones by deadline, all of them; the closed ones are history, the 200 newest
+    const open = await prisma.appraisalRequest.findMany({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] } }, include, orderBy: [{ dueOn: 'asc' }, { id: 'asc' }], take: 500 })
+    const closed = opts.all ? await prisma.appraisalRequest.findMany({ where: { status: { in: ['ISSUED', 'CANCELLED'] } }, include, orderBy: { id: 'desc' }, take: 200 }) : []
+    const rows = [...open, ...closed]
     const ids = [...new Set(rows.map((r) => r.assignedAppraiserId).filter((v): v is number => v !== null))]
     const users = ids.length ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : []
     const nameOf = new Map(users.map((u) => [u.id, u.name]))
@@ -101,8 +108,7 @@ export async function appraisalQueue(now = new Date(), opts: { all?: boolean } =
         requestedAt: r.createdAt.toISOString(),
       }
     })
-    // open first (by deadline), then the closed ones newest first
-    return items.sort((a, b) => (isOpen(a.status) === isOpen(b.status) ? (isOpen(a.status) ? 0 : b.id - a.id) : isOpen(a.status) ? -1 : 1))
+    return items
   })
 }
 
@@ -181,32 +187,38 @@ export async function setDueDay(id: number, rawDay: unknown, actor: Ctx): Promis
 }
 
 /**
- * The team cancels an open request with a note. The APPRAISAL_SIGNED order still OPEN is
- * cancelled with it; a PAID one stays as it is — the refund is the finance desk's, by hand,
- * and the audit row says which case it was.
+ * The team cancels an open request with a note. The APPRAISAL_SIGNED order was paid on the spot
+ * (placeOrder charges before it writes), so the charge is given back through the Stripe door:
+ * refunded → the order reads CANCELLED; the refund refused → the order stays PAID and the audit
+ * row says `refundPending` (finance settles by hand). The requester and the appraiser are told.
  */
-export async function cancelRequest(id: number, rawNote: unknown, actor: Ctx): Promise<{ status: 'CANCELLED'; orderStatus: string | null }> {
+export async function cancelRequest(id: number, rawNote: unknown, actor: Ctx): Promise<{ status: 'CANCELLED'; orderStatus: string | null; refunded: boolean }> {
   const note = typeof rawNote === 'string' ? rawNote.trim().slice(0, CANCEL_NOTE_MAX) : ''
   if (!note) throw new ArtworkError('NOTE', 'Diga o motivo do cancelamento.', 422)
   return totalScope('appraisal:cancel', async () => {
     const r = await openRow(id)
     if (!canCancel(actor, r.row)) throw new ArtworkError('FORBIDDEN', isOpen(r.status) ? 'Só a equipe cancela um pedido.' : 'Este pedido já foi encerrado.', isOpen(r.status) ? 403 : 409)
-    const orderStatus = await prisma.$transaction(async (tx) => {
-      const w = await tx.appraisalRequest.updateMany({ where: { id, status: r.status }, data: { status: 'CANCELLED' } })
-      if (w.count === 0) throw new ArtworkError('CHANGED', 'O pedido acabou de mudar.', 409)
-      if (!r.orderId) return null
-      const o = await tx.order.findUnique({ where: { id: r.orderId }, select: { status: true } })
-      if (o?.status === 'OPEN') { await tx.order.updateMany({ where: { id: r.orderId, status: 'OPEN' }, data: { status: 'CANCELLED' } }); return 'CANCELLED' }
-      return o?.status ?? null
-    })
-    void audit.event({ entity: 'appraisal_request', entityId: id, action: 'cancel', userId: actor.userId, userName: actor.name, ip: actor.ip, userAgent: actor.userAgent, before: { status: r.status, assignedAppraiserId: r.assignedAppraiserId }, after: { status: 'CANCELLED', note, orderStatus, refundPending: orderStatus === 'PAID' } })
+    const w = await prisma.appraisalRequest.updateMany({ where: { id, status: r.status }, data: { status: 'CANCELLED' } })
+    if (w.count === 0) throw new ArtworkError('CHANGED', 'O pedido acabou de mudar.', 409)
+    const order = r.orderId ? await prisma.order.findUnique({ where: { id: r.orderId }, select: { id: true, status: true, paymentRef: true } }) : null
+    let refunded = false, refundError: string | null = null
+    if (order?.status === 'PAID') {
+      try {
+        await refundOrderPayment(order.paymentRef ?? '')
+        const u = await prisma.order.updateMany({ where: { id: order.id, status: 'PAID' }, data: { status: 'CANCELLED' } })
+        refunded = u.count === 1
+      } catch (e) { refundError = e instanceof Error ? e.name : 'refund_failed' }
+    }
+    const orderStatus = order ? (refunded ? 'CANCELLED' : order.status) : null
+    void audit.event({ entity: 'appraisal_request', entityId: id, action: 'cancel', userId: actor.userId, userName: actor.name, ip: actor.ip, userAgent: actor.userAgent, before: { status: r.status, assignedAppraiserId: r.assignedAppraiserId }, after: { status: 'CANCELLED', note, orderId: order?.id ?? null, orderStatus, refunded, refundPending: order?.status === 'PAID' && !refunded, refundError } })
     const requester = await prisma.user.findUnique({ where: { id: r.requestedByUserId }, select: { email: true } })
-    await notify({ userId: r.requestedByUserId, email: requester?.email, kind: 'appraisal.cancelled', title: `Pedido de laudo cancelado · ${r.artwork.title}`, body: orderStatus === 'PAID' ? 'A HouseArt entra em contato sobre o valor pago.' : 'Nada foi cobrado.', href: '/wallet', emailSubject: 'Seu pedido de laudo foi cancelado' })
+    const href = r.memberId ? `/artworks/${r.artworkId}` : '/wallet'
+    await notify({ userId: r.requestedByUserId, email: requester?.email, kind: 'appraisal.cancelled', title: `Pedido de laudo cancelado · ${r.artwork.title}`, body: order?.status === 'PAID' ? (refunded ? 'O valor pago volta pelo mesmo meio de pagamento.' : 'A HouseArt entra em contato sobre o valor pago.') : 'Nada foi cobrado.', href, emailSubject: 'Seu pedido de laudo foi cancelado' })
     if (r.assignedAppraiserId) {
       const u = await prisma.user.findUnique({ where: { id: r.assignedAppraiserId }, select: { email: true } })
       await notify({ userId: r.assignedAppraiserId, email: u?.email, kind: 'appraisal.cancelled', title: `Pedido cancelado · ${r.artwork.title}`, body: 'A equipe cancelou este pedido de laudo.', href: '/appraisals' })
     }
-    return { status: 'CANCELLED', orderStatus }
+    return { status: 'CANCELLED', orderStatus, refunded }
   })
 }
 
@@ -271,7 +283,7 @@ export async function issueAppraisal(appraiser: { userId: number; name: string; 
     const pdfRef = await savePrivateFile({ buffer: Buffer.from(pdf), contentType: 'application/pdf', prefix: `appraisals/${r.id}` })
     const pdfHash = sha256OfBytes(pdf)
     const appraisal = await prisma.$transaction(async (tx) => {
-      const g = await tx.appraisalRequest.updateMany({ where: { id: r.id, status: { in: ['QUEUED', 'IN_PROGRESS'] }, assignedAppraiserId: r.assignedAppraiserId }, data: { status: 'ISSUED', assignedAppraiserId: appraiser.userId } })
+      const g = await tx.appraisalRequest.updateMany({ where: { id: r.id, status: { in: ['QUEUED', 'IN_PROGRESS'] }, assignedAppraiserId: r.assignedAppraiserId }, data: { status: 'ISSUED', assignedAppraiserId: r.assignedAppraiserId ?? appraiser.userId } })
       if (g.count === 0) throw new ArtworkError('ALREADY_ISSUED', 'Este laudo acabou de ser emitido.', 409)
       await tx.appraisal.updateMany({ where: { artworkId: r.artworkId, status: 'ISSUED' }, data: { status: 'SUPERSEDED' } })
       const previous = await tx.appraisal.count({ where: { artworkId: r.artworkId } })

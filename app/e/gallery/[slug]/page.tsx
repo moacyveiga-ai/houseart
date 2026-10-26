@@ -14,7 +14,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = g ? `${g.name} — HouseArt` : 'Galeria — HouseArt'
   const description = g?.summary ?? undefined
   const image = g?.coverUrl ?? g?.rooms.find((r) => r.url)?.url ?? null
-  return { title, description, openGraph: { title, description, type: 'website', ...(image ? { images: [{ url: image, alt: g!.name }] } : {}) } }
+  // same rule as the artist page: openGraph only with an image, else the root layout's brand block stays
+  return { title, description, ...(image ? { openGraph: { title, description, siteName: 'HouseArt', locale: 'pt_BR', type: 'website', images: [{ url: image, alt: g!.name }] } } : {}) }
 }
 
 // Galeria (handoff "HouseArt Galeria"): the public page of a verified gallery.

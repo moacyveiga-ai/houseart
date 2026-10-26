@@ -13,7 +13,6 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'HouseArt — A escritura da obra de arte',
-  openGraph: { title: 'HouseArt — A escritura da obra de arte', description: 'O artista certifica. A galeria apresenta. O colecionador recebe a obra e a escritura.' },
   description: 'O artista certifica. A galeria apresenta. O colecionador recebe a obra e a escritura. Cada revenda volta a pagar quem criou, cada dono fica registrado e nenhuma obra perde o próprio nome.',
 }
 

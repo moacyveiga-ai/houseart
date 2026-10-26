@@ -6,6 +6,10 @@ import { PIX_KEY_TYPE_LABELS, type PixKeyType } from '@/lib/payment-methods/doma
 import { initialsOf } from '@/lib/profiles/core'
 import { composerInstagram } from '@/lib/instagram/server'
 import { galleryAccount } from '@/lib/gallery/account-server'
+import { addressLine, planLine, splitLine } from '@/lib/gallery/account-core'
+import { usageOf } from '@/lib/plans/server'
+import { priceLabel } from '@/lib/plans/core'
+import { ScopeNotApplied } from '@/lib/scope/extension-core'
 import { AccountScreen, type AccountSection } from '@/components/gallery/AccountScreen'
 import '@/components/gallery/account.css'
 
@@ -15,12 +19,14 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export default async function GalleryAccountPage() {
   const { user, scope } = await requirePanelPage('/gallery/account')
-  const [people, artists, payout, ig, account] = await Promise.all([
+  const [people, artists, payout, ig, account, usage] = await Promise.all([
     teamOf(scope, user.id),
     representedArtists(scope).catch(() => []),
     user.memberId ? payoutAccountOf(user.memberId) : null,
     composerInstagram(user.id),
     galleryAccount(user, scope),
+    // the plan line is decoration: a failure zeroes it, but a query without owner is never swallowed
+    usageOf(scope).catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return null }),
   ])
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null
   const members = people.filter((p) => p.kind === 'MEMBER').length
@@ -30,6 +36,7 @@ export default async function GalleryAccountPage() {
       { icon: 'storefront', name: 'Dados da galeria', sub: account ? [account.cnpjMask ? `CNPJ ${account.cnpjMask}` : null, account.data.city || null].filter(Boolean).join(' · ') || 'Nome, CNPJ, contato e cidade' : 'Nome, CNPJ, contato e cidade', href: '/gallery/account/data' },
       { icon: 'groups', name: 'Equipe', sub: `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}`, href: '/gallery/team' },
       { icon: 'palette', name: 'Artistas representados', sub: `${plural(artists.length, 'artista', 'artistas')} · ${plural(artists.filter((a) => a.contract).length, 'contrato ativo', 'contratos ativos')}`, href: '/gallery/artists' },
+      { icon: 'location_on', name: 'Endereço e horários', sub: addressLine(account?.address ?? null), href: '/gallery/public' },
       { icon: 'public', name: 'Perfil público', sub: 'Página da galeria no site: sobre, endereço, equipe, fotos e publicações', href: '/gallery/public' },
     ] },
     // the desk screens that left the menu (audit 2026-10-25: five entries, as in Web Galeria)
@@ -41,9 +48,11 @@ export default async function GalleryAccountPage() {
     ] },
     { name: 'Recebimentos', items: [
       { icon: 'account_balance', name: 'Pix para repasses', sub: payout ? `${PIX_KEY_TYPE_LABELS[payout.pixKeyType as PixKeyType] ?? payout.pixKeyType} · ${payout.pixKeyMask}` : 'Não cadastrado', href: '/sales/payout' },
+      { icon: 'call_split', name: 'Divisão com artistas', sub: splitLine(artists.flatMap((a) => (a.contract ? [a.contract] : []))), href: '/gallery/artists' },
+      { icon: 'receipt_long', name: 'Notas e comprovantes', sub: 'Serviços, etiquetas e taxas pagas pela galeria', href: '/account/receipts' },
     ] },
     { name: 'Plano e pagamentos', items: [
-      { icon: 'workspace_premium', name: 'Plano e cobrança', sub: 'Plano, uso do mês e faturas', href: '/billing' },
+      { icon: 'workspace_premium', name: 'Plano e cobrança', sub: planLine(usage ? { name: usage.plan.name, priceLabel: priceLabel(usage.plan.priceCents) } : null, usage?.bars ?? []), href: '/billing' },
       { icon: 'account_balance_wallet', name: 'Carteira e cartões', sub: 'Cartão para plano e serviços', href: '/wallet/cards' },
     ] },
     { name: 'Redes sociais', items: [

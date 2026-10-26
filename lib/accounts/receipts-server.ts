@@ -12,12 +12,17 @@ export interface ReceiptRow { key: string; kind: 'PURCHASE' | 'ORDER' | 'TRANSFE
 const KIND_LABEL: Record<ReceiptRow['kind'], string> = { PURCHASE: 'Compra', ORDER: 'Serviço', TRANSFER: 'Taxa de transferência' }
 export const receiptKindLabel = (k: ReceiptRow['kind']) => KIND_LABEL[k]
 
-export async function receiptsOf(userId: number, take = 100): Promise<ReceiptRow[]> {
+/**
+ * Everything the person paid, newest first. `tenantId` brings the orders of the house (kit of
+ * markers, services placed by any member of the gallery — they carry tenantId, not userId), the
+ * same rule as /billing.
+ */
+export async function receiptsOf(userId: number, tenantId: number | null = null, take = 100): Promise<ReceiptRow[]> {
   return totalScope('account:receipts', async () => {
     const [deals, orders, transfers] = await Promise.all([
       prisma.deal.findMany({ where: { buyerUserId: userId, escrowPaidAt: { not: null }, OR: [{ exceptionStatus: null }, { exceptionStatus: 'DISPUTE' }] }, orderBy: { escrowPaidAt: 'desc' }, take, select: { id: true, code: true, amountCents: true, shippingCents: true, insuranceCents: true, escrowPaymentRef: true, escrowPaidAt: true, escrowMethod: true, offer: { select: { guaranteeRef: true } }, artwork: { select: { title: true } } } }),
       // a transfer fee paid as an order is listed once, as the transfer
-      prisma.order.findMany({ where: { userId, status: 'PAID', transferId: null }, orderBy: { paidAt: 'desc' }, take, select: { id: true, code: true, description: true, amountCents: true, paidAt: true, createdAt: true } }),
+      prisma.order.findMany({ where: { status: 'PAID', transferId: null, ...(tenantId ? { OR: [{ userId }, { tenantId }] } : { userId }) }, orderBy: { paidAt: 'desc' }, take, select: { id: true, code: true, description: true, amountCents: true, paidAt: true, createdAt: true } }),
       prisma.ownershipTransfer.findMany({ where: { fromUserId: userId, feePaidAt: { not: null }, feeCents: { gt: 0 } }, orderBy: { feePaidAt: 'desc' }, take, select: { id: true, feeCents: true, feePaidAt: true, artwork: { select: { title: true } } } }),
     ])
     const rows: ReceiptRow[] = [

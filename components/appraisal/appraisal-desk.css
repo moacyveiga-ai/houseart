@@ -1,0 +1,12 @@
+/* The appraisal desk (components/appraisal/AppraisalDesk.tsx). Prefix ha-adesk. */
+.ha-adesk__filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-adesk__filters .ha-chip { text-decoration: none; }
+.ha-adesk__row { grid-template-columns: 1fr auto; }
+.ha-adesk__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ha-adesk__main .ha-sm { display: inline-flex; align-items: center; gap: 4px; }
+.ha-adesk__hold { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ha-space-3); }
+.ha-adesk__team { display: flex; flex-direction: column; gap: var(--ha-space-3); padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-adesk__ctl { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--ha-space-3); }
+.ha-adesk__ctl .ha-label { flex: 1 1 220px; }
+.ha-adesk__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-adesk__err { font-size: var(--ha-text-caption); color: var(--ha-alert-500); margin: 0; }

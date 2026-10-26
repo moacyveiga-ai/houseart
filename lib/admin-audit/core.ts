@@ -13,6 +13,7 @@ export const ACTION_LABELS: Record<string, string> = {
   create: 'criou', update: 'alterou', delete: 'apagou', approve: 'aprovou', reject: 'reprovou', revalidate: 'pediu nova verificação',
   block: 'bloqueou', unblock: 'desbloqueou', profile: 'trocou o papel', password_link: 'enviou link de senha', invite_resent: 'reenviou convite',
   split_paid_manually: 'marcou repasse como pago', transfer: 'transferiu pela Stripe', transfer_unrecorded: 'transferência sem registro', login: 'entrou', logout: 'saiu', login_failed: 'falhou ao entrar',
+  assign: 'atribuiu avaliador', take: 'assumiu', due: 'mudou o prazo', cancel: 'cancelou', issue: 'emitiu',
 }
 export const ORIGIN_LABELS: Record<string, string> = { ui: 'tela', api: 'API', job: 'rotina', webhook: 'webhook', 'public-link': 'link público' }
 

@@ -239,6 +239,13 @@ export async function cancelAsyncPayment(ref: string): Promise<'CANCELLED' | 'PA
   }
 }
 
+/** Gives back an order paid on the spot (a cancelled appraisal request). Mock: nothing to refund. One refund per charge. */
+export async function refundOrderPayment(ref: string): Promise<void> {
+  if (stripeMode() === 'mock' || ref.startsWith('mock_')) return
+  try { await stripeGateway().refundPaymentIntent(ref, `refund-order:${ref}`) }
+  catch (e) { throw stripeFailure(e) }
+}
+
 /** Gives back a Pix/boleto paid for a deal that no longer waits for it (already paid another way, or cancelled). One refund per PaymentIntent. */
 export async function refundAsyncPayment(ref: string): Promise<void> {
   try { await stripeGateway().refundPaymentIntent(ref, `refund-stray:${ref}`) }

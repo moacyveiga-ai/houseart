@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { ALWAYS_LIGHT_ROUTES, antiFlashScript, isAlwaysLightRoute as rotaSempreClara } from './theme-routes'
+import { ALWAYS_LIGHT_ROUTES, DEFAULT_THEME, antiFlashScript, isAlwaysLightRoute as rotaSempreClara } from './theme-routes'
 
 // Ratchet (revisão adversarial 9.7): as rotas sempre claras viviam em TRÊS
 // listas editadas à mão — rotaSempreClara, o script anti-flash do root layout
@@ -34,6 +34,11 @@ describe('rotas sempre claras', () => {
     expect(js).toContain(JSON.stringify(ALWAYS_LIGHT_ROUTES))
     expect(js).toContain("data-ha-theme")
     expect(js.startsWith('(function(){')).toBe(true)
+  })
+
+  it('sem preferência gravada o painel é claro (o escuro não foi desenhado)', () => {
+    expect(DEFAULT_THEME).toBe('light')
+    expect(antiFlashScript()).toContain("t='light'")
   })
 
 })

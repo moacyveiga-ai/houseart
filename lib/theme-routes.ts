@@ -13,6 +13,9 @@
  * (lib/theme.ts), o script anti-flash do root layout e o teste de
  * `components/layout/AppShell.tsx` leem. Três cópias à mão divergiam (9.7).
  */
+/** The theme nobody chose: light. The dark panel was never designed (DS audit 2026-10-25) and there is no selector on screen — only a saved preference turns it on. */
+export const DEFAULT_THEME = 'light' as const
+
 export const ALWAYS_LIGHT_ROUTES = ['/e', '/login', '/signup', '/recover-password', '/reset-password', '/verify', '/privacy'] as const
 
 export function isAlwaysLightRoute(pathname: string): boolean {
@@ -26,5 +29,5 @@ export function isAlwaysLightRoute(pathname: string): boolean {
  */
 export function antiFlashScript(): string {
   const rotas = JSON.stringify(ALWAYS_LIGHT_ROUTES)
-  return `(function(){try{var t=localStorage.getItem('ha-theme');if(t!=='light'&&t!=='dark'&&t!=='system')t='system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var p=location.pathname;var c=${rotas};for(var i=0;i<c.length;i++){if(p===c[i]||p.indexOf(c[i]+'/')===0)d=false;}document.documentElement.setAttribute('data-ha-theme',d?'dark':'');}catch(e){}})();`
+  return `(function(){try{var t=localStorage.getItem('ha-theme');if(t!=='light'&&t!=='dark'&&t!=='system')t='${DEFAULT_THEME}';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var p=location.pathname;var c=${rotas};for(var i=0;i<c.length;i++){if(p===c[i]||p.indexOf(c[i]+'/')===0)d=false;}document.documentElement.setAttribute('data-ha-theme',d?'dark':'');}catch(e){}})();`
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { artIndexAt, artIndexQuote, deltaLabel, parseAwesome, parseSgs, tickerItemsOf } from './core'
+import { artIndexAt, artIndexQuote, deltaLabel, parseAwesome, parseBaseStart, parseSgs, tickerItemsOf } from './core'
 
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`)
 const sale = (iso: string, reais: number) => ({ amountCents: BigInt(reais * 100), at: day(iso) })
@@ -11,6 +11,9 @@ describe('faixa de índices', () => {
     expect(tickerItemsOf([{ key: 'HA_INDEX', valueMicros: null, changeBps: null }, { key: 'USD_BRL', valueMicros: 5_420_000n, changeBps: null }]))
       .toEqual([{ label: 'Índice HouseArt', value: '—' }, { label: 'Dólar', value: 'R$ 5,42' }])
     expect(deltaLabel(-120)).toBe('−1,2%')
+    // a currency nobody could fetch for days is not shown as current
+    const now = new Date('2026-10-26T12:00:00Z')
+    expect(tickerItemsOf([{ key: 'USD_BRL', valueMicros: 5_420_000n, changeBps: null, observedAt: new Date('2026-10-18T12:00:00Z') }], now)).toEqual([{ label: 'Índice HouseArt', value: '—' }])
     expect(deltaLabel(0)).toBe('0,0%')
   })
 
@@ -32,6 +35,9 @@ describe('faixa de índices', () => {
     expect(artIndexAt(sales, day('2026-10-26'))).toBe(112.5) // (55 000 + 57 500)/2 ÷ (40 000 + 60 000)/2
     expect(artIndexAt(sales, day('2026-08-01'))).toBeNull() // nothing in the last 90 days
     expect(artIndexAt([], day('2026-10-26'))).toBeNull()
+    // ART_INDEX_BASE_START: sales before the launch (the demo) never set the base
+    expect(artIndexAt(sales, day('2026-10-26'), parseBaseStart('2026-08-15'))).toBe(100)
+    expect(parseBaseStart('ontem')).toBeNull()
     const q = artIndexQuote(sales, day('2026-10-20'))
     expect(q.valueMicros).toBe(112_500_000n)
     expect(q.changeBps).toBe(227) // 110,0 the day before (only the 55 000 sale) → 112,5

@@ -11,7 +11,10 @@ export const QUOTE_LABELS: Record<QuoteKey, string> = { HA_INDEX: 'Índice House
 export const INDEX_WINDOW_DAYS = 90
 const DAY = 86_400_000
 
-export interface QuoteRow { key: string; valueMicros: bigint | null; changeBps: number | null }
+export interface QuoteRow { key: string; valueMicros: bigint | null; changeBps: number | null; observedAt?: Date | null }
+
+/** A currency older than this is left out of the strip (every source down for days): never shown as current. */
+export const STALE_CURRENCY_DAYS = 5
 export interface TickerItem { label: string; value: string; delta?: string }
 
 const nf1 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -28,7 +31,7 @@ export function deltaLabel(bps: number): string {
  * The ticker in the order of the design. The index always shows (with "—" when there are no sales);
  * a currency never fetched yet is left out rather than shown as "R$ 0,00".
  */
-export function tickerItemsOf(rows: QuoteRow[]): TickerItem[] {
+export function tickerItemsOf(rows: QuoteRow[], now: Date = new Date()): TickerItem[] {
   const by = new Map(rows.map((r) => [r.key, r]))
   const out: TickerItem[] = []
   const idx = by.get('HA_INDEX')
@@ -36,7 +39,8 @@ export function tickerItemsOf(rows: QuoteRow[]): TickerItem[] {
   else out.push({ label: QUOTE_LABELS.HA_INDEX, value: '—' })
   for (const key of ['USD_BRL', 'EUR_BRL'] as const) {
     const r = by.get(key)
-    if (r?.valueMicros != null) out.push({ label: QUOTE_LABELS[key], value: `R$ ${nf2.format(Number(r.valueMicros) / 1e6)}` })
+    const fresh = !r?.observedAt || now.getTime() - r.observedAt.getTime() <= STALE_CURRENCY_DAYS * DAY
+    if (r?.valueMicros != null && fresh) out.push({ label: QUOTE_LABELS[key], value: `R$ ${nf2.format(Number(r.valueMicros) / 1e6)}` })
   }
   return out
 }
@@ -78,6 +82,13 @@ export function parseSgs(json: unknown, key: 'USD_BRL' | 'EUR_BRL'): ParsedQuote
 
 export interface Sale { amountCents: bigint; at: Date }
 
+/** ART_INDEX_BASE_START ("2026-11-01"): the day the index starts counting sales. Invalid or empty = from the first sale. */
+export function parseBaseStart(v: string | undefined): Date | null {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return null
+  const d = new Date(`${v.trim()}T00:00:00-03:00`)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 const meanIn = (sales: Sale[], from: number, to: number): number | null => {
   const xs = sales.filter((s) => s.at.getTime() > from && s.at.getTime() <= to)
   if (!xs.length) return null
@@ -86,13 +97,14 @@ const meanIn = (sales: Sale[], from: number, to: number): number | null => {
 
 /**
  * The HouseArt index at `now`: 100 × (mean sale of the last INDEX_WINDOW_DAYS) ÷ (mean sale of the
- * base window — the first INDEX_WINDOW_DAYS from the platform's first sale). Null without a sale in
- * the current window (the ticker reads "—").
+ * base window — the first INDEX_WINDOW_DAYS from the first sale on or after `baseStart`). Sales before
+ * `baseStart` (ART_INDEX_BASE_START: the launch, so demo sales never set the base) never count.
+ * Null without a sale in the current window (the ticker reads "—").
  */
-export function artIndexAt(sales: Sale[], now: Date): number | null {
-  const done = sales.filter((s) => s.at.getTime() <= now.getTime())
+export function artIndexAt(sales: Sale[], now: Date, baseStart: Date | null = null): number | null {
+  const done = sales.filter((s) => s.at.getTime() <= now.getTime() && (!baseStart || s.at.getTime() >= baseStart.getTime()))
   if (!done.length) return null
-  const first = Math.min(...done.map((s) => s.at.getTime()))
+  const first = done.reduce((m, s) => Math.min(m, s.at.getTime()), Infinity)
   const w = INDEX_WINDOW_DAYS * DAY
   const base = meanIn(done, first - 1, first + w)
   const cur = meanIn(done, now.getTime() - w, now.getTime())
@@ -101,9 +113,9 @@ export function artIndexAt(sales: Sale[], now: Date): number | null {
 }
 
 /** The index now and its change vs a day before (bps), as the cron stores it. */
-export function artIndexQuote(sales: Sale[], now: Date): { valueMicros: bigint | null; changeBps: number | null } {
-  const v = artIndexAt(sales, now)
+export function artIndexQuote(sales: Sale[], now: Date, baseStart: Date | null = null): { valueMicros: bigint | null; changeBps: number | null } {
+  const v = artIndexAt(sales, now, baseStart)
   if (v === null) return { valueMicros: null, changeBps: null }
-  const before = artIndexAt(sales, new Date(now.getTime() - DAY))
+  const before = artIndexAt(sales, new Date(now.getTime() - DAY), baseStart)
   return { valueMicros: toMicros(v), changeBps: before ? Math.round((v / before - 1) * 10_000) : null }
 }

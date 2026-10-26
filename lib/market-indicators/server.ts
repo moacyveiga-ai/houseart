@@ -5,7 +5,7 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
-import { artIndexQuote, parseAwesome, parseSgs, tickerItemsOf, type ParsedQuote, type TickerItem } from './core'
+import { artIndexQuote, INDEX_WINDOW_DAYS, parseAwesome, parseBaseStart, parseSgs, tickerItemsOf, type ParsedQuote, type TickerItem } from './core'
 
 const AWESOME_URL = 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL'
 const SGS_SERIES: Record<'USD_BRL' | 'EUR_BRL', number> = { USD_BRL: 1, EUR_BRL: 21619 }
@@ -45,9 +45,17 @@ export async function refreshMarketIndicators(now = new Date(), fetchFn: Fetch =
       await prisma.marketQuote.upsert({ where: { key: q.key }, create: { key: q.key, valueMicros: q.valueMicros, changeBps: q.changeBps, observedAt: q.observedAt, source: q.source }, update: { valueMicros: q.valueMicros, changeBps: q.changeBps, observedAt: q.observedAt, source: q.source } })
       updated.push(q.key)
     }
-    // the platform's sales: every completed deal, by the day it completed
-    const deals = await prisma.deal.findMany({ where: { phase: 'COMPLETED', completedAt: { not: null }, exceptionStatus: null }, select: { amountCents: true, completedAt: true } })
-    const idx = artIndexQuote(deals.map((d) => ({ amountCents: d.amountCents, at: d.completedAt! })), now)
+    // the platform's sales (completed deals, by the day they completed), only the two windows the index reads:
+    // the base (90 days from the first sale on or after ART_INDEX_BASE_START) and the last 90 days + 1 (the day-before change)
+    const baseStart = parseBaseStart(process.env.ART_INDEX_BASE_START)
+    const done = { phase: 'COMPLETED', exceptionStatus: null, completedAt: { not: null, ...(baseStart ? { gte: baseStart } : {}) } }
+    const first = await prisma.deal.findFirst({ where: done, orderBy: { completedAt: 'asc' }, select: { completedAt: true } })
+    const w = INDEX_WINDOW_DAYS * 86_400_000
+    const deals = first?.completedAt ? await prisma.deal.findMany({
+      where: { ...done, OR: [{ completedAt: { gte: first.completedAt, lte: new Date(first.completedAt.getTime() + w) } }, { completedAt: { gt: new Date(now.getTime() - w - 86_400_000), lte: now } }] },
+      select: { amountCents: true, completedAt: true },
+    }) : []
+    const idx = artIndexQuote(deals.map((d) => ({ amountCents: d.amountCents, at: d.completedAt! })), now, baseStart)
     await prisma.marketQuote.upsert({ where: { key: 'HA_INDEX' }, create: { key: 'HA_INDEX', ...idx, observedAt: now, source: 'platform' }, update: { ...idx, observedAt: now, source: 'platform' } })
     updated.push('HA_INDEX')
     return { updated, errors }
@@ -56,6 +64,6 @@ export async function refreshMarketIndicators(now = new Date(), fetchFn: Fetch =
 
 /** What the shell shows (the table only). Empty when nothing was ever written (the strip stays hidden). */
 export async function tickerItems(): Promise<TickerItem[]> {
-  const rows = await prisma.marketQuote.findMany({ select: { key: true, valueMicros: true, changeBps: true } })
+  const rows = await prisma.marketQuote.findMany({ select: { key: true, valueMicros: true, changeBps: true, observedAt: true } })
   return rows.length ? tickerItemsOf(rows) : []
 }

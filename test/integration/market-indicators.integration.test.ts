@@ -9,7 +9,8 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const awesome = { USDBRL: { bid: '5.42', pctChange: '0.10', timestamp: '1793000000' }, EURBRL: { bid: '6.11', pctChange: '-0.20', timestamp: '1793000000' } }
 
 beforeEach(async () => {
-  await truncateTables(['MarketQuote'])
+  // completed deals left by other files would turn the index into a number
+  await truncateTables(['MarketQuote', 'Deal'])
 })
 
 describe('faixa de índices (cron)', () => {

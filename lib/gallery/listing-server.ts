@@ -14,7 +14,7 @@ import { diaNoFuso } from '@/lib/timezone'
 
 export interface ListingView {
   artworkId: number; title: string; status: string; paused: boolean; listPriceCents: bigint; acceptsOffers: boolean; fixedPrice: boolean
-  stats: { views7d: number; views30d: number; openOffers: number }
+  stats: { views7d: number; views30d: number; openOffers: number; saves: number; likes: number }
   rules: { autoNegotiatorOn: boolean; autoAcceptMinBps: number }
 }
 
@@ -55,7 +55,7 @@ async function loadListings(scope: Scope, artworkIds: readonly number[], now: Da
   const artworks = (await prisma.artwork.findMany({ where: { id: { in: ids } }, select: ARTWORK_SELECT })).filter((a) => canView(scope, a))
   const visible = artworks.map((a) => a.id)
   if (visible.length === 0) return { visible: new Set(), listings: out }
-  const [mandates, views7d, views30d, offers] = await Promise.all([
+  const [mandates, views7d, views30d, offers, reactions] = await Promise.all([
     prisma.mandate.findMany({
       where: { artworkId: { in: visible }, status: 'ACTIVE' },
       select: { artworkId: true, listPriceCents: true, fixedPrice: true, autoNegotiatorOn: true, autoAcceptMinBps: true },
@@ -64,7 +64,10 @@ async function loadListings(scope: Scope, artworkIds: readonly number[], now: Da
     viewsSinceMany(visible, 7, now),
     viewsSinceMany(visible, 30, now),
     prisma.offer.groupBy({ by: ['artworkId'], where: { artworkId: { in: visible }, status: { in: [...OPEN_FOR_SELLER] } }, _count: { _all: true } }),
+    // "salvos · curtidas" of the public page (community reactions on the artwork; the collector's favourite is the SAVE)
+    prisma.reaction.groupBy({ by: ['targetId', 'kind'], where: { targetKind: 'ARTWORK', targetId: { in: visible }, kind: { in: ['SAVE', 'LIKE'] } }, _count: { _all: true } }),
   ])
+  const reactionsOf = new Map(reactions.map((r) => [`${r.targetId}:${r.kind}`, r._count._all]))
   const mandateOf = new Map<number, (typeof mandates)[number]>()
   for (const m of mandates) if (!mandateOf.has(m.artworkId)) mandateOf.set(m.artworkId, m)
   const offersOf = new Map(offers.map((o) => [o.artworkId, o._count._all]))
@@ -73,7 +76,7 @@ async function loadListings(scope: Scope, artworkIds: readonly number[], now: Da
     if (!m) continue
     out.set(a.id, {
       artworkId: a.id, title: a.title, status: a.status, paused: !!a.listingPausedAt, listPriceCents: m.listPriceCents, acceptsOffers: !m.fixedPrice, fixedPrice: m.fixedPrice,
-      stats: { views7d: views7d.get(a.id) ?? 0, views30d: views30d.get(a.id) ?? 0, openOffers: offersOf.get(a.id) ?? 0 },
+      stats: { views7d: views7d.get(a.id) ?? 0, views30d: views30d.get(a.id) ?? 0, openOffers: offersOf.get(a.id) ?? 0, saves: reactionsOf.get(`${a.id}:SAVE`) ?? 0, likes: reactionsOf.get(`${a.id}:LIKE`) ?? 0 },
       rules: { autoNegotiatorOn: m.autoNegotiatorOn, autoAcceptMinBps: m.autoAcceptMinBps },
     })
   }

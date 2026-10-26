@@ -21,7 +21,7 @@ export interface ArtworkPanelData {
 
 const day = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/Bahia' })
 
-export function ArtworkPanel({ a, closeHref, listing, rules, canManage, blockedReason }: { a: ArtworkPanelData; closeHref: string; listing: ListingState | null; rules: ToggleRules | null; canManage: boolean; blockedReason: string }) {
+export function ArtworkPanel({ a, closeHref, listing, rules, canManage, canTransfer = false, blockedReason }: { a: ArtworkPanelData; closeHref: string; listing: ListingState | null; rules: ToggleRules | null; canManage: boolean; canTransfer?: boolean; blockedReason: string }) {
   const [cover, ...thumbs] = a.images
   const footer = (
     <>
@@ -53,7 +53,7 @@ export function ArtworkPanel({ a, closeHref, listing, rules, canManage, blockedR
       {listing ? (
         <section className="ha-stack" style={{ gap: 8 }}>
           <h3 className="ha-ap__h">Gestão do anúncio</h3>
-          <ListingManager canManage={canManage} blockedReason={blockedReason} artworkId={a.id} title={a.title} artistName={a.artist} publicId={a.publicId} rules={rules} initial={listing} />
+          <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={blockedReason} artworkId={a.id} title={a.title} artistName={a.artist} publicId={a.publicId} rules={rules} initial={listing} />
         </section>
       ) : null}
       <section className="ha-stack" style={{ gap: 8 }}>

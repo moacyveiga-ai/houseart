@@ -1,5 +1,6 @@
 import { requirePanelPage } from '../_session'
 import { negotiatorOf, sellerOffers } from '@/lib/offers/server'
+import { getArtwork } from '@/lib/artworks/server'
 import { negotiatorLabel } from '@/lib/offers/mandate-core'
 import { Tabs } from '@/components/ds/Tabs'
 import { OffersTable } from '@/components/offers/OffersTable'
@@ -32,7 +33,7 @@ function financeOf(d: DealView) {
   return { finance: finance.map((l) => ({ label: l.label, cents: l.cents.toString(), sign: l.sign, strong: l.strong })), payoutNote }
 }
 
-export default async function SalesPage({ searchParams }: { searchParams: Promise<{ tab?: string; sale?: string }> }) {
+export default async function SalesPage({ searchParams }: { searchParams: Promise<{ tab?: string; sale?: string; artwork?: string }> }) {
   const { scope, user, nav } = await requirePanelPage('/sales')
   // A collector without a member (no artwork in their name yet) has nothing to sell: the
   // scope is NONE, every list is empty and the page says so instead of erroring.
@@ -48,15 +49,21 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams
   const tab = sp.tab === 'deals' ? 'deals' : 'offers'
   const saleId = Number(sp.sale)
-  const offers = await sellerOffers(scope)
+  const allOffers = await sellerOffers(scope)
+  // "Ofertas desta obra" (Gestão do anúncio): ?artwork= narrows the list to ONE work; the chip leads back to all
+  const artworkFilter = Number(sp.artwork)
+  // the work named must be in the seller's scope (getArtwork); with no offer the list is empty and the chip says so
+  const filteredWork = Number.isInteger(artworkFilter) && artworkFilter > 0 && tab === 'offers' ? await getArtwork(scope, artworkFilter) : null
+  const onlyWork = filteredWork ? { id: filteredWork.id, title: filteredWork.title } : null
+  const offers = onlyWork ? allOffers.filter((o) => o.artworkId === onlyWork.id) : allOffers
   const deals = tab === 'deals' && flagOn('FLAG_DEALS') ? await sellerDeals(scope) : []
   // the sale named by ?sale= among the seller's own deals (scope-limited list: another seller's id opens nothing)
   const open1 = Number.isInteger(saleId) && saleId > 0 ? deals.find((d) => d.id === saleId) ?? null : null
   const mandate = await negotiatorOf(scope)
-  const open = offers.filter((o) => o.open).length
+  const open = allOffers.filter((o) => o.open).length
   // The gallery team role: Acervo does not answer proposals, only Admin changes the rules (the API refuses the rest).
   const can = sellerPermissions(await galleryRoleOf(scope))
-  const live = flagOn('FLAG_DEALS') ? (await sellerDeals(scope)).filter((d) => d.phase !== 'COMPLETED').length : offers.filter((o) => o.status === 'ACCEPTED' || o.status === 'IN_DEAL').length
+  const live = flagOn('FLAG_DEALS') ? (await sellerDeals(scope)).filter((d) => d.phase !== 'COMPLETED').length : allOffers.filter((o) => o.status === 'ACCEPTED' || o.status === 'IN_DEAL').length
   // The gallery desk and the collector use the prototype's offer cards (Web Galeria › Negócios; App Colecionador › Vendas).
   const desk = nav === 'gallery' || nav === 'advisor'
   const cards = desk || collector
@@ -70,6 +77,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="sales" /> : <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : 'Vendas e ofertas'}</h1></div>}
       <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
+      {onlyWork ? (
+        <div className="ha-row" style={{ gap: 8, alignItems: 'center' }}><span className="ha-chip ha-chip--on">{offers.length ? 'Ofertas de' : 'Nenhuma oferta para'} <i>{onlyWork.title}</i></span><Link href="/sales" className="ha-link ha-sm">Ver todas as ofertas</Link></div>
+      ) : null}
       {tab === 'offers' && cards ? (
         <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} payout={payout} offers={offers.map((o) => ({
           id: o.id, code: o.code, artworkId: o.artworkId, artworkTitle: o.artworkTitle, artworkCover: o.artworkCover, listPriceCents: o.listPriceCents?.toString() ?? null, currentCents: o.currentCents.toString(),

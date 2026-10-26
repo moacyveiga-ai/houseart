@@ -33,8 +33,8 @@ describe('listing-manager-core', () => {
     expect(publicArtworkPath('HA-2026-7K3F-9Q2M')).toBe('/e/artwork/HA-2026-7K3F-9Q2M')
     expect(shareMessage({ title: 'Construção nº 7', artistName: 'Joana Teixeira' }, 'https://x/e/artwork/HA-1')).toBe('Separei esta obra para você: Construção nº 7, de Joana Teixeira. Qualquer dúvida, é só responder. https://x/e/artwork/HA-1')
   })
-  it('lists the four stats with the missing ones as "—"', () => {
-    expect(listingStats({ views7d: 1234, openOffers: 1 }).map((s) => `${s.value} ${s.label}`)).toEqual(['1.234 views · 7 dias', '— salvos', '— curtidas', '1 oferta'])
-    expect(listingStats({ views7d: 0, openOffers: 2 })[3]).toEqual({ value: '2', label: 'ofertas' })
+  it('lists the four stats with the real saves and likes', () => {
+    expect(listingStats({ views7d: 1234, openOffers: 1, saves: 46, likes: 214 }).map((s) => `${s.value} ${s.label}`)).toEqual(['1.234 views · 7 dias', '46 salvos', '214 curtidas', '1 oferta'])
+    expect(listingStats({ views7d: 0, openOffers: 2, saves: 0, likes: 0 })[3]).toEqual({ value: '2', label: 'ofertas' })
   })
 })

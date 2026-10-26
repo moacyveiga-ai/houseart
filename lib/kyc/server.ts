@@ -15,8 +15,9 @@ export async function verifyIdentity(userId: number, documentHash: string | null
     await prisma.kycVerification.create({ data: { userId, provider, status: 'PENDING', documentHash } })
     return 'PENDING'
   }
-  // a person the desk rejected does not get an automatic approval back: a new row waits for the desk
-  if ((await latestOf(userId))?.status === 'REJECTED') {
+  // a person the desk rejected, or whose row already waits for the desk, never gets an automatic approval back
+  const latest = (await latestOf(userId))?.status
+  if (latest === 'REJECTED' || latest === 'PENDING') {
     await prisma.kycVerification.create({ data: { userId, provider: 'mock', status: 'PENDING', documentHash } })
     return 'PENDING'
   }

@@ -1,9 +1,11 @@
 /* Comunidade (handoff "HouseArt App Colecionador" › Comunidade / Comentários / Novo post;
    "HouseArt Web Colecionador": the same feed centred at 680px). Prefix ha-cm-. */
 .ha-cm { display: flex; flex-direction: column; min-width: 0; }
+/* Web: the feed centred at 680px (handoff "Web Colecionador" › Comunidade) — a post fits the screen, the wall is not a billboard. */
+@media (min-width: 720px) { .ha-cm { max-width: 680px; margin: 0 auto; width: 100%; } }
 .ha-cm__head { display: flex; align-items: center; justify-content: space-between; gap: var(--ha-space-4); }
 .ha-cm__feed { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
-@media (min-width: 1100px) { .ha-cm__feed { grid-template-columns: minmax(0, 1fr); } .ha-cm-photo__wall { aspect-ratio: 16 / 9; } }
+@media (min-width: 1100px) { .ha-cm__feed { grid-template-columns: minmax(0, 1fr); } }
 .ha-cm__tabs { display: flex; gap: var(--ha-space-5); border-bottom: var(--ha-border-w) solid var(--ha-paper-200); overflow-x: auto; scrollbar-width: none; }
 .ha-cm__tab { flex: none; height: 44px; border: 0; border-bottom: 2px solid transparent; background: none; padding: 0; color: var(--ha-ink-500); font-size: var(--ha-text-body-sm); font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap; }
 .ha-cm__tab--on { color: var(--ha-ink-900); border-bottom-color: var(--ha-ink-900); }

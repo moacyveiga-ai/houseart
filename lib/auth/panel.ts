@@ -7,6 +7,7 @@ import { tenantLevelOn } from '@/lib/scope'
 
 export interface PanelSession { user: SessionUser; scope: Scope }
 
+
 export function scopeOfSession(user: SessionUser): Scope {
   return scopeOfUser(user, () => hasTotalScope(user), { tenantLevel: tenantLevelOn() })
 }
@@ -24,6 +25,7 @@ export async function requirePanel(): Promise<PanelSession> {
 export async function panelSession(): Promise<PanelSession | null> {
   const user = await getSession()
   if (!user || !isInternal(user)) return null
+  if (user.tenantSuspended) return null
   const scope = scopeOfSession(user)
   enterScope(scope, 'panelSession')
   return { user, scope }

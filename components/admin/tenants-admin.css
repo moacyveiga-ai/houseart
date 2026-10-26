@@ -1,0 +1,28 @@
+/* Admin › Galerias e contas (components/admin/TenantsAdmin.tsx). Prefix ha-atenants. */
+.ha-atenants { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-atenants__search { display: flex; flex-direction: column; gap: 6px; }
+.ha-atenants__searchrow { display: flex; gap: var(--ha-space-2); }
+.ha-atenants__searchrow .ha-input { flex: 1 1 auto; }
+.ha-atenants__filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-atenants__filters .ha-chip { text-decoration: none; }
+.ha-atenants__list { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-atenants__row { border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-atenants__row--off { opacity: 0.75; }
+.ha-atenants__head { display: grid; grid-template-columns: minmax(180px, 1.2fr) minmax(0, 1.5fr) minmax(0, 1fr) 170px 24px; gap: var(--ha-space-3); align-items: center; width: 100%; padding: var(--ha-space-3) var(--ha-space-4); border: 0; background: none; color: var(--ha-fg); font: inherit; text-align: left; cursor: pointer; }
+.ha-atenants__head:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-atenants__who, .ha-atenants__facts, .ha-atenants__plan { display: flex; flex-direction: column; min-width: 0; font-size: var(--ha-text-body-sm); }
+.ha-atenants__who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-atenants__sub { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-atenants__state { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: var(--ha-text-caption); }
+.ha-atenants__flag { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ha-alert-500); }
+.ha-atenants__flag--soft { color: var(--ha-fg-body); }
+.ha-atenants__body { display: flex; flex-direction: column; gap: var(--ha-space-3); padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-atenants__dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ha-space-2) var(--ha-space-4); margin: 0; font-size: var(--ha-text-caption); }
+.ha-atenants__dl dt { font-weight: 600; color: var(--ha-fg-muted); }
+.ha-atenants__dl dd { margin: 0; color: var(--ha-fg); }
+.ha-atenants__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ha-space-2); }
+.ha-atenants__role { display: inline-flex; align-items: center; gap: var(--ha-space-2); }
+.ha-atenants__role .ha-select { width: auto; padding: 6px var(--ha-space-3); font-size: var(--ha-text-body-sm); }
+.ha-atenants__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
+.ha-atenants__err { font-size: var(--ha-text-caption); color: var(--ha-alert-500); margin: 0; }
+@media (max-width: 900px) { .ha-atenants__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-atenants__searchrow { flex-direction: column; } }

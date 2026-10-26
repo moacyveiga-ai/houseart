@@ -33,6 +33,8 @@ export interface SessionUser extends ProfilePrincipal {
   memberKind: string | null
   /** Product profile active in this session (lib/profiles); null = not chosen yet. */
   activeProfileKind: string | null
+  /** The person's tenant is SUSPENDED by the house: no panel, no API of the product (staff never). */
+  tenantSuspended: boolean
   /** Session row id (to switch the active profile). */
   sessionId: number | null
 }
@@ -44,6 +46,7 @@ type UserRow = {
   id: number; name: string; email: string; cpf: string | null; profile: string
   memberId: number | null; tenantId: number | null; tenantRole: string | null
   member?: { kind: string } | null
+  tenant?: { status: string } | null
 }
 
 export function userForSession(u: UserRow, session: { id: number | null; activeProfileKind: string | null } = { id: null, activeProfileKind: null }): SessionUser {
@@ -57,6 +60,7 @@ export function userForSession(u: UserRow, session: { id: number | null; activeP
     tenantId: u.tenantId ?? null,
     tenantRole: u.tenantRole === 'ADMIN' || u.tenantRole === 'MEMBER' ? u.tenantRole : null,
     memberKind: u.member?.kind ?? null,
+    tenantSuspended: !!u.tenantId && u.tenant?.status === 'SUSPENDED' && !hasTotalScope(knownProfile(u.profile)),
     activeProfileKind: session.activeProfileKind,
     sessionId: session.id,
   }
@@ -113,7 +117,7 @@ export async function getSession(): Promise<SessionUser | null> {
 
 export async function getSessionByToken(token: string): Promise<SessionUser | null> {
   if (!/^[0-9a-f]{64}$/.test(token)) return null
-  const session = await prisma.session.findUnique({ where: { token: sessionTokenKey(token) }, include: { user: { include: { member: { select: { kind: true } } } } } })
+  const session = await prisma.session.findUnique({ where: { token: sessionTokenKey(token) }, include: { user: { include: { member: { select: { kind: true } }, tenant: { select: { status: true } } } } } })
   if (!session) return null
   if (session.expiresAt < new Date()) {
     afterResponse('auth: expired session', () => prisma.session.deleteMany({ where: { id: session.id } }))
@@ -129,9 +133,13 @@ export class AuthError extends Error {
   constructor(msg: string, status = 401) { super(msg); this.status = status }
 }
 
+export const SUSPENDED_MESSAGE = 'Esta conta foi suspensa pela HouseArt. Fale com o atendimento.'
+
+/** 401 without session; 403 for a member of a SUSPENDED tenant (every API of the product; the public site still reads the session). */
 export async function requireAuth(): Promise<SessionUser> {
   const u = await getSession()
   if (!u) throw new AuthError('Não autenticado', 401)
+  if (u.tenantSuspended) throw new AuthError(SUSPENDED_MESSAGE, 403)
   return u
 }
 

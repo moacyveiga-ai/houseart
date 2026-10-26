@@ -73,6 +73,8 @@ const ADMIN: NavItem[] = [
   // Not in the design: the desk's view of every deal (audit 2026-10-25, web-app §admin), 2026-10-26.
   { key: 'deals', label: 'Negócios', icon: 'handshake', href: '/admin/deals' },
   { key: 'users', label: 'Usuários e contas', icon: 'manage_accounts', href: '/admin/users' },
+  // Not in the design: the galleries and autonomous accounts (plan, team, contracts, suspension), audit §5, 2026-10-26.
+  { key: 'tenants', label: 'Galerias e contas', icon: 'storefront', href: '/admin/tenants' },
   { key: 'kyc', label: 'KYC', icon: 'verified_user', href: '/admin/kyc' },
   // Not in the design: the off-platform transfers and what each waits for (audit §5), 2026-10-26.
   { key: 'transfers', label: 'Transferências', icon: 'swap_horiz', href: '/admin/transfers' },

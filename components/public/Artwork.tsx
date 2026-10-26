@@ -12,7 +12,8 @@ import { Icon } from '@/components/ds/Icon'
 import { PriceBox } from '@/components/ds/PriceBox'
 import { ProvenanceChain, type ProvenanceEvent } from '@/components/ds/ProvenanceChain'
 import { StatusBadge, type ArtworkStatus } from '@/components/ds/StatusBadge'
-import { ArtworkMedia, type MediaItem } from './ArtworkMedia'
+import { ArtworkMedia } from './ArtworkMedia'
+import { mediaItemsOf } from './artwork-media-core'
 import { ArtworkOffer } from './ArtworkOffer'
 import { ShippingQuote } from './ShippingQuote'
 import { TalkToSellerButton } from './TalkToSellerButton'
@@ -22,15 +23,6 @@ import type { MarketItem } from '@/lib/marketplace/filter-core'
 import type { PublicArtworkPage } from '@/lib/marketplace/public-server'
 import { installmentCents } from '@/lib/shipping/quote-core'
 import { diaNoFuso } from '@/lib/timezone'
-
-/** Frente · Verso e etiqueta · Detalhe 1 · Detalhe 2 (the details are the front at scale 2.4). */
-function mediaItemsOf(front: string | null, back: string | null): MediaItem[] {
-  const out: MediaItem[] = []
-  if (front) out.push({ label: 'Frente', src: front, view: 'front' })
-  if (back) out.push({ label: 'Verso e etiqueta', src: back, view: 'back' })
-  if (front) out.push({ label: 'Detalhe 1', src: front, view: 'detail', origin: '30% 25%' }, { label: 'Detalhe 2', src: front, view: 'detail', origin: '70% 75%' })
-  return out
-}
 
 const LANGUAGE_OF: Partial<Record<string, Language>> = CATEGORY_LANGUAGE
 
@@ -79,7 +71,7 @@ function cardOf(i: MarketItem): ArtworkCardData {
 
 export function Artwork({ artwork: a, related, signedIn = false }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean }) {
   const language = LANGUAGE_OF[a.category]
-  const media = mediaItemsOf(a.cover, a.media.find((m) => m.kind === 'BACK')?.url ?? null)
+  const media = mediaItemsOf(a.media)
   const wall = a.size.heightMm && a.size.widthMm ? { heightMm: a.size.heightMm, widthMm: a.size.widthMm, dimensions: a.dimensions } : null
   const price = a.priceCents === null ? null : Number(a.priceCents)
   const listed = a.status === 'LISTED'

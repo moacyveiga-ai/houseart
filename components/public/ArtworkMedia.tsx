@@ -1,11 +1,12 @@
 'use client'
 // Media of the public artwork page: stage (Obra · Ver em parede), thumbnails
-// (Frente · Verso e etiqueta · Detalhe 1 · Detalhe 2 — the details are the
-// front itself at scale 2.4, as in the prototype) and the lightbox (Esc closes).
+// (Frente · Verso e etiqueta · Detalhe · Assinatura · Na parede — the real photos;
+// `artwork-media-core.ts` decides the strip) and the lightbox (Esc closes).
 import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import type { MediaItem } from './artwork-media-core'
 
-export interface MediaItem { label: string; src: string; view: 'front' | 'back' | 'detail'; origin?: string }
+export type { MediaItem } from './artwork-media-core'
 
 interface WallScale { heightMm: number; widthMm: number; dimensions: string }
 
@@ -20,6 +21,8 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
     return () => window.removeEventListener('keydown', onKey)
   }, [zoom])
   const current = items[index] ?? items[0]
+  // "Ver em parede" hangs the FRONT; a work photographed without it has no wall mode
+  const front = items.find((m) => m.view === 'front') ?? null
   if (!current) return <div className="hp-artwork__stage" aria-label="Sem imagem" />
   const alt = `${caption.title}, ${caption.artist}${caption.year ? `, ${caption.year}` : ''} · ${current.label}`
   const detailStyle = current.view === 'detail' ? { transform: 'scale(2.4)', transformOrigin: current.origin } : undefined
@@ -33,12 +36,12 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
             {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
             <img src={current.src} alt={alt} style={detailStyle} />
           </button>
-        ) : wall ? (
+        ) : wall && front ? (
           <div className="hp-artwork__wall" role="img" aria-label={`Escala aproximada: obra ${wall.dimensions} sobre sofá de 2,20 m`}>
             <div className="hp-artwork__wall-floor" />
             <div className="hp-artwork__wall-work" style={{ height: `${wallHeightPct}%`, aspectRatio: `${wall.widthMm} / ${wall.heightMm}` }}>
               {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
-              <img src={items[0].src} alt="" />
+              <img src={front.src} alt="" />
             </div>
             <div className="hp-artwork__wall-sofa" />
             <div className="hp-artwork__wall-leg hp-artwork__wall-leg--l" />
@@ -49,7 +52,7 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
             <div className="hp-artwork__wall-note">Escala aproximada · obra {wall.dimensions} sobre sofá de 2,20 m</div>
           </div>
         ) : null}
-        {wall ? (
+        {wall && front ? (
           <div className="hp-artwork__seg" role="group" aria-label="Modo de visualização">
             <button type="button" aria-pressed={mode === 'work'} onClick={() => setMode('work')}>Obra</button>
             <button type="button" aria-pressed={mode === 'wall'} onClick={() => setMode('wall')}><Icon name="chair" size={16} />Ver em parede</button>

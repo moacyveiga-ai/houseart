@@ -86,7 +86,7 @@ export const EMPTY_DRAFT: ComposerDraft = { kind: 'TEXT', body: '', artworkId: n
 /** The "Publicar" button only lights when the draft can be posted (the server re-checks with `checkPost`). */
 export function draftReady(d: ComposerDraft): boolean {
   if (d.kind === 'TEXT') return d.body.trim().length > 0
-  if (d.kind === 'PHOTO') return d.artworkId != null || /^https?:\/\//.test(d.imageUrl.trim())
+  if (d.kind === 'PHOTO') return d.artworkId != null || d.imageUrl.trim() !== ''
   if (d.kind === 'POLL') return d.body.trim().length > 0 && d.pollOptions.filter((o) => o.trim()).length >= 2
   return d.event.title.trim().length > 0 && d.event.venue.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(d.event.startsOn)
 }

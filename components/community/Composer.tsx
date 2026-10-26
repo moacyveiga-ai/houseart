@@ -2,7 +2,8 @@
 // Novo post (handoff "HouseArt App Colecionador" › sheet "Novo post"): the text,
 // the optional artwork of the collection, and — beyond the prototype, which only
 // wrote photo/text — the poll and the event the API also takes.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { canvasToJpeg, loadImage } from '@/components/artworks/capture-render'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { hasContactLeak } from '@/lib/messaging/core'
@@ -25,6 +26,24 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
 }) {
   const [d, setD] = useState<ComposerDraft>(EMPTY_DRAFT)
   const [sending, setSending] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  // Each pick (and closing the composer) bumps the ticket: a late upload never lands in another draft.
+  const ticket = useRef(0)
+  async function pickPhoto(file: File | undefined) {
+    if (!file) return
+    const mine = ++ticket.current
+    setUploading(true)
+    let body: Blob = file
+    // Phone photos pass Vercel's 4.5 MB body limit: re-encode to JPEG with the longer side ≤ 2048.
+    try { body = await shrinkPhoto(file) } catch { /* the server re-encodes and says what is wrong */ }
+    const form = new FormData(); form.append('file', body, 'foto.jpg')
+    const res = await fetch('/api/community/images', { method: 'POST', body: form }).catch(() => null)
+    const data = (await res?.json().catch(() => ({}))) as { url?: string; error?: string } | undefined
+    if (mine !== ticket.current) return
+    setUploading(false)
+    if (!res?.ok || !data?.url) { onToast(data?.error ?? (res?.status === 413 ? 'A foto é grande demais. Tente outra.' : 'Não foi possível enviar a foto.')); return }
+    set({ imageUrl: data.url })
+  }
   const [igOn, setIgOn] = useState(!!instagram.handle && instagram.defaultOn)
   const [igFormat, setIgFormat] = useState<InstagramFormat>('FEED')
   const set = (p: Partial<ComposerDraft>) => setD((x) => ({ ...x, ...p }))
@@ -32,14 +51,14 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
   const showArtworks = (d.kind === 'TEXT' || d.kind === 'PHOTO') && artworks.length > 0
   // Instagram only takes a post with an image: a tagged artwork or the photo
   const tagged = artworks.find((a) => a.id === d.artworkId) ?? null
-  const igImage = d.kind === 'PHOTO' && /^https?:\/\//.test(d.imageUrl.trim()) ? d.imageUrl.trim() : tagged?.coverUrl ?? null
+  const igImage = d.kind === 'PHOTO' && d.imageUrl.trim() ? d.imageUrl.trim() : tagged?.coverUrl ?? null
   const igKind = d.kind === 'TEXT' || d.kind === 'PHOTO'
   const igSending = igOn && !!instagram.handle && igKind && !!igImage
 
-  function close() { setD(EMPTY_DRAFT); setIgOn(!!instagram.handle && instagram.defaultOn); onClose() }
+  function close() { ticket.current++; setUploading(false); setD(EMPTY_DRAFT); setIgOn(!!instagram.handle && instagram.defaultOn); onClose() }
 
   async function publish() {
-    if (!ready || sending) return
+    if (!ready || sending || uploading) return
     const text = [d.body, ...d.pollOptions, d.event.title, d.event.venue].join('\n')
     if (hasContactLeak(text)) { onToast('Tire telefones, e-mails e links para publicar'); return }
     setSending(true)
@@ -71,14 +90,21 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
         ) : null}
 
         {d.kind === 'PHOTO' ? (
-          <label className="ha-cm-new__label">URL da imagem <span className="ha-muted">· ou marque uma obra</span>
-            <input className="ha-input" value={d.imageUrl} onChange={(e) => set({ imageUrl: e.target.value })} placeholder="https://…" inputMode="url" />
-          </label>
+          <div className="ha-cm-new__photo">
+            {/* eslint-disable-next-line @next/next/no-img-element -- the derivative just uploaded */}
+            {d.imageUrl ? <img src={d.imageUrl} alt="Foto do post" className="ha-cm-new__photo-img" /> : null}
+            <label className={`ha-btn ha-btn--outline ha-btn--sm${uploading ? ' is-loading' : ''}`}>
+              <Icon name="add_photo_alternate" size={18} />{uploading ? 'Enviando…' : d.imageUrl ? 'Trocar foto' : 'Escolher foto'}
+              <input type="file" accept="image/*" className="ha-sr" disabled={uploading} onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = '' }} />
+            </label>
+            {d.imageUrl ? <button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" onClick={() => set({ imageUrl: '' })}>Remover</button> : null}
+            <span className="ha-cm-new__hint">Ou marque uma obra da sua coleção abaixo.</span>
+          </div>
         ) : null}
 
         {showArtworks ? (
           <>
-            <span className="ha-cm-new__label">Marcar uma obra da sua coleção · {d.kind === 'PHOTO' ? 'ou a URL acima' : 'opcional'}</span>
+            <span className="ha-cm-new__label">Marcar uma obra da sua coleção · {d.kind === 'PHOTO' ? 'ou a foto acima' : 'opcional'}</span>
             <div className="ha-cm-new__artworks" role="listbox" aria-label="Obras">
               {artworks.map((a) => (
                 <button key={a.id} type="button" role="option" aria-selected={d.artworkId === a.id} className={`ha-cm-new__art${d.artworkId === a.id ? ' ha-cm-new__art--on' : ''}`} onClick={() => set({ artworkId: d.artworkId === a.id ? null : a.id })}>
@@ -143,10 +169,21 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
           </div>
         ) : null}
 
-        <button type="button" className={`ha-cm-new__publish${ready ? ' ha-cm-new__publish--ready' : ''}`} aria-disabled={!ready} disabled={sending} onClick={publish}>
+        <button type="button" className={`ha-cm-new__publish${ready ? ' ha-cm-new__publish--ready' : ''}`} aria-disabled={!ready || uploading} disabled={sending || uploading} onClick={publish}>
           {sending ? 'Publicando…' : `Publicar ${d.kind === 'TEXT' ? 'na comunidade' : kindLabel(d.kind).toLowerCase()}`}
         </button>
       </div>
     </Modal>
   )
+}
+
+async function shrinkPhoto(file: File, maxSide = 2048): Promise<Blob> {
+  const { img, url } = await loadImage(file)
+  try {
+    const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * k)); canvas.height = Math.max(1, Math.round(img.naturalHeight * k))
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+    return await canvasToJpeg(canvas, 0.86)
+  } finally { URL.revokeObjectURL(url) }
 }

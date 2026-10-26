@@ -51,7 +51,7 @@ export function FeedCard({ item, actions, busy, myMemberId }: { item: FeedItem; 
           {item.artwork ? (
             <Link href={`/e/artwork/${item.artwork.publicId}`} className="ha-cm-artwork">
               <Icon name="sell" size={20} />
-              <span className="ha-cm-artwork__t"><span className="ha-cm-artwork__title">{item.artwork.title}</span><span className="ha-cm-artwork__sub">Obra certificada · {item.artwork.publicId}</span></span>
+              <span className="ha-cm-artwork__t"><span className="ha-cm-artwork__title">{item.artwork.title}</span><span className="ha-cm-artwork__sub">{item.artwork.artist} · {item.artwork.price ?? 'certificada'}</span></span>
               <span className="ha-cm-artwork__cta">Ver obra</span>
             </Link>
           ) : null}

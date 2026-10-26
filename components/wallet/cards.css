@@ -121,3 +121,22 @@
 .ha-cards-foot .ha-btn { width: 100%; }
 .ha-cards-foot__by { text-align: center; font-size: 11px; color: var(--ha-fg-muted); }
 .ha-cards-foot__by strong { font-weight: 700; color: var(--ha-fg-body); }
+
+/* Saldos (Em garantia · A receber) and Movimentações. */
+.ha-cards-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--ha-space-3); }
+.ha-cards-balance { display: flex; flex-direction: column; gap: var(--ha-space-1); padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-cards-balance__k { display: inline-flex; align-items: center; gap: var(--ha-space-1); font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-cards-balance__v { font-family: var(--ha-font-display); font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); color: var(--ha-fg); font-variant-numeric: tabular-nums; }
+.ha-cards-balance__n { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-cards-moves { display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-cards-moves > .ha-cards-empty { padding: var(--ha-space-4); }
+.ha-cards-move { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); }
+.ha-cards-move + .ha-cards-move { border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-cards-move__ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--ha-radius-full); background: var(--ha-paper-100); color: var(--ha-fg-body); }
+.ha-cards-move__ic--in { background: var(--ha-verified-100); color: var(--ha-verified-500); }
+.ha-cards-move__txt { min-width: 0; }
+.ha-cards-move__t { font-size: var(--ha-text-body-sm); color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-cards-move__s { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-cards-move__v { font-size: var(--ha-text-body-sm); color: var(--ha-fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ha-cards-move__v--in { color: var(--ha-verified-500); }
+.ha-cards-move__v--neutral { color: var(--ha-fg-muted); }

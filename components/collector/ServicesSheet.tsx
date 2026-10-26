@@ -2,7 +2,8 @@
 // "Serviços para uma obra" (handoff "HouseArt App Colecionador" › Serviços para uma obra, step
 // `cbP4` of `CB_SERV`): the catalog services a collector can order for ONE artwork, multi-select,
 // price or "Sob orçamento" (the catalog has no deadlines: none is shown). Certification comes
-// first and reads "Necessária para vender" while the artwork has no green seal. Confirm →
+// first and reads "Necessária para vender" while the artwork has no green seal; once the seal is
+// green it leaves the list, as in the new prototype ("Certificação…" is not offered). Confirm →
 // POST /api/collector/artworks/<id>/services per service → the caller's toast.
 import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
@@ -32,10 +33,10 @@ export function ServicesSheet({ artworkId, title, sealGreen, open, onClose, onDo
       const d = (await r.json().catch(() => ({}))) as { items?: ServiceItem[]; error?: string }
       if (gone) return
       if (!r.ok || !d.items) { setError(d.error ?? 'Não foi possível carregar os serviços.'); setItems([]); return }
-      setItems(orderServices(d.items))
+      setItems(orderServices(sealGreen ? d.items.filter((s) => s.code !== 'CERTIFICATION') : d.items))
     }).catch(() => { if (!gone) { setError('Não foi possível carregar os serviços.'); setItems([]) } })
     return () => { gone = true }
-  }, [open])
+  }, [open, sealGreen])
   if (!open) return null
 
   const chosen = (items ?? []).filter((s) => sel[s.code])

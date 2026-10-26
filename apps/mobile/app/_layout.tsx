@@ -29,7 +29,11 @@ function Gate() {
     if (status === 'signed-out') {
       if (seen === null) return
       const onOnboarding = inAuth && (segments as string[])[1] === 'onboarding'
-      if (!seen && !onOnboarding) { router.replace('/(auth)/onboarding'); return }
+      if (!seen && !onOnboarding) {
+        // the onboarding marks itself seen before leaving: read again so "Começar" does not bounce back
+        void onboardingSeen().then((v) => { if (v) setSeen(true); else router.replace('/(auth)/onboarding') })
+        return
+      }
       if (!inAuth) router.replace('/(auth)/login')
       return
     }

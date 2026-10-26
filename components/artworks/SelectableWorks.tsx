@@ -19,11 +19,12 @@ export interface SelectableCard extends SelectableWork {
   badge: { tone: 'verified' | 'pending' | 'neutral'; icon: string; label: string }
 }
 
-export function SelectableWorks({ items, markersOn }: { items: SelectableCard[]; markersOn: boolean }) {
+export function SelectableWorks({ items, markersOn, canList }: { items: SelectableCard[]; markersOn: boolean; canList: boolean }) {
   const [selected, setSelected] = useState<number[]>([])
   const [hint, setHint] = useState('')
   const [listing, setListing] = useState(false)
   const [toast, setToast] = useState('')
+  const [listedSome, setListedSome] = useState(false)
   const picked = useMemo(() => items.filter((a) => selected.includes(a.id)), [items, selected])
   const sum = useMemo(() => summarize(picked), [picked])
 
@@ -40,7 +41,6 @@ export function SelectableWorks({ items, markersOn }: { items: SelectableCard[];
   }
   function openListing() {
     if (!sum.listable.length) { setHint(EMPTY_LISTABLE); return }
-    setHint(sum.notListable ? `${sum.notListable} ${sum.notListable === 1 ? 'obra selecionada fica de fora' : 'obras selecionadas ficam de fora'}: só obras autenticadas com o selo verde vão ao marketplace.` : '')
     setListing(true)
   }
 
@@ -51,7 +51,7 @@ export function SelectableWorks({ items, markersOn }: { items: SelectableCard[];
           <span className="ha-sel__text" aria-live="polite">{sum.text}</span>
           <span className="ha-sel__actions">
             {markersOn ? <button type="button" className="ha-btn ha-btn--outline-paper ha-btn--sm" onClick={requestMarkers}>Solicitar etiquetas</button> : null}
-            <button type="button" className="ha-btn ha-btn--paper ha-btn--sm" onClick={openListing}>Listar no marketplace</button>
+            {canList ? <button type="button" className="ha-btn ha-btn--paper ha-btn--sm" onClick={openListing}>Listar no marketplace</button> : null}
             <button type="button" className="ha-sel__close" aria-label="Limpar seleção" onClick={clear}><Icon name="close" size={20} /></button>
           </span>
           {hint ? <span className="ha-sel__hint">{hint}</span> : null}
@@ -81,15 +81,23 @@ export function SelectableWorks({ items, markersOn }: { items: SelectableCard[];
           )
         })}
       </div>
-      {listing ? <BatchListDialog works={sum.listable} onClose={() => setListing(false)} onDone={(ok, failed) => { setToast(batchResultText(ok, failed)); if (ok) window.setTimeout(() => window.location.reload(), 900) }} /> : null}
+      {listing ? (
+        <BatchListDialog
+          works={sum.listable}
+          excluded={sum.notListable}
+          // the page only reloads when the dialog closes: a partial success keeps it open with the reason on each row
+          onClose={() => { setListing(false); if (listedSome) window.location.reload() }}
+          onDone={(ok, failed) => { setToast(batchResultText(ok, failed)); if (ok) setListedSome(true) }}
+        />
+      ) : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </>
   )
 }
 
 /** "Listar no marketplace" for several works: price and floor per work, the negotiator shared. */
-function BatchListDialog({ works, onClose, onDone }: { works: SelectableWork[]; onClose: () => void; onDone: (ok: number, failed: number) => void }) {
-  const [rows, setRows] = useState<BatchRow[]>(works.map((w) => ({ id: w.id, listPrice: w.listPriceCents ? String(BigInt(w.listPriceCents) / 100n) : '', reservePrice: '' })))
+function BatchListDialog({ works, excluded, onClose, onDone }: { works: SelectableWork[]; excluded: number; onClose: () => void; onDone: (ok: number, failed: number) => void }) {
+  const [rows, setRows] = useState<BatchRow[]>(works.map((w) => ({ id: w.id, listPrice: w.listPriceCents && BigInt(w.listPriceCents) > 0n ? String(BigInt(w.listPriceCents) / 100n) : '', reservePrice: '' })))
   const [shared, setShared] = useState({ fixedPrice: false, autoNegotiatorOn: true, autoAcceptMin: '92' })
   const [error, setError] = useState('')
   const [rowErrors, setRowErrors] = useState<Record<number, string>>({})
@@ -126,14 +134,15 @@ function BatchListDialog({ works, onClose, onDone }: { works: SelectableWork[]; 
   return (
     <Modal open title="Listar no marketplace" onClose={onClose} footer={<button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy || pending.length === 0} onClick={submit}>{busy ? 'Listando…' : `Listar ${pending.length} ${pending.length === 1 ? 'obra' : 'obras'}`}</button>}>
       <p className="ha-muted ha-sm">Preço pedido e piso de cada obra, em reais. O piso só você vê.</p>
+      {excluded ? <p className="ha-muted ha-sm">{excluded} {excluded === 1 ? 'obra selecionada fica de fora' : 'obras selecionadas ficam de fora'}: já à venda, em negociação ou sem o selo verde.</p> : null}
       <div className="ha-sel__rows">
         {rows.map((r) => {
           const isDone = done.includes(r.id)
           return (
             <div key={r.id} className={`ha-sel__row${isDone ? ' ha-sel__row--done' : ''}`}>
               <span className="ha-sel__row-title">{isDone ? '✓ ' : ''}{titles.get(r.id)}</span>
-              <label className="ha-label">Preço (R$)<input className="ha-input ha-input--num" inputMode="numeric" disabled={isDone || busy} value={r.listPrice} onChange={(e) => setRow(r.id, { listPrice: e.target.value })} /></label>
-              <label className="ha-label">Piso (R$)<input className="ha-input ha-input--num" inputMode="numeric" disabled={isDone || busy} value={r.reservePrice} onChange={(e) => setRow(r.id, { reservePrice: e.target.value })} /></label>
+              <label className="ha-label">Preço (R$)<input className="ha-input ha-input--num" inputMode="numeric" aria-label={`Preço pedido de ${titles.get(r.id)}`} disabled={isDone || busy} value={r.listPrice} onChange={(e) => setRow(r.id, { listPrice: e.target.value })} /></label>
+              <label className="ha-label">Piso (R$)<input className="ha-input ha-input--num" inputMode="numeric" aria-label={`Piso de ${titles.get(r.id)}`} disabled={isDone || busy} value={r.reservePrice} onChange={(e) => setRow(r.id, { reservePrice: e.target.value })} /></label>
               {rowErrors[r.id] ? <span className="ha-sel__row-err" role="alert">{rowErrors[r.id]}</span> : null}
             </div>
           )

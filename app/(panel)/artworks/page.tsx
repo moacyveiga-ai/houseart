@@ -92,7 +92,8 @@ export default async function ArtworksPage({ searchParams }: { searchParams: Pro
       {items.length === 0 ? (
         <div className="ha-card ha-card--pad"><p className="ha-muted">Nenhuma obra aqui ainda.</p></div>
       ) : (
-        <SelectableWorks items={items.map(cardOf)} markersOn={flagOn('FLAG_CERTIFICATES') && flagOn('FLAG_PHYSICAL_MARKERS') && scope.kind !== 'total'} />
+        // key={filter}: the selection starts over with each chip (the island would otherwise keep ids the new filter no longer shows)
+        <SelectableWorks key={filter} items={items.map(cardOf)} markersOn={flagOn('FLAG_CERTIFICATES') && flagOn('FLAG_PHYSICAL_MARKERS') && scope.kind !== 'total'} canList={scope.kind !== 'total'} />
       )}
     </div>
   )

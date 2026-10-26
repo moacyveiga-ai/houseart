@@ -65,19 +65,12 @@ export function deckCounter(index: number, total: number): string {
   return `${Math.min(index + 1, total)} de ${total} · arraste para a direita para curtir`
 }
 
-/** Descobrir (§61 of the handoff): works by artists the viewer already liked come first, stably.
- *  Works already liked or saved are not dealt again — they live in the favorites. */
-export function discoverOrder<T extends Pick<ExploreItem, 'artist' | 'liked' | 'saved'>>(items: T[]): T[] {
+/** Descobrir (§61 of the handoff): works by artists the viewer already liked come first, stably;
+ *  everything else keeps the marketplace order (the prototype's `descLista`). */
+export function discoverOrder<T extends Pick<ExploreItem, 'artist' | 'liked'>>(items: T[]): T[] {
   const likedArtists = new Set(items.filter((i) => i.liked).map((i) => i.artist))
-  const deck = items.filter((i) => !i.liked && !i.saved)
-  return [...deck.filter((i) => likedArtists.has(i.artist)), ...deck.filter((i) => !likedArtists.has(i.artist))]
-}
-
-/** The line under the deck counter: "N obras curtidas. Artistas das obras curtidas aparecem primeiro no Descobrir." */
-export function likedNote(items: Pick<ExploreItem, 'liked'>[]): string | null {
-  const n = items.filter((i) => i.liked).length
-  if (n === 0) return null
-  return `${n} ${n === 1 ? 'obra curtida' : 'obras curtidas'}. Artistas das obras curtidas aparecem primeiro no Descobrir.`
+  if (likedArtists.size === 0) return items
+  return [...items.filter((i) => likedArtists.has(i.artist)), ...items.filter((i) => !likedArtists.has(i.artist))]
 }
 
 /** The technical line of the card: technique · dimensions (what the prototype's `ficha` shows). */

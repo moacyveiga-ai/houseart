@@ -13,7 +13,7 @@ import { ShareSheet } from '@/components/public/ShareSheet'
 import { categoryLabel, formatBRL } from '@/lib/artworks/domain'
 import { installmentCents } from '@/lib/shipping/quote-core'
 import { CommentsSheet, type CommentSubject } from '@/components/community/CommentsSheet'
-import { acceptsOffers, deckCounter, discoverOrder, exploreHref, likedNote, exploreWorkHref, marketLabel, sellerSubOf, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
+import { acceptsOffers, deckCounter, discoverOrder, exploreHref, exploreWorkHref, marketLabel, sellerSubOf, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
 import './explore.css'
 
 const initialsOf = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
@@ -137,7 +137,6 @@ function DiscoverDeck({ items, react, onShare, workHref }: { items: ExploreItem[
   const [fly, setFly] = useState<0 | 1 | -1 | 2>(0)
   const start = useRef<number | null>(null)
   const [order] = useState(() => discoverOrder(items).map((i) => i.id))
-  const note = useMemo(() => likedNote(items), [items])
   const ordered = useMemo(() => order.map((id) => items.find((i) => i.id === id)).filter((i): i is ExploreItem => !!i), [order, items])
   const deck = ordered.filter((i) => !decided[i.id])
   const top = deck[0]
@@ -198,7 +197,6 @@ function DiscoverDeck({ items, react, onShare, workHref }: { items: ExploreItem[
         <button type="button" className="ha-deck__b" aria-label="Compartilhar" onClick={() => onShare(top)}><Icon name="send" size={22} /></button>
       </div>
       <span className="ha-deck__count">{deckCounter(total - deck.length, total)}</span>
-      {note ? <span className="ha-deck__note">{note}</span> : null}
     </div>
   )
 }

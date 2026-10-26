@@ -9,7 +9,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Icon } from './Icon'
 
-export function SidePanel({ title, closeHref, children, footer, actions }: { title: string; closeHref: string; children: ReactNode; footer?: ReactNode; actions?: ReactNode }) {
+export function SidePanel({ title, closeHref, children, footer, actions, hideTitle = false }: { title: string; closeHref: string; children: ReactNode; footer?: ReactNode; actions?: ReactNode; hideTitle?: boolean }) {
   const router = useRouter()
   const ref = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -37,7 +37,7 @@ export function SidePanel({ title, closeHref, children, footer, actions }: { tit
     <aside ref={ref} className="ha-sidepanel" role="dialog" aria-modal="false" aria-label={title} tabIndex={-1}>
       <div className="ha-sidepanel__head">
         <button type="button" className="ha-sidepanel__back" aria-label="Fechar" onClick={() => router.replace(closeHref, { scroll: false })}><Icon name="arrow_back" size={24} /></button>
-        <span className="ha-sidepanel__title">{title}</span>
+        <span className="ha-sidepanel__title">{hideTitle ? null : title}</span>
         {actions}
       </div>
       <div className="ha-sidepanel__body">{children}</div>

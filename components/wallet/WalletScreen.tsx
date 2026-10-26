@@ -1,81 +1,47 @@
-'use client'
-import { useState } from 'react'
+// "Minha coleção › Obras" / "Carteira de escrituras": the works the person holds. Each row opens the
+// work in the side panel (?own=<artworkId>), where the deed and the owner's actions live — Serviços,
+// Vender esta obra, Transferir, Segurar, Pedir laudo (handoff "HouseArt Web Colecionador" › obra).
 import Link from 'next/link'
 import { Badge } from '@/components/ds/Badge'
 import { Icon } from '@/components/ds/Icon'
-import { Toast } from '@/components/ds/Toast'
-import { SellSheet } from '@/components/collector/SellSheet'
-import { ServicesSheet } from '@/components/collector/ServicesSheet'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { WalletItem } from '@/lib/collector-wallet/server'
 
-/** The deed plus what the seller sheets read: status, seal and the registered value (handoff App Colecionador › Vender uma obra / Serviços). */
+/** The deed plus its status (the row's badge). */
 export type WalletScreenItem = WalletItem & { status: string; sealGreen: boolean; registeredCents: string | null }
 
-export function WalletScreen({ items, totalCents, holderName, transferOn, inCollection = false }: { items: WalletScreenItem[]; totalCents: string; holderName: string; transferOn: boolean; inCollection?: boolean }) {
-  const [sel, setSel] = useState(0)
-  const [toast, setToast] = useState('')
-  const [sheet, setSheet] = useState<'sell' | 'services' | null>(null)
-  const w = items[sel]
-  async function requestAppraisal() {
-    if (!w) return
-    const res = await fetch('/api/appraisals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ artworkId: w.artworkId, purpose: 'INSURANCE', requesterLabel: 'Colecionador' }) })
-    const data = await res.json().catch(() => ({})) as { error?: string; orderCode?: string | null }
-    setToast(res.ok ? `Laudo pedido · avaliador credenciado em até 5 dias${data.orderCode ? ` · pedido ${data.orderCode}` : ''}` : data.error ?? 'Não foi possível pedir o laudo.')
-  }
-  async function insure() {
-    if (!w) return
-    const res = await fetch(`/api/wallet/${w.artworkId}/insure`, { method: 'POST' })
-    const data = await res.json().catch(() => ({})) as { insurer?: string; error?: string }
-    setToast(res.ok ? `Cotação aceita · ${data.insurer} — apólice emitida` : data.error ?? 'Não foi possível segurar.')
-    if (res.ok) window.setTimeout(() => window.location.reload(), 800)
-  }
+function badgeOf(it: WalletScreenItem): { tone: 'verified' | 'pending' | 'neutral'; label: string } {
+  if (it.status === 'LISTED') return { tone: 'verified', label: 'À venda' }
+  if (it.status === 'IN_DEAL') return { tone: 'pending', label: 'Em venda' }
+  if (!it.sealGreen) return { tone: 'pending', label: 'Em revisão' }
+  return it.insured ? { tone: 'verified', label: 'Segurada' } : { tone: 'neutral', label: 'Sem seguro' }
+}
+
+export function WalletScreen({ items, totalCents, holderName, inCollection = false, openId = null }: { items: WalletScreenItem[]; totalCents: string; holderName: string; inCollection?: boolean; openId?: number | null }) {
   return (
-    <div className={items.length ? 'ha-split' : 'ha-split ha-split--one'}>
-      <section className="ha-stack">
-        <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><span className="ha-row" style={{ gap: 'var(--ha-space-4)' }}><Link href="/wallet/register" className="ha-btn ha-btn--ink ha-btn--xs"><Icon name="add_photo_alternate" size={18} />Cadastrar obra</Link><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></span></div>
-        {inCollection ? null : <h1 className="ha-h1">Carteira de escrituras</h1>}
-        {inCollection ? null : <div className="ha-row"><span className="ha-muted">Valor registrado · {items.length} obra(s)</span><b className="ha-num">{formatBRL(BigInt(totalCents))}</b></div>}
-        <ul className="ha-list">
-          {items.length === 0 ? <li className="ha-muted">Nenhuma escritura ainda. Uma obra que já é sua entra pela opção Cadastrar obra; a que você comprar na HouseArt chega aqui depois da entrega.</li> : null}
-          {items.map((it, i) => (
+    <section className="ha-stack">
+      <div className="ha-row" style={{ justifyContent: 'space-between' }}><span className="ha-eyebrow">{holderName}</span><span className="ha-row" style={{ gap: 'var(--ha-space-4)' }}><Link href="/wallet/register" className="ha-btn ha-btn--ink ha-btn--xs"><Icon name="add_photo_alternate" size={18} />Cadastrar obra</Link><Link href="/wallet/cards" className="ha-link ha-link--quiet ha-sm">Cartões →</Link></span></div>
+      {inCollection ? null : <h1 className="ha-h1">Carteira de escrituras</h1>}
+      {inCollection ? null : <div className="ha-row"><span className="ha-muted">Valor registrado · {items.length} obra(s)</span><b className="ha-num">{formatBRL(BigInt(totalCents))}</b></div>}
+      <ul className="ha-list">
+        {items.length === 0 ? <li className="ha-muted">Nenhuma escritura ainda. Uma obra que já é sua entra pela opção Cadastrar obra; a que você comprar na HouseArt chega aqui depois da entrega.</li> : null}
+        {items.map((it) => {
+          const b = badgeOf(it)
+          const on = openId === it.artworkId
+          return (
             <li key={it.artworkId}>
-              <button type="button" className="ha-list__row ha-list__btn" style={{ gridTemplateColumns: '40px 1fr auto auto', width: '100%', borderColor: i === sel ? 'var(--ha-ink-900)' : undefined }} onClick={() => setSel(i)}>
+              <Link href={`/wallet?own=${it.artworkId}`} scroll={false} aria-current={on ? 'true' : undefined} className="ha-list__row ha-list__btn" style={{ gridTemplateColumns: '40px 1fr auto auto', width: '100%', borderColor: on ? 'var(--ha-ink-900)' : undefined, color: 'inherit', textDecoration: 'none' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
                 <span className="ha-wall ha-wall--40">{it.cover ? <img src={it.cover} alt="" /> : null}</span>
                 <span style={{ textAlign: 'left' }}><b>{it.title}</b><br /><span className="ha-muted ha-sm">{it.artist} · adquirida em {it.acquiredAt}</span></span>
                 <span className="ha-num">{it.priceLabel}</span>
-                {it.status === 'LISTED' ? <Badge tone="verified">À venda</Badge> : <Badge tone={it.insured ? 'verified' : 'pending'}>{it.insured ? 'Segurada' : 'Sem seguro'}</Badge>}
-              </button>
+                <Badge tone={b.tone}>{b.label}</Badge>
+              </Link>
             </li>
-          ))}
-        </ul>
-      </section>
-      {w ? (
-        <section className="ha-deed ha-stack">
-          <div className="ha-row"><span className="ha-eyebrow">HouseArt</span><span className="ha-muted ha-sm">{w.publicId}</span></div>
-          <h2 className="ha-h3">Escritura da obra</h2>
-          <div className="ha-kv">
-            <span>Obra</span><span>{w.title}</span>
-            <span>Artista</span><span>{w.artist}</span>
-            <span>Titular</span><span>{w.holderName}{w.holderMask ? ` · CPF ${w.holderMask}` : ''}</span>
-            <span>Desde</span><span>{w.acquiredAt}</span>
-            <span>Apólice</span><span>{w.insurer ?? 'Sem apólice'}</span>
-          </div>
-          <p className="ha-muted ha-sm">Carimbo do tempo ICP-Brasil · {w.acquiredAt} · versão {w.version}</p>
-          <div className="ha-row" style={{ flexWrap: 'wrap' }}>
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setSheet('sell')}>{w.status === 'LISTED' ? 'À venda' : 'Vender'}</button>
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setSheet('services')}>{w.sealGreen ? 'Serviços' : 'Certificar e outros serviços'}</button>
-            {transferOn ? <Link href={`/transfer?artworkId=${w.artworkId}`} className="ha-btn ha-btn--outline ha-btn--sm">Transferir</Link> : null}
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={w.insured} onClick={insure}>Segurar</button>
-            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={requestAppraisal}>Pedir laudo</button>
-            <a className="ha-btn ha-btn--outline ha-btn--sm" href={`/verify/${w.publicId}`} target="_blank" rel="noreferrer">Compartilhar certificado</a>
-          </div>
-        </section>
-      ) : null}
-      {w && sheet === 'sell' ? <SellSheet key={`sell-${w.artworkId}`} open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} artwork={{ artworkId: w.artworkId, title: w.title, artist: w.artist, cover: w.cover, status: w.status, sealGreen: w.sealGreen, registeredCents: w.registeredCents }} /> : null}
-      {w && sheet === 'services' ? <ServicesSheet key={`svc-${w.artworkId}`} open onClose={() => setSheet(null)} onDone={setToast} artworkId={w.artworkId} title={w.title} sealGreen={w.sealGreen} /> : null}
-      <Toast message={toast} onDone={() => setToast('')} />
-    </div>
+          )
+        })}
+      </ul>
+      {items.length ? <p className="ha-muted ha-sm" style={{ margin: 0 }}>Toque numa obra para ver a escritura, vender, pedir serviços ou transferir.</p> : null}
+    </section>
   )
 }

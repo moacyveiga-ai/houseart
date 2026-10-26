@@ -42,6 +42,12 @@ export function exploreHref(view: ExploreView, chip: ExploreChip): string {
   return `/explore${q ? `?${q}` : ''}`
 }
 
+/** The same screen with the artwork open in the side panel (?work=<publicId>). */
+export function exploreWorkHref(view: ExploreView, chip: ExploreChip, publicId: string): string {
+  const base = exploreHref(view, chip)
+  return `${base}${base.includes('?') ? '&' : '?'}work=${encodeURIComponent(publicId)}`
+}
+
 /** "3 de 12 · arraste para a direita para curtir" of the deck. */
 export function deckCounter(index: number, total: number): string {
   return `${Math.min(index + 1, total)} de ${total} · arraste para a direita para curtir`

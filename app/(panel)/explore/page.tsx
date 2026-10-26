@@ -2,7 +2,9 @@ import { requirePanelPage } from '../_session'
 import { listPublicArtworks, marketItems } from '@/lib/marketplace/public-server'
 import { artworkFlags } from '@/lib/community/server'
 import { ExploreScreen } from '@/components/collector/ExploreScreen'
-import { chipOf, passesChip, viewOf, type ExploreItem } from '@/components/collector/explore-core'
+import { chipOf, exploreHref, passesChip, viewOf, type ExploreItem } from '@/components/collector/explore-core'
+import { collectorPanel } from '@/lib/collector-wallet/panel-server'
+import { CollectorArtworkPanel } from '@/components/collector/CollectorArtworkPanel'
 
 export const metadata = { title: 'Explorar — HouseArt' }
 
@@ -24,10 +26,17 @@ async function exploreItems(viewer: number): Promise<ExploreItem[]> {
   })
 }
 
-export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ view?: string; cat?: string }> }) {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ view?: string; cat?: string; work?: string }> }) {
   const { user } = await requirePanelPage('/explore')
   const p = await searchParams
   const view = viewOf(p.view), chip = chipOf(p.cat)
   const items = (await exploreItems(user.id)).filter((i) => passesChip(i, chip))
-  return <div className="ha-page"><ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} /></div>
+  // the artwork opens in the side panel over the feed (Web Colecionador › obra)
+  const panel = p.work ? await collectorPanel(user.id, { work: p.work }) : null
+  return (
+    <div className="ha-page">
+      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} />
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref={exploreHref(view, chip)} /> : null}
+    </div>
+  )
 }

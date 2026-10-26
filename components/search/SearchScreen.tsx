@@ -15,7 +15,8 @@ import './search.css'
 
 const CATEGORY_CHIPS = ARTWORK_CATEGORIES.filter((c) => c !== 'OTHER')
 
-export function SearchScreen({ result, featured }: { result: SearchResult; featured: PublicArtistCard[] }) {
+/** `workPrefix`: the search URL ending in `work=` — the artwork opens in the side panel over the results. */
+export function SearchScreen({ result, featured, workPrefix }: { result: SearchResult; featured: PublicArtistCard[]; workPrefix: string }) {
   const q = result.q
   const cert = q && looksLikePublicId(q) ? result.artworks[0] ?? null : null
   const works = cert ? result.artworks.slice(1) : result.artworks
@@ -62,7 +63,7 @@ export function SearchScreen({ result, featured }: { result: SearchResult; featu
       ) : null}
 
       {cert ? (
-        <Link href={`/e/artwork/${cert.publicId}`} className="ha-search-cert">
+        <Link href={`${workPrefix}${encodeURIComponent(cert.publicId)}`} scroll={false} className="ha-search-cert">
           <Icon name="verified" size={24} filled />
           <span className="ha-search-cert__t"><span className="ha-search-cert__k">Certificado encontrado</span><span className="ha-search-cert__title">{cert.title} · {cert.artist}</span><span className="ha-search-cert__id">{cert.publicId}</span></span>
           <Icon name="chevron_right" size={20} className="ha-search-cert__arrow" />
@@ -99,7 +100,7 @@ export function SearchScreen({ result, featured }: { result: SearchResult; featu
           <span className="ha-search-sec__k">{works.length} {works.length === 1 ? 'obra' : 'obras'}</span>
           <div className="ha-search-works">
             {works.map((o) => (
-              <Link key={o.publicId} href={`/e/artwork/${o.publicId}`} className="ha-search-work">
+              <Link key={o.publicId} href={`${workPrefix}${encodeURIComponent(o.publicId)}`} scroll={false} className="ha-search-work">
                 <span className="ha-search-work__wall">
                   {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
                   {o.cover ? <img src={o.cover} alt={o.title} loading="lazy" /> : null}

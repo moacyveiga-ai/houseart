@@ -2,14 +2,16 @@ import { requirePanelPage } from '../_session'
 import { walletOf } from '@/lib/collector-wallet/server'
 import { heldArtworks } from '@/lib/ownership/server'
 import { WalletScreen } from '@/components/wallet/WalletScreen'
-import { flagOn } from '@/lib/flags'
 import { collectionSummary } from '@/lib/collector-wallet/collection-server'
 import { CollectionHeader } from '@/components/collector/CollectionHeader'
+import { collectorPanel } from '@/lib/collector-wallet/panel-server'
+import { CollectorArtworkPanel } from '@/components/collector/CollectorArtworkPanel'
 
 export const metadata = { title: 'Minha coleção — HouseArt' }
 
-export default async function WalletPage() {
+export default async function WalletPage({ searchParams }: { searchParams: Promise<{ own?: string }> }) {
   const { user, nav } = await requirePanelPage('/wallet')
+  const sp = await searchParams
   const summary = nav === 'collector' ? await collectionSummary(user) : null
   const [w, held] = await Promise.all([walletOf(user.id), heldArtworks(user.id)])
   // What "Vender" and "Serviços" need beyond the deed: the seal, the status and the registered value of each held artwork.
@@ -18,5 +20,13 @@ export default async function WalletPage() {
     const a = byArtwork.get(it.artworkId)
     return { ...it, status: a?.status ?? 'AUTHENTICATED', sealGreen: a?.seal === 'GREEN', registeredCents: a?.listPriceCents?.toString() ?? null }
   })
-  return <div className="ha-page">{summary ? <CollectionHeader s={summary} active="works" /> : null}<WalletScreen items={items} totalCents={w.totalCents.toString()} holderName={user.name} transferOn={flagOn('FLAG_OWNERSHIP_TRANSFER')} inCollection={!!summary} /></div>
+  // the work opens in the side panel with the deed and the owner's actions (only a deed of this person)
+  const panel = sp.own ? await collectorPanel(user.id, { own: sp.own }) : null
+  return (
+    <div className="ha-page">
+      {summary ? <CollectionHeader s={summary} active="works" /> : null}
+      <WalletScreen items={items} totalCents={w.totalCents.toString()} holderName={user.name} inCollection={!!summary} openId={panel?.id ?? null} />
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} closeHref="/wallet" /> : null}
+    </div>
+  )
 }

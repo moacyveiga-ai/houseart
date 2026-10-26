@@ -1,0 +1,45 @@
+/* The artwork in the collector's side panel (Web Colecionador › obra) */
+.ha-cp__bleed { margin: -4px -16px 0; }
+.ha-cp__view { position: relative; width: 100%; aspect-ratio: 1 / 1; border: 0; padding: 32px; background: var(--ha-wall); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: zoom-in; color: var(--ha-ink-500); transition: padding var(--ha-dur-panel) var(--ha-ease); }
+.ha-cp__view--zoom { cursor: zoom-out; padding: 0; }
+.ha-cp__view img { max-width: 100%; max-height: 100%; display: block; box-shadow: var(--ha-shadow-wall); pointer-events: none; transition: transform var(--ha-dur-panel) var(--ha-ease); }
+.ha-cp__zoomtip { position: absolute; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--ha-radius-full); background: var(--ha-scrim); color: var(--ha-paper-50); font-size: 11px; font-weight: 600; pointer-events: none; }
+.ha-cp__thumbs { display: flex; gap: 8px; }
+.ha-cp__thumb { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: none; padding: 0; cursor: pointer; font-size: 11px; color: var(--ha-ink-500); }
+.ha-cp__thumb span { width: 56px; height: 56px; overflow: hidden; background: var(--ha-wall); border: 2px solid transparent; display: flex; }
+.ha-cp__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ha-cp__thumb--on span { border-color: var(--ha-ink-900); }
+.ha-cp__id { display: flex; flex-direction: column; gap: 4px; }
+.ha-cp__artist { align-self: flex-start; display: inline-flex; align-items: center; gap: 2px; font-size: 14px; font-weight: 600; color: var(--ha-ink-900); text-decoration: none; }
+.ha-cp__title { margin: 0; font-family: var(--ha-font-display); font-style: italic; font-weight: 400; font-size: 28px; line-height: 34px; color: var(--ha-ink-900); }
+.ha-cp__ficha, .ha-cp__muted { font-size: 12px; line-height: 17px; color: var(--ha-ink-500); }
+.ha-cp__ficha { font-size: 13px; }
+.ha-cp__price { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: var(--ha-border-w) solid var(--ha-paper-200); border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
+.ha-cp__price b { font-size: 24px; line-height: 30px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ha-ink-900); }
+.ha-cp__cert { padding: 14px; border-radius: var(--ha-radius-md); background: var(--ha-verified-100); display: flex; flex-direction: column; gap: 8px; }
+.ha-cp__cert--warn { background: var(--ha-pending-100); }
+.ha-cp__cert-h { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ha-verified-500); }
+.ha-cp__cert--warn .ha-cp__cert-h { color: var(--ha-pending-500); }
+.ha-cp__cert-t { font-size: 13px; line-height: 19px; color: var(--ha-ink-700); }
+.ha-cp__cert-code { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--ha-ink-900); font-variant-numeric: tabular-nums; }
+.ha-cp__cert-a { font-size: 13px; font-weight: 600; color: var(--ha-ink-900); }
+.ha-cp__h { font-size: 14px; font-weight: 600; color: var(--ha-ink-900); }
+.ha-cp__prov { display: flex; flex-direction: column; gap: 2px; }
+.ha-cp__prov-i { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; padding: 6px 0; font-size: 13px; }
+.ha-cp__dot { width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--ha-ink-900); }
+.ha-cp__talk { height: 36px; padding: 0 12px; border-radius: var(--ha-radius-md); border: 1px solid var(--ha-ink-900); background: transparent; color: var(--ha-ink-900); font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.ha-cp__notes { display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 17px; color: var(--ha-ink-500); }
+.ha-cp__notes span { display: flex; gap: 6px; }
+.ha-cp__notes .ha-icon { color: var(--ha-ink-900); flex: none; }
+.ha-cp__deed { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
+.ha-cp__deed dl { margin: 0; display: flex; flex-direction: column; }
+.ha-cp__deed dl div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 13px; }
+.ha-cp__deed dt { color: var(--ha-ink-500); }
+.ha-cp__deed dd { margin: 0; text-align: right; }
+.ha-cp__deed-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.ha-cp__foot { display: flex; gap: 8px; }
+.ha-cp__foot > * { flex: 1; }
+.ha-cp__state { height: 50px; border-radius: var(--ha-radius-md); background: var(--ha-paper-100); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--ha-ink-500); }
+.ha-cp__on { color: var(--ha-ink-900); }
+.ha-cp__liked { color: var(--ha-alert-500); }
+.ha-sd__btn--ink { background: var(--ha-ink-900); color: var(--ha-paper-50); border: 0; }

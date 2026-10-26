@@ -12,6 +12,7 @@ import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 import { flagOn } from '@/lib/flags'
 import { payoutReadiness } from '@/lib/payment-methods/payout-readiness-server'
 import { cpfMaskOf } from '@/lib/payment-methods/domain'
+import { restorationBlockReason } from './restore-core'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import type { CollectorPanelData } from './panel-core'
 
@@ -68,7 +69,7 @@ async function ownerPanel(viewer: { id: number; name: string; cpf: string | null
       { k: 'Titular atual · você', v: `Desde ${w.acquiredAt}` },
     ],
     seller: null, market: null,
-    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), payout, cover: w.cover },
+    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), restoreBlocked: restorationBlockReason(a.status, a.certificate?.status ?? null), payout, cover: w.cover },
   }
 }
 

@@ -1,6 +1,8 @@
 // /verify/[publicId] — Verificação pública of a certificate (HA-AAAA-XXXX-XXXX) or of a
 // value opinion (HA-L-AAAA-XXXX). Opened by tap (?uid&ctr&cmac[&tt]) the SUN read is
-// recorded first; the page then shows the simulated reading. Outside /e: the shell is here.
+// recorded first; the page then shows the reading overlay. The certificate card is the
+// page (handoff "HouseArt Verificacao": header of its own, no site nav or footer — it is
+// the screen the tap opens); the value opinion keeps the public shell.
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
@@ -23,16 +25,19 @@ type Params = { params: Promise<{ publicId: string }>; searchParams: Promise<Rec
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const publicId = (await params).publicId.toUpperCase()
-  return { title: `Verificação ${publicId} — HouseArt` }
+  return {
+    title: `Verificação ${publicId} — HouseArt`,
+    description: 'Verificação pública de um certificado-escritura HouseArt: autenticidade, etiqueta e cadeia de titularidade da obra.',
+  }
 }
 
 export default async function VerifyPage({ params, searchParams }: Params) {
   const publicId = (await params).publicId.toUpperCase()
-  const body = isAppraisalCode(publicId) ? <AppraisalVerify code={publicId} /> : <CertificateVerify publicId={publicId} sp={await searchParams} />
+  if (!isAppraisalCode(publicId)) return <main className="hp"><CertificateVerify publicId={publicId} sp={await searchParams} /></main>
   return (
     <div className="hp">
       <PublicHeader />
-      <main>{body}</main>
+      <main><AppraisalVerify code={publicId} /></main>
       <PublicFooter />
     </div>
   )

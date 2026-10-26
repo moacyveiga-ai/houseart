@@ -14,16 +14,23 @@ import { Toast } from '@/components/ds/Toast'
 import { SellSheet } from './SellSheet'
 import { ServicesSheet } from './ServicesSheet'
 import { CommentsSheet } from '@/components/community/CommentsSheet'
+import { Modal } from '@/components/ds/Modal'
+import { RESTORATION_DESCRIPTION_MAX, RESTORATION_DESCRIPTION_MIN } from '@/lib/collector-wallet/restore-core'
 import type { CollectorPanelData } from '@/lib/collector-wallet/panel-core'
 import './collector-panel.css'
 import '@/components/sales/sales-progress.css'
+
+/** Today's day as the browser sees it: only the `max` of the date field (the server is the rule, in the house timezone). */
+const todayIso = () => new Date().toISOString().slice(0, 10)
 
 export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: CollectorPanelData; closeHref: string; meInitials: string }) {
   const router = useRouter()
   const [photo, setPhoto] = useState(0)
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null)
   const [sig, setSig] = useState(a.signals)
-  const [sheet, setSheet] = useState<'sell' | 'services' | 'comments' | null>(null)
+  const [sheet, setSheet] = useState<'sell' | 'services' | 'comments' | 'restore' | null>(null)
+  const [restore, setRestore] = useState({ description: '', restorer: '', on: '' })
+  const [restoreError, setRestoreError] = useState('')
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState(false)
   const cur = a.images[photo] ?? null
@@ -62,6 +69,18 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
     setBusy(false)
     setToast(res.ok ? ok(data) : data.error ?? 'Não foi possível registrar.')
     if (res.ok) router.refresh()
+  }
+
+  async function submitRestoration() {
+    setRestoreError('')
+    setBusy(true)
+    const res = await fetch(`/api/wallet/${a.id}/restore`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ description: restore.description, restorer: restore.restorer, on: restore.on }) })
+    const data = await res.json().catch(() => ({})) as { error?: string }
+    setBusy(false)
+    if (!res.ok) { setRestoreError(data.error ?? 'Não foi possível registrar.'); return }
+    setSheet(null); setRestore({ description: '', restorer: '', on: '' })
+    setToast('Restauro registrado na proveniência da obra')
+    router.refresh()
   }
 
   const actions = (
@@ -157,6 +176,8 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
             {o.transferOn ? <Link href={`/transfer?artworkId=${a.id}`} className="ha-btn ha-btn--outline ha-btn--sm">Transferir</Link> : null}
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={o.insured || busy} onClick={() => post(`/api/wallet/${a.id}/insure`, {}, (d) => `Cotação aceita · ${d.insurer} — apólice emitida`)}>Segurar</button>
             <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={busy} onClick={() => post('/api/appraisals', { artworkId: a.id, purpose: 'INSURANCE', requesterLabel: 'Colecionador' }, (d) => `Laudo pedido · avaliador credenciado em até 5 dias${d.orderCode ? ` · pedido ${d.orderCode}` : ''}`)}>Pedir laudo</button>
+            {o.restoreBlocked ? null : <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={busy} onClick={() => { setRestoreError(''); setSheet('restore') }}>Registrar restauro</button>}
+            {a.publicId ? <Link href={`/verify/${a.publicId}`} className="ha-btn ha-btn--outline ha-btn--sm">Compartilhar certificado</Link> : null}
           </div>
         </div>
       ) : (
@@ -168,6 +189,15 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
       {/* the sheets render on <body>: the panel's slide-in transform would make it their containing block */}
       {o && sheet === 'sell' ? createPortal(<SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} payout={o.payout} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents }} />, document.body) : null}
       {o && sheet === 'services' ? createPortal(<ServicesSheet open onClose={() => setSheet(null)} onDone={setToast} artworkId={a.id} title={a.title} sealGreen={o.sealGreen} />, document.body) : null}
+      {o && sheet === 'restore' ? createPortal(
+        <Modal open title="Registrar restauro" onClose={() => setSheet(null)} footer={<button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={submitRestoration}>{busy ? 'Registrando…' : 'Registrar na proveniência'}</button>}>
+          <p className="ha-muted ha-sm">O restauro entra na cadeia do certificado como um evento assinado: quem vier a comprar a obra lê que ela passou por intervenção, quando e por quem. Não dá para editar depois.</p>
+          <label className="ha-label">O que foi feito<textarea className="ha-textarea" rows={4} maxLength={RESTORATION_DESCRIPTION_MAX} value={restore.description} onChange={(e) => setRestore({ ...restore, description: e.target.value })} placeholder="Limpeza da superfície, reentelamento e verniz refeito" /></label>
+          <span className="ha-muted ha-sm">{restore.description.trim().length} de {RESTORATION_DESCRIPTION_MAX} · mínimo {RESTORATION_DESCRIPTION_MIN}</span>
+          <label className="ha-label">Restaurador ou ateliê · opcional<input className="ha-input" maxLength={120} value={restore.restorer} onChange={(e) => setRestore({ ...restore, restorer: e.target.value })} /></label>
+          <label className="ha-label">Data do restauro · opcional<input className="ha-input" type="date" max={todayIso()} value={restore.on} onChange={(e) => setRestore({ ...restore, on: e.target.value })} /></label>
+          {restoreError ? <p className="ha-field-error" role="alert">{restoreError}</p> : null}
+        </Modal>, document.body) : null}
       {sheet === 'comments' && sig ? (
         <CommentsSheet item={{ key: `a${a.id}`, id: a.id, target: 'ARTWORK', author: { memberId: null, name: a.seller?.name ?? '' } }} me={{ initials: meInitials }} onClose={() => setSheet(null)} onToast={setToast}
           onCount={(_k, delta) => setSig((s) => (s ? { ...s, comments: Math.max(0, s.comments + delta) } : s))} />

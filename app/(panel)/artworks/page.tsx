@@ -1,14 +1,15 @@
 import Link from 'next/link'
 import { requirePanelPage } from '../_session'
-import { getArtwork, listArtworks } from '@/lib/artworks/server'
+import { getArtwork, listArtworks, type ArtworkSummary } from '@/lib/artworks/server'
 import { categoryLabel, ARTWORK_STATUS_ICONS, ARTWORK_STATUS_LABELS, formatBRL, formatDimensions, LIST_FILTERS, MEDIA_SLOTS, type ArtworkStatus } from '@/lib/artworks/domain'
 import { Chip } from '@/components/ds/Chip'
 import { Icon } from '@/components/ds/Icon'
-import { Badge } from '@/components/ds/Badge'
 import { listingsOf } from '@/lib/gallery/listing-server'
 import { InventoryList } from '@/components/gallery/InventoryList'
 import { chipCounts, chipKey, filterInventory, rowPrice, rowStatus, type InventoryItem } from '@/components/gallery/inventory-core'
 import { ArtworkPanel, type ArtworkPanelData } from '@/components/gallery/ArtworkPanel'
+import { SelectableWorks, type SelectableCard } from '@/components/artworks/SelectableWorks'
+import { flagOn } from '@/lib/flags'
 import { listingOf } from '@/lib/gallery/listing-server'
 import { rulesOf } from '@/lib/gallery/rules-server'
 import { publicCertificate } from '@/lib/certificates/server'
@@ -62,6 +63,16 @@ async function GalleryInventory({ scope, chip, q, openId }: { scope: Scope; chip
   )
 }
 
+/** The card of "Minhas obras" as the client island reads it: display strings only (BigInt stays here). */
+function cardOf(a: ArtworkSummary): SelectableCard {
+  return {
+    id: a.id, title: a.title, year: a.year, status: a.status, seal: a.seal, publicId: a.publicId, listPriceCents: a.listPriceCents?.toString() ?? null, coverUrl: a.coverUrl,
+    subtitle: [a.technique, formatDimensions(a.dimensions)].filter((x) => x && x !== '—').join(' · ') || '—',
+    priceText: a.saleMode === 'ON_REQUEST' ? 'Sob consulta' : formatBRL(a.listPriceCents),
+    badge: { tone: a.status === 'AUTHENTICATED' || a.status === 'LISTED' ? 'verified' : a.status === 'IN_CERTIFICATION' ? 'pending' : 'neutral', icon: ARTWORK_STATUS_ICONS[a.status], label: ARTWORK_STATUS_LABELS[a.status] },
+  }
+}
+
 export default async function ArtworksPage({ searchParams }: { searchParams: Promise<{ filter?: string; q?: string; open?: string }> }) {
   const { scope, nav } = await requirePanelPage('/artworks')
   const sp = await searchParams
@@ -81,24 +92,8 @@ export default async function ArtworksPage({ searchParams }: { searchParams: Pro
       {items.length === 0 ? (
         <div className="ha-card ha-card--pad"><p className="ha-muted">Nenhuma obra aqui ainda.</p></div>
       ) : (
-        <div className="ha-grid-cards">
-          {items.map((a) => (
-            <Link key={a.id} href={`/artworks/${a.id}/edit`} className="ha-card">
-              <span className="ha-wall ha-wall--sq">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
-                  {a.coverUrl ? <img src={a.coverUrl} alt={a.title} /> : <Icon name="imagesmode" size={28} />}</span>
-              <div className="ha-card__body">
-                <div className="ha-title">{a.title}{a.year ? `, ${a.year}` : ''}</div>
-                <div className="ha-muted ha-sm">{[a.technique, formatDimensions(a.dimensions)].filter((x) => x && x !== '—').join(' · ') || '—'}</div>
-                <div className="ha-row">
-                  <Badge tone={a.status === 'AUTHENTICATED' || a.status === 'LISTED' ? 'verified' : a.status === 'IN_CERTIFICATION' ? 'pending' : 'neutral'}>
-                    <Icon name={ARTWORK_STATUS_ICONS[a.status]} size={14} /> {ARTWORK_STATUS_LABELS[a.status]}
-                  </Badge>
-                  <span className="ha-num">{a.saleMode === 'ON_REQUEST' ? 'Sob consulta' : formatBRL(a.listPriceCents)}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        // key={filter}: the selection starts over with each chip (the island would otherwise keep ids the new filter no longer shows)
+        <SelectableWorks key={filter} items={items.map(cardOf)} markersOn={flagOn('FLAG_CERTIFICATES') && flagOn('FLAG_PHYSICAL_MARKERS') && scope.kind !== 'total'} canList={scope.kind !== 'total'} />
       )}
     </div>
   )

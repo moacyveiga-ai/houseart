@@ -1,0 +1,19 @@
+/* "Minhas obras" › seleção múltipla (handoff "Web Artista"). Prefix ha-sel-. */
+.ha-sel__bar { display: flex; align-items: center; gap: var(--ha-space-4); padding: var(--ha-space-3) var(--ha-space-4); background: var(--ha-ink-900); color: var(--ha-paper-50); border-radius: var(--ha-radius-md); flex-wrap: wrap; }
+.ha-sel__text { font-size: var(--ha-text-body-sm); font-weight: 600; }
+.ha-sel__actions { margin-left: auto; display: flex; align-items: center; gap: var(--ha-space-3); flex-wrap: wrap; }
+.ha-sel__hint { flex-basis: 100%; font-size: var(--ha-text-caption); color: var(--ha-paper-200); }
+.ha-sel__close { border: 0; background: transparent; color: var(--ha-paper-50); cursor: pointer; display: inline-flex; padding: 0; }
+.ha-sel__close:focus-visible, .ha-sel__check:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-sel__item { position: relative; display: flex; flex-direction: column; }
+/* inside the wrapper the <a> is no longer a grid child: give it back its box, or border/outline paint on inline fragments */
+.ha-sel__item .ha-card { display: block; flex: 1; }
+.ha-sel__check { position: absolute; top: var(--ha-space-3); left: var(--ha-space-3); z-index: 2; width: 24px; height: 24px; border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-ink-900); background: var(--ha-paper-50); color: var(--ha-paper-50); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.ha-sel__check[aria-pressed='true'] { background: var(--ha-ink-900); }
+.ha-sel__item--on .ha-card { outline: 2px solid var(--ha-ink-900); outline-offset: -2px; }
+.ha-sel__rows { display: flex; flex-direction: column; gap: var(--ha-space-3); max-height: 50vh; overflow: auto; }
+.ha-sel__row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 120px; gap: var(--ha-space-2); align-items: end; }
+.ha-sel__row-title { font-family: var(--ha-font-display); font-style: italic; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-sel__row-err { grid-column: 1 / -1; font-size: var(--ha-text-caption); color: var(--ha-alert-500); }
+.ha-sel__row--done .ha-sel__row-title { color: var(--ha-ink-500); }
+@media (max-width: 480px) { .ha-sel__row { grid-template-columns: 1fr 1fr; } .ha-sel__row-title { grid-column: 1 / -1; } }

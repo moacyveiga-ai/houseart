@@ -197,3 +197,40 @@ export async function cancelHold(ref: string): Promise<'CANCELLED' | 'CAPTURED'>
     throw stripeFailure(e)
   }
 }
+
+// ── Pix and boleto (async) ────────────────────────────────────────────────
+/**
+ * Pix or boleto for an amount: a PaymentIntent confirmed now, paid by the buyer outside (QR / voucher);
+ * `payment_intent.succeeded` arrives by webhook. Test/live only — the mock caller draws its own codes.
+ * A method the Stripe account has not enabled comes back as a 409 the screen can show.
+ */
+export async function startAsyncPayment(i: { method: 'PIX' | 'BOLETO'; amountCents: bigint; payerUserId: number; description: string; idempotencyKey: string; metadata: Record<string, string>; billing?: { name: string; email: string; taxId: string; line1: string; city: string; state: string; postalCode: string }; pixExpiresAfterSeconds?: number; boletoExpiresAfterDays?: number }): Promise<{ ref: string; nextAction: unknown }> {
+  assertChargeAllowed()
+  const customer = await ensureCustomer(i.payerUserId)
+  try {
+    const pi = await stripeGateway().createAsyncPaymentIntent({
+      amount: Number(i.amountCents), customer, method: i.method === 'PIX' ? 'pix' : 'boleto', description: i.description, metadata: i.metadata, billing: i.billing,
+      pixExpiresAfterSeconds: i.pixExpiresAfterSeconds, boletoExpiresAfterDays: i.boletoExpiresAfterDays,
+    }, i.idempotencyKey)
+    return { ref: pi.id, nextAction: pi.nextAction }
+  } catch (e) {
+    const err = e as { type?: string; code?: string; message?: string }
+    // "The payment method type 'pix' is invalid…" / not activated on the account
+    if (err?.type === 'StripeInvalidRequestError' && /payment method type|payment_method_types|not activated|not enabled/i.test(err.message ?? '')) {
+      throw new ArtworkError('METHOD_UNAVAILABLE', i.method === 'PIX' ? 'Pix ainda não está disponível. Pague com cartão ou boleto.' : 'Boleto ainda não está disponível. Pague com cartão ou Pix.', 409)
+    }
+    throw stripeFailure(e)
+  }
+}
+
+/** Cancels a Pix/boleto that was not paid (the deal expired). A PaymentIntent already paid is reported as such. */
+export async function cancelAsyncPayment(ref: string): Promise<'CANCELLED' | 'PAID'> {
+  try { await stripeGateway().cancelPaymentIntent(ref, `cancel-async:${ref}`); return 'CANCELLED' }
+  catch (e) {
+    let pi: GwPaymentIntent
+    try { pi = await stripeGateway().retrievePaymentIntent(ref) } catch { throw stripeFailure(e) }
+    if (pi.status === 'succeeded' || pi.status === 'processing') return 'PAID'
+    if (pi.status === 'canceled') return 'CANCELLED'
+    throw stripeFailure(e)
+  }
+}

@@ -42,17 +42,30 @@ export function insuranceText(i: { delivery: DeliveryMode; insurance: boolean; i
   return i.quoted ? `Cobre transporte e os primeiros 30 dias · ${format(i.insuranceCents)}` : 'Cobre transporte e os primeiros 30 dias · informe o CEP'
 }
 
-export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean }
+export type PayMethod = 'PIX' | 'CARD' | 'BOLETO'
+/** The three ways of the prototype (`ckPags`), in its order. */
+export const PAY_METHODS: { key: PayMethod; name: string; sub: string; icon: string }[] = [
+  { key: 'PIX', name: 'Pix', sub: 'aprovação na hora', icon: 'qr_code_2' },
+  { key: 'CARD', name: 'Cartão', sub: 'cobrado agora, em garantia', icon: 'credit_card' },
+  { key: 'BOLETO', name: 'Boleto', sub: '1 dia útil', icon: 'receipt_long' },
+]
+
+export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null }
 
 /** Why the order cannot be confirmed yet (null = ready). */
 export function blockedReason(i: ReadyInput): string | null {
-  if (!i.hasCard) return 'Adicione um cartão para pagar.'
+  const method = i.method ?? 'CARD'
+  if (method === 'CARD' && !i.hasCard) return 'Adicione um cartão para pagar.'
   if (i.delivery === 'CARRIER' && !i.cepValid) return 'Informe o CEP de entrega para calcular frete e seguro.'
+  if (method === 'BOLETO' && i.boletoProblem) return i.boletoProblem
   return null
 }
 
-/** The primary button label: "Confirmar pedido · R$ …" when a card is selected, else the prototype's call to add one. */
-export function ctaLabel(i: { hasCard: boolean; total: number }, format: (cents: number) => string): string {
+/** The primary button (prototype `ckCta`): "Pagar R$ … com Pix" / "no boleto"; the card says "Confirmar pedido" or asks for a card. */
+export function ctaLabel(i: { hasCard: boolean; total: number; method?: PayMethod }, format: (cents: number) => string): string {
+  const method = i.method ?? 'CARD'
+  if (method === 'PIX') return `Pagar ${format(i.total)} com Pix`
+  if (method === 'BOLETO') return `Pagar ${format(i.total)} no boleto`
   return i.hasCard ? `Confirmar pedido · ${format(i.total)}` : 'Adicionar cartão para pagar'
 }
 

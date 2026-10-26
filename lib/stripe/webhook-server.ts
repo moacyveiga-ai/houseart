@@ -34,7 +34,10 @@ function accountOfEvent(o: Record<string, unknown>): GwAccount | null {
   }
 }
 
-export async function handleStripeWebhook(rawBody: string, signature: string | null, nowMs = Date.now()): Promise<WebhookResult> {
+/** `onPaymentSucceeded`: injected by the route (lib/deals imports lib/stripe — never the reverse): the Pix/boleto escrow of a deal. Idempotent. */
+export interface WebhookHooks { onPaymentSucceeded?: (paymentIntentId: string) => Promise<unknown> }
+
+export async function handleStripeWebhook(rawBody: string, signature: string | null, nowMs = Date.now(), hooks: WebhookHooks = {}): Promise<WebhookResult> {
   const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].map((v) => (v ?? '').trim()).filter(Boolean)
   if (secrets.length === 0) return { status: 503, body: { ok: false, error: 'Webhook da Stripe não configurado.' } }
   const nowSec = Math.floor(nowMs / 1000)
@@ -52,6 +55,9 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   if (!isHandledEvent(type) || !obj || obj.object !== 'payment_intent' || typeof obj.id !== 'string') return { status: 200, body: { ok: true, ignored: 'type' } }
   const piId = obj.id
   try {
+    // First the deal (idempotent by CAS), then the event row: a failure here answers 500 and Stripe retries,
+    // instead of a committed event row turning the retry into a duplicate that never settles.
+    if (type === 'payment_intent.succeeded' && hooks.onPaymentSucceeded) await hooks.onPaymentSucceeded(piId)
     await totalScope('stripe:webhook', () => prisma.$transaction(async (tx) => {
       await tx.stripeEvent.create({ data: { eventId: id, type, livemode: ev.livemode === true, objectId: piId } })
       await reconcile(tx, piId, type)

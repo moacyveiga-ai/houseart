@@ -695,6 +695,14 @@ model Deal {
   exceptionStatus      String? // CANCELLED | DISPUTE
   escrowPaymentRef     String?
   escrowPaidAt         DateTime?
+  /// How the buyer paid (or is paying) the escrow: CARD | PIX | BOLETO (lib/payments/async-core.ts). Null = before 2026-10-26.
+  escrowMethod         String?
+  /// The Pix/boleto PaymentIntent awaiting payment (pi_… / mock_pix_…); the webhook settles the escrow by it.
+  escrowPendingRef     String?
+  /// When an unpaid Pix/boleto stops holding the artwork (the cron cancels the deal).
+  escrowExpiresAt      DateTime?
+  /// The buyer's instructions (QR, copia e cola, boleto line, PDF) — PaymentInstructions as JSON.
+  escrowInstructionsJson String?
   sellerSignedAt       DateTime?
   buyerSignedAt        DateTime?
   carrierName          String?
@@ -715,6 +723,7 @@ model Deal {
   @@index([memberId, phase])
   @@index([tenantId, phase])
   @@index([buyerUserId, phase])
+  @@index([escrowPendingRef])
 }
 
 model DealPhaseEvent {

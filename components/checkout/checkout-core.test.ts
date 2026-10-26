@@ -39,3 +39,13 @@ describe('checkout core (pure)', () => {
     expect(previewCardNumber('4111 11', 'visa')).toBe('4111 11•• •••• ••••')
   })
 })
+
+describe('Pix e boleto no checkout', () => {
+  const brl = (c: number) => `R$ ${c / 100}`
+  it('Pix and boleto need no card; boleto needs its billing', () => {
+    expect(blockedReason({ delivery: 'PICKUP', cepValid: false, hasCard: false, method: 'PIX' })).toBeNull()
+    expect(blockedReason({ delivery: 'PICKUP', cepValid: false, hasCard: false, method: 'BOLETO', boletoProblem: 'Informe o CPF' })).toBe('Informe o CPF')
+    expect(ctaLabel({ hasCard: false, total: 100, method: 'PIX' }, brl)).toBe('Pagar R$ 1 com Pix')
+    expect(ctaLabel({ hasCard: false, total: 100, method: 'BOLETO' }, brl)).toBe('Pagar R$ 1 no boleto')
+  })
+})

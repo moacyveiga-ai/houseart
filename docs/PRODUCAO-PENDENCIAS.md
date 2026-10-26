@@ -175,6 +175,22 @@ ela, só a assinatura do endpoint de sempre vale.
 - Cartões salvos em modo mock não servem no modo teste (e os de teste não servem no live): cada
   pessoa cadastra de novo ao trocar de modo.
 
+### 9.2 Pix e boleto na garantia (código pronto em 2026-10-26)
+
+O checkout e Compras oferecem **Pix · Cartão · Boleto** (protótipo Web Colecionador › Comprar). Pix e boleto
+viram um PaymentIntent da Stripe (`payment_method_types: pix | boleto`), a obra fica reservada e o negócio
+só passa a "Pago em garantia" quando chega o `payment_intent.succeeded` no webhook de sempre. Sem pagamento
+até o vencimento (Pix 24 h, boleto 3 dias), o cron `offers-expire` cancela o negócio e devolve a obra à venda.
+
+Para ligar na Stripe (modo de teste e depois live):
+1. Dashboard › Settings › Payment methods: ativar **Pix** e **Boleto** (conta Brasil).
+2. O webhook da plataforma já recebe `payment_intent.succeeded` — nada novo.
+3. Teste: no modo de teste a página de instruções da Stripe (link "Abrir instruções de pagamento") simula o
+   Pix pago; para o boleto, um e-mail de comprador terminado em `succeed_immediately@…` compensa sozinho.
+
+Sem a ativação, escolher Pix/boleto responde "Pix ainda não está disponível" e a reserva é desfeita na hora.
+Parcelamento no cartão (1×/3×/6×/10× do protótipo) **não** foi ligado: pede o fluxo de planos de parcela da Stripe.
+
 ## Depois do MVP (produto)
 Stripe live (`STRIPE_ENV=live` com `sk_live_`/`pk_live_`, webhooks live; tirar `STRIPE_TEST_ALLOWED`), Connect live (§9.1), KYC real,
 etiquetas NTAG 424 reais (`MARKER_VENDOR=ntag424` + master key), carimbo do tempo, âncora,

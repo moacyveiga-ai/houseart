@@ -97,7 +97,7 @@ export function TransferWizard({ artwork, existing }: { artwork: { id: number; t
       ) : null}
       <div className="ha-row ha-row--end">
         <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => (step === 0 ? window.location.assign('/wallet') : setStep(step - 1))} disabled={step >= 2 && !!t}>Voltar</button>
-        <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={next} disabled={step === 2 && !bothSigned}>{step === 2 ? `Pagar ${formatBRL(19900n)} e concluir` : step === 3 ? 'Voltar à carteira' : 'Continuar'}</button>
+        <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={next} disabled={step === 2 && !bothSigned}>{step === 2 ? `Pagar ${formatBRL(BigInt(t?.feeCents ?? '19900'))} e concluir` : step === 3 ? 'Voltar à carteira' : 'Continuar'}</button>
       </div>
       <Toast message={toast} onDone={() => setToast('')} />
     </div>

@@ -9,7 +9,7 @@ import { audit } from '@/lib/audit'
 import { ArtworkError } from '@/lib/artworks/server'
 import { PLAN_AUDIENCE_LABELS } from '@/lib/plans/core'
 import { USAGE_KEYS, USAGE_LABELS, type PlanAudience, type UsageKey } from '@/lib/plans/domain'
-import { changedKeys, deactivationBlock, isDefaultPlan, SERVICE_ROLE_NOTES, SERVICE_UNIT_LABELS, type AdminPlanRow, type AdminServiceRow, type PlanInput, type ServiceInput, type ServiceUnit } from './core'
+import { changedKeys, deactivationBlock, isDefaultPlan, parsePlanInput, parseServiceInput, SERVICE_ROLE_NOTES, SERVICE_UNIT_LABELS, type AdminPlanRow, type AdminServiceRow, type PlanInput, type ServiceInput, type ServiceUnit } from './core'
 
 const DAY = 86_400_000
 
@@ -17,7 +17,8 @@ export async function adminCatalog(now = new Date()): Promise<{ plans: AdminPlan
   return totalScope('admin:catalog', async () => {
     const [plans, subs, services, orders] = await Promise.all([
       prisma.plan.findMany({ include: { features: true }, orderBy: { id: 'asc' } }),
-      prisma.planSubscription.groupBy({ by: ['planId'], where: { status: 'ACTIVE' }, _count: { _all: true } }),
+      // in arrears is still on the plan (lib/plans currentPlan): it counts
+      prisma.planSubscription.groupBy({ by: ['planId'], where: { status: { in: ['ACTIVE', 'PAST_DUE'] } }, _count: { _all: true } }),
       prisma.serviceCatalog.findMany({ orderBy: { id: 'asc' } }),
       prisma.order.groupBy({ by: ['serviceCode'], where: { status: 'PAID', createdAt: { gte: new Date(now.getTime() - 30 * DAY) } }, _count: { _all: true } }),
     ])
@@ -39,16 +40,23 @@ export async function adminCatalog(now = new Date()): Promise<{ plans: AdminPlan
 
 export interface Actor { userId: number; name?: string; ip?: string; userAgent?: string }
 
-/** Name, description, price, active and the limits of the keys sent (a key not sent keeps its value; a key the plan never had is added). */
-export async function updatePlan(id: number, input: PlanInput, actor: Actor): Promise<{ changed: string[] }> {
+export interface SavedPlan { changed: string[]; name: string; description: string; priceCents: string; active: boolean; limits: Record<string, number | null> }
+export interface SavedService { changed: string[]; name: string; description: string; priceCents: string; unit: string; active: boolean }
+
+/** Name, description, price, active and the limits of the keys sent (a key not sent keeps its value; only keys the plan already has). Returns what was saved: the screen shows that, never what it typed. */
+export async function updatePlan(id: number, raw: unknown, actor: Actor): Promise<SavedPlan> {
   return totalScope('admin:catalog:plan', async () => {
     const p = await prisma.plan.findUnique({ where: { id }, include: { features: true } })
     if (!p) throw new ArtworkError('NOT_FOUND', 'Plano não encontrado.', 404)
+    const parsed = parsePlanInput(raw, p.features.map((f) => f.key))
+    if (!parsed.ok) throw new ArtworkError('INVALID', parsed.error, 422)
+    const input: PlanInput = parsed.value
     if (!input.active) { const block = deactivationBlock(p.code); if (block) throw new ArtworkError('DEFAULT_PLAN', block, 409) }
     const before = { name: p.name, description: p.description, priceCents: Number(p.priceCents), active: p.active, limits: Object.fromEntries(p.features.map((f) => [f.key, f.limit])) as Record<string, number | null> }
     const after = { name: input.name, description: input.description, priceCents: input.priceCents, active: input.active, limits: { ...before.limits, ...input.limits } as Record<string, number | null> }
     const changed = changedKeys(before, after) as string[]
-    if (changed.length === 0) return { changed }
+    const saved: SavedPlan = { changed, name: after.name, description: after.description, priceCents: String(after.priceCents), active: after.active, limits: after.limits }
+    if (changed.length === 0) return saved
     await prisma.$transaction(async (tx) => {
       await tx.plan.update({ where: { id }, data: { name: after.name, description: after.description, priceCents: BigInt(after.priceCents), active: after.active } })
       for (const key of Object.keys(input.limits) as UsageKey[]) {
@@ -57,21 +65,25 @@ export async function updatePlan(id: number, input: PlanInput, actor: Actor): Pr
       }
     })
     void audit.update({ entity: 'plan', entityId: id, userId: actor.userId, userName: actor.name, ip: actor.ip, userAgent: actor.userAgent, before: pick(before, changed), after: { ...pick(after, changed), code: p.code } })
-    return { changed }
+    return saved
   })
 }
 
-export async function updateService(id: number, input: ServiceInput, actor: Actor): Promise<{ changed: string[] }> {
+export async function updateService(id: number, raw: unknown, actor: Actor): Promise<SavedService> {
   return totalScope('admin:catalog:service', async () => {
     const s = await prisma.serviceCatalog.findUnique({ where: { id } })
     if (!s) throw new ArtworkError('NOT_FOUND', 'Serviço não encontrado.', 404)
+    const parsed = parseServiceInput(raw, s.code)
+    if (!parsed.ok) throw new ArtworkError('INVALID', parsed.error, 422)
+    const input: ServiceInput = parsed.value
     const before = { name: s.name, description: s.description ?? '', priceCents: Number(s.priceCents), unit: s.unit, active: s.active }
     const after = { name: input.name, description: input.description, priceCents: input.priceCents, unit: input.unit as string, active: input.active }
     const changed = changedKeys(before, after) as string[]
-    if (changed.length === 0) return { changed }
+    const saved: SavedService = { changed, name: after.name, description: after.description, priceCents: String(after.priceCents), unit: after.unit, active: after.active }
+    if (changed.length === 0) return saved
     await prisma.serviceCatalog.update({ where: { id }, data: { name: after.name, description: after.description || null, priceCents: BigInt(after.priceCents), unit: after.unit, active: after.active } })
     void audit.update({ entity: 'service_catalog', entityId: id, userId: actor.userId, userName: actor.name, ip: actor.ip, userAgent: actor.userAgent, before: pick(before, changed), after: { ...pick(after, changed), code: s.code } })
-    return { changed }
+    return saved
   })
 }
 

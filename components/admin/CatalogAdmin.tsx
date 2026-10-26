@@ -8,7 +8,7 @@ import { Badge } from '@/components/ds/Badge'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
-import { centsToInput, DESCRIPTION_MAX, NAME_MAX, SERVICE_UNIT_LABELS, SERVICE_UNITS, type AdminPlanRow, type AdminServiceRow, type ServiceUnit } from '@/lib/admin-catalog/core'
+import { centsToInput, DESCRIPTION_MAX, NAME_MAX, parseCents, SERVICE_UNIT_LABELS, SERVICE_UNITS, type AdminPlanRow, type AdminServiceRow, type ServiceUnit } from '@/lib/admin-catalog/core'
 
 type PlanForm = { name: string; description: string; price: string; active: boolean; limits: Record<string, string> }
 type ServiceForm = { name: string; description: string; price: string; unit: ServiceUnit; active: boolean }
@@ -35,35 +35,38 @@ export function CatalogAdmin({ plans: initialPlans, services: initialServices, e
   async function send(p: Pending) {
     setBusy(true); setError((e) => ({ ...e, [`${p.kind}:${p.id}`]: '' }))
     const res = await fetch('/api/admin/catalog', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: p.kind, id: p.id, ...p.body }) }).catch(() => null)
-    const data = (await res?.json().catch(() => ({}))) as { error?: string; changed?: string[] } | undefined
+    // the row shows what the server SAVED (parsed cents, limits), never what was typed
+    const data = (await res?.json().catch(() => ({}))) as { error?: string; changed?: string[]; name?: string; description?: string; priceCents?: string; active?: boolean; unit?: ServiceUnit; limits?: Record<string, number | null> } | undefined
     setBusy(false); setPending(null)
-    if (!res?.ok) { setError((e) => ({ ...e, [`${p.kind}:${p.id}`]: data?.error ?? 'Não foi possível salvar.' })); return }
+    if (!res?.ok || !data || typeof data.priceCents !== 'string') { setError((e) => ({ ...e, [`${p.kind}:${p.id}`]: data?.error ?? 'Não foi possível salvar.' })); return }
+    const d = data
     if (p.kind === 'plan') {
-      const f = p.body as unknown as { name: string; description: string; priceCents: number; active: boolean; limits: Record<string, number | null> }
-      setPlans((xs) => xs.map((x) => x.id === p.id ? { ...x, name: f.name, description: f.description, priceCents: String(f.priceCents), active: f.active, limits: x.limits.map((l) => (l.key in f.limits ? { ...l, limit: f.limits[l.key] } : l)) } : x))
+      setPlans((xs) => xs.map((x) => x.id === p.id ? { ...x, name: d.name ?? x.name, description: d.description ?? x.description, priceCents: d.priceCents!, active: d.active ?? x.active, limits: x.limits.map((l) => (d.limits && l.key in d.limits ? { ...l, limit: d.limits[l.key] } : l)) } : x))
       setPlanForms((m) => { const n = { ...m }; delete n[p.id]; return n })
     } else {
-      const f = p.body as unknown as { name: string; description: string; priceCents: number; unit: ServiceUnit; active: boolean }
-      setServices((xs) => xs.map((x) => x.id === p.id ? { ...x, name: f.name, description: f.description, priceCents: String(f.priceCents), unit: f.unit, unitLabel: SERVICE_UNIT_LABELS[f.unit], active: f.active } : x))
+      const unit = d.unit ?? (p.body.unit as ServiceUnit)
+      setServices((xs) => xs.map((x) => x.id === p.id ? { ...x, name: d.name ?? x.name, description: d.description ?? x.description, priceCents: d.priceCents!, unit, unitLabel: SERVICE_UNIT_LABELS[unit], active: d.active ?? x.active } : x))
       setServiceForms((m) => { const n = { ...m }; delete n[p.id]; return n })
     }
     setToast(data?.changed?.length ? `${p.label} · ${data.changed.length === 1 ? 'um campo alterado' : `${data.changed.length} campos alterados`}` : `${p.label} · nada mudou`)
   }
 
-  /** Reais typed on the screen → integer cents; the server validates again. */
-  const cents = (v: string): number | string => { const m = /^\s*(\d{1,7})(?:[.,](\d{1,2}))?\s*$/.exec(v); return m ? Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0')) : v }
+  /** The same rule as the server (`parseCents`): a string is reais; an unreadable price stops here with the message. */
+  const priceOrError = (key: string, v: string): number | null => { const c = parseCents(v); if (c === null) setError((e) => ({ ...e, [key]: 'Preço inválido (em reais, ex.: 49,90).' })); return c }
 
   function submitPlan(p: AdminPlanRow) {
     const f = pf(p)
+    const priceCents = priceOrError(`plan:${p.id}`, f.price); if (priceCents === null) return
     const limits: Record<string, number | null | string> = {}
     for (const l of p.limits) { const v = (f.limits[l.key] ?? '').trim(); limits[l.key] = v === '' ? null : /^\d+$/.test(v) ? Number(v) : v }
-    const body = { name: f.name, description: f.description, priceCents: cents(f.price), active: f.active, limits }
+    const body = { name: f.name, description: f.description, priceCents, active: f.active, limits }
     const next: Pending = { kind: 'plan', id: p.id, label: `Plano ${f.name}`, body, deactivates: p.active && !f.active }
     if (next.deactivates) setPending(next); else void send(next)
   }
   function submitService(s: AdminServiceRow) {
     const f = sf(s)
-    const body = { name: f.name, description: f.description, priceCents: cents(f.price), unit: f.unit, active: f.active }
+    const priceCents = priceOrError(`service:${s.id}`, f.price); if (priceCents === null) return
+    const body = { name: f.name, description: f.description, priceCents, unit: f.unit, active: f.active }
     const next: Pending = { kind: 'service', id: s.id, label: f.name, body, deactivates: s.active && !f.active }
     if (next.deactivates) setPending(next); else void send(next)
   }

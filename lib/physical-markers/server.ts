@@ -9,7 +9,7 @@ import { totalScope } from '@/lib/scope/context'
 import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
-import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, MARKER_UNIT_PRICE_CENTS, publicIdOf, UID_RE, type ReadPurpose } from './domain'
+import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, publicIdOf, UID_RE, type ReadPurpose } from './domain'
 import { mockMasterKey, mockSunMessage, verifySun } from './sun-core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
@@ -106,10 +106,11 @@ export async function requestMarkers(scope: Scope, quantity: number) {
   const tenantId = tenantOfScope(scope)
   if (!memberId || !tenantId) throw new ArtworkError('NO_MEMBER', 'Só membros pedem etiquetas.', 403)
   if (!Number.isInteger(quantity) || quantity < MARKER_KIT_MIN || quantity > MARKER_KIT_MAX) throw new ArtworkError('BAD_QUANTITY', 'Quantidade inválida.', 400)
-  // the price is the catalog's TAG_KIT (Admin › Catálogo); the constant is the fallback of a base without the row
-  const unitPriceCents = (await catalogPriceCents('TAG_KIT')) ?? MARKER_UNIT_PRICE_CENTS
+  // the price is the catalog's TAG_KIT (Admin › Catálogo), read ONCE: the kit row and the charge carry the same number, and a switched-off kit refuses before anything is written
+  const unitPriceCents = await catalogPriceCents('TAG_KIT')
+  if (unitPriceCents === null || unitPriceCents <= 0n) throw new ArtworkError('SERVICE_OFF', 'O pedido de etiquetas está indisponível no momento.', 409)
   const order = await prisma.markerOrder.create({ data: { tenantId, memberId, quantity, unitPriceCents } })
-  await placeOrder({ serviceCode: 'TAG_KIT', payerKind: 'ARTIST', quantity, tenantId, memberId, description: `Kit de etiquetas NFC × ${quantity}` })
+  await placeOrder({ serviceCode: 'TAG_KIT', payerKind: 'ARTIST', quantity, tenantId, memberId, amountCents: unitPriceCents * BigInt(quantity), description: `Kit de etiquetas NFC × ${quantity}` })
   void audit.create({ entity: 'marker_order', entityId: order.id, after: { quantity, memberId } })
   return order
 }

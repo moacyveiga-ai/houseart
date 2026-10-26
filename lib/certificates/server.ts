@@ -10,7 +10,7 @@ import { savePrivateFile } from '@/lib/storage/private-vault'
 import { publicBaseUrl } from '@/lib/public-url'
 import { formatDimensions } from '@/lib/artworks/domain'
 import { ArtworkError } from '@/lib/artworks/server'
-import { actionOf, MARKER_UNIT_PRICE_CENTS, stageOf } from '@/lib/physical-markers/domain'
+import { actionOf, stageOf } from '@/lib/physical-markers/domain'
 import { catalogPriceCents } from '@/lib/orders/server'
 import { ordersOf } from '@/lib/physical-markers/server'
 import { chainValid, contentHashOf, EVENT_LABELS, holderLabel, merkleRoot, type CertificateContent, type EventKind } from './core'
@@ -34,8 +34,9 @@ export async function certificationView(scope: Scope) {
     const stage = stageOf({ submitted: true, hasOrder, orderDelivered, linked: !!a.publicId, signed: !!a.certificate?.signedAt, issued: !!a.certificate?.issuedAt })
     return { id: a.id, certificateId: a.certificate?.id ?? null, title: `${a.title}${a.year ? `, ${a.year}` : ''}`, publicId: a.publicId, cover: a.media[0]?.publicUrl ?? null, stage, ...actionOf(stage), status: a.status }
   })
-  const kitUnitCents = (await catalogPriceCents('TAG_KIT')) ?? MARKER_UNIT_PRICE_CENTS
-  return { items, orders: orders.map((o) => ({ id: o.id, quantity: o.quantity, status: o.status, createdAt: o.createdAt })), kitUnitCents: String(kitUnitCents) }
+  // the kit's unit price from the catalog (Admin › Catálogo); null = switched off, and the screen does not offer the kit
+  const kit = await catalogPriceCents('TAG_KIT')
+  return { items, orders: orders.map((o) => ({ id: o.id, quantity: o.quantity, status: o.status, createdAt: o.createdAt })), kitUnitCents: kit !== null && kit > 0n ? String(kit) : null }
 }
 
 async function certificateReachable(scope: Scope, certificateId: number) {

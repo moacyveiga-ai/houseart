@@ -22,6 +22,7 @@ import { mockMasterKey, verifySun } from '@/lib/physical-markers/sun-core'
 import { catalogPriceCents, placeOrder } from '@/lib/orders/server'
 import { chargeNow, stripeMode } from '@/lib/stripe/door'
 
+/** The fee of transfers created before the catalog drove it (2026-10-26); the screen's placeholder. The live value is the catalog's OFFPLATFORM_TRANSFER. */
 export const TRANSFER_FEE_CENTS = 19900n
 const sha = (v: string) => createHash('sha256').update(v).digest('hex')
 
@@ -66,8 +67,9 @@ export async function createTransfer(userId: number, i: { artworkId: number; toD
   const doc = protectDocument(i.toDocument)
   const royalty = flagOn('FLAG_RESALE_ROYALTY') ? royaltyFor(i.priceCents, await lastPrice(i.artworkId)).royaltyCents : 0n
   const token = randomBytes(24).toString('base64url')
-  // the fee is the catalog's OFFPLATFORM_TRANSFER (Admin › Catálogo) at the moment of the invite; the constant is the fallback of a base without the row
-  const feeCents = (await catalogPriceCents('OFFPLATFORM_TRANSFER')) ?? TRANSFER_FEE_CENTS
+  // the fee is the catalog's OFFPLATFORM_TRANSFER (Admin › Catálogo), frozen at the invite; switched off or unpriced, no invite (the seller would be stuck at the fee after both signatures)
+  const feeCents = await catalogPriceCents('OFFPLATFORM_TRANSFER')
+  if (feeCents === null || feeCents <= 0n) throw new ArtworkError('SERVICE_OFF', 'A transferência fora da plataforma está indisponível no momento.', 409)
   const t = await prisma.ownershipTransfer.create({ data: {
     certificateId: v.certificateId, artworkId: i.artworkId, fromUserId: userId, toName: i.toName.trim().slice(0, 120), toEmail: email, toDocumentHash: doc.hash, toDocumentEnc: doc.enc, toDocumentMask: doc.mask,
     priceCents: i.priceCents, priceSealed: i.priceSealed, sealedPriceHash: i.priceSealed ? sha256Hex(`${i.artworkId}:${i.priceCents}:${doc.hash}`) : null, royaltyCents: royalty, feeCents,

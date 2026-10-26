@@ -19,12 +19,15 @@ export const SERVICE_UNIT_LABELS: Record<ServiceUnit, string> = { UNIT: 'por uni
 
 /** What the code drives elsewhere in the product — said on the row so the desk knows what a change touches. */
 export const SERVICE_ROLE_NOTES: Record<string, string> = {
-  TAG_KIT: 'Preço de cada etiqueta NFC: o kit que o artista pede na Certificação cobra este valor × quantidade.',
-  OFFPLATFORM_TRANSFER: 'Taxa da transferência de titularidade fora da plataforma, cobrada do vendedor depois das duas assinaturas.',
+  TAG_KIT: 'Preço de cada etiqueta NFC: o kit que o artista pede na Certificação cobra este valor × quantidade. Desligado, ninguém pede kit.',
+  OFFPLATFORM_TRANSFER: 'Taxa da transferência de titularidade fora da plataforma, congelada no convite e cobrada do vendedor depois das duas assinaturas. Desligado, ninguém abre transferência.',
   APPRAISAL_SIGNED: 'Laudo de opinião de valor pedido pela carteira ou pela obra.',
   COLLECTION_INSURANCE: 'Seguro de acervo pedido pela carteira.',
   PLAN_SUBSCRIPTION: 'Linha contábil da mensalidade; o valor vem do plano, não daqui.',
 }
+
+/** Codes the product charges by itself (kit, transfer fee, appraisal): never "under quote", never R$ 0, and switching them off blocks that flow. */
+export const SELF_CHARGED_CODES: readonly string[] = ['TAG_KIT', 'OFFPLATFORM_TRANSFER', 'APPRAISAL_SIGNED']
 
 /** The free plan of each audience is what a tenant falls back to: it can never be switched off. */
 export const DEFAULT_PLAN_CODES: readonly string[] = PLAN_AUDIENCES.map(defaultPlanFor)
@@ -45,16 +48,20 @@ export interface ServiceInput { name: string; description: string; priceCents: n
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string }
 
 const text = (v: unknown, max: number): string | null => (typeof v === 'string' && v.trim().length <= max ? v.trim() : null)
-/** Integer cents from a number or a numeric string; "49,90" and "49.90" are read as reais. */
+/**
+ * Integer cents. A NUMBER is cents already; a STRING is what a person types, in REAIS — "49", "49,90",
+ * "49.90", "R$ 1.234,50", "1.234" — never cents (the screen and the API read it the same way).
+ */
 export function parseCents(v: unknown): number | null {
   if (typeof v === 'number') return Number.isInteger(v) && v >= 0 && v <= PRICE_MAX_CENTS ? v : null
   if (typeof v !== 'string') return null
-  const s = v.trim().replace(/^R\$\s*/, '')
+  const s = v.trim().replace(/^R\$\s*/, '').replace(/\s+/g, '')
   if (!s) return null
-  if (/^\d+$/.test(s)) return parseCents(Number(s))
-  const m = /^(\d{1,7})[.,](\d{1,2})$/.exec(s.replace(/\.(?=\d{3}(\D|$))/g, ''))
+  // thousands separators: a dot (or comma) followed by exactly three digits and then the end or the other separator
+  const flat = s.replace(/[.,](?=\d{3}(?:[.,]\d{1,2})?$)/g, '')
+  const m = /^(\d{1,7})(?:[.,](\d{1,2}))?$/.exec(flat)
   if (!m) return null
-  return parseCents(Number(m[1]) * 100 + Number(m[2].padEnd(2, '0')))
+  return parseCents(Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0')))
 }
 const limitOf = (v: unknown): number | null | undefined => {
   if (v === null || v === '' || v === 'unlimited') return null
@@ -63,7 +70,8 @@ const limitOf = (v: unknown): number | null | undefined => {
   return undefined
 }
 
-export function parsePlanInput(raw: unknown): Parsed<PlanInput> {
+/** `allowedKeys`: the limits this plan already has (a key the plan never had would add a line to its public price card). */
+export function parsePlanInput(raw: unknown, allowedKeys: readonly string[] = USAGE_KEYS): Parsed<PlanInput> {
   const b = (raw ?? {}) as Record<string, unknown>
   const name = text(b.name, NAME_MAX); if (!name) return { ok: false, error: `Nome obrigatório, até ${NAME_MAX} caracteres.` }
   const description = text(b.description ?? '', DESCRIPTION_MAX); if (description === null) return { ok: false, error: `Descrição até ${DESCRIPTION_MAX} caracteres.` }
@@ -72,14 +80,15 @@ export function parsePlanInput(raw: unknown): Parsed<PlanInput> {
   const limits: Partial<Record<UsageKey, number | null>> = {}
   const src = (b.limits ?? {}) as Record<string, unknown>
   for (const key of Object.keys(src)) {
-    if (!(USAGE_KEYS as readonly string[]).includes(key)) return { ok: false, error: `Limite desconhecido: ${key}.` }
+    if (!(USAGE_KEYS as readonly string[]).includes(key) || !allowedKeys.includes(key)) return { ok: false, error: `Limite desconhecido para este plano: ${key}.` }
     const n = limitOf(src[key]); if (n === undefined) return { ok: false, error: `Limite de ${USAGE_LABELS[key as UsageKey]} inválido (inteiro até ${LIMIT_MAX}, ou vazio = ilimitado).` }
     limits[key as UsageKey] = n
   }
   return { ok: true, value: { name, description, priceCents, active: b.active, limits } }
 }
 
-export function parseServiceInput(raw: unknown): Parsed<ServiceInput> {
+/** `code`: the row being edited — a self-charged service refuses "under quote" and R$ 0. */
+export function parseServiceInput(raw: unknown, code?: string): Parsed<ServiceInput> {
   const b = (raw ?? {}) as Record<string, unknown>
   const name = text(b.name, NAME_MAX); if (!name) return { ok: false, error: `Nome obrigatório, até ${NAME_MAX} caracteres.` }
   const description = text(b.description ?? '', DESCRIPTION_MAX); if (description === null) return { ok: false, error: `Descrição até ${DESCRIPTION_MAX} caracteres.` }
@@ -88,6 +97,7 @@ export function parseServiceInput(raw: unknown): Parsed<ServiceInput> {
   if (typeof b.active !== 'boolean') return { ok: false, error: 'Informe se o serviço está ativo.' }
   const unit = b.unit as ServiceUnit
   if (unit !== 'QUOTE' && priceCents === 0) return { ok: false, error: 'Serviço com preço zero só sob orçamento (o pedido recusa a cobrança de R$ 0).' }
+  if (code && SELF_CHARGED_CODES.includes(code) && (unit === 'QUOTE' || priceCents === 0)) return { ok: false, error: 'Este serviço é cobrado pela própria plataforma: precisa de preço por unidade acima de zero.' }
   return { ok: true, value: { name, description, priceCents, unit, active: b.active } }
 }
 

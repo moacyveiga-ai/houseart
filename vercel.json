@@ -14,6 +14,10 @@
     {
       "path": "/api/cron/connect-payouts",
       "schedule": "40 * * * *"
+    },
+    {
+      "path": "/api/cron/market-indicators",
+      "schedule": "5 * * * *"
     }
   ]
 }

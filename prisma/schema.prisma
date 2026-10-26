@@ -1430,3 +1430,18 @@ model StripeEvent {
   objectId    String? // the PaymentIntent the event was about
   processedAt DateTime @default(now())
 }
+
+/// The header ticker (D.25/E.15): one row per series — USD_BRL, EUR_BRL (AwesomeAPI, PTAX as fallback)
+/// and HA_INDEX (own index of the platform's sales, lib/market-indicators). Written by the cron
+/// market-indicators; a failed fetch never erases the last good value. HA_INDEX without sales = valueMicros null.
+model MarketQuote {
+  key         String   @id // USD_BRL | EUR_BRL | HA_INDEX
+  /// value × 1 000 000 (R$ per unit for currencies; points for the index)
+  valueMicros BigInt?
+  /// change in basis points (vs the previous close / the index a day before); null when unknown
+  changeBps   Int?
+  /// when the source says the value is from
+  observedAt  DateTime?
+  source      String // awesomeapi | bcb-ptax | platform
+  updatedAt   DateTime @updatedAt
+}

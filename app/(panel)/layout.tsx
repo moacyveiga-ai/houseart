@@ -8,6 +8,11 @@ import { headers } from 'next/headers'
 import { unreadCount } from '@/lib/notifications/server'
 import { unreadMessages } from '@/lib/messaging/server'
 import { openReviewCount } from '@/lib/admin-review/server'
+import { tickerItems } from '@/lib/market-indicators/server'
+
+// The index strip is in the Web App prototype (artist, appraiser, advisor, admin); the Web Galeria and
+// Web Colecionador prototypes have no strip.
+const TICKER_PROFILES = new Set(['artist', 'appraiser', 'advisor', 'admin'])
 
 // The shell only; each page calls requirePanelPage() (authorization lives in the page).
 export default async function PanelLayout({ children }: { children: ReactNode }) {
@@ -17,10 +22,10 @@ export default async function PanelLayout({ children }: { children: ReactNode })
   const h = await headers()
   const pathname = h.get('x-pathname') ?? '/'
   // Counters of the shell (bell + "Mensagens" badge) — best-effort, never block the page.
-  const [bell, messages, cards, review] = await Promise.all([unreadCount(s.user.id).catch(() => 0), unreadMessages(s.user.id).catch(() => 0), profilesOf(s.user).catch(() => []), nav === 'admin' ? openReviewCount().catch(() => 0) : 0])
+  const [bell, messages, cards, review, ticker] = await Promise.all([unreadCount(s.user.id).catch(() => 0), unreadMessages(s.user.id).catch(() => 0), profilesOf(s.user).catch(() => []), nav === 'admin' ? openReviewCount().catch(() => 0) : 0, TICKER_PROFILES.has(nav) ? tickerItems().catch(() => []) : []])
   const profiles = cards.map((c) => ({ kind: c.kind, name: c.name, icon: c.icon, active: navProfileOf(c.kind) === nav }))
   return (
-    <AppShell user={{ initials: initialsOf(s.user.name), profile: nav, name: s.user.name }} profiles={profiles} activeKey={activeNavKey(nav, pathname)} bell={bell} badges={{ ...(messages ? { messages } : {}), ...(review ? { review } : {}) }}>
+    <AppShell user={{ initials: initialsOf(s.user.name), profile: nav, name: s.user.name }} profiles={profiles} activeKey={activeNavKey(nav, pathname)} bell={bell} ticker={ticker} badges={{ ...(messages ? { messages } : {}), ...(review ? { review } : {}) }}>
       {children}
     </AppShell>
   )

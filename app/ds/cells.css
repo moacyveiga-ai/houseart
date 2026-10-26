@@ -171,7 +171,7 @@
 
 /* ── shell ──────────────────────────────────────────────────────────────── */
 .ha-shell { display: flex; flex-direction: column; min-height: 100vh; }
-.ha-ticker { background: var(--ha-ink-900); color: var(--ha-paper-200); font-size: var(--ha-text-caption); font-variant-numeric: tabular-nums; padding: var(--ha-space-1) var(--ha-space-6); display: flex; gap: var(--ha-space-6); justify-content: flex-end; flex-wrap: wrap; }
+.ha-ticker { background: var(--ha-ink-900); color: var(--ha-paper-200); font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); font-variant-numeric: tabular-nums; padding: var(--ha-space-1) var(--ha-space-6); display: flex; gap: var(--ha-space-6); justify-content: flex-end; flex-wrap: wrap; }
 .ha-ticker b { color: var(--ha-paper-50); font-weight: 600; }
 .ha-ticker .ha-ticker__delta { color: var(--ha-ink-300); }
 .ha-topbar { height: 64px; display: flex; align-items: center; gap: var(--ha-space-6); padding: 0 var(--ha-space-6); border-bottom: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); position: sticky; top: 0; z-index: 20; }

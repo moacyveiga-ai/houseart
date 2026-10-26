@@ -13,10 +13,16 @@ import { reviewHref } from '@/lib/admin-review/core'
 export interface BatchRow { id: number; code: string; quantity: number; destination: string; linked: number; status: string }
 export interface OrderRow { id: number; quantity: number; status: string; who: string; createdAt: string }
 /** A read whose chip reported tampering: the marker is REMOVED and a review item opened for the desk. */
-export interface AlertRow { id: number; at: string; purpose: string; uid: string; markerStatus: string; artwork: { publicId: string | null; title: string } | null; reviewOpen: boolean }
+export interface AlertRow { id: number; at: string; purpose: string; /** the read's CMAC checked out (a forged `tt` link does not) */ authenticated: boolean; uid: string; markerStatus: string; artwork: { publicId: string | null; title: string } | null; reviewOpen: boolean }
 export interface FoundMarker { uid: string; status: string; artwork: { publicId: string | null; title: string } | null; batch: string; readCounter: number }
 
 const PURPOSE_LABELS: Record<string, string> = { VERIFY: 'verificação pública', LINK: 'vínculo', DELIVERY_CONFIRM: 'confirmação de entrega', TRANSFER_CONFIRM: 'transferência' }
+/** What the desk did with the read: open review, revoked tag (approved — the decision unlinks the tag from the work), or kept (rejected). */
+function alertOutcome(al: AlertRow): { badge: string; tone: { bg: string; fg: string }; note: string | null } {
+  if (al.reviewOpen) return { badge: 'Violação', tone: { bg: '--ha-alert-500', fg: '--ha-paper-50' }, note: null }
+  if (al.markerStatus === 'REVOKED') return { badge: 'Revogada', tone: { bg: '--ha-paper-200', fg: '--ha-ink-900' }, note: 'revisão aprovada' }
+  return { badge: 'Decidida', tone: { bg: '--ha-paper-200', fg: '--ha-ink-900' }, note: 'revisão decidida' }
+}
 const whenBR = (iso: string) => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Bahia', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 function ArtworkRef({ a }: { a: { publicId: string | null; title: string } | null }) {
@@ -109,13 +115,17 @@ export function MarkersAdmin({ batches: initial, orders, found, query, alerts }:
       <h2 className="ha-h3">Alertas de remoção</h2>
       <ul className="ha-list" aria-label="Leituras com violação do chip nos últimos 7 dias">
         {alerts.length === 0 ? <li className="ha-muted">Nenhuma leitura indicou violação do chip nos últimos 7 dias.</li> : null}
-        {alerts.map((al) => (
-          <li key={al.id} className="ha-list__row ha-markers__order">
-            <span><b><ArtworkRef a={al.artwork} /></b><br /><span className="ha-muted ha-sm">etiqueta <span className="ha-id">{al.uid}</span> · {label(MARKER_STATUS_LABELS, al.markerStatus)} · {PURPOSE_LABELS[al.purpose] ?? al.purpose} · {whenBR(al.at)}</span></span>
-            <span className="ha-review__kind" style={{ background: 'var(--ha-alert-500)', color: 'var(--ha-paper-50)' }}>Removida</span>
-            {al.reviewOpen ? <Link href={reviewHref('open', 'MARKER_REMOVED')} className="ha-btn ha-btn--ink ha-btn--xs">Abrir revisão</Link> : <span className="ha-muted ha-sm">{al.artwork ? 'revisão decidida' : 'sem revisão'}</span>}
-          </li>
-        ))}
+        {alerts.map((al) => {
+          const o = alertOutcome(al)
+          return (
+            <li key={al.id} className="ha-list__row ha-markers__order">
+              <span><b>{al.artwork ? <ArtworkRef a={al.artwork} /> : 'Obra desvinculada pela revisão'}</b><br /><span className="ha-muted ha-sm">etiqueta <span className="ha-id">{al.uid}</span> · {label(MARKER_STATUS_LABELS, al.markerStatus)} · {PURPOSE_LABELS[al.purpose] ?? al.purpose} · {whenBR(al.at)}{al.authenticated ? '' : ' · leitura não autenticada'}</span></span>
+              <span className="ha-review__kind" style={{ background: `var(${o.tone.bg})`, color: `var(${o.tone.fg})` }}>{o.badge}</span>
+              {al.reviewOpen ? <Link href={reviewHref('open', 'MARKER_REMOVED')} className="ha-btn ha-btn--ink ha-btn--xs">Abrir revisão</Link> : <span className="ha-muted ha-sm">{o.note}</span>}
+            </li>
+          )
+        })}
+        {alerts.length >= 20 ? <li className="ha-muted ha-sm">Mostrando as 20 leituras mais recentes.</li> : null}
       </ul>
 
       <h2 className="ha-h3">Pedidos de kit</h2>

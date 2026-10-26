@@ -54,7 +54,7 @@ export async function adminMarkersView(query: string | null) {
     ])
     // removal alerts (audit web-app §2): the tamper reads of the last 7 days, each with the artwork and
     // whether the review item the read opened is still waiting for the desk
-    const tamperReads = await prisma.markerRead.findMany({ where: { tamperFlag: true, createdAt: { gte: new Date(Date.now() - 7 * 24 * 3600_000) } }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, createdAt: true, purpose: true, marker: { select: { uid: true, status: true, artworkId: true } } } })
+    const tamperReads = await prisma.markerRead.findMany({ where: { tamperFlag: true, createdAt: { gte: new Date(Date.now() - 7 * 24 * 3600_000) } }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, createdAt: true, purpose: true, cmacValid: true, marker: { select: { uid: true, status: true, artworkId: true } } } })
     const alertArtworkIds = [...new Set(tamperReads.map((r) => r.marker.artworkId).filter((id): id is number => id !== null))]
     const [alertArtworks, openReviews] = await Promise.all([
       alertArtworkIds.length ? prisma.artwork.findMany({ where: { id: { in: alertArtworkIds } }, select: { id: true, publicId: true, title: true } }) : [],
@@ -64,7 +64,7 @@ export async function adminMarkersView(query: string | null) {
     const reviewOpen = new Set(openReviews.map((r) => r.artworkId))
     const alerts = tamperReads.map((r) => {
       const a = r.marker.artworkId ? artworkById.get(r.marker.artworkId) : undefined
-      return { id: r.id, at: r.createdAt.toISOString(), purpose: r.purpose, uid: r.marker.uid, markerStatus: r.marker.status, artwork: a ? { publicId: a.publicId, title: a.title } : null, reviewOpen: !!r.marker.artworkId && reviewOpen.has(r.marker.artworkId) }
+      return { id: r.id, at: r.createdAt.toISOString(), purpose: r.purpose, authenticated: r.cmacValid, uid: r.marker.uid, markerStatus: r.marker.status, artwork: a ? { publicId: a.publicId, title: a.title } : null, reviewOpen: !!r.marker.artworkId && reviewOpen.has(r.marker.artworkId) }
     })
     const q = query?.trim()
     const found = q

@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { heldArtworks } from '@/lib/ownership/server'
 import { ArtworkError } from '@/lib/artworks/server'
 import { placeOrder } from '@/lib/orders/server'
+import { recordEvent } from '@/lib/certificate-events/server'
+import { audit } from '@/lib/audit'
+import type { RestorationInput } from './restore-core'
 
 export interface WalletItem { artworkId: number; publicId: string | null; title: string; artist: string; acquiredAt: string; priceLabel: string; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; cover: string | null; version: number }
 
@@ -31,4 +34,16 @@ export async function insureArtwork(userId: number, artworkId: number) {
   const premium = (a.listPriceCents ?? 0n) / 100n
   if (premium > 0n) await placeOrder({ serviceCode: 'COLLECTION_INSURANCE', payerKind: 'REQUESTER', userId, artworkId, amountCents: premium, description: 'Seguro de acervo · Chubb · 12 meses' })
   return prisma.insurancePolicy.create({ data: { artworkId, kind: 'COLLECTION', insurer: 'Chubb', policyNumber: `${Date.now().toString().slice(-5)}-${artworkId}`, validFrom: new Date(), validUntil: new Date(Date.now() + 365 * 86_400_000), coverageCents: a.listPriceCents ?? 0n } })
+}
+
+/**
+ * "Registrar restauro": the holder writes a RESTORED event in the certificate's chain (what, who, when).
+ * Nothing on the artwork changes — the record is the provenance line the public page and the panel show.
+ */
+export async function recordRestoration(userId: number, artworkId: number, input: RestorationInput, ctx: { ip?: string; userAgent?: string } = {}) {
+  const held = await prisma.certificateVersion.findFirst({ where: { holderUserId: userId, status: 'ACTIVE', certificate: { artworkId } }, select: { id: true } })
+  if (!held) throw new ArtworkError('NOT_HOLDER', 'Você não é o titular desta obra.', 404)
+  const ev = await recordEvent(artworkId, 'RESTORED', { description: input.description, restorer: input.restorer, on: input.on }, userId)
+  void audit.event({ entity: 'artwork', entityId: artworkId, action: 'restoration', userId, ip: ctx.ip, userAgent: ctx.userAgent, after: { seq: ev.seq, restorer: input.restorer, on: input.on } })
+  return { seq: ev.seq }
 }

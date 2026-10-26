@@ -11,7 +11,7 @@ import { formatBRL } from '@/lib/artworks/domain'
 
 export interface OfferCardView {
   id: number; code: string; artworkId: number; artworkTitle: string; artworkCover: string | null; listPriceCents: string | null; currentCents: string
-  status: string; statusLabel: string; buyer: string; buyerFirstName: string; buyerInitials: string; buyerUserId: number | null
+  status: string; statusLabel: string; buyer: string; buyerFirstName: string; buyerInitials: string
   expiresIn: string; open: boolean; lastAuthor: string | null; pctOfPrice: number | null; buyerMessage: string | null
 }
 
@@ -52,7 +52,8 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
 
   async function talk(o: OfferCardView) {
     setBusy(`${o.id}:talk`)
-    const res = await fetch('/api/messages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ artworkId: o.artworkId, ...(o.buyerUserId ? { userId: o.buyerUserId } : {}) }) })
+    // The conversation is opened BY THE OFFER: the server finds the proponent (their id never reaches the page).
+    const res = await fetch(`/api/offers/${o.id}/conversation`, { method: 'POST' })
     const data = await res.json().catch(() => ({})) as { id?: number; error?: string }
     setBusy(null)
     if (!res.ok || !data.id) { setToast(data.error ?? 'Não foi possível abrir a conversa.'); return }
@@ -98,7 +99,7 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
                     </div>
                   )
               ) : <span className="ha-offer__status">{o.statusLabel}</span>}
-              <button type="button" className="ha-offer__talk" disabled={busy !== null} onClick={() => talk(o)}><span className="ha-icon" aria-hidden="true">chat_bubble</span>Conversar com {o.buyerFirstName}</button>
+              {canAnswer ? <button type="button" className="ha-offer__talk" disabled={busy !== null} onClick={() => talk(o)}><span className="ha-icon" aria-hidden="true">chat_bubble</span>Conversar com {o.buyerFirstName}</button> : null}
             </article>
           )
         })}

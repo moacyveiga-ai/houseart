@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
+import { panelSession } from '@/lib/auth/panel'
 import { safeNext } from '@/lib/auth/safe-next'
 import { configuredProviders } from '@/lib/auth/oauth/core'
 import { AuthShell } from '@/components/auth/AuthShell'
@@ -17,7 +18,7 @@ const LOGIN_WALL = { src: '/api/public/media/content/news/1792772349313-1i5ga4ci
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; social?: string }> }) {
   const sp = await searchParams
   const next = safeNext(sp.next)
-  if (await getSession()) redirect(next ?? '/')
+  if (await getSession()) redirect((await panelSession()) ? next ?? '/' : '/e')
   const social = sp.social && SOCIAL_CODE.test(sp.social) ? sp.social : null
   return (
     <AuthShell variant="claim" brandHeight={56} className="ha-login--entrar" wall={LOGIN_WALL}>

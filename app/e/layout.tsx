@@ -10,7 +10,7 @@ import { homeOf, PROFILE_LABELS } from '@/lib/profiles/nav'
 export default async function PublicLayout({ children }: { children: ReactNode }) {
   const user = await getSession().catch(() => null)
   const nav = user ? await activeNavProfile(user).catch(() => null) : null
-  const account = user ? { href: nav ? homeOf(nav) : '/', label: nav ? PROFILE_LABELS[nav] : 'Minha área' } : null
+  const account = user ? (nav ? { href: homeOf(nav), label: PROFILE_LABELS[nav] } : { href: '/e/how-it-works#suporte', label: 'Ajuda' }) : null
   return (
     <div className="hp">
       <PublicHeader account={account} />

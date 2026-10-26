@@ -77,6 +77,8 @@ export function Verification({ c, read }: { c: PublicCertificate; read: TagRead 
           <div><h2>{b.title}</h2><p>{bannerText(c, read)}</p></div>
         </div>
         {!read ? <div className="hp-verification-note"><Icon name="contactless" size={18} />Leitura não autenticada (sem etiqueta)</div> : null}
+        {read?.tamper ? <div className="hp-verification-note hp-verification-note--alert"><Icon name="link_off" size={18} />Etiqueta não confirmada: a leitura indicou violação ou remoção do chip. Fale com o suporte.</div> : null}
+        {read && !read.tamper && !read.authenticated ? <div className="hp-verification-note hp-verification-note--alert"><Icon name="report" size={18} />Leitura não confirmada: a etiqueta lida não confere com este certificado. Aproxime o celular de novo.</div> : null}
 
         <div className={`hp-verification-wall${c.verdict === 'stolen' ? ' hp-verification-wall--stolen' : ''}`}>
           {c.artwork.cover ? <ArtworkFrame src={c.artwork.cover} alt={`${c.artwork.title}, de ${c.artist}`} mode="canvas" /> : <div className="hp-verification-wall__empty">Sem imagem pública</div>}

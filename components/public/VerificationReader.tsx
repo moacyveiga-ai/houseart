@@ -17,11 +17,21 @@ export function VerificationReader({ result, verdict }: { result: ReadResult; ve
     const b = window.setTimeout(() => setPhase('done'), READING_MS + RESULT_MS)
     return () => { window.clearTimeout(a); window.clearTimeout(b) }
   }, [result, verdict])
+  useEffect(() => {
+    // the card under the overlay is not reachable by Tab while it is covered
+    if (phase === 'done') return
+    const card = document.querySelector<HTMLElement>('.hp-verification__card')
+    const covered = card ? Array.from(card.children).filter((el): el is HTMLElement => el instanceof HTMLElement && !el.classList.contains('hp-verification-overlay')) : []
+    covered.forEach((el) => el.setAttribute('inert', ''))
+    return () => covered.forEach((el) => el.removeAttribute('inert'))
+  }, [phase])
   if (phase === 'done') return null
   const outcome = outcomeOf(result, verdict)
   const showing = phase === 'result'
   return (
     <div className="hp-verification-overlay" role="status" aria-live="polite">
+      <noscript><style>{'.hp-verification-overlay{display:none}'}</style></noscript>
+      <div className="hp-verification-overlay__stage">
       <div className={`hp-verification-overlay__ring${showing ? ` hp-verification-overlay__ring--${outcome}` : ''}`}>
         {showing ? (
           <svg width="140" height="140" viewBox="0 0 104 104" className="hp-verification-overlay__close" aria-hidden="true"><circle cx="52" cy="52" r="48" fill="none" strokeWidth="4" strokeDasharray="302" /></svg>
@@ -33,6 +43,7 @@ export function VerificationReader({ result, verdict }: { result: ReadResult; ve
       <div>
         <div className="hp-verification-overlay__title">{readerTitle(phase, result, verdict)}</div>
         <div className="hp-verification-overlay__sub">{readerSubtitle(phase, result)}</div>
+      </div>
       </div>
     </div>
   )

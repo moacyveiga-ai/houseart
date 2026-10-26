@@ -12,7 +12,8 @@ export const RESULT_MS = 900
 
 export type Outcome = 'ok' | 'attention' | 'failed'
 
-/** What the ring says at the end: green check, amber attention or red failure. */
+/** What the ring says at the end: green check (authenticated), or alert red — attention (contested, stolen,
+ *  unverified read) or failure (tamper). The prototype colours everything but "autenticada" with alert-500. */
 export function outcomeOf(result: ReadResult, verdict: Verdict): Outcome {
   if (result === 'tamper') return 'failed'
   if (result === 'unverified') return 'attention'

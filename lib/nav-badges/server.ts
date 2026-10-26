@@ -34,7 +34,8 @@ async function purchasesInCourse(userId: number): Promise<number> {
 }
 
 /** The appraisals desk opens on "open": every request in the queue or in progress (also another appraiser's), for the appraiser and for the staff alike. */
-const openAppraisals = () => totalScope('nav-badges:appraisals', () => prisma.appraisalRequest.count({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] } } }))
+// `await` INSIDE the scope: a PrismaPromise is lazy and would run after the total scope closed (the ratchet caught exactly this).
+const openAppraisals = () => totalScope('nav-badges:appraisals', async () => await prisma.appraisalRequest.count({ where: { status: { in: ['QUEUED', 'IN_PROGRESS'] } } }))
 
 async function staffCounts(): Promise<BadgeCounts> {
   return totalScope('nav-badges:staff', async () => {

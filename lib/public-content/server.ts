@@ -6,7 +6,8 @@ import { totalScope } from '@/lib/scope/context'
 import { formatDimensions } from '@/lib/artworks/domain'
 import { jsonList, lifeSpan, paragraphsOf, type ArtistEntryKind } from './domain'
 
-const LISTED = { status: 'LISTED', seal: 'GREEN', publicId: { not: null } } as const
+// a seller suspended by the house is out of every public list
+const LISTED = { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, member: { tenant: { status: 'ACTIVE' } } } as const
 const PUBLIC_STATUSES = ['LISTED', 'IN_DEAL', 'SOLD', 'AUTHENTICATED'] as const
 
 export interface PublicWork { publicId: string; title: string; year: number | null; technique: string | null; dimensions: string; priceCents: bigint | null; saleMode: string | null; status: string; cover: string | null; seller: string | null; artist: string; artistSlug: string }
@@ -49,7 +50,7 @@ export async function publicArtist(slug: string): Promise<PublicArtistPage | nul
   return totalScope('public:artist', async () => {
     const a = await prisma.artist.findUnique({
       where: { slug },
-      include: { profile: true, entries: { orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }] }, publications: { orderBy: { sortOrder: 'asc' } }, artworks: { where: { status: { in: [...PUBLIC_STATUSES] }, seal: 'GREEN', publicId: { not: null } }, select: WORK_SELECT, orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }] } },
+      include: { profile: true, entries: { orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }] }, publications: { orderBy: { sortOrder: 'asc' } }, artworks: { where: { status: { in: [...PUBLIC_STATUSES] }, seal: 'GREEN', publicId: { not: null }, member: { tenant: { status: 'ACTIVE' } } }, select: WORK_SELECT, orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }] } },
     })
     if (!a) return null
     const p = a.profile

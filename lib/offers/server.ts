@@ -162,8 +162,8 @@ export async function startPublicOffer(i: PublicOfferInput): Promise<{ ok: true;
     if (i.offeredCents <= 0n) return { ok: false, error: 'Informe o valor da proposta.' }
     let doc
     try { doc = protectDocument(i.buyerDocument) } catch { return { ok: false, error: 'CPF/CNPJ inválido.' } }
-    const a = await prisma.artwork.findUnique({ where: { publicId: i.publicId }, select: { id: true, memberId: true, status: true, seal: true, mandates: { where: { status: 'ACTIVE' }, select: { id: true, fixedPrice: true, listPriceCents: true } } } })
-    if (!a || a.status !== 'LISTED' || a.seal !== 'GREEN') return { ok: false, error: 'Esta obra não está aceitando propostas.' }
+    const a = await prisma.artwork.findUnique({ where: { publicId: i.publicId }, select: { id: true, memberId: true, status: true, seal: true, member: { select: { tenant: { select: { status: true } } } }, mandates: { where: { status: 'ACTIVE' }, select: { id: true, fixedPrice: true, listPriceCents: true } } } })
+    if (!a || a.status !== 'LISTED' || a.seal !== 'GREEN' || a.member.tenant.status !== 'ACTIVE') return { ok: false, error: 'Esta obra não está aceitando propostas.' }
     const mandate = a.mandates[0]
     if (mandate?.fixedPrice && i.offeredCents !== mandate.listPriceCents) return { ok: false, error: 'Esta obra é vendida a preço fixo.' }
     const validityHours = i.validityHours && (VALIDITY_HOURS as readonly number[]).includes(i.validityHours) ? i.validityHours : OFFER_VALIDITY_DAYS * 24
@@ -431,8 +431,8 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     if (!email) return { ok: false, error: 'Informe um e-mail válido.' }
     let doc: { hash: string; enc: string; mask: string } | null = null
     if (i.buyerDocument) { try { doc = protectDocument(i.buyerDocument) } catch { return { ok: false, error: 'CPF/CNPJ inválido.' } } }
-    const a = await prisma.artwork.findUnique({ where: { publicId: i.publicId }, select: { id: true, memberId: true, status: true, seal: true, listPriceCents: true, mandates: { where: { status: 'ACTIVE' }, select: { id: true, listPriceCents: true } } } })
-    if (!a || a.status !== 'LISTED' || a.seal !== 'GREEN') return { ok: false, error: 'Esta obra não está à venda.' }
+    const a = await prisma.artwork.findUnique({ where: { publicId: i.publicId }, select: { id: true, memberId: true, status: true, seal: true, listPriceCents: true, member: { select: { tenant: { select: { status: true } } } }, mandates: { where: { status: 'ACTIVE' }, select: { id: true, listPriceCents: true } } } })
+    if (!a || a.status !== 'LISTED' || a.seal !== 'GREEN' || a.member.tenant.status !== 'ACTIVE') return { ok: false, error: 'Esta obra não está à venda.' }
     const mandate = a.mandates[0]
     const price = mandate?.listPriceCents ?? a.listPriceCents
     if (!price || price <= 0n) return { ok: false, error: 'Esta obra é vendida sob consulta.' }

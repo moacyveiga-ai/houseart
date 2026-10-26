@@ -19,7 +19,7 @@ export async function listPublicArtworks(f: MarketplaceFilters = {}, take = 60):
         ...(f.category && (ARTWORK_CATEGORIES as readonly string[]).includes(f.category) ? { category: f.category } : {}),
         ...(f.maxPriceCents ? { listPriceCents: { lte: f.maxPriceCents } } : {}),
         ...(f.market === 'PRIMARY' || f.market === 'SECONDARY' ? { market: f.market } : {}),
-        ...(f.uf ? { member: { uf: f.uf.toUpperCase() } } : {}),
+        member: { tenant: { status: 'ACTIVE' }, ...(f.uf ? { uf: f.uf.toUpperCase() } : {}) },
         ...(f.q ? { OR: [{ title: { contains: f.q, mode: 'insensitive' } }, { artist: { name: { contains: f.q, mode: 'insensitive' } } }, { publicId: { equals: f.q.replace(/\s/g, '').toUpperCase() } }] } : {}),
       },
       select: { id: true, publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, category: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
@@ -55,7 +55,7 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       where: { publicId },
       include: {
         artist: { select: { id: true, name: true, slug: true, birthYear: true, tenantId: true, profile: { select: { birthPlace: true, livesIn: true, bio: true } } } },
-        member: { select: { kind: true, displayName: true, city: true, uf: true, tenantId: true } },
+        member: { select: { kind: true, displayName: true, city: true, uf: true, tenantId: true, tenant: { select: { status: true } } } },
         media: { where: { kind: { in: ['FRONT_COLOR_CARD', 'BACK', 'DETAIL'] } }, orderBy: { sortOrder: 'asc' } },
         historyItems: { orderBy: { sortOrder: 'asc' } },
         mandates: { where: { status: 'ACTIVE' }, select: { fixedPrice: true } },
@@ -63,6 +63,8 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       },
     })
     if (!a || !(PAGE_STATUSES as readonly string[]).includes(a.status)) return null
+    // a seller suspended by the house has no public page (the works also leave the lists)
+    if (a.member.tenant.status !== 'ACTIVE') return null
     // Stolen / disputed works keep a public page (the badge is the warning); the rest only with the green seal.
     if (a.status !== 'STOLEN' && a.status !== 'DISPUTED' && a.seal !== 'GREEN') return null
     const isGallery = a.member.kind === 'GALLERY_STAFF'
@@ -100,7 +102,7 @@ export async function relatedArtworks(publicId: string, take = 4): Promise<Marke
     const items = await marketItems(500)
     const byId = new Map(items.map((i) => [i.publicId, i]))
     const rows = await prisma.artwork.findMany({
-      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, id: { not: a.id }, OR: [{ artistId: a.artistId }, { memberId: a.memberId }] },
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, member: { tenant: { status: 'ACTIVE' } }, id: { not: a.id }, OR: [{ artistId: a.artistId }, { memberId: a.memberId }] },
       select: { publicId: true, artistId: true }, orderBy: { updatedAt: 'desc' }, take: 40,
     })
     const sorted = [...rows.filter((r) => r.artistId === a.artistId), ...rows.filter((r) => r.artistId !== a.artistId)]
@@ -112,7 +114,7 @@ export async function relatedArtworks(publicId: string, take = 4): Promise<Marke
 export async function marketItems(take = 500): Promise<MarketItem[]> {
   return totalScope('marketplace:items', async () => {
     const rows = await prisma.artwork.findMany({
-      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null },
+      where: { status: 'LISTED', seal: 'GREEN', publicId: { not: null }, listingPausedAt: null, member: { tenant: { status: 'ACTIVE' } } },
       select: { publicId: true, title: true, year: true, category: true, technique: true, heightMm: true, widthMm: true, depthMm: true, listPriceCents: true, saleMode: true, market: true, updatedAt: true, artist: { select: { name: true, slug: true } }, member: { select: { displayName: true, kind: true, uf: true, city: true, tenantId: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } },
       orderBy: { updatedAt: 'desc' }, take,
     })
@@ -132,8 +134,8 @@ export async function marketItems(take = 500): Promise<MarketItem[]> {
 export async function marketArtists(take = 6): Promise<{ slug: string; name: string; meta: string; count: number; photoUrl: string | null }[]> {
   return totalScope('marketplace:artists', async () => {
     const rows = await prisma.artist.findMany({
-      where: { artworks: { some: { status: 'LISTED', seal: 'GREEN' } } },
-      select: { slug: true, name: true, birthYear: true, deathYear: true, profile: { select: { livesIn: true, languagesJson: true, photoUrl: true } }, _count: { select: { artworks: { where: { status: 'LISTED', seal: 'GREEN' } } } } },
+      where: { artworks: { some: { status: 'LISTED', seal: 'GREEN', member: { tenant: { status: 'ACTIVE' } } } } },
+      select: { slug: true, name: true, birthYear: true, deathYear: true, profile: { select: { livesIn: true, languagesJson: true, photoUrl: true } }, _count: { select: { artworks: { where: { status: 'LISTED', seal: 'GREEN', member: { tenant: { status: 'ACTIVE' } } } } } } },
       orderBy: { artworks: { _count: 'desc' } }, take,
     })
     return rows.map((r) => {

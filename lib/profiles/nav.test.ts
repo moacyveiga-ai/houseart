@@ -9,8 +9,8 @@ describe('NAV per profile (from the design)', () => {
     expect(NAV.collector[0].href).toBe('/explore')
     for (const k of ['artist', 'gallery', 'collector'] as const) expect(NAV[k].map((i) => i.href)).toEqual(expect.arrayContaining(['/messages', '/community']))
     expect(NAV.appraiser).toHaveLength(1)
-    expect(NAV.admin).toHaveLength(9)
-    expect(NAV.admin.map((i) => i.href)).toEqual(expect.arrayContaining(['/admin/content', '/admin/deals', '/admin/users', '/admin/kyc', '/admin/audit', '/appraisals']))
+    expect(NAV.admin).toHaveLength(10)
+    expect(NAV.admin.map((i) => i.href)).toEqual(expect.arrayContaining(['/admin/content', '/admin/deals', '/admin/users', '/admin/kyc', '/admin/audit', '/admin/tenants', '/appraisals']))
     expect(NAV.advisor).toBe(NAV.gallery)
   })
   it('the gallery desk: painel do dia is home, inner screens light "Galeria", payout beats Negócios', () => {

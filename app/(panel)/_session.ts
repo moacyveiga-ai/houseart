@@ -14,7 +14,10 @@ export async function requirePanelPage(next: string): Promise<PanelPage> {
   const s = await panelSession()
   // Signed in but without panel access (e.g. institution): the public site, never /login — the
   // login page sends a signed-in account back to `next`, and the two would bounce forever.
-  if (!s) redirect((await getSession()) ? '/e' : `/login?next=${encodeURIComponent(next)}`)
+  if (!s) {
+    const u = await getSession()
+    redirect(u?.tenantSuspended ? '/suspended' : u ? '/e' : `/login?next=${encodeURIComponent(next)}`)
+  }
   const nav = await activeNavProfile(s.user)
   if (!nav) redirect('/e')
   return { ...s, nav }

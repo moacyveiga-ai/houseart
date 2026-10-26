@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS "InstagramPublication" (
     "error" TEXT,
     "feedMediaId" TEXT,
     "storyMediaId" TEXT,
+    "feedContainerId" TEXT,
+    "storyContainerId" TEXT,
     "code" TEXT NOT NULL,
     "targetPath" TEXT NOT NULL,
     "reach" INTEGER NOT NULL DEFAULT 0,

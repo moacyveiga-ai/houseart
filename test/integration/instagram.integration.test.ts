@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { encryptText } from '@/lib/crypto/cipher'
 import { awaitDetached } from '@/lib/after'
 import { createPost } from '@/lib/community/server'
-import { composerInstagram, disconnect, followLink, instagramView, requestPublication, runInstagramCron } from '@/lib/instagram/server'
+import { composerInstagram, disconnect, followLink, instagramView, publishNow, requestPublication, runInstagramCron } from '@/lib/instagram/server'
 import { createScenario, type Scenario } from './fixtures'
 import { truncateTables } from './db'
 
@@ -108,11 +108,38 @@ describe('instagram', () => {
     let pub = await prisma.instagramPublication.findUniqueOrThrow({ where: { postId: post.id } })
     expect(pub).toMatchObject({ status: 'PENDING', attempts: 1, error: 'O Instagram recusou o envio' })
     // the cron resends what stayed pending (after 10 minutes)
-    await prisma.$executeRaw`UPDATE "InstagramPublication" SET "updatedAt" = now() - interval '11 minutes' WHERE id = ${pub.id}`
+    await prisma.$executeRaw`UPDATE "InstagramPublication" SET "updatedAt" = (now() AT TIME ZONE 'UTC') - interval '11 minutes' WHERE id = ${pub.id}`
     await runInstagramCron()
-    await prisma.$executeRaw`UPDATE "InstagramPublication" SET "updatedAt" = now() - interval '11 minutes' WHERE id = ${pub.id}`
+    await prisma.$executeRaw`UPDATE "InstagramPublication" SET "updatedAt" = (now() AT TIME ZONE 'UTC') - interval '11 minutes' WHERE id = ${pub.id}`
     await runInstagramCron()
     pub = await prisma.instagramPublication.findUniqueOrThrow({ where: { id: pub.id } })
     expect(pub).toMatchObject({ status: 'FAILED', attempts: 3 })
+  }, 60_000)
+  it('live: a run that died after media_publish is not published twice', async () => {
+    process.env.INSTAGRAM_APP_ID = 'app'; process.env.INSTAGRAM_APP_SECRET = 'sec'
+    await authenticated(s.b.artworkId)
+    const c = await connect(s.b.userId, 'LIVE', '@joana')
+    const post = await createPost(s.b.userId, { kind: 'TEXT', body: 'x', artworkId: s.b.artworkId })
+    // the previous run saved the container and published it, then died before writing the result
+    const pub = await prisma.instagramPublication.create({ data: { postId: post.id, userId: s.b.userId, connectionId: c.id, format: 'FEED', code: 'abcd12', targetPath: '/community', attempts: 1, feedContainerId: 'container_9' } })
+    const urls: string[] = []
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      urls.push(url)
+      if (url.includes('container_9?fields=status_code')) return new Response(JSON.stringify({ status_code: 'PUBLISHED' }), { status: 200 })
+      return new Response(JSON.stringify({ id: 'other' }), { status: 200 })
+    }))
+    await publishNow(pub.id)
+    expect(await prisma.instagramPublication.findUniqueOrThrow({ where: { id: pub.id } })).toMatchObject({ status: 'PUBLISHED' })
+    expect(urls.some((u) => u.includes('media_publish') || u.endsWith('/media'))).toBe(false)
+  }, 60_000)
+
+  it('an expired connection queues nothing and the composer asks to connect again', async () => {
+    process.env.INSTAGRAM_APP_ID = 'app'; process.env.INSTAGRAM_APP_SECRET = 'sec'
+    await authenticated(s.b.artworkId)
+    const c = await connect(s.b.userId, 'LIVE', '@joana')
+    await prisma.instagramConnection.update({ where: { id: c.id }, data: { status: 'ERROR' } })
+    const post = await createPost(s.b.userId, { kind: 'TEXT', body: 'x', artworkId: s.b.artworkId })
+    expect(await requestPublication(s.b.userId, post.id, 'FEED')).toMatchObject({ error: expect.stringMatching(/expirou/) })
+    expect((await composerInstagram(s.b.userId)).handle).toBeNull()
   }, 60_000)
 })

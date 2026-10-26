@@ -1481,6 +1481,8 @@ model InstagramPublication {
   error        String?
   feedMediaId  String?
   storyMediaId String?
+  feedContainerId  String? // saved BEFORE media_publish: a resend asks its status and never publishes twice
+  storyContainerId String?
   code         String    @unique
   targetPath   String
   reach        Int       @default(0)

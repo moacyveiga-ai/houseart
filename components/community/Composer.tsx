@@ -49,6 +49,8 @@ export function Composer({ open, artworks, instagram, onClose, onPublished, onTo
     setSending(false)
     if (!res.ok) { onToast(data.error ?? 'Não foi possível publicar.'); return }
     setD(EMPTY_DRAFT)
+    setIgOn(!!instagram.handle && instagram.defaultOn)
+    setIgFormat('FEED')
     onPublished(data.instagram?.error ? `Publicado na comunidade. Instagram: ${data.instagram.error}` : igSending ? `Publicado na comunidade e enviado a ${instagram.handle}` : undefined)
   }
 

@@ -46,6 +46,10 @@ describe('instagram core', () => {
     expect(publishBlocker({ kind: 'TEXT', imageUrl: null, hasArtworkImage: false })).toMatch(/imagem/)
     expect(publishBlocker({ kind: 'TEXT', imageUrl: null, hasArtworkImage: true })).toBeNull()
     expect(publishBlocker({ kind: 'POLL', imageUrl: 'https://x', hasArtworkImage: true })).toMatch(/Enquetes/)
+    // a 3:4 portrait does not go to the feed, but goes to Stories
+    expect(publishBlocker({ kind: 'TEXT', imageUrl: null, hasArtworkImage: true, format: 'FEED', image: { width: 900, height: 1200 } })).toMatch(/4:5/)
+    expect(publishBlocker({ kind: 'TEXT', imageUrl: null, hasArtworkImage: true, format: 'STORIES', image: { width: 900, height: 1200 } })).toBeNull()
+    expect(publishBlocker({ kind: 'TEXT', imageUrl: null, hasArtworkImage: true, format: 'BOTH', image: { width: 1080, height: 1350 } })).toBeNull()
   })
 
   it('stats line and token refresh window', () => {

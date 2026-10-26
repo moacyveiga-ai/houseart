@@ -100,10 +100,22 @@ export function captionOf(input: { body: string; artwork: { title: string; artis
   return head ? `${head}\n\n${tail}` : tail
 }
 
-/** Why a post cannot go to Instagram (null = it can). Instagram only takes posts with an image. */
-export function publishBlocker(post: { kind: string; imageUrl: string | null; hasArtworkImage: boolean }): string | null {
+/** The feed takes images between 4:5 (portrait) and 1.91:1 (landscape); Stories take any. */
+export function feedRatioOk(width: number, height: number): boolean {
+  if (!(width > 0 && height > 0)) return true
+  const r = width / height
+  return r >= 0.8 - 0.005 && r <= 1.91 + 0.005
+}
+
+/**
+ * Why a post cannot go to Instagram (null = it can). Instagram only takes posts with an image; the feed
+ * refuses an image outside 4:5–1.91:1 (a 3:4 portrait painting), so that is said before sending.
+ * `image` is the size of the artwork image when the post uses it (unknown for the post's own photo).
+ */
+export function publishBlocker(post: { kind: string; imageUrl: string | null; hasArtworkImage: boolean; format?: InstagramFormat; image?: { width: number; height: number } | null }): string | null {
   if (post.kind === 'POLL') return 'Enquetes ficam só na comunidade.'
   if (!post.imageUrl && !post.hasArtworkImage) return 'O Instagram precisa de uma imagem: marque uma obra ou poste uma foto.'
+  if (post.format && post.format !== 'STORIES' && post.image && !feedRatioOk(post.image.width, post.image.height)) return 'No feed, o Instagram só aceita imagens entre 4:5 e 1,91:1. Escolha Stories ou poste uma foto recortada.'
   return null
 }
 

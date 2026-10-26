@@ -92,6 +92,12 @@ export function verifySun(opt: { master: Buffer; uid: string; counter: number; c
   return { ok: true }
 }
 
+/** The tamper flag only counts on an authenticated read: the `tt` bit travels in the URL and is not
+ *  covered by the CMAC here, so a forged link with `tt=1` must not revoke a linked tag. */
+export function tamperOf(reported: boolean, verdict: SunVerdict): boolean {
+  return reported && verdict.ok
+}
+
 /** Development master key (MARKER_VENDOR=mock): derived, never a real tag key. */
 export function mockMasterKey(): Buffer {
   return scryptSync('houseart-marker-master-dev', 'houseart-marker-salt', 16)

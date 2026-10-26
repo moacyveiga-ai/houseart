@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aesCmac, mockMasterKey, mockSunMessage, verifySun } from './sun-core'
+import { aesCmac, mockMasterKey, mockSunMessage, tamperOf, verifySun } from './sun-core'
 import { actionOf, isPublicId, publicIdOf, stageOf } from './domain'
 
 describe('AES-CMAC (RFC 4493 vectors)', () => {
@@ -38,5 +38,14 @@ describe('public id and stages', () => {
     expect(stageOf({ submitted: true, hasOrder: true, orderDelivered: true, linked: false, signed: false, issued: false })).toBe(2)
     expect(actionOf(2)).toEqual({ label: 'Vincular no app', action: 'LINK_IN_APP' })
     expect(actionOf(5).action).toBe('VIEW')
+  })
+})
+
+describe('tamper flag', () => {
+  it('only counts with a valid CMAC (a forged tt=1 link changes nothing)', () => {
+    expect(tamperOf(true, { ok: true })).toBe(true)
+    expect(tamperOf(true, { ok: false, reason: 'BAD_CMAC' })).toBe(false)
+    expect(tamperOf(true, { ok: false, reason: 'REPLAY' })).toBe(false)
+    expect(tamperOf(false, { ok: true })).toBe(false)
   })
 })

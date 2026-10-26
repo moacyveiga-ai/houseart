@@ -14,14 +14,6 @@
 .ha-explore__chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
 .ha-explore__chips .ha-chip { flex: none; height: 32px; display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; text-decoration: none; }
 .ha-explore__feed { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
-/* desktop: the feed takes the whole width as a grid of cards (the phone column stays below 720px) */
-@media (min-width: 720px) {
-  .ha-explore__feed { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--ha-space-5); }
-  .ha-xp-post { padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-lg); background: var(--ha-bg); }
-  .ha-xp-post__wall { padding: var(--ha-space-6); }
-  .ha-explore__empty, .ha-explore__foot { grid-column: 1 / -1; }
-}
-@media (min-width: 1200px) { .ha-explore__feed { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .ha-explore__empty { padding: var(--ha-space-10) var(--ha-space-6); text-align: center; font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
 .ha-explore__foot { padding: var(--ha-space-6) 0 var(--ha-space-8); text-align: center; font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
 
@@ -79,6 +71,14 @@
 .ha-deck__empty-ic { color: var(--ha-sand-600); }
 .ha-deck__empty-t { font-family: var(--ha-font-display); font-size: 24px; line-height: 30px; color: var(--ha-fg); }
 .ha-deck__empty-s { font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
+/* desktop: the feed takes the whole width as a grid of cards (the phone column stays below 720px). After the base rules on purpose: same specificity, the later one wins. */
+@media (min-width: 720px) {
+  .ha-explore__feed { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--ha-space-5); }
+  .ha-xp-post { padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-lg); background: var(--ha-bg); }
+  .ha-xp-post__wall { padding: var(--ha-space-6); }
+  .ha-explore__empty, .ha-explore__foot { grid-column: 1 / -1; }
+}
+@media (min-width: 1200px) { .ha-explore__feed { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 719px) { .ha-xp-post__wall { padding: var(--ha-space-6); border-radius: 0; margin: 0 calc(-1 * var(--ha-space-4)); } .ha-deck__stage { min-height: 520px; } }
 
 /* ♥ and 💬 with the counts (prototype `likes` / `coments`); the seller head links to the gallery page */

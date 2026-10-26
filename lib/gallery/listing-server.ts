@@ -137,3 +137,15 @@ export async function recordView(publicId: string, now = new Date()): Promise<bo
   return true
 }
 
+/** Likes and saves of each artwork (the public reactions of lib/community), for the panel's "Obras mais vistas". */
+export async function reactionCountsOf(artworkIds: number[]): Promise<Map<number, { likes: number; saves: number }>> {
+  const out = new Map<number, { likes: number; saves: number }>()
+  if (!artworkIds.length) return out
+  const rows = await prisma.reaction.groupBy({ by: ['targetId', 'kind'], where: { targetKind: 'ARTWORK', targetId: { in: artworkIds }, kind: { in: ['LIKE', 'SAVE'] } }, _count: { _all: true } })
+  for (const r of rows) {
+    const c = out.get(r.targetId) ?? { likes: 0, saves: 0 }
+    if (r.kind === 'LIKE') c.likes = r._count._all; else c.saves = r._count._all
+    out.set(r.targetId, c)
+  }
+  return out
+}

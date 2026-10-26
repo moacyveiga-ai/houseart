@@ -5,6 +5,7 @@ import { payoutAccountOf } from '@/lib/payment-methods/server'
 import { PIX_KEY_TYPE_LABELS, type PixKeyType } from '@/lib/payment-methods/domain'
 import { initialsOf } from '@/lib/profiles/core'
 import { composerInstagram } from '@/lib/instagram/server'
+import { galleryAccount } from '@/lib/gallery/account-server'
 import { AccountScreen, type AccountSection } from '@/components/gallery/AccountScreen'
 import '@/components/gallery/account.css'
 
@@ -14,16 +15,19 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export default async function GalleryAccountPage() {
   const { user, scope } = await requirePanelPage('/gallery/account')
-  const [people, artists, payout, ig] = await Promise.all([
+  const [people, artists, payout, ig, account] = await Promise.all([
     teamOf(scope, user.id),
     representedArtists(scope).catch(() => []),
     user.memberId ? payoutAccountOf(user.memberId) : null,
     composerInstagram(user.id),
+    galleryAccount(user, scope),
   ])
+  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null
   const members = people.filter((p) => p.kind === 'MEMBER').length
   const invites = people.length - members
   const sections: AccountSection[] = [
     { name: 'Galeria', items: [
+      { icon: 'storefront', name: 'Dados da galeria', sub: account ? [account.cnpjMask ? `CNPJ ${account.cnpjMask}` : null, account.data.city || null].filter(Boolean).join(' · ') || 'Nome, CNPJ, contato e cidade' : 'Nome, CNPJ, contato e cidade', href: '/gallery/account/data' },
       { icon: 'groups', name: 'Equipe', sub: `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}`, href: '/gallery/team' },
       { icon: 'palette', name: 'Artistas representados', sub: `${plural(artists.length, 'artista', 'artistas')} · ${plural(artists.filter((a) => a.contract).length, 'contrato ativo', 'contratos ativos')}`, href: '/gallery/artists' },
       { icon: 'public', name: 'Perfil público', sub: 'Página da galeria no site: sobre, endereço, equipe, fotos e publicações', href: '/gallery/public' },
@@ -49,13 +53,14 @@ export default async function GalleryAccountPage() {
       { icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', href: '/recover-password' },
     ] },
     { name: 'Ajuda', items: [
+      { icon: 'support_agent', name: 'Falar com a HouseArt', sub: supportEmail ? `Atendimento por e-mail · ${supportEmail}` : 'Como chegar ao atendimento', href: supportEmail ? `mailto:${supportEmail}` : '/e/how-it-works#suporte' },
       { icon: 'help', name: 'Central de ajuda', sub: 'Consignação, certificação, frete e repasses', href: '/e/how-it-works' },
     ] },
   ]
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Conta da galeria</h1></div>
-      <AccountScreen initials={initialsOf(user.name)} name={user.name} email={user.email} sections={sections} />
+      <AccountScreen initials={initialsOf(account?.galleryName ?? user.name)} name={account?.galleryName ?? user.name} email={user.email} verification={account?.verified ?? null} sections={sections} supportEmail={supportEmail} />
     </div>
   )
 }

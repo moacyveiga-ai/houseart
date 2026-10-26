@@ -10,19 +10,19 @@ import { Badge } from '@/components/ds/Badge'
 import { homeOf } from '@/lib/profiles/nav'
 import { redirect } from 'next/navigation'
 import { dayPanel } from '@/lib/gallery/panel-server'
-import { listingsOf } from '@/lib/gallery/listing-server'
+import { listingsOf, reactionCountsOf } from '@/lib/gallery/listing-server'
 import { initialsOf } from '@/lib/profiles/core'
 import { DayPanel, type TopViewed } from '@/components/gallery/DayPanel'
 
 export const metadata = { title: 'Início — HouseArt' }
 
 /** "Galeria · painel do dia": the panel of the gallery (and of the advisor, the same desk). */
-async function GalleryDay({ scope, userName, now }: { scope: Parameters<typeof dayPanel>[0]; userName: string; now: Date }) {
-  const [data, listed] = await Promise.all([dayPanel(scope, now), listArtworks(scope, { filter: 'listed' })])
+async function GalleryDay({ scope, userId, userName, now }: { scope: Parameters<typeof dayPanel>[0]; userId: number; userName: string; now: Date }) {
+  const [data, listed] = await Promise.all([dayPanel(scope, now, userId), listArtworks(scope, { filter: 'listed' })])
   const ls = listed.items.filter((a) => a.status === 'LISTED')
-  const stats = await listingsOf(scope, ls.map((a) => a.id), now)
+  const [stats, reactions] = await Promise.all([listingsOf(scope, ls.map((a) => a.id), now), reactionCountsOf(ls.map((a) => a.id))])
   const top: TopViewed[] = []
-  ls.forEach((a) => { const l = stats.get(a.id); if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers }) })
+  ls.forEach((a) => { const l = stats.get(a.id); if (l && l.stats.views7d > 0) top.push({ id: a.id, title: a.title, coverUrl: a.coverUrl, views7d: l.stats.views7d, openOffers: l.stats.openOffers, ...(reactions.get(a.id) ?? { likes: 0, saves: 0 }) }) })
   top.sort((x, y) => y.views7d - x.views7d)
   return <DayPanel data={data} who={{ initials: initialsOf(userName), name: userName, dateLabel: dateLabel(now) }} top={top.slice(0, 3)} />
 }
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   // the house team opens on its review queue (audit 2026-10-25), never on a gallery dashboard
   if (nav !== 'artist' && nav !== 'gallery' && nav !== 'advisor') redirect(homeOf(nav))
   const now = new Date()
-  if (nav === 'gallery' || nav === 'advisor') return <GalleryDay scope={scope} userName={user.name} now={now} />
+  if (nav === 'gallery' || nav === 'advisor') return <GalleryDay scope={scope} userId={user.id} userName={user.name} now={now} />
   const [counts, recent] = await Promise.all([dashboardCounts(scope, now), listArtworks(scope, { take: 6 })])
   const profile = nav === 'artist' ? 'artist' : 'gallery'
   const year = Number(new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: 'America/Bahia' }).format(now))

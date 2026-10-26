@@ -10,11 +10,11 @@ import { Toast } from '@/components/ds/Toast'
 import { acceptsOffersSub, listingStats, pauseToggledMessage, pausedSub, priceCents, priceChanged, priceMask, priceSavedMessage, publicArtworkPath, shareMessage, type ToggleRules } from './listing-manager-core'
 import './listing-manager.css'
 
-export interface ListingState { listPriceCents: string; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number } }
+export interface ListingState { listPriceCents: string; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number; saves: number; likes: number } }
 /** `canManage` false (the gallery's Acervo role): the listing is shown, nothing changes and `blockedReason` says why. */
-interface Props { artworkId: number; title: string; artistName: string; publicId: string | null; initial: ListingState; rules: ToggleRules | null; canManage?: boolean; blockedReason?: string }
+interface Props { artworkId: number; title: string; artistName: string; publicId: string | null; initial: ListingState; rules: ToggleRules | null; canManage?: boolean; blockedReason?: string; /** the viewer holds the deed: "Vendida fora" shows */ canTransfer?: boolean }
 
-export function ListingManager({ artworkId, title, artistName, publicId, initial, rules, canManage = true, blockedReason }: Props) {
+export function ListingManager({ artworkId, title, artistName, publicId, initial, rules, canManage = true, blockedReason, canTransfer = false }: Props) {
   const [state, setState] = useState<ListingState>(initial)
   const [price, setPrice] = useState(priceMask(Number(BigInt(initial.listPriceCents) / 100n)))
   const [busy, setBusy] = useState<'price' | 'offers' | 'pause' | null>(null)
@@ -26,7 +26,7 @@ export function ListingManager({ artworkId, title, artistName, publicId, initial
     setBusy(what)
     try {
       const res = await fetch(`/api/artworks/${artworkId}/listing`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json().catch(() => ({})) as { error?: string; listing?: { listPriceCents: string | number; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number } } }
+      const data = await res.json().catch(() => ({})) as { error?: string; listing?: { listPriceCents: string | number; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number; saves: number; likes: number } } }
       if (!res.ok || !data.listing) { setToast(data.error ?? 'Não foi possível salvar.'); return null }
       const next: ListingState = { listPriceCents: String(data.listing.listPriceCents), acceptsOffers: data.listing.acceptsOffers, paused: data.listing.paused, stats: data.listing.stats }
       setState(next)
@@ -69,9 +69,10 @@ export function ListingManager({ artworkId, title, artistName, publicId, initial
       </div>
       {!canManage && blockedReason ? <p className="ha-callout ha-sm">{blockedReason}</p> : null}
       <div className="ha-lm__btns">
-        <Link href="/sales" className="ha-lm__btn"><Icon name="request_quote" size={16} />Ofertas desta obra</Link>
+        <Link href={`/sales?artwork=${artworkId}`} className="ha-lm__btn"><Icon name="request_quote" size={16} />Ofertas desta obra</Link>
         <button type="button" className="ha-lm__btn" onClick={() => { void share() }} disabled={!publicId}><Icon name="share" size={16} />Enviar a um cliente</button>
-        <Link href={`/transfer?artworkId=${artworkId}`} className="ha-lm__btn"><Icon name="storefront" size={16} />Vendida fora</Link>
+        {/* "Vendida fora": only the HOLDER of the deed transfers it (a gallery colleague is not; the page would open another work) */}
+        {canTransfer ? <Link href={`/transfer?artworkId=${artworkId}`} className="ha-lm__btn"><Icon name="storefront" size={16} />Vendida fora</Link> : null}
       </div>
       <Toast message={toast} onDone={() => setToast('')} />
     </section>

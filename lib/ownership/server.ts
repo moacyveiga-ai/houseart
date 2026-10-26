@@ -35,6 +35,11 @@ export async function heldArtworks(userId: number) {
   })
 }
 
+/** Does the user hold the deed of this artwork now? (The "Vendida fora" of the listing shows only to them.) */
+export async function holdsArtwork(userId: number, artworkId: number): Promise<boolean> {
+  return (await prisma.certificateVersion.count({ where: { holderUserId: userId, status: 'ACTIVE', certificate: { artworkId } } })) > 0
+}
+
 async function heldVersion(userId: number, artworkId: number) {
   const v = await prisma.certificateVersion.findFirst({ where: { holderUserId: userId, status: 'ACTIVE', certificate: { artworkId } }, include: { certificate: { include: { artwork: { include: { artist: true } } } } } })
   if (!v) throw new ArtworkError('NOT_HOLDER', 'Você não é o titular desta obra.', 404)

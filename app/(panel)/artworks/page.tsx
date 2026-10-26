@@ -10,6 +10,7 @@ import { chipCounts, chipKey, filterInventory, rowPrice, rowStatus, type Invento
 import { ArtworkPanel, type ArtworkPanelData } from '@/components/gallery/ArtworkPanel'
 import { SelectableWorks, type SelectableCard } from '@/components/artworks/SelectableWorks'
 import { flagOn } from '@/lib/flags'
+import { holdsArtwork } from '@/lib/ownership/server'
 import { listingOf } from '@/lib/gallery/listing-server'
 import { rulesOf } from '@/lib/gallery/rules-server'
 import { publicCertificate } from '@/lib/certificates/server'
@@ -20,7 +21,7 @@ import type { Scope } from '@/lib/scope/core'
 export const metadata = { title: 'Obras — HouseArt' }
 
 /** The work named by ?open= for the side panel (Acervo › obra): display fields only. */
-async function panelOf(scope: Scope, id: number) {
+async function panelOf(scope: Scope, id: number, userId: number) {
   const a = await getArtwork(scope, id)
   if (!a) return null
   const listing = a.status === 'LISTED' ? await listingOf(scope, a.id) : null
@@ -40,12 +41,13 @@ async function panelOf(scope: Scope, id: number) {
     provenance: (cert?.events ?? []).map((e) => ({ label: e.label, at: e.at })),
   }
   const canManage = sellerPermissions(await galleryRoleOf(scope)).manageListing
+  const canTransfer = !!listing && flagOn('FLAG_OWNERSHIP_TRANSFER') && await holdsArtwork(userId, a.id)
   const rules = listing ? await rulesOf(scope).then((r) => ({ refuseBelowBps: r.refuseBelowBps, responseHours: r.responseHours })).catch(() => null) : null
-  return { data, canManage, rules, listing: listing ? { listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers } } : null }
+  return { data, canManage, canTransfer, rules, listing: listing ? { listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, saves: listing.stats.saves, likes: listing.stats.likes } } : null }
 }
 
 /** "Acervo" of the gallery: the whole inventory loaded once, chips and search applied here (listArtworks has no q). */
-async function GalleryInventory({ scope, chip, q, openId }: { scope: Scope; chip: string; q: string; openId: number | null }) {
+async function GalleryInventory({ scope, userId, chip, q, openId }: { scope: Scope; userId: number; chip: string; q: string; openId: number | null }) {
   const { items } = await listArtworks(scope, { filter: 'all' })
   const listings = await listingsOf(scope, items.filter((a) => a.status === 'LISTED').map((a) => a.id))
   const all: InventoryItem[] = []
@@ -54,11 +56,11 @@ async function GalleryInventory({ scope, chip, q, openId }: { scope: Scope; chip
     all.push({ id: a.id, title: a.title, year: a.year, artistName: a.artistName, status: a.status, listPriceCents: a.listPriceCents, saleMode: a.saleMode, publicId: a.publicId, coverUrl: a.coverUrl, listing: listing ? { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, paused: listing.paused } : null })
   })
   const base = `/artworks?filter=${chip}${q ? `&q=${encodeURIComponent(q)}` : ''}`
-  const panel = openId ? await panelOf(scope, openId) : null
+  const panel = openId ? await panelOf(scope, openId, userId) : null
   return (
     <>
       <InventoryList title="Acervo" all={all} items={filterInventory(all, chip, q)} chip={chip} q={q} counts={chipCounts(all)} openId={panel ? openId : null} />
-      {panel ? <ArtworkPanel key={panel.data.id} a={panel.data} closeHref={base} listing={panel.listing} rules={panel.rules} canManage={panel.canManage} blockedReason={ROLE_REASONS.listing} /> : null}
+      {panel ? <ArtworkPanel key={panel.data.id} a={panel.data} closeHref={base} listing={panel.listing} rules={panel.rules} canManage={panel.canManage} canTransfer={panel.canTransfer} blockedReason={ROLE_REASONS.listing} /> : null}
     </>
   )
 }
@@ -74,10 +76,10 @@ function cardOf(a: ArtworkSummary): SelectableCard {
 }
 
 export default async function ArtworksPage({ searchParams }: { searchParams: Promise<{ filter?: string; q?: string; open?: string }> }) {
-  const { scope, nav } = await requirePanelPage('/artworks')
+  const { scope, nav, user } = await requirePanelPage('/artworks')
   const sp = await searchParams
   const openId = Number(sp.open)
-  if (nav === 'gallery' || nav === 'advisor') return <GalleryInventory scope={scope} chip={chipKey(sp.filter)} q={(sp.q ?? '').slice(0, 80)} openId={Number.isInteger(openId) && openId > 0 ? openId : null} />
+  if (nav === 'gallery' || nav === 'advisor') return <GalleryInventory scope={scope} userId={user.id} chip={chipKey(sp.filter)} q={(sp.q ?? '').slice(0, 80)} openId={Number.isInteger(openId) && openId > 0 ? openId : null} />
   const filter = sp.filter ?? 'all'
   const { items, counts } = await listArtworks(scope, { filter })
   return (

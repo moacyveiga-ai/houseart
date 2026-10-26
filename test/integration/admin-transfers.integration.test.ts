@@ -52,7 +52,7 @@ describe('admin transfers', () => {
     expect(JSON.stringify(rows)).not.toContain('52998224725')
     rows = await adminTransfers({ profile: 'admin' }, new Date(Date.now() + 8 * 86_400_000))
     expect(rows[0]).toMatchObject({ stuck: true, daysInStep: 8 })
-    expect((await adminTransfers({ profile: 'operator' }))[0].can).toEqual({ resend: false, cancel: false })
+    expect((await adminTransfers({ profile: 'operator' }))[0].can).toEqual({ resend: false, cancel: false, refund: false })
     // resend: operator refused; admin gets a new token and the old link dies
     const oldToken = lastToken()
     const operator = await prisma.user.create({ data: { email: 'op@houseart.test', name: 'Op', profile: 'operator', active: true } })

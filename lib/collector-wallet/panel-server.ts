@@ -19,6 +19,9 @@ export type { CollectorPanelData }
 const MEDIA_LABELS: Record<string, string> = { FRONT_COLOR_CARD: 'Frente', DETAIL: 'Detalhe', BACK: 'Verso' }
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
 const day = (d: Date | string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Bahia' })
+/** Frente, Detalhe, Verso — the viewer's order in the prototype, whatever the upload order. */
+const byView = <T extends { kind: string }>(m: T[]) => [...m].sort((x, y) => VIEW_ORDER.indexOf(x.kind) - VIEW_ORDER.indexOf(y.kind))
+const VIEW_ORDER = ['FRONT_COLOR_CARD', 'DETAIL', 'BACK']
 const fichaOf = (year: number | null, technique: string | null, dims: string) => [year ? String(year) : null, technique, dims !== '—' ? dims : null].filter(Boolean).join(' · ')
 
 /** The viewer HOLDS the work as a collector: an active deed in their name and the work in their own
@@ -50,7 +53,7 @@ async function ownerPanel(userId: number, artworkId: number): Promise<CollectorP
   return {
     mode: 'owner', id: a.id, publicId: a.publicId, title: a.title, artist: a.artist.name, artistSlug: a.artist.slug,
     ficha: fichaOf(a.year, a.technique ?? ARTWORK_CATEGORY_LABELS[a.category as keyof typeof ARTWORK_CATEGORY_LABELS] ?? null, formatDimensions(a)),
-    images: a.media.filter((m) => m.publicUrl).map((m) => ({ url: m.publicUrl!, label: MEDIA_LABELS[m.kind] ?? m.kind })),
+    images: byView(a.media.filter((m) => m.publicUrl)).map((m) => ({ url: m.publicUrl!, label: MEDIA_LABELS[m.kind] ?? m.kind })),
     priceLabel: listed ? 'Seu preço pedido' : 'Valor registrado', price: listed && a.listPriceCents ? formatBRL(a.listPriceCents) : w.priceLabel,
     priceSub: `Titular desde ${w.acquiredAt}`, signals,
     certificate: { code: a.publicId, ok: a.seal === 'GREEN', text: a.seal === 'GREEN' ? `Etiqueta NFC no verso, assinada por ${a.artist.name} digitalmente. A escritura está em seu nome.` : 'Certificado em revisão. A escritura segue em seu nome.' },
@@ -78,7 +81,7 @@ async function marketPanel(viewer: { id: number; tenantId: number | null }, publ
   return {
     mode: 'market', id: p.id, publicId: p.publicId, title: p.title, artist: p.artist, artistSlug: p.artistSlug,
     ficha: fichaOf(p.year, p.technique, p.dimensions),
-    images: p.media.map((m) => ({ url: m.url, label: MEDIA_LABELS[m.kind] ?? m.kind })),
+    images: byView(p.media).map((m) => ({ url: m.url, label: MEDIA_LABELS[m.kind] ?? m.kind })),
     priceLabel: blocked ? 'Fora de venda' : mine && p.status === 'LISTED' ? 'Seu preço pedido' : !listed ? (p.status === 'IN_DEAL' ? 'Reservada' : 'Fora de venda') : p.priceCents === null ? 'Preço sob consulta' : p.fixedPrice ? 'Preço fixo' : 'Preço pedido · aceita ofertas',
     price: (listed || (mine && p.status === 'LISTED')) && p.priceCents !== null ? formatBRL(p.priceCents) : '—',
     priceSub: listed && p.priceCents !== null ? `ou 10× de ${formatBRL(p.priceCents / 10n)} sem juros` : '',

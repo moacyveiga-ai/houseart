@@ -36,7 +36,7 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
       <IndexTicker items={ticker} />
       <header className="ha-topbar">
         <ShellDrawer items={drawerItems} accountHref={accountHref} helpHref={HELP_HREF} />
-        <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="full_vert" height={48} /></Link>
+        <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="simples_horiz" tone="auto-mono" height={24} /></Link>
         <form className="ha-topbar__search" role="search" action="/search">
           <Icon name="search" size={20} />
           <input name="q" className="ha-topbar__input" placeholder="Buscar obras, artistas, galerias ou IDs" aria-label="Buscar" />

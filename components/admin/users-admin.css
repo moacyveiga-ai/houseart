@@ -1,0 +1,28 @@
+/* Admin › Usuários e contas (components/admin/UsersAdmin.tsx). Prefix ha-ausers. */
+.ha-ausers { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-ausers__filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-ausers__filters .ha-chip { text-decoration: none; }
+.ha-ausers__list { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-ausers__row { border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-ausers__head { display: grid; grid-template-columns: minmax(180px, 1.2fr) minmax(0, 1.4fr) minmax(0, 1fr) 150px 24px; gap: var(--ha-space-3); align-items: center; width: 100%; padding: var(--ha-space-3) var(--ha-space-4); border: 0; background: none; color: var(--ha-fg); font: inherit; text-align: left; cursor: pointer; }
+.ha-ausers__head:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-ausers__who { display: flex; flex-direction: column; min-width: 0; font-size: var(--ha-text-body-sm); }
+.ha-ausers__who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-ausers__sub { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-ausers__kinds, .ha-ausers__state { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: var(--ha-text-caption); }
+.ha-ausers__member { color: var(--ha-fg-muted); }
+.ha-ausers__flag { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ha-alert-500); }
+.ha-ausers__flag--soft { color: var(--ha-fg-body); }
+.ha-ausers__when { display: flex; flex-direction: column; font-size: var(--ha-text-caption); text-align: right; align-items: flex-end; }
+.ha-ausers__body { display: flex; flex-direction: column; gap: var(--ha-space-3); padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-ausers__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ha-space-2) var(--ha-space-4); margin: 0; font-size: var(--ha-text-caption); }
+.ha-ausers__facts dt { font-weight: 600; color: var(--ha-fg-muted); }
+.ha-ausers__facts dd { margin: 0; color: var(--ha-fg); }
+.ha-ausers__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ha-space-2); }
+.ha-ausers__role { display: inline-flex; align-items: center; gap: var(--ha-space-2); }
+.ha-ausers__role .ha-select { width: auto; padding: 6px var(--ha-space-3); font-size: var(--ha-text-body-sm); }
+.ha-ausers__err { font-size: var(--ha-text-caption); color: var(--ha-alert-500); margin: 0; }
+@media (max-width: 900px) {
+  .ha-ausers__head { grid-template-columns: minmax(0, 1fr) 24px; }
+  .ha-ausers__when { align-items: flex-start; text-align: left; }
+}

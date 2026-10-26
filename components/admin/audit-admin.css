@@ -1,0 +1,21 @@
+/* Admin › Auditoria (components/admin/AuditAdmin.tsx). Prefix ha-audit. */
+.ha-audit { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-audit__filters { display: flex; flex-wrap: wrap; gap: var(--ha-space-3); align-items: flex-end; padding: var(--ha-space-3) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-audit__field { display: flex; flex-direction: column; gap: 4px; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-fg-muted); }
+.ha-audit__input { width: 160px; padding: var(--ha-space-1) var(--ha-space-3); font-size: var(--ha-text-body-sm); }
+.ha-audit__buttons { display: flex; gap: var(--ha-space-2); margin-left: auto; }
+.ha-audit__list { display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-audit__row { border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-audit__head { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto 24px; gap: var(--ha-space-3); align-items: center; width: 100%; padding: var(--ha-space-3) var(--ha-space-4); border: 0; background: none; color: var(--ha-fg); font: inherit; text-align: left; cursor: pointer; }
+.ha-audit__head:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: -2px; }
+.ha-audit__when { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); font-variant-numeric: tabular-nums; }
+.ha-audit__what { font-size: var(--ha-text-body-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-audit__entity { color: var(--ha-fg-muted); }
+.ha-audit__meta { display: flex; gap: 4px; }
+.ha-audit__body { padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); border-top: var(--ha-border-w) solid var(--ha-border); }
+.ha-audit__facts { display: flex; flex-direction: column; gap: var(--ha-space-2); margin: 0; font-size: var(--ha-text-caption); }
+.ha-audit__facts dt { font-weight: 600; color: var(--ha-fg-muted); }
+.ha-audit__facts dd { margin: 0; color: var(--ha-fg); overflow-wrap: anywhere; }
+.ha-audit__json { display: block; padding: var(--ha-space-2); background: var(--ha-paper-200); border-radius: var(--ha-radius-sm); font-size: 12px; white-space: pre-wrap; }
+.ha-audit__pager { display: flex; justify-content: space-between; align-items: center; gap: var(--ha-space-3); }
+@media (max-width: 900px) { .ha-audit__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-audit__input { width: 100%; } .ha-audit__field { flex: 1 1 140px; } .ha-audit__buttons { margin-left: 0; } }

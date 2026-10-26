@@ -56,7 +56,6 @@ export function publicArtworkPath(publicId: string): string {
   return `/e/artwork/${encodeURIComponent(publicId)}`
 }
 
-/** The four stats of the block; saves and likes do not exist yet ("—"). */
 export function listingStats(s: { views7d: number; openOffers: number; saves: number; likes: number }): { value: string; label: string }[] {
   return [
     { value: s.views7d.toLocaleString('pt-BR'), label: 'views · 7 dias' },

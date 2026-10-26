@@ -1,5 +1,6 @@
 import { requirePanelPage } from '../_session'
 import { negotiatorOf, sellerOffers } from '@/lib/offers/server'
+import { getArtwork } from '@/lib/artworks/server'
 import { negotiatorLabel } from '@/lib/offers/mandate-core'
 import { Tabs } from '@/components/ds/Tabs'
 import { OffersTable } from '@/components/offers/OffersTable'
@@ -49,8 +50,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const allOffers = await sellerOffers(scope)
   // "Ofertas desta obra" (Gestão do anúncio): ?artwork= narrows the list to ONE work; the chip leads back to all
   const artworkFilter = Number(sp.artwork)
-  const onlyWork = Number.isInteger(artworkFilter) && artworkFilter > 0 ? allOffers.find((o) => o.artworkId === artworkFilter) ?? null : null
-  const offers = onlyWork ? allOffers.filter((o) => o.artworkId === artworkFilter) : allOffers
+  // the work named must be in the seller's scope (getArtwork); with no offer the list is empty and the chip says so
+  const filteredWork = Number.isInteger(artworkFilter) && artworkFilter > 0 && tab === 'offers' ? await getArtwork(scope, artworkFilter) : null
+  const onlyWork = filteredWork ? { id: filteredWork.id, title: filteredWork.title } : null
+  const offers = onlyWork ? allOffers.filter((o) => o.artworkId === onlyWork.id) : allOffers
   const deals = tab === 'deals' && flagOn('FLAG_DEALS') ? await sellerDeals(scope) : []
   // the sale named by ?sale= among the seller's own deals (scope-limited list: another seller's id opens nothing)
   const open1 = Number.isInteger(saleId) && saleId > 0 ? deals.find((d) => d.id === saleId) ?? null : null
@@ -70,8 +73,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="sales" /> : <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : 'Vendas e ofertas'}</h1></div>}
       <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
-      {tab === 'offers' && onlyWork ? (
-        <div className="ha-row" style={{ gap: 8, alignItems: 'center' }}><span className="ha-chip ha-chip--on">Ofertas de <i>{onlyWork.artworkTitle}</i></span><Link href={tab === 'offers' ? '/sales' : '/sales?tab=offers'} className="ha-link ha-sm">Ver todas as ofertas</Link></div>
+      {onlyWork ? (
+        <div className="ha-row" style={{ gap: 8, alignItems: 'center' }}><span className="ha-chip ha-chip--on">{offers.length ? 'Ofertas de' : 'Nenhuma oferta para'} <i>{onlyWork.title}</i></span><Link href="/sales" className="ha-link ha-sm">Ver todas as ofertas</Link></div>
       ) : null}
       {tab === 'offers' && cards ? (
         <OfferCards canAnswer={can.answerOffers} blockedReason={ROLE_REASONS.offers} negotiatorLine={negotiatorLine} offers={offers.map((o) => ({

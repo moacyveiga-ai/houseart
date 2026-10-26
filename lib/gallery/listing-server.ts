@@ -65,7 +65,7 @@ async function loadListings(scope: Scope, artworkIds: readonly number[], now: Da
     viewsSinceMany(visible, 30, now),
     prisma.offer.groupBy({ by: ['artworkId'], where: { artworkId: { in: visible }, status: { in: [...OPEN_FOR_SELLER] } }, _count: { _all: true } }),
     // "salvos · curtidas" of the public page (community reactions on the artwork; the collector's favourite is the SAVE)
-    visible.length ? prisma.reaction.groupBy({ by: ['targetId', 'kind'], where: { targetKind: 'ARTWORK', targetId: { in: visible }, kind: { in: ['SAVE', 'LIKE'] } }, _count: { _all: true } }) : Promise.resolve([]),
+    prisma.reaction.groupBy({ by: ['targetId', 'kind'], where: { targetKind: 'ARTWORK', targetId: { in: visible }, kind: { in: ['SAVE', 'LIKE'] } }, _count: { _all: true } }),
   ])
   const reactionsOf = new Map(reactions.map((r) => [`${r.targetId}:${r.kind}`, r._count._all]))
   const mandateOf = new Map<number, (typeof mandates)[number]>()

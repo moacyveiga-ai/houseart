@@ -38,7 +38,7 @@ export function OpsAdmin({ view, canRun }: { view: View; canRun: boolean }) {
     <div className="ha-aops">
       <section className="ha-aops__section">
         <h2 className="ha-h2">Crons</h2>
-        <p className="ha-muted ha-sm">Trilha dos últimos 30 dias. Atrasado = sem rodada boa em duas vezes o intervalo; a Vercel só dispara os crons em produção.</p>
+        <p className="ha-muted ha-sm">As 12 rodadas mais recentes de cada rotina (a trilha guarda 90 dias). Atrasado = sem rodada boa em duas vezes o intervalo; uma rodada parada há mais de 15 min conta como falha (a função foi abatida pelo tempo máximo); a Vercel só dispara os crons em produção.</p>
         <div className="ha-aops__list">
           {view.crons.map((c) => {
             const isOpen = open === c.name
@@ -85,7 +85,7 @@ export function OpsAdmin({ view, canRun }: { view: View; canRun: boolean }) {
 
       <section className="ha-aops__section">
         <h2 className="ha-h2">Alertas do financeiro</h2>
-        {view.financeAlerts.length === 0 ? <p className="ha-muted ha-sm">Nenhum estorno pendente nem repasse sem registro nos últimos 30 dias.</p> : (
+        {view.financeAlerts.length === 0 ? <p className="ha-muted ha-sm">Nenhum estorno pendente (laudo cancelado) nem repasse sem registro nos últimos 30 dias.</p> : (
           <ul className="ha-aops__runs">
             {view.financeAlerts.map((a, i) => <li key={i}><Badge tone="alert">atenção</Badge><span>{a.label}</span><span className="ha-aops__sub">{a.entity} #{a.entityId} · {dataBR(a.at)}</span><Link href={a.href} className="ha-link">ver na auditoria</Link></li>)}
           </ul>

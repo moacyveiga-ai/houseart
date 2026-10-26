@@ -21,6 +21,12 @@ describe('admin ops core', () => {
     expect(cronHealth(hourly, [], null, now)).toBe('NEVER')
     expect(cronHealth(hourly, [run('OK', 30)], null, now)).toBe('OK')
     expect(cronHealth(hourly, [run('SKIPPED', 30), run('OK', 90)], null, now)).toBe('OK')
+    // SKIPPED never hides a failure (a manual run while the platform's one was in course, and that one failed)
+    expect(cronHealth(hourly, [run('SKIPPED', 5), run('FAILED', 10), run('OK', 70)], null, now)).toBe('FAILING')
+    expect(cronHealth(hourly, [run('SKIPPED', 5), run('SKIPPED', 65), run('SKIPPED', 125)], null, now)).toBe('NEVER')
+    // a RUNNING row older than the stale limit was killed by the platform: a failure, not "running"
+    expect(cronHealth(hourly, [run('RUNNING', 20), run('OK', 61)], null, now)).toBe('FAILING')
+    expect(cronHealth({ schedule: '20 3 * * *' }, [run('RUNNING', 23 * 60)], null, now)).toBe('FAILING')
     expect(cronHealth(hourly, [run('OK', 200)], null, now)).toBe('LATE')
     expect(cronHealth(hourly, [run('FAILED', 10), run('OK', 70)], null, now)).toBe('FAILING')
     expect(cronHealth(hourly, [run('FAILED', 10), run('FAILED', 70), run('OK', 300)], null, now)).toBe('FAILING')

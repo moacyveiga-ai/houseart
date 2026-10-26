@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withJob } from '@/lib/jobs/auth'
+import { pruneJobRuns } from '@/lib/job-runs/server'
 import { adminOps } from '@/lib/admin-ops/server'
 import { handleStripeWebhook } from '@/lib/stripe/webhook-server'
 import { signStripePayload } from '@/lib/stripe/mode-core'
@@ -46,6 +47,20 @@ describe('admin ops', () => {
     await signIn(s.staff.userId)
     expect((await withJob(req('POST'), 'offers-expire', async () => Response.json({ ok: true }))).status).toBe(200)
     expect(await prisma.jobRun.count({ where: { name: 'offers-expire' } })).toBe(3)
+    // a run the platform killed stays RUNNING: the next run of the same job closes it as a timeout, and the health reads it as a failure
+    await prisma.jobRun.create({ data: { kind: 'CRON', name: 'market-indicators', status: 'RUNNING', startedAt: new Date(Date.now() - 20 * 60_000) } })
+    expect((await adminOps()).crons.find((c) => c.name === 'market-indicators')).toMatchObject({ health: 'FAILING', failures7d: 1 })
+    await withJob(req('GET', bearer), 'market-indicators', async () => Response.json({ ok: true }))
+    const closed = await prisma.jobRun.findFirstOrThrow({ where: { name: 'market-indicators', error: 'timeout' } })
+    expect(closed.status).toBe('FAILED'); expect(closed.finishedAt).not.toBeNull()
+    // a SKIPPED run after a failed one never hides it
+    await prisma.jobRun.create({ data: { kind: 'CRON', name: 'offers-expire', status: 'SKIPPED', startedAt: new Date(), httpStatus: 200 } })
+    await prisma.jobRun.updateMany({ where: { name: 'offers-expire', status: 'OK' }, data: { startedAt: new Date(Date.now() - 2 * 60_000) } })
+    await prisma.jobRun.updateMany({ where: { name: 'offers-expire', status: 'FAILED' }, data: { startedAt: new Date(Date.now() - 60_000) } })
+    expect((await adminOps()).crons.find((c) => c.name === 'offers-expire')?.health).toBe('FAILING')
+    // retention: the daily anchor prunes the trail
+    await prisma.jobRun.create({ data: { kind: 'CRON', name: 'offers-expire', status: 'OK', startedAt: new Date(Date.now() - 100 * 86_400_000), httpStatus: 200 } })
+    expect(await pruneJobRuns()).toBe(1)
   })
 
   it('reads the health of each cron, the webhook failures and the finance alerts; configuration is presence only', async () => {
@@ -66,16 +81,17 @@ describe('admin ops', () => {
     expect(fail).toMatchObject({ name: 'stripe:payment_intent.succeeded', status: 'FAILED', error: 'P1001' })
     expect(JSON.stringify(fail)).not.toContain('never-stored')
     // finance alerts come from the audit trail
-    await audit.event({ entity: 'ownership_transfer', entityId: 7, action: 'cancel', userId: s.staff.userId, after: { status: 'CANCELLED', refundPending: true } })
-    await audit.event({ entity: 'ownership_transfer', entityId: 8, action: 'cancel', userId: s.staff.userId, after: { status: 'CANCELLED', refundPending: false } })
+    // the shape lib/appraisal/server.ts cancelRequest writes when the Stripe refund is refused
+    await audit.event({ entity: 'appraisal_request', entityId: 7, action: 'cancel', userId: s.staff.userId, after: { status: 'CANCELLED', orderStatus: 'PAID', refunded: false, refundPending: true, refundError: 'StripeError' } })
+    await audit.event({ entity: 'appraisal_request', entityId: 8, action: 'cancel', userId: s.staff.userId, after: { status: 'CANCELLED', orderStatus: 'CANCELLED', refunded: true, refundPending: false, refundError: null } })
     await audit.event({ entity: 'deal_split', entityId: 3, action: 'transfer_unrecorded', after: { party: 'ARTIST' } })
     const v = await adminOps(now)
     const health = Object.fromEntries(v.crons.map((c) => [c.name, c.health]))
     expect(health).toEqual({ 'certificate-anchor': 'NEVER', 'offers-expire': 'OK', 'connect-payouts': 'FAILING', 'market-indicators': 'LATE', instagram: 'NEVER' })
     expect(v.crons.find((c) => c.name === 'connect-payouts')).toMatchObject({ failures7d: 1, runs: expect.arrayContaining([expect.objectContaining({ status: 'FAILED' })]) })
     expect(v.webhookFailures).toHaveLength(1)
-    expect(v.financeAlerts.map((a) => [a.entity, a.entityId, a.action]).sort()).toEqual([['deal_split', '3', 'transfer_unrecorded'], ['ownership_transfer', '7', 'cancel']])
-    expect(v.financeAlerts.find((a) => a.entityId === '7')?.href).toBe('/admin/audit?entity=ownership_transfer&id=7')
+    expect(v.financeAlerts.map((a) => [a.entity, a.entityId, a.action]).sort()).toEqual([['appraisal_request', '7', 'cancel'], ['deal_split', '3', 'transfer_unrecorded']])
+    expect(v.financeAlerts.find((a) => a.entityId === '7')?.href).toBe('/admin/audit?entity=appraisal_request&id=7')
     expect(v.kpis).toMatchObject({ cronsOk: 1, cronsBad: 2, cronsNever: 2, webhookFailures7d: 1, financeAlerts: 2 })
     const smtp = v.config.find((c) => c.key === 'SMTP_URL')!
     expect(smtp.ok).toBe(false)

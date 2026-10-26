@@ -27,12 +27,23 @@ export const CRON_HEALTH_LABELS: Record<CronHealth, string> = { OK: 'Em dia', FA
 
 export interface RunRow { status: string; startedAt: string; finishedAt: string | null; ms: number | null; httpStatus: number | null; error: string | null; summary: string | null }
 
+/** A RUNNING row older than this never finished: the function was killed (Vercel's maxDuration) before `finally` ran. */
+export const STALE_RUNNING_MS = 15 * 60_000
+
+/** Rows that say something about the job: SKIPPED only proves the lease worked and never counts as a run (it would hide a FAILED one). */
+export function realRuns(runs: RunRow[], now: Date): RunRow[] {
+  return runs
+    .filter((r) => r.status !== 'SKIPPED')
+    .map((r) => (r.status === 'RUNNING' && now.getTime() - new Date(r.startedAt).getTime() > STALE_RUNNING_MS ? { ...r, status: 'FAILED', error: r.error ?? 'timeout' } : r))
+}
+
 /** Late = no successful run within twice the interval (plus 15 min of slack for the platform's jitter). */
 export function cronHealth(spec: Pick<CronSpec, 'schedule'>, runs: RunRow[], lease: { lockedUntil: string } | null, now: Date): CronHealth {
-  const last = runs[0] ?? null
+  const real = realRuns(runs, now)
+  const last = real[0] ?? null
   if (last?.status === 'RUNNING' || (lease && new Date(lease.lockedUntil) > now)) return 'RUNNING'
   if (!last) return 'NEVER'
-  const lastOk = runs.find((r) => r.status === 'OK' || r.status === 'SKIPPED')
+  const lastOk = real.find((r) => r.status === 'OK')
   const limit = 2 * intervalOfSchedule(spec.schedule) + 15 * 60_000
   if (!lastOk || now.getTime() - new Date(lastOk.startedAt).getTime() > limit) return last.status === 'FAILED' ? 'FAILING' : 'LATE'
   if (last.status === 'FAILED') return 'FAILING'

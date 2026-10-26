@@ -7,9 +7,11 @@ import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { stripeMode } from '@/lib/stripe/door'
 import { declaredPublicUrl } from '@/lib/public-url'
-import { CRON_HEALTH_LABELS, cronHealth, CRONS, intervalOfSchedule, kpisOf, type ConfigItem, type CronView, type RunRow, type WebhookFailure, type WebhookView } from './core'
+import { CRON_HEALTH_LABELS, cronHealth, CRONS, intervalOfSchedule, kpisOf, realRuns, type ConfigItem, type CronView, type RunRow, type WebhookFailure, type WebhookView } from './core'
 
 const RUNS_PER_CRON = 12
+/** Rows read per cron for the health: enough for two days of an hourly job (what LATE/FAILING look at), never the whole month. */
+const RUNS_FOR_HEALTH = 60
 const DAY = 86_400_000
 
 export interface FinanceAlert { entity: string; entityId: string; action: string; label: string; at: string; href: string }
@@ -23,20 +25,26 @@ const ALERT_LABELS: Record<string, string> = {
 export async function adminOps(now = new Date()) {
   return totalScope('admin:ops', async () => {
     const since7d = new Date(now.getTime() - 7 * DAY), since24h = new Date(now.getTime() - DAY), since30d = new Date(now.getTime() - 30 * DAY)
-    const [runs, leases, events7d, failures, alertRows] = await Promise.all([
-      prisma.jobRun.findMany({ where: { kind: 'CRON', startedAt: { gte: since30d } }, orderBy: { startedAt: 'desc' }, take: 1000 }),
+    const [runsByCron, failures7dByCron, leases, events7d, failures, alertRows] = await Promise.all([
+      // one query per cron: a single `take` over the whole table starves the slow crons once the hourly ones fill it
+      Promise.all(CRONS.map((c) => prisma.jobRun.findMany({ where: { kind: 'CRON', name: c.name }, orderBy: { startedAt: 'desc' }, take: RUNS_FOR_HEALTH }))),
+      prisma.jobRun.groupBy({ by: ['name'], where: { kind: 'CRON', status: 'FAILED', startedAt: { gte: since7d } }, _count: { _all: true } }),
       prisma.jobLease.findMany(),
       prisma.stripeEvent.findMany({ where: { processedAt: { gte: since7d } }, select: { type: true, processedAt: true } }),
       prisma.jobRun.findMany({ where: { kind: 'WEBHOOK', startedAt: { gte: since7d } }, orderBy: { startedAt: 'desc' }, take: 50, select: { name: true, startedAt: true, error: true } }),
-      prisma.auditLog.findMany({ where: { createdAt: { gte: since30d }, OR: [{ action: { in: ['escrow_stray_refund_failed', 'transfer_unrecorded'] } }, { action: 'cancel', entity: { in: ['appraisal_request', 'ownership_transfer'] }, after: { contains: '"refundPending":true' } }] }, orderBy: { createdAt: 'desc' }, take: 50, select: { entity: true, entityId: true, action: true, createdAt: true } }),
+      prisma.auditLog.findMany({ where: { createdAt: { gte: since30d }, OR: [{ action: { in: ['escrow_stray_refund_failed', 'transfer_unrecorded'] } }, { action: 'cancel', entity: { in: ['appraisal_request'] }, after: { contains: '"refundPending":true' } }] }, orderBy: { createdAt: 'desc' }, take: 50, select: { entity: true, entityId: true, action: true, createdAt: true } }),
     ])
+    const runs = runsByCron.flat()
+    const failedCount = new Map(failures7dByCron.map((g) => [g.name, g._count._all]))
     const toRow = (r: (typeof runs)[number]): RunRow => ({ status: r.status, startedAt: r.startedAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null, ms: r.ms, httpStatus: r.httpStatus, error: r.error, summary: r.summary })
     const leaseOf = new Map(leases.map((l) => [l.name, { lockedUntil: l.lockedUntil.toISOString(), runId: l.runId }]))
     const crons: CronView[] = CRONS.map((spec) => {
-      const mine = runs.filter((r) => r.name === spec.name).map(toRow)
+      const mine = realRuns(runs.filter((r) => r.name === spec.name).map(toRow), now)
       const lease = leaseOf.get(spec.name) ?? null
       const health = cronHealth(spec, mine, lease, now)
-      return { ...spec, health, healthLabel: CRON_HEALTH_LABELS[health], interval: intervalOfSchedule(spec.schedule), lastRun: mine[0] ?? null, lastOk: mine.find((r) => r.status === 'OK') ?? null, failures7d: mine.filter((r) => r.status === 'FAILED' && new Date(r.startedAt) >= since7d).length, lease, runs: mine.slice(0, RUNS_PER_CRON) }
+      // a run killed by the platform (RUNNING past STALE_RUNNING_MS) reads as FAILED here, like in the health; the trail counts it too
+      const stale = mine.filter((r) => r.status === 'FAILED' && r.error === 'timeout' && r.finishedAt === null && new Date(r.startedAt) >= since7d).length
+      return { ...spec, health, healthLabel: CRON_HEALTH_LABELS[health], interval: intervalOfSchedule(spec.schedule), lastRun: mine[0] ?? null, lastOk: mine.find((r) => r.status === 'OK') ?? null, failures7d: (failedCount.get(spec.name) ?? 0) + stale, lease, runs: mine.slice(0, RUNS_PER_CRON) }
     })
     const byType = new Map<string, WebhookView>()
     for (const e of events7d) {

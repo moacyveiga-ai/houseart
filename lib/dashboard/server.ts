@@ -1,7 +1,7 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { memberFilter, type Scope } from '@/lib/scope/core'
-import { startOfYearInTz } from '@/lib/timezone'
+import { diaNoFuso, startOfYearInTz } from '@/lib/timezone'
 import type { DashboardCounts } from './core'
 
 export async function dashboardCounts(scope: Scope, now = new Date()): Promise<DashboardCounts> {
@@ -21,4 +21,13 @@ export async function dashboardCounts(scope: Scope, now = new Date()): Promise<D
     soldThisYear: sold._count._all, soldThisYearCents: sold._sum.listPriceCents ?? 0n,
     awaitingSignature, pendingMedia, markersToLink: 0,
   }
+}
+
+/** Deals completed this year in the scope (the seller's side), as the chart's rows: the day of completion in the house timezone and the price. */
+export async function salesThisYear(scope: Scope, now = new Date()): Promise<{ day: string; amountCents: bigint }[]> {
+  const rows = await prisma.deal.findMany({
+    where: { ...memberFilter(scope), phase: 'COMPLETED', completedAt: { gte: startOfYearInTz(now) } },
+    select: { completedAt: true, amountCents: true }, orderBy: { completedAt: 'asc' }, take: 500,
+  })
+  return rows.flatMap((r) => { const day = diaNoFuso(r.completedAt); return day ? [{ day, amountCents: r.amountCents }] : [] })
 }

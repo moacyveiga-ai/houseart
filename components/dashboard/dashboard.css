@@ -1,0 +1,20 @@
+/* Início do artista (handoff "Web Artista"): "Vendas em {ano}" e a grade de obras recentes. Prefix ha-dash-. */
+.ha-dash__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ha-space-3); }
+.ha-dash__title { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); color: var(--ha-fg); }
+.ha-dash__caption { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-dash__section { display: flex; flex-direction: column; gap: var(--ha-space-3); min-width: 0; }
+.ha-dash__chart { border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); padding: var(--ha-space-5); display: flex; align-items: flex-end; gap: var(--ha-space-2); height: 248px; }
+.ha-dash__bar { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-2); height: 100%; justify-content: flex-end; }
+.ha-dash__bar-v { font-size: 10px; color: var(--ha-ink-500); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ha-dash__bar-fill { width: 100%; max-width: 28px; background: var(--ha-ink-900); }
+.ha-dash__bar--now .ha-dash__bar-fill { background: var(--ha-sand-500); }
+.ha-dash__bar-m { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-dash__empty { margin: auto; font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); text-align: center; }
+.ha-dash__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--ha-space-6); }
+.ha-dash__work { display: flex; flex-direction: column; gap: var(--ha-space-2); text-decoration: none; color: inherit; min-width: 0; }
+.ha-dash__work-name { font-family: var(--ha-font-display); font-style: italic; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-dash__work:hover .ha-dash__work-name { text-decoration: underline; }
+.ha-dash__work .ha-badge { align-self: flex-start; }
+.ha-dash__work .ha-wall--sq { padding: var(--ha-space-6); }
+.ha-dash__work .ha-wall .ha-icon { color: var(--ha-ink-300); }
+@media (max-width: 720px) { .ha-dash__chart { height: 200px; } .ha-dash__bar-v { display: none; } .ha-dash__bar--now .ha-dash__bar-v { display: block; } }

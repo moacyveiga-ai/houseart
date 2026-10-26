@@ -54,3 +54,40 @@ export function dateLabel(now: Date, tz = 'America/Bahia'): string {
   const s = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz }).format(now)
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+// ---- "Vendas em {ano}" (handoff "Web Artista" › Início): one bar per month from January to the
+// current month, the current one in sand; the caption "R$ 268 mil em 11 obras".
+export const MONTH_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'] as const
+
+/** "R$ 980", "R$ 12 mil", "R$ 268 mil", "R$ 1,2 mi" — the short reais of the chart. */
+export function shortBRL(cents: bigint): string {
+  const reais = Number(cents / 100n)
+  if (reais >= 1_000_000) return `R$ ${(reais / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
+  if (reais >= 1_000) return `R$ ${Math.round(reais / 1_000).toLocaleString('pt-BR')} mil`
+  return `R$ ${reais.toLocaleString('pt-BR')}`
+}
+
+export interface SalesBar { month: string; count: number; cents: bigint; label: string; pct: number; current: boolean }
+export interface SalesChart { bars: SalesBar[]; total: string; empty: boolean }
+
+/**
+ * Deals completed this year, bucketed by the month of `day` (YYYY-MM-DD in the house timezone).
+ * `currentMonth` is 1–12; the chart runs from January to it (the prototype draws jan–out in October).
+ */
+export function salesChart(sales: { day: string; amountCents: bigint }[], year: number, currentMonth: number): SalesChart {
+  const months = Math.min(12, Math.max(1, currentMonth))
+  const bars: SalesBar[] = Array.from({ length: months }, (_, i) => ({ month: MONTH_SHORT[i], count: 0, cents: 0n, label: '', pct: 0, current: i === months - 1 }))
+  let totalCents = 0n, totalCount = 0
+  for (const s of sales) {
+    const [y, m] = s.day.split('-').map(Number)
+    if (y !== year || !m || m > months) continue
+    const b = bars[m - 1]
+    b.count += 1; b.cents += s.amountCents; totalCents += s.amountCents; totalCount += 1
+  }
+  const max = bars.reduce((acc, b) => (b.cents > acc ? b.cents : acc), 0n)
+  for (const b of bars) {
+    b.pct = max > 0n ? Math.max(b.cents > 0n ? 4 : 0, Math.round(Number((b.cents * 100n) / max))) : 0
+    b.label = b.cents > 0n ? shortBRL(b.cents) : ''
+  }
+  return { bars, total: totalCount ? `${shortBRL(totalCents)} em ${totalCount} ${totalCount === 1 ? 'obra' : 'obras'}` : 'Nenhuma venda concluída ainda', empty: totalCount === 0 }
+}

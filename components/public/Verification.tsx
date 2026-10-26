@@ -131,7 +131,7 @@ export function Verification({ c, read }: { c: PublicCertificate; read: TagRead 
           </div>
           <p>Cada obra tem uma etiqueta de autenticação única no verso; ao aproximar o celular, esta página confirma a etiqueta e mostra o certificado registrado e assinado.</p>
           <small>Sem login · dados do titular protegidos</small>
-          <p>Esta página não mostra valores de aquisição nem documentos. Para contestar a titularidade, use a API pública de contestação ou escreva para a equipe HouseArt.</p>
+          <p>Esta página não mostra valores de aquisição nem documentos. Para contestar a titularidade, escreva para a equipe HouseArt.</p>
         </footer>
       </article>
     </div>

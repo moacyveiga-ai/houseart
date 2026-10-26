@@ -1,9 +1,24 @@
 /* Verificação (handoff "HouseArt Verificacao"): the public certificate page, the 480px
    card of the prototype centred inside the public shell. Prefix hp-verification-. */
-.hp-verification { background: var(--ha-paper-200); padding: var(--ha-space-10) var(--ha-space-4) var(--ha-space-16); }
-.hp-verification__card { position: relative; width: 100%; max-width: 480px; margin: 0 auto; background: var(--ha-paper-50); box-shadow: var(--ha-shadow-lg); color: var(--ha-ink-700); }
-.hp-verification-reader { border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
-.hp-verification-reader .ha-reader { border-radius: 0; }
+.hp-verification { min-height: 100vh; background: var(--ha-paper-200); padding: var(--ha-space-10) var(--ha-space-4) var(--ha-space-16); font-family: var(--ha-font-ui); font-size: var(--ha-text-body); line-height: var(--ha-lh-body); }
+.hp-verification__card { position: relative; overflow: hidden; width: 100%; max-width: 480px; margin: 0 auto; background: var(--ha-paper-50); box-shadow: var(--ha-shadow-lg); color: var(--ha-ink-700); }
+/* The reading overlay (tap): covers the card, ink-900, then goes away. */
+.hp-verification-overlay { position: absolute; inset: 0; z-index: 10; min-height: 100vh; background: var(--ha-ink-900); color: var(--ha-paper-50); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ha-space-8); padding: var(--ha-space-8); text-align: center; }
+.hp-verification-overlay__ring { position: relative; width: 140px; height: 140px; flex: none; }
+.hp-verification-overlay__pulse { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--ha-sand-500); animation: ha-pulse 1200ms ease-out infinite; }
+.hp-verification-overlay__pulse--late { animation-delay: 600ms; }
+.hp-verification-overlay__close { position: absolute; inset: 0; transform: rotate(-90deg); }
+.hp-verification-overlay__close circle { stroke: var(--ha-sand-500); animation: ha-close 600ms var(--ha-ease) forwards; }
+.hp-verification-overlay__core { position: absolute; inset: 30px; border-radius: 50%; background: var(--ha-sand-500); color: var(--ha-ink-900); display: flex; align-items: center; justify-content: center; transition: background 600ms, color 600ms; }
+.hp-verification-overlay__core .ha-icon { font-size: 40px; }
+.hp-verification-overlay__ring--ok .hp-verification-overlay__close circle { stroke: var(--ha-verified-500); }
+.hp-verification-overlay__ring--ok .hp-verification-overlay__core { background: var(--ha-verified-500); color: var(--ha-paper-50); }
+.hp-verification-overlay__ring--attention .hp-verification-overlay__close circle,
+.hp-verification-overlay__ring--failed .hp-verification-overlay__close circle { stroke: var(--ha-alert-500); }
+.hp-verification-overlay__ring--attention .hp-verification-overlay__core,
+.hp-verification-overlay__ring--failed .hp-verification-overlay__core { background: var(--ha-alert-500); color: var(--ha-paper-50); }
+.hp-verification-overlay__title { font-family: var(--ha-font-display); font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); }
+.hp-verification-overlay__sub { margin-top: var(--ha-space-2); font-size: var(--ha-text-body-sm); color: var(--ha-ink-300); }
 
 .hp-verification__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ha-space-3); padding: var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
 .hp-verification__top span { font-size: var(--ha-text-caption); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ha-ink-500); }

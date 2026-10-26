@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useFonts } from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -8,6 +8,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '@/auth/session'
 import { FONT_FILES, colors, theme } from '@/theme'
 import { setDisplayFontLoaded } from '@/ui/kit'
+import { SplashOverlay } from '@/screens/onboarding/SplashOverlay'
+import { onboardingSeen } from '@/screens/onboarding/seen'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
@@ -16,12 +18,18 @@ function Gate() {
   const { status, me, profiles } = useSession()
   const segments = useSegments()
   const router = useRouter()
+  // the three onboarding slides are shown once per device, before the first login
+  const [seen, setSeen] = useState<boolean | null>(null)
+  useEffect(() => { void onboardingSeen().then(setSeen) }, [])
 
   useEffect(() => {
     if (status === 'loading') return
     void SplashScreen.hideAsync().catch(() => undefined)
     const inAuth = segments[0] === '(auth)'
     if (status === 'signed-out') {
+      if (seen === null) return
+      const onOnboarding = inAuth && (segments as string[])[1] === 'onboarding'
+      if (!seen && !onOnboarding) { router.replace('/(auth)/onboarding'); return }
       if (!inAuth) router.replace('/(auth)/login')
       return
     }
@@ -32,9 +40,15 @@ function Gate() {
       return
     }
     if (inAuth || segments[0] === 'profiles' || !segments[0]) router.replace('/(tabs)')
-  }, [status, me?.activeProfileKind, profiles.length, segments, router])
+  }, [status, seen, me?.activeProfileKind, profiles.length, segments, router])
 
   return null
+}
+
+/** The brand mark over the first screen, until the session is known (and at least SPLASH_MS). */
+function Splash() {
+  const { status } = useSession()
+  return <SplashOverlay ready={status !== 'loading'} />
 }
 
 export default function RootLayout() {
@@ -82,6 +96,7 @@ export default function RootLayout() {
             <Stack.Screen name="verify" />
             <Stack.Screen name="settings" options={{ headerShown: true, title: 'Perfil', headerTintColor: theme.fg, headerStyle: { backgroundColor: theme.bg } }} />
           </Stack>
+          <Splash />
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

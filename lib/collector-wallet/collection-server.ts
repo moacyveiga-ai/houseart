@@ -50,7 +50,8 @@ const MAX_ARTISTS_PRICED = 12
  * (sales of the last 12 months, six or more, quartile ends rounded outwards), never a median that
  * could be one sale of someone else.
  */
-async function valuationOf(values: readonly { artworkId: number; artistId: number; registeredCents: bigint | null }[]): Promise<CollectionValuation | null> {
+/** Also read by the mobile app's Minha coleção (`/api/collector/wallet`), with the same rule as the web header. */
+export async function valuationOf(values: readonly { artworkId: number; artistId: number; registeredCents: bigint | null }[]): Promise<CollectionValuation | null> {
   const priced = values.filter((v) => v.registeredCents && v.registeredCents > 0n)
   if (!priced.length) return null
   const laudos = await totalScope('collection:valuation', async () => await prisma.appraisal.findMany({ where: { artworkId: { in: priced.map((v) => v.artworkId) }, status: 'ISSUED' }, orderBy: { issuedAt: 'desc' }, select: { artworkId: true, suggestedCents: true } }))

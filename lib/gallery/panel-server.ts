@@ -65,13 +65,20 @@ export async function dayPanel(scope: Scope, now = new Date(), userId: number | 
   const offers = await sellerOffers(scope, now)
   const deals = flagOn('FLAG_DEALS') ? await sellerDeals(scope) : []
   const since = startOfMonthInTz(now)
-  const monthDeals = await prisma.deal.findMany({ where: { ...memberFilter(scope), createdAt: { gte: since } }, select: { amountCents: true } })
+  // the same stretch of the previous month (day 1 up to the same elapsed time), never past its end
+  const prevStart = startOfMonthInTz(new Date(since.getTime() - 24 * 3600_000))
+  const prevEnd = new Date(Math.min(prevStart.getTime() + (now.getTime() - since.getTime()), since.getTime()))
+  const prevMonthName = new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'America/Bahia' }).format(new Date(prevStart.getTime() + 12 * 3600_000))
+  const [monthDeals, prevSales] = await Promise.all([
+    prisma.deal.findMany({ where: { ...memberFilter(scope), createdAt: { gte: since } }, select: { amountCents: true } }),
+    prisma.deal.aggregate({ where: { ...memberFilter(scope), createdAt: { gte: prevStart, lt: prevEnd } }, _sum: { amountCents: true } }),
+  ])
   const open = offers.filter((o) => o.open)
   const escrow = deals.filter((d) => d.escrowPaid && d.phase !== 'COMPLETED').reduce((a, d) => a + d.amountCents, 0n)
   const artworkIds = await prisma.artwork.findMany({ where: { ...memberFilter(scope), status: 'LISTED' }, select: { id: true } })
   let views7d = 0
   for (const v of (await viewsSinceMany(artworkIds.map((a) => a.id), 7, now)).values()) views7d += v
-  const kpis = panelKpis({ monthSalesCents: monthDeals.reduce((a, d) => a + d.amountCents, 0n), monthSalesCount: monthDeals.length, openOffers: open.length, biggestOpenOfferCents: open.length ? open.reduce((m, o) => (o.currentCents > m ? o.currentCents : m), 0n) : null, escrowCents: escrow, views7d }, monthName)
+  const kpis = panelKpis({ monthSalesCents: monthDeals.reduce((a, d) => a + d.amountCents, 0n), monthSalesCount: monthDeals.length, openOffers: open.length, biggestOpenOfferCents: open.length ? open.reduce((m, o) => (o.currentCents > m ? o.currentCents : m), 0n) : null, escrowCents: escrow, views7d, prevSalesCents: prevSales._sum.amountCents ?? 0n, prevMonthName }, monthName)
   const actions: PanelAction[] = []
   for (const o of open) actions.push({ icon: 'request_quote', title: `Oferta de ${brl(o.currentCents)}`, sub: offerSub(o), tag: `expira em ${o.expiresIn}`, tone: 'pending', href: '/sales' })
   for (const o of offers.filter((x) => x.status === 'ACCEPTED')) actions.push({ icon: 'hourglass_top', title: 'Aguardando pagamento', sub: `${o.artworkTitle} · ${o.buyer}`, tag: 'até 24 h', tone: 'neutral', href: '/sales?tab=deals' })

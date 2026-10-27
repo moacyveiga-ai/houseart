@@ -102,6 +102,7 @@ export function ArtistsScreen({ artists: initial }: { artists: RepresentedArtist
           ) : (
             <>
               <p className="ha-caption" style={{ margin: 0 }}>{open.works} {open.works === 1 ? 'obra' : 'obras'} no acervo · {open.forSale} à venda{!open.hasAccount ? ' · sem conta na HouseArt' : ''}</p>
+              <a className="ha-link ha-sm" href={`/e/artist/${encodeURIComponent(open.slug)}`} target="_blank" rel="noreferrer">Ver perfil público →</a>
               <SelectField label="Tipo de contrato" value={edit.kind} onChange={(e) => setEdit({ ...edit, kind: e.target.value as ContractKind })}>
                 {CONTRACT_KINDS.map((k) => <option key={k} value={k}>{CONTRACT_KIND_LABELS[k]}</option>)}
               </SelectField>

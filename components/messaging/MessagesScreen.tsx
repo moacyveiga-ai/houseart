@@ -11,7 +11,7 @@ import { previewOf } from '@/lib/messaging/core'
 
 const LIST_POLL_MS = 15000
 
-export function MessagesScreen({ initialRows, initialConversationId, role }: { initialRows: ConversationView[]; initialConversationId: number | null; role: MessageRole }) {
+export function MessagesScreen({ initialRows, initialConversationId, role, emptyText }: { initialRows: ConversationView[]; initialConversationId: number | null; role: MessageRole; emptyText: string }) {
   const [rows, setRows] = useState(initialRows)
   const [q, setQ] = useState('')
   const [selected, setSelected] = useState<number | null>(initialConversationId)
@@ -76,7 +76,7 @@ export function MessagesScreen({ initialRows, initialConversationId, role }: { i
               </span>
             </button>
           ))}
-          {rows.length === 0 ? <div className="ha-msg-list__empty">{q ? 'Nenhuma conversa encontrada.' : 'Nenhuma conversa ainda. Toque em "Falar com a galeria" na página de uma obra para começar.'}</div> : null}
+          {rows.length === 0 ? <div className="ha-msg-list__empty">{q ? 'Nenhuma conversa encontrada.' : emptyText}</div> : null}
         </div>
       </section>
       {selected ? (

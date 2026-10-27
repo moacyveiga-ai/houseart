@@ -7,6 +7,7 @@ import { MediaStep } from './MediaStep'
 import { ARTWORK_CATEGORIES, ARTWORK_CATEGORY_LABELS, CONDITION_GRADES, CONDITION_GRADE_LABELS, CONDITION_REGIONS, CONDITION_REGION_LABELS, HISTORY_KINDS, HISTORY_KIND_LABELS, SALE_MODE_CARDS, WIZARD_STEPS } from '@/lib/artworks/domain'
 import { nextLabel, regionStateLabel, reviewLines, sheetPatch, STEP_COUNT, type WizardHistory, type WizardMedia, type WizardRegion, type WizardState } from './wizard-core'
 import { ReadingPanel } from './ReadingPanel'
+import { hasContactLeakInProse } from '@/lib/messaging/core'
 
 export interface WizardArtwork extends WizardState {
   id: number
@@ -53,7 +54,12 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
   /** Autosave (800 ms) of the sheet after each change. */
   const scheduleSheet = useCallback((next: WizardArtwork) => {
     if (timer.current) window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => void patch(sheetPatch(next)), 800)
+    timer.current = window.setTimeout(() => {
+      // a "Sobre a obra" with a contact stays on screen with its warning; the rest of the sheet still saves
+      const body: Record<string, unknown> = sheetPatch(next)
+      if (next.description && hasContactLeakInProse(next.description)) delete body.description
+      void patch(body)
+    }, 800)
   }, [patch])
 
   useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current) }, [])
@@ -176,7 +182,7 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
                   <label className="ha-label">Edição / tiragem<input className={`ha-input${hl.has('edition') ? ' ha-input--read' : ''}`} placeholder="Obra única" value={a.edition ?? ''} onChange={(e) => field('edition', e.target.value)} /></label>
                   <label className="ha-label">Assinatura<input className={`ha-input${hl.has('signatureLocation') ? ' ha-input--read' : ''}`} placeholder="Verso, canto inferior esquerdo" value={a.signatureLocation ?? ''} onChange={(e) => field('signatureLocation', e.target.value)} /></label>
                   <label className="ha-label">Série<input className="ha-input" value={a.series ?? ''} onChange={(e) => field('series', e.target.value)} /></label>
-                  <label className="ha-label ha-col-span">Sobre a obra<textarea className="ha-textarea" rows={4} maxLength={2000} placeholder="O que a obra é, de onde vem, o que a artista quis — aparece na página pública" value={a.description ?? ''} onChange={(e) => field('description', e.target.value)} /><span className="ha-muted ha-sm">Até 2.000 caracteres, sem telefone, e-mail ou redes.</span></label>
+                  <label className="ha-label ha-col-span">Sobre a obra<textarea className="ha-textarea" rows={4} maxLength={2000} placeholder="O que a obra é, de onde vem, o que a artista quis — aparece na página pública" value={a.description ?? ''} onChange={(e) => field('description', e.target.value)} />{a.description && hasContactLeakInProse(a.description) ? <span className="ha-field-error" role="alert">Tire telefone, e-mail, link ou Pix do texto para ele ser salvo.</span> : <span className="ha-muted ha-sm">Até 2.000 caracteres, sem telefone, e-mail ou redes.</span>}</label>
                   <p className="ha-muted ha-sm ha-col-span">Artista: {a.artistName}</p>
                 </fieldset>
               )}

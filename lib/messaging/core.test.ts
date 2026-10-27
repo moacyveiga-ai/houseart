@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkMessage, CONTACT_GUARD, hasContactLeak, pairOf, previewOf, whenLabel } from './core'
+import { checkMessage, CONTACT_GUARD, hasContactLeak, hasContactLeakInProse, pairOf, previewOf, whenLabel } from './core'
 
 describe('messaging core', () => {
   it('refuses phone, e-mail, link, WhatsApp and Pix', () => {
@@ -21,5 +21,13 @@ describe('messaging core', () => {
     expect(previewOf('Olá', true, 'TEXT')).toBe('Você: Olá')
     expect(previewOf('Proposta enviada', true, 'SYSTEM')).toBe('Proposta enviada')
     expect(whenLabel(new Date(Date.now() - 3 * 3_600_000))).toBe('há 3 h')
+  })
+})
+
+describe('hasContactLeakInProse', () => {
+  it('lets runs of years pass and still catches contacts', () => {
+    expect(hasContactLeakInProse('Pintada entre 2019-2021, exposta em 1998 2004 2010.')).toBe(false)
+    expect(hasContactLeakInProse('Fale comigo: 71 99999-1234')).toBe(true)
+    expect(hasContactLeakInProse('ana@atelie.com')).toBe(true)
   })
 })

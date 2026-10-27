@@ -170,7 +170,7 @@ export function Artwork({ artwork: a, related, signedIn = false }: { artwork: Pu
         {about ? (
           <div className="hp-artwork__col">
             <h2 className="hp-artwork__h2">Sobre a obra</h2>
-            {written.length ? written.map((p, i) => <p key={`w${i}`} className={i === 0 ? 'hp-artwork__lead' : 'hp-artwork__note'}>{p}</p>)
+            {written.length ? written.map((p, i) => <p key={`w${i}`} className={`${i === 0 ? 'hp-artwork__lead' : 'hp-artwork__note'} hp-artwork__written`}>{p}</p>)
               : aboutLead ? <p className="hp-artwork__lead">{aboutLead}{a.dimensions !== '—' ? `, ${a.dimensions}` : ''}{a.series ? `. Da série “${a.series}”` : ''}.</p> : null}
             {others.map((h, i) => <p key={`o${i}`} className="hp-artwork__note">{h.description} · {monthLong(h.occurredOn)}.</p>)}
             {shows.map((h, i) => <p key={`s${i}`} className="hp-artwork__note">Exposta em {h.description}, {monthLong(h.occurredOn)}.</p>)}

@@ -24,7 +24,7 @@ import { Button } from '@/components/ds/Button'
 /** Today's day as the browser sees it: only the `max` of the date field (the server is the rule, in the house timezone). */
 const todayIso = () => new Date().toISOString().slice(0, 10)
 
-export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: CollectorPanelData; closeHref: string; meInitials: string }) {
+export function CollectorArtworkPanel({ a, closeHref, meInitials, meAvatarUrl = null }: { a: CollectorPanelData; closeHref: string; meInitials: string; meAvatarUrl?: string | null }) {
   const router = useRouter()
   const [photo, setPhoto] = useState(0)
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null)
@@ -200,7 +200,7 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
           {restoreError ? <p className="ha-field-error" role="alert">{restoreError}</p> : null}
         </Modal>, document.body) : null}
       {sheet === 'comments' && sig ? (
-        <CommentsSheet item={{ key: `a${a.id}`, id: a.id, target: 'ARTWORK', author: { memberId: null, name: a.seller?.name ?? '' } }} me={{ initials: meInitials }} onClose={() => setSheet(null)} onToast={setToast}
+        <CommentsSheet item={{ key: `a${a.id}`, id: a.id, target: 'ARTWORK', author: { memberId: null, name: a.seller?.name ?? '' } }} me={{ initials: meInitials, avatarUrl: meAvatarUrl }} onClose={() => setSheet(null)} onToast={setToast}
           onCount={(_k, delta) => setSig((s) => (s ? { ...s, comments: Math.max(0, s.comments + delta) } : s))} />
       ) : null}
       <Toast message={toast} onDone={() => setToast('')} />

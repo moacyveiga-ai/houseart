@@ -32,7 +32,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: Pr
   const compose = nav === 'gallery' || nav === 'advisor' ? 'Publique uma obra, abertura ou novidade…' : nav === 'artist' ? 'Mostre o ateliê, uma obra nova ou uma abertura…' : 'Mostre uma obra da sua coleção…'
   return (
     <div className="ha-page">
-      <CommunityScreen key={tab} items={filterTab(items, tab)} tab={tab} me={{ initials: initialsOf(user.name), name: user.name, memberId: user.memberId }} artworks={artworks} instagram={instagram} compose={compose} />
+      <CommunityScreen key={tab} items={filterTab(items, tab)} tab={tab} me={{ initials: initialsOf(user.name), name: user.name, memberId: user.memberId, avatarUrl: user.avatarUrl ?? null }} artworks={artworks} instagram={instagram} compose={compose} />
     </div>
   )
 }

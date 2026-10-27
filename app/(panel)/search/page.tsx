@@ -28,7 +28,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Busca</h1></div>
       <SearchScreen result={result} featured={featured} recentKey={staff ? null : recentKeyOf(user.id)} workPrefix={`${base}${q ? '&' : '?'}work=`} before={admin && admin.total > 0 ? <AdminSearchResults r={admin} /> : null} />
-      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref={base} /> : null}
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} meAvatarUrl={user.avatarUrl ?? null} closeHref={base} /> : null}
     </div>
   )
 }

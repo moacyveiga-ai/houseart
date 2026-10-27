@@ -22,7 +22,7 @@ const installmentOf = (cents: string | null) => (cents === null ? 'O preço não
 
 type Kind = 'LIKE' | 'SAVE'
 
-export function ExploreScreen({ items: initial, view, chip, me }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip; me: { initials: string } }) {
+export function ExploreScreen({ items: initial, view, chip, me }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip; me: { initials: string; avatarUrl?: string | null } }) {
   const [items, setItems] = useState(initial)
   const workHref = (publicId: string) => exploreWorkHref(view, chip, publicId)
   const [toast, setToast] = useState('')

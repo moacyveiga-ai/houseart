@@ -30,7 +30,7 @@ export interface ReaderProps {
   sharePath: string
   /** null = the guide (no reactions, no comments) */
   social: ReaderSocial | null
-  viewer: { signedIn: boolean; initials: string }
+  viewer: { signedIn: boolean; initials: string; avatarUrl?: string | null }
 }
 
 export function Reader(p: ReaderProps) {
@@ -147,7 +147,7 @@ export function Reader(p: ReaderProps) {
       ) : null}
 
       {commenting && social ? (
-        <CommentsSheet item={social.feedItem} me={{ initials: p.viewer.initials }} onClose={() => setCommenting(false)} onCount={(_k, delta) => setSocial((s) => (s ? { ...s, comments: s.comments + delta } : s))} onToast={setToast} />
+        <CommentsSheet item={social.feedItem} me={{ initials: p.viewer.initials, avatarUrl: p.viewer.avatarUrl }} onClose={() => setCommenting(false)} onCount={(_k, delta) => setSocial((s) => (s ? { ...s, comments: s.comments + delta } : s))} onToast={setToast} />
       ) : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </article>

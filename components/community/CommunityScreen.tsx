@@ -17,7 +17,7 @@ import { ShareSheet } from '@/components/public/ShareSheet'
 export function CommunityScreen({ items: initial, tab, me, artworks, instagram, compose }: {
   items: FeedItem[]
   tab: CommunityTab
-  me: { initials: string; name: string; memberId: number | null }
+  me: { initials: string; name: string; memberId: number | null; avatarUrl?: string | null }
   artworks: ComposerArtwork[]
   instagram: ComposerInstagram
   /** The prompt line of the prototype ("Mostre uma obra da sua coleção…" / "Publique uma obra, abertura ou novidade…"). */

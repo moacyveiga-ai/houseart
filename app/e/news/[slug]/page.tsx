@@ -46,7 +46,7 @@ export default async function NewsArticlePage({ params }: Params) {
       kicker={n.category} title={n.title} lead={n.summary} author="Redação HouseArt" meta={`${newsDateLabel(n.publishedAt)} · ${readMinutesLabel(n.readMinutes)}`}
       imageUrl={n.imageUrl} blocks={paragraphBlocks(n.body)} source={n.sourceName ? { name: n.sourceName, url: n.sourceUrl } : null}
       trail={null} next={null} related={n.related.map((r) => ({ kicker: r.category, title: r.title, href: `/e/news/${r.slug}` }))}
-      backHref="/e/news" sharePath={`/e/news/${n.slug}`} social={social} viewer={{ signedIn: !!session, initials: session ? initialsOf(session.name) : '' }}
+      backHref="/e/news" sharePath={`/e/news/${n.slug}`} social={social} viewer={{ signedIn: !!session, initials: session ? initialsOf(session.name) : '', avatarUrl: session?.avatarUrl ?? null }}
     />
   )
 }

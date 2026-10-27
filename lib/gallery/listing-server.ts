@@ -120,10 +120,14 @@ async function tellSavers(artworkId: number, fromCents: bigint, toCents: bigint,
   const art = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { title: true, publicId: true } })
   if (!art?.publicId) return 0
   const savers = await prisma.reaction.findMany({ where: { targetKind: 'ARTWORK', targetId: artworkId, kind: 'SAVE' }, select: { userId: true }, orderBy: { createdAt: 'desc' } })
-  const to = priceDropRecipients(savers.map((r) => r.userId), actorUserId)
+  // only active accounts (blocked or deleted never hear from us)
+  const active = new Set((await prisma.user.findMany({ where: { id: { in: [...new Set(savers.map((r) => r.userId))] }, active: true }, select: { id: true } })).map((u) => u.id))
+  const to = priceDropRecipients(savers.map((r) => r.userId).filter((id) => active.has(id)), actorUserId)
   if (!to.length) return 0
   const n = priceDropNotice({ title: art.title, publicId: art.publicId }, fromCents, toCents)
-  await afterResponseOrNow('listing:price_drop', async () => { for (const userId of to) await notify({ userId, kind: 'artwork.price_drop', ...n }) })
+  await afterResponseOrNow('listing:price_drop', async () => {
+    for (let i = 0; i < to.length; i += 20) await Promise.all(to.slice(i, i + 20).map((userId) => notify({ userId, kind: 'artwork.price_drop', ...n })))
+  })
   return to.length
 }
 

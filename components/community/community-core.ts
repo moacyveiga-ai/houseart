@@ -99,3 +99,14 @@ export function draftPayload(d: ComposerDraft): Record<string, unknown> {
   if (d.kind === 'EVENT') base.event = { title: d.event.title.trim(), venue: d.event.venue.trim(), startsOn: d.event.startsOn, startsAt: d.event.startsAt.trim() || null }
   return base
 }
+
+/**
+ * The news reader inside the panel (audit colecionador §7: "Notícia / Guia abre o leitor dentro do
+ * app"): a public news link `/e/news/<slug>` becomes `/community/news/<slug>`, so reading keeps the
+ * sidebar and comes back to the feed. Any other href is kept.
+ */
+export function panelNewsHref(href: string | null | undefined): string | null {
+  if (!href) return null
+  const m = /^\/e\/news\/([a-z0-9-]{1,120})$/.exec(href)
+  return m ? `/community/news/${m[1]}` : href
+}

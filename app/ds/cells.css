@@ -532,6 +532,8 @@ a.ha-card { color: inherit; text-decoration: none; }
 a.ha-review__title:hover { text-decoration: underline; }
 .ha-review__who { display: block; font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .ha-review__reason { color: var(--ha-ink-700); }
+.ha-review__open { display: block; margin-top: 2px; font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-review__open:hover { color: var(--ha-fg); }
 .ha-review__ago { color: var(--ha-ink-500); font-variant-numeric: tabular-nums; }
 .ha-review__actions { justify-self: end; display: flex; gap: var(--ha-space-2); }
 .ha-review__done { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }

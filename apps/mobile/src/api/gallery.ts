@@ -2,7 +2,7 @@
 // ofertas, vendas, regras, equipe, artistas). Thin wrappers over `api()`:
 // the server is the authority on every rule (the asked price can never go
 // under the mandate's minimum — the app never receives that number).
-import { api } from './client'
+import { api, apiUpload, type LocalFile } from './client'
 
 /** GET /api/gallery/panel → { ok, panel } */
 export interface PanelKpi { key: string; label: string; value: string; detail: string; icon: string; href: string; dark?: true }
@@ -58,9 +58,16 @@ export interface DealView {
   split: { party: string; label: string; amountCents: string; status: string; payoutState?: string; payoutLabel?: string }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
+  exception?: string | null
+  /** "Embalagem e condition report": the note and the photo URLs (the photos need the bearer). */
+  packaging?: { report: string | null; packedAt: string | null; photos: { id: number; url: string }[] }
 }
 export const sellerDeals = async (): Promise<DealView[]> => (await api<{ ok: boolean; deals: DealView[] }>('/api/gallery/deals')).deals
 export const signDeal = (id: number) => api<{ ok: boolean }>(`/api/deals/${id}/sign`, { body: {} })
+/** The packed work: photos first (multipart, private vault), then the condition note (≥ 1 photo on the server). */
+export const addPackagingPhoto = (id: number, file: LocalFile) => apiUpload<{ ok: boolean; photo: { id: number; url: string } }>(`/api/deals/${id}/packaging/photos`, {}, file)
+export const removePackagingPhoto = (id: number, photoId: number) => api<{ ok: boolean }>(`/api/deals/${id}/packaging/photos/${photoId}`, { method: 'DELETE' })
+export const recordPackaging = (id: number, report: string) => api<{ ok: boolean }>(`/api/deals/${id}/packaging`, { body: { report } })
 export const bookShipping = (id: number, input: { carrier: string; tracking: string; insurer?: string }) => api<{ ok: boolean }>(`/api/deals/${id}/shipping`, { body: input })
 
 /** GET/PUT /api/gallery/rules → { ok, rules } */

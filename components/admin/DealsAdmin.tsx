@@ -98,7 +98,7 @@ export function DealsAdmin({ rows: initial, filter, filters, openId = null }: { 
                   </table>
                   {d.phase === 'COMPLETED' && d.exception !== 'CANCELLED' && released.length ? (
                     <div className="ha-row" style={{ gap: 8 }}>
-                      <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" disabled={busy !== null} aria-busy={busy === `r${d.id}` || undefined} onClick={() => retry(d)}><Icon name="refresh" size={18} />Tentar de novo pela Stripe</button>
+                      <Button variant="primary" size="sm" icon="refresh" loading={busy === `r${d.id}`} disabled={busy !== null} onClick={() => retry(d)}>Tentar de novo pela Stripe</Button>
                       <span className="ha-muted ha-sm">Paga agora as linhas liberadas de quem tem a conta Stripe ativa; as outras ficam para o Pix manual.</span>
                     </div>
                   ) : null}

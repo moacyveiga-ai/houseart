@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { CollectionSummary } from '@/lib/collector-wallet/collection-server'
-import { changeLabel, valuationNote } from '@/lib/collector-wallet/valuation-core'
+import { changeLabel, shownBps, valuationNote } from '@/lib/collector-wallet/valuation-core'
 import './collection.css'
 
 export type CollectionTab = 'works' | 'saved' | 'liked' | 'purchases' | 'sales'
@@ -23,10 +23,11 @@ export function CollectionHeader({ s, active }: { s: CollectionSummary; active: 
     { key: 'purchases', label: `Compras · ${s.purchases}`, href: '/purchases' },
     { key: 'sales', label: s.newSales ? `Vendas · ${s.newSales} ${plural(s.newSales, 'nova', 'novas')}` : 'Vendas', href: '/sales' },
   ]
+  const change = s.valuation ? shownBps(s.valuation.changeBps) : 0
   const kpis = [
     { icon: 'imagesmode', v: String(s.works), k: plural(s.works, 'obra', 'obras') },
     { icon: 'account_balance', v: s.registeredCents > 0n ? thousands(s.registeredCents) : '—', k: 'valor registrado' },
-    { icon: s.valuation && s.valuation.changeBps < 0 ? 'trending_down' : 'trending_up', v: s.valuation ? changeLabel(s.valuation.changeBps) : '—', k: 'valorização', tone: s.valuation ? (s.valuation.changeBps > 0 ? 'up' : s.valuation.changeBps < 0 ? 'down' : null) : null },
+    { icon: change < 0 ? 'trending_down' : 'trending_up', v: s.valuation ? changeLabel(s.valuation.changeBps) : '—', k: 'valorização', tone: change > 0 ? 'up' : change < 0 ? 'down' : null },
     { icon: 'palette', v: String(s.artists), k: plural(s.artists, 'artista', 'artistas') },
   ]
   return (

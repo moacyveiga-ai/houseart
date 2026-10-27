@@ -187,13 +187,13 @@ describe('deal flow', () => {
     const wallet = await walletOf(buyer.id)
     expect(wallet.items.map((i) => [i.publicId, i.version, i.insured])).toEqual([[publicId, 2, false]])
     expect(wallet.totalCents).toBe(4_400_000n)
-    // "valorização" of the collection header: one sale of the artist is no reference; six registered sales are
+    // "valorização" of the collection header: one sale of the artist is no reference (the range needs six); an issued laudo is
     const { collectionSummary } = await import('@/lib/collector-wallet/collection-server')
     expect((await collectionSummary({ id: buyer.id, memberId: null })).valuation).toBeNull()
-    const artistId = (await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).artistId
-    await prisma.appraisalComparable.createMany({ data: Array.from({ length: 6 }, (_, i) => ({ artistId, label: `Comparável ${i}`, priceCents: 5_500_000n, soldOn: new Date(), source: 'AUCTION' })) })
+    const req = await prisma.appraisalRequest.create({ data: { artworkId: s.b.artworkId, requestedByUserId: buyer.id, requesterLabel: 'Titular', purpose: 'INSURANCE', dueOn: new Date(), status: 'ISSUED' } })
+    const laudo = await prisma.appraisal.create({ data: { requestId: req.id, artworkId: s.b.artworkId, appraiserUserId: buyer.id, minCents: 4_800_000n, suggestedCents: 5_500_000n, maxCents: 6_000_000n, methodology: 'teste', contentHash: 'x', verificationCode: 'HA-L-2026-TEST', status: 'ISSUED', issuedAt: new Date() } })
     expect((await collectionSummary({ id: buyer.id, memberId: null })).valuation).toMatchObject({ registeredCents: 4_400_000n, estimatedCents: 5_500_000n, changeBps: 2500, works: 1 })
-    await prisma.appraisalComparable.deleteMany({ where: { artistId } })
+    await prisma.appraisal.delete({ where: { id: laudo.id } }); await prisma.appraisalRequest.delete({ where: { id: req.id } })
     await insureArtwork(buyer.id, s.b.artworkId)
     expect((await walletOf(buyer.id)).items[0]).toMatchObject({ insured: true, insurer: expect.stringMatching(/^Chubb/) })
     expect((await walletOf(s.b.userId)).items).toEqual([])

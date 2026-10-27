@@ -20,8 +20,14 @@ export function collectionValuation(works: readonly WorkValue[]): CollectionValu
   return { registeredCents: registered, estimatedCents: estimated, changeBps: Number(((estimated - registered) * 10_000n) / registered), works: n }
 }
 
+/** The change as the label shows it (one decimal of a percent): −4 bps is "0 %", never "−0 %". */
+export function shownBps(bps: number): number {
+  return Math.round(bps / 10) * 10
+}
+
 /** "+17,5 %", "−3,2 %", "0 %". */
-export function changeLabel(bps: number): string {
+export function changeLabel(raw: number): string {
+  const bps = shownBps(raw)
   if (bps === 0) return '0 %'
   const v = (Math.abs(bps) / 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
   return `${bps > 0 ? '+' : '−'}${v} %`

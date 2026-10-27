@@ -19,6 +19,8 @@ describe('valorização da coleção', () => {
     expect(changeLabel(1750)).toBe('+17,5 %')
     expect(changeLabel(-320)).toBe('−3,2 %')
     expect(changeLabel(0)).toBe('0 %')
+    expect(changeLabel(4)).toBe('0 %')
+    expect(changeLabel(-4)).toBe('0 %')
     const v = { registeredCents: 1n, estimatedCents: 3_724_000n, changeBps: 1, works: 2 }
     expect(valuationNote(v, 3, () => 'R$ 37.240')).toBe('Valor estimado hoje: R$ 37.240 · 2 de 3 obras com referência · não substitui um laudo')
     expect(valuationNote(v, 2, () => 'R$ 37.240')).toBe('Valor estimado hoje: R$ 37.240 · não substitui um laudo')

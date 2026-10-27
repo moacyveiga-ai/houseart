@@ -6,7 +6,7 @@
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import type { FeedItem } from '@/lib/community/server'
-import { authorLineOf, goingLabel, personTagOf, votesLabel } from './community-core'
+import { authorLineOf, goingLabel, panelNewsHref, personTagOf, votesLabel } from './community-core'
 
 export interface CardActions {
   onLike: (item: FeedItem) => void
@@ -61,7 +61,7 @@ export function FeedCard({ item, actions, busy, myMemberId }: { item: FeedItem; 
       ) : null}
 
       {item.kind === 'NEWS' ? (
-        <Link href={item.href ?? '/community'} className="ha-cm-news">
+        <Link href={panelNewsHref(item.href) ?? '/community'} className="ha-cm-news">
           {/* eslint-disable-next-line @next/next/no-img-element -- news image */}
           {item.imageUrl ? <span className="ha-cm-news__img"><img src={item.imageUrl} alt="" /></span> : null}
           {item.format ? <span className="ha-cm-news__format">{item.format}</span> : null}

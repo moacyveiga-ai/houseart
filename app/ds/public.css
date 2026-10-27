@@ -54,7 +54,7 @@
 .hp-btn-ink:hover { background: var(--ha-paper-100); color: var(--ha-ink-900); }
 /* audit design-system §2: the public buttons hover by the 160 ms token and show the sand ring on keyboard focus, like .ha-btn */
 .hp-btn-sand, .hp-btn-paper, .hp-btn-ink, .hp-header__login, .hp-header__cta { transition: background var(--ha-dur-fast) var(--ha-ease), color var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease); }
-.hp-btn-sand:focus-visible, .hp-btn-paper:focus-visible, .hp-btn-ink:focus-visible, .hp-header__login:focus-visible, .hp-header__cta:focus-visible { outline: 2px solid var(--ha-sand-500); outline-offset: 2px; }
+.hp-btn-sand:focus-visible, .hp-btn-paper:focus-visible, .hp-btn-ink:focus-visible, .hp-header__login:focus-visible, .hp-header__cta:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .hp-chip { cursor: pointer; font-size: var(--ha-text-body-sm); padding: var(--ha-space-2) var(--ha-space-4); border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-paper-200); background: transparent; color: var(--ha-ink-700); text-decoration: none; white-space: nowrap; }
 .hp-chip--on { border-color: var(--ha-ink-900); background: var(--ha-ink-900); color: var(--ha-paper-50); }
 .hp-section-title { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); color: var(--ha-ink-900); }

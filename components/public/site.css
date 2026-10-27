@@ -16,7 +16,8 @@
 .hp-site-btn-ink { display: inline-flex; align-items: center; align-self: flex-start; font-weight: 600; padding: var(--ha-space-3) var(--ha-space-6); border-radius: var(--ha-radius-md); background: var(--ha-ink-900); color: var(--ha-paper-50); text-decoration: none; }
 .hp-site-btn-ink:hover { background: var(--ha-ink-700); color: var(--ha-paper-50); }
 .hp-site-btn-ink { transition: background var(--ha-dur-fast) var(--ha-ease); }
-.hp-site-btn-ink:focus-visible { outline: 2px solid var(--ha-sand-500); outline-offset: 2px; }
+#suporte { scroll-margin-top: 88px; }
+.hp-site-btn-ink:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .hp-site a:focus-visible, .hp-site button:focus-visible, .hp-site input:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .hp-site-hero__figure { flex: 1 1 360px; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-4); }
 .hp-site-hero__frame { width: min(100%, 420px); aspect-ratio: 2296 / 2869; border: var(--ha-border-w) solid var(--ha-ink-700); background: var(--ha-ink-700); }

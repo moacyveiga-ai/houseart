@@ -80,7 +80,18 @@ export default async function ArtworksPage({ searchParams }: { searchParams: Pro
         {LIST_FILTERS.map((f) => <Chip key={f.key} on={f.key === filter} href={`/artworks?filter=${f.key}`}>{f.name} <span className="ha-chip__n">{counts[f.key] ?? 0}</span></Chip>)}
       </div>
       {items.length === 0 ? (
-        <div className="ha-card ha-card--pad"><p className="ha-muted">Nenhuma obra aqui ainda.</p></div>
+        filter === 'all' && nav === 'artist' ? (
+          <div className="ha-card ha-card--pad ha-stack ha-stack--3">
+            <h2 className="ha-h3">Nenhuma obra cadastrada ainda</h2>
+            <p className="ha-muted">Comece pela primeira: fotos guiadas, a ficha e, depois, a etiqueta e o certificado.</p>
+            <div><Link href="/artworks/new" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="add_photo_alternate" size={18} />Cadastrar a primeira obra</Link></div>
+          </div>
+        ) : (
+          <div className="ha-card ha-card--pad ha-stack ha-stack--3">
+            <p className="ha-muted">{filter === 'all' ? 'Nenhuma obra aqui ainda.' : 'Nenhuma obra neste filtro.'}</p>
+            {filter !== 'all' ? <div><Link href="/artworks?filter=all" className="ha-btn ha-btn--ghost ha-btn--sm">Ver todas as obras</Link></div> : null}
+          </div>
+        )
       ) : (
         // key={filter}: the selection starts over with each chip (the island would otherwise keep ids the new filter no longer shows)
         <SelectableWorks key={filter} items={items.map(cardOf)} markersOn={flagOn('FLAG_CERTIFICATES') && flagOn('FLAG_PHYSICAL_MARKERS') && scope.kind !== 'total'} canList={scope.kind !== 'total'} />

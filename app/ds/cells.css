@@ -79,6 +79,9 @@
 /* ── chips / badges ─────────────────────────────────────────────────────── */
 .ha-chip { padding: var(--ha-space-1) var(--ha-space-3); border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-ink-300); background: transparent; color: var(--ha-fg); font-size: var(--ha-text-body-sm); cursor: pointer; white-space: nowrap; }
 .ha-chip--on { background: var(--ha-ink-900); color: var(--ha-paper-50); border-color: var(--ha-ink-900); }
+.ha-chip { transition: background var(--ha-dur-fast) var(--ha-ease), color var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease); }
+/* audit design-system §4: 44 px touch target on the phone (the chip itself stays 32 px on desktop) */
+@media (max-width: 720px) { .ha-chip { min-height: 44px; display: inline-flex; align-items: center; gap: var(--ha-space-1); } }
 .ha-chip .ha-chip__n { opacity: .7; font-variant-numeric: tabular-nums; }
 .ha-badge { display: inline-flex; align-items: center; gap: var(--ha-space-1); padding: 2px var(--ha-space-2); border-radius: var(--ha-radius-sm); font-size: var(--ha-text-caption); font-weight: 600; white-space: nowrap; background: var(--ha-paper-200); color: var(--ha-ink-900); }
 .ha-badge .ha-icon { font-size: 14px; }

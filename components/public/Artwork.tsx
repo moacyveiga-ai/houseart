@@ -84,7 +84,9 @@ export function Artwork({ artwork: a, related, signedIn = false }: { artwork: Pu
   const shows = a.history.filter((h) => h.kind === 'EXHIBITION')
   const others = a.history.filter((h) => h.kind !== 'EXHIBITION')
   const aboutLead = [a.technique, a.materials].filter(Boolean).join(', ')
-  const about = aboutLead || shows.length || others.length
+  // the text written by whoever registered the work; without it, the line built from the sheet
+  const written = (a.description ?? '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+  const about = written.length || aboutLead || shows.length || others.length
   const provenance = provenanceOf(a)
   const seller = a.seller
   const sellerMeta = [[seller.city, seller.uf].filter(Boolean).join('/') || null, seller.representsArtist ? 'representa a artista' : null].filter(Boolean).join(' · ')
@@ -168,7 +170,8 @@ export function Artwork({ artwork: a, related, signedIn = false }: { artwork: Pu
         {about ? (
           <div className="hp-artwork__col">
             <h2 className="hp-artwork__h2">Sobre a obra</h2>
-            {aboutLead ? <p className="hp-artwork__lead">{aboutLead}{a.dimensions !== '—' ? `, ${a.dimensions}` : ''}{a.series ? `. Da série “${a.series}”` : ''}.</p> : null}
+            {written.length ? written.map((p, i) => <p key={`w${i}`} className={i === 0 ? 'hp-artwork__lead' : 'hp-artwork__note'}>{p}</p>)
+              : aboutLead ? <p className="hp-artwork__lead">{aboutLead}{a.dimensions !== '—' ? `, ${a.dimensions}` : ''}{a.series ? `. Da série “${a.series}”` : ''}.</p> : null}
             {others.map((h, i) => <p key={`o${i}`} className="hp-artwork__note">{h.description} · {monthLong(h.occurredOn)}.</p>)}
             {shows.map((h, i) => <p key={`s${i}`} className="hp-artwork__note">Exposta em {h.description}, {monthLong(h.occurredOn)}.</p>)}
           </div>

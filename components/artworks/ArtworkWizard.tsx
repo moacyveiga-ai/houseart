@@ -176,6 +176,7 @@ export function ArtworkWizard({ initial, userName }: { initial: WizardArtwork; u
                   <label className="ha-label">Edição / tiragem<input className={`ha-input${hl.has('edition') ? ' ha-input--read' : ''}`} placeholder="Obra única" value={a.edition ?? ''} onChange={(e) => field('edition', e.target.value)} /></label>
                   <label className="ha-label">Assinatura<input className={`ha-input${hl.has('signatureLocation') ? ' ha-input--read' : ''}`} placeholder="Verso, canto inferior esquerdo" value={a.signatureLocation ?? ''} onChange={(e) => field('signatureLocation', e.target.value)} /></label>
                   <label className="ha-label">Série<input className="ha-input" value={a.series ?? ''} onChange={(e) => field('series', e.target.value)} /></label>
+                  <label className="ha-label ha-col-span">Sobre a obra<textarea className="ha-textarea" rows={4} maxLength={2000} placeholder="O que a obra é, de onde vem, o que a artista quis — aparece na página pública" value={a.description ?? ''} onChange={(e) => field('description', e.target.value)} /><span className="ha-muted ha-sm">Até 2.000 caracteres, sem telefone, e-mail ou redes.</span></label>
                   <p className="ha-muted ha-sm ha-col-span">Artista: {a.artistName}</p>
                 </fieldset>
               )}

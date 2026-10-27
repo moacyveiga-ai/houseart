@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requirePanel } from '@/lib/auth/panel'
 import { getArtwork, patchArtwork } from '@/lib/artworks/server'
 import { artworkPatchSchema } from '@/lib/artworks/input'
+import { hasContactLeak } from '@/lib/messaging/core'
 import { toArtworkDto } from '@/lib/artworks/dto-core'
 import { artworkErrorResponse, idParam, json } from '../_http'
 
@@ -24,6 +25,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     if (!id) return NextResponse.json({ error: 'Obra não encontrada.' }, { status: 404 })
     const parsed = artworkPatchSchema.safeParse(await req.json().catch(() => ({})))
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.', issues: parsed.error.issues.map((i) => i.path.join('.')) }, { status: 400 })
+    if (parsed.data.description && hasContactLeak(parsed.data.description)) return NextResponse.json({ error: 'O texto “Sobre a obra” não pode ter telefone, e-mail ou redes.', issues: ['description'] }, { status: 400 })
     return json(toArtworkDto(await patchArtwork(scope, id, parsed.data)))
   } catch (e) { return artworkErrorResponse(e) }
 }

@@ -30,6 +30,8 @@ export const artworkPatchSchema = z.object({
   edition: text(80),
   signatureLocation: text(120),
   series: text(120),
+  /** "Sobre a obra" of the public page; the route refuses contacts (the chat's filter) */
+  description: text(2000),
   category: z.enum(ARTWORK_CATEGORIES).optional(),
   acquisitionKind: z.enum(ORIGIN_KINDS).nullable().optional(),
   acquisitionYear: intOrNull,

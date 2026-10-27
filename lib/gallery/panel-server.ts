@@ -11,7 +11,7 @@ import { unansweredConversations } from '@/lib/messaging/server'
 import { AGENDA_KIND_LABELS, type AgendaKind } from '@/lib/public-content/domain'
 import { panelKpis, type PanelKpi } from './domain'
 import { viewsSinceMany } from './listing-server'
-import { agendaOf, draftsAction, offerSub, unansweredAction, type AgendaItem, type AgendaSource, type PanelAction } from './panel-core'
+import { agendaOf, certificationActions, draftsAction, offerSub, unansweredAction, type AgendaItem, type AgendaSource, type PanelAction } from './panel-core'
 
 export type { AgendaItem, PanelAction } from './panel-core'
 export interface DayPanel { kpis: PanelKpi[]; actions: PanelAction[]; agenda: AgendaItem[]; monthName: string }
@@ -79,13 +79,13 @@ export async function dayPanel(scope: Scope, now = new Date(), userId: number | 
   for (const d of deals.filter((x) => x.phase === 'DOCUMENTS')) actions.push({ icon: 'inventory_2', title: 'Embalar e registrar o envio', sub: `${d.artworkTitle} · vendida para ${d.buyerName}`, tag: 'hoje', tone: 'alert', href: `/sales?tab=deals&sale=${d.id}` })
   const [waiting, inCert, drafts, agenda] = await Promise.all([
     userId ? unansweredConversations(userId) : [],
-    prisma.artwork.count({ where: { ...memberFilter(scope), status: 'IN_CERTIFICATION' } }),
+    prisma.artwork.findMany({ where: { ...memberFilter(scope), status: 'IN_CERTIFICATION' }, orderBy: { submittedAt: 'asc' }, take: 200, select: { id: true, title: true, year: true, publicId: true, certificate: { select: { signedAt: true, issuedAt: true } } } }),
     prisma.artwork.count({ where: { ...memberFilter(scope), status: 'DRAFT' } }),
     agendaFor(scope, userId, now),
   ])
   const unanswered = unansweredAction(waiting.map((w) => w.name))
   if (unanswered) actions.push(unanswered)
-  if (inCert) actions.push({ icon: 'verified', title: `${inCert} ${inCert === 1 ? 'obra' : 'obras'} em certificação`, sub: 'Vincule a etiqueta e assine o certificado', tag: 'pendente', tone: 'neutral', href: '/certification' })
+  actions.push(...certificationActions(inCert.map((a) => ({ id: a.id, title: `${a.title}${a.year ? `, ${a.year}` : ''}`, linked: !!a.publicId, signed: !!a.certificate?.signedAt, issued: !!a.certificate?.issuedAt }))))
   const draft = draftsAction(drafts)
   if (draft) actions.push(draft)
   return { kpis, actions, agenda, monthName }

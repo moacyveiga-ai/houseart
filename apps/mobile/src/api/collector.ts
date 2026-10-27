@@ -15,10 +15,14 @@ export interface PurchaseDeal {
   steps: { phase: DealPhase; title: string; icon: string; description: string; date: string | null; state: 'done' | 'on' | 'todo' }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
+  /** CANCELLED | DISPUTE | … (the web hides "Falar com o vendedor" on a cancelled deal; the server refuses it) */
+  exception?: string | null
 }
 export interface Purchases { deals: PurchaseDeal[]; simulateAllowed: boolean }
 export const purchases = (): Promise<Purchases> => api<Purchases>('/api/collector/purchases')
 export const payEscrow = (dealId: number) => api<{ ok: boolean }>(`/api/deals/${dealId}/escrow`, { body: {} })
+/** The buyer opens (or reopens) the conversation with who sold the artwork — the web's "Falar com o vendedor". */
+export const openDealConversation = (dealId: number) => api<{ ok: boolean; id: number }>(`/api/deals/${dealId}/conversation`, { body: {} })
 export const signAsBuyer = (dealId: number) => api<{ ok: boolean }>(`/api/deals/${dealId}/sign`, { body: {} })
 /** The tap of the delivery: the SUN message of the tag, or (the server decides: mock vendor) the simulated tap with no read. */
 export const confirmDelivery = (dealId: number, sun: { uid: string; ctr: number; cmac: string } | null) => api<{ ok: boolean }>(`/api/deals/${dealId}/confirm-delivery`, { body: sun ?? {} })

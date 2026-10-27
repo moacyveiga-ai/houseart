@@ -96,7 +96,7 @@ export async function listConversations(me: number, q?: string | null): Promise<
     include: { participants: { where: { userId: me } } },
   })
   const otherIds = [...new Set(rows.map((r) => otherOf(r, me)))]
-  const users = otherIds.length ? await prisma.user.findMany({ where: { id: { in: otherIds } }, select: { id: true, name: true, avatarUrl: true, member: { select: { kind: true, displayName: true } } } }) : []
+  const users = otherIds.length ? await prisma.user.findMany({ where: { id: { in: otherIds } }, select: { id: true, name: true, avatarUrl: true, active: true, member: { select: { kind: true, displayName: true } } } }) : []
   const artIds = [...new Set(rows.map((r) => r.artworkId).filter((v): v is number => v != null))]
   const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds } }, select: { id: true, title: true, publicId: true, coverMediaId: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
   const byUser = new Map(users.map((u) => [u.id, u])); const byArt = new Map(arts.map((a) => [a.id, a]))
@@ -107,7 +107,7 @@ export async function listConversations(me: number, q?: string | null): Promise<
     const name = u.member?.displayName ?? u.name
     const row: ConversationRow = {
       id: r.id, artworkId: r.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null,
-      other: { id: u.id, name, initials: initials(name), avatarUrl: u.avatarUrl, sub: u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : u.member.kind === 'COLLECTOR' ? 'Colecionador' : 'Consultor') : 'Colecionador' },
+      other: { id: u.id, name, initials: initials(name), avatarUrl: u.active ? u.avatarUrl : null, sub: u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : u.member.kind === 'COLLECTOR' ? 'Colecionador' : 'Consultor') : 'Colecionador' },
       preview: r.lastPreview ?? '', when: r.lastMessageAt ? whenLabel(r.lastMessageAt) : '', unread: r.participants[0]?.unread ?? 0,
     }
     if (q && !`${row.other.name} ${row.artworkTitle ?? ''}`.toLowerCase().includes(q.toLowerCase())) continue
@@ -145,7 +145,7 @@ async function requireParticipant(me: number, conversationId: number) {
 export async function readConversation(me: number, conversationId: number, afterId = 0): Promise<{ header: ConversationRow; messages: MessageRow[] }> {
   const c = await requireParticipant(me, conversationId)
   const other = otherOf(c, me)
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: other }, select: { id: true, name: true, avatarUrl: true, collectorVerifiedAt: true, emailVerifiedAt: true, phoneVerifiedAt: true, member: { select: { displayName: true, kind: true, status: true, approvedAt: true } } } })
+  const u = await prisma.user.findUniqueOrThrow({ where: { id: other }, select: { id: true, name: true, avatarUrl: true, active: true, collectorVerifiedAt: true, emailVerifiedAt: true, phoneVerifiedAt: true, member: { select: { displayName: true, kind: true, status: true, approvedAt: true } } } })
   const meRow = await prisma.user.findUniqueOrThrow({ where: { id: me }, select: { tenantId: true, member: { select: { kind: true } } } })
   const a = c.artworkId ? await prisma.artwork.findUnique({ where: { id: c.artworkId }, select: { title: true, publicId: true, status: true, seal: true, saleMode: true, listPriceCents: true, listingPausedAt: true, member: { select: { userId: true, tenantId: true, tenant: { select: { status: true } } } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : null
   // the artwork's member lost its login (SetNull): the tenant ADMIN answers for it, as in counterpartOfArtwork
@@ -158,7 +158,7 @@ export async function readConversation(me: number, conversationId: number, after
   await prisma.conversationParticipant.updateMany({ where: { conversationId, userId: me }, data: { unread: 0, lastReadAt: new Date() } })
   const name = u.member?.displayName ?? u.name
   return {
-    header: { id: c.id, artworkId: c.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null, other: { id: u.id, name, initials: initials(name), avatarUrl: u.avatarUrl, sub: await subOf(u.id), verified: verifiedByHouse({ memberStatus: u.member?.status ?? null, memberApprovedAt: u.member?.approvedAt ?? null, collectorVerifiedAt: u.collectorVerifiedAt, emailVerifiedAt: u.emailVerifiedAt, phoneVerifiedAt: u.phoneVerifiedAt }) }, preview: c.lastPreview ?? '', when: c.lastMessageAt ? whenLabel(c.lastMessageAt) : '', unread: 0,
+    header: { id: c.id, artworkId: c.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null, other: { id: u.id, name, initials: initials(name), avatarUrl: u.active ? u.avatarUrl : null, sub: await subOf(u.id), verified: verifiedByHouse({ memberStatus: u.member?.status ?? null, memberApprovedAt: u.member?.approvedAt ?? null, collectorVerifiedAt: u.collectorVerifiedAt, emailVerifiedAt: u.emailVerifiedAt, phoneVerifiedAt: u.phoneVerifiedAt }) }, preview: c.lastPreview ?? '', when: c.lastMessageAt ? whenLabel(c.lastMessageAt) : '', unread: 0,
       myRole, artworkPrice, canOffer: listed && myRole === 'buyer' && a!.saleMode === 'FIXED_WITH_OFFERS' },
     messages: msgs.map((m) => ({ id: m.id, mine: m.senderUserId === me, kind: m.kind as MessageKind, body: m.body, at: m.createdAt.toISOString(), offerId: m.offerId, imageUrl: m.kind === 'IMAGE' && m.imageRef ? photoUrl(conversationId, m.id) : null })),
   }

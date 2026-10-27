@@ -17,7 +17,7 @@ export async function GET(_req: Request, ctx: Ctx) {
     if (!file) return NextResponse.json({ error: 'Foto não encontrada.' }, { status: 404 })
     return new NextResponse(file.stream, { status: 200, headers: {
       'content-type': 'image/jpeg', ...(file.size !== null ? { 'content-length': String(file.size) } : {}),
-      'content-disposition': 'inline; filename="embalagem.jpg"', 'x-content-type-options': 'nosniff', 'content-security-policy': 'sandbox', 'cache-control': 'private, max-age=3600',
+      'content-disposition': 'inline; filename="embalagem.jpg"', 'x-content-type-options': 'nosniff', 'content-security-policy': 'sandbox', 'cache-control': 'private, no-cache',
     } })
   } catch (e) {
     if (e instanceof PrivateVaultUnavailableError) return NextResponse.json({ error: 'Foto indisponível agora.' }, { status: 503 })

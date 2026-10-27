@@ -9,13 +9,21 @@ import { ArtworkError } from '@/lib/artworks/server'
 import { audit } from '@/lib/audit'
 import { notify } from '@/lib/notifications/server'
 import { contentTypeOf } from '@/lib/storage/content-type'
-import { savePrivateFile } from '@/lib/storage/private-vault'
+import { deleteVaultFile, savePrivateFile } from '@/lib/storage/private-vault'
 import { CONTENT_IMAGE_MAX_SIDE, contentImageVerdict } from '@/lib/public-content/editor-core'
 import type { DealPhase } from './domain'
 import { canRecordPackaging, conditionReportOf, PACKAGING_MAX_PHOTOS, packagingPhotoUrl } from './packaging-core'
 
 /** a 10 MB PNG can decode to hundreds of MB: anything above 40 MP is refused before decoding */
 const PHOTO_MAX_PIXELS = 40_000_000
+
+/** one writer per deal's packaging at a time: the six-photo cap and the "last photo stays" rule hold under concurrent requests */
+const lockKey = (dealId: number) => `deal-packaging:${dealId}`
+
+/** a vault file whose row never landed (or was removed) is a client's photo: best-effort cleanup, never fatal */
+function dropFile(ref: string): void {
+  deleteVaultFile(ref).catch((e: unknown) => console.error('[packaging] arquivo do cofre não apagado:', (e as Error)?.name ?? 'erro'))
+}
 
 async function sellerPackingDeal(scope: Scope, dealId: number) {
   const d = await prisma.deal.findUnique({ where: { id: dealId }, select: { id: true, phase: true, exceptionStatus: true, memberId: true, tenantId: true, buyerUserId: true, code: true, packedAt: true } })
@@ -26,8 +34,7 @@ async function sellerPackingDeal(scope: Scope, dealId: number) {
 
 export async function addPackagingPhoto(scope: Scope, dealId: number, bytes: Buffer, actorUserId: number): Promise<{ id: number; url: string }> {
   await sellerPackingDeal(scope, dealId)
-  const count = await prisma.dealPackagingPhoto.count({ where: { dealId } })
-  if (count >= PACKAGING_MAX_PHOTOS) throw new ArtworkError('TOO_MANY_PHOTOS', `Até ${PACKAGING_MAX_PHOTOS} fotos da embalagem.`, 409)
+  if ((await prisma.dealPackagingPhoto.count({ where: { dealId } })) >= PACKAGING_MAX_PHOTOS) throw new ArtworkError('TOO_MANY_PHOTOS', `Até ${PACKAGING_MAX_PHOTOS} fotos da embalagem.`, 409)
   const v = contentImageVerdict(contentTypeOf(bytes.subarray(0, 32), null), bytes.length)
   if (!v.ok) throw new ArtworkError('INVALID_FILE', v.error, v.status)
   let out: Buffer
@@ -37,17 +44,34 @@ export async function addPackagingPhoto(scope: Scope, dealId: number, bytes: Buf
       .flatten({ background: '#ffffff' }).jpeg({ quality: 85 }).toBuffer()
   } catch { throw new ArtworkError('INVALID_FILE', 'Imagem ilegível.', 415) }
   const fileRef = await savePrivateFile({ buffer: out, contentType: 'image/jpeg', prefix: `deals/${dealId}/packaging` })
-  const row = await prisma.dealPackagingPhoto.create({ data: { dealId, fileRef } })
+  let row: { id: number }
+  try {
+    // the phase and the cap are checked again under the lock, where the row is written
+    row = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey(dealId)}))`
+      const d = await tx.deal.findUnique({ where: { id: dealId }, select: { phase: true, exceptionStatus: true } })
+      if (!d || !canRecordPackaging(d.phase as DealPhase, d.exceptionStatus)) throw new ArtworkError('WRONG_PHASE', 'A embalagem é registrada entre o pagamento em garantia e o envio.', 409)
+      if ((await tx.dealPackagingPhoto.count({ where: { dealId } })) >= PACKAGING_MAX_PHOTOS) throw new ArtworkError('TOO_MANY_PHOTOS', `Até ${PACKAGING_MAX_PHOTOS} fotos da embalagem.`, 409)
+      return tx.dealPackagingPhoto.create({ data: { dealId, fileRef }, select: { id: true } })
+    })
+  } catch (e) { dropFile(fileRef); throw e }
   void audit.event({ entity: 'deal', entityId: dealId, action: 'packaging_photo_added', userId: actorUserId, after: { photoId: row.id } })
   return { id: row.id, url: packagingPhotoUrl(dealId, row.id) }
 }
 
 export async function removePackagingPhoto(scope: Scope, dealId: number, photoId: number, actorUserId: number): Promise<void> {
-  const d = await sellerPackingDeal(scope, dealId)
-  // a recorded packaging keeps at least one photo (the buyer was told there are photos)
-  if (d.packedAt && (await prisma.dealPackagingPhoto.count({ where: { dealId } })) <= 1) throw new ArtworkError('LAST_PHOTO', 'A embalagem registrada mantém ao menos uma foto.', 409)
-  const r = await prisma.dealPackagingPhoto.deleteMany({ where: { id: photoId, dealId } })
-  if (r.count === 0) throw new ArtworkError('NOT_FOUND', 'Foto não encontrada.', 404)
+  await sellerPackingDeal(scope, dealId)
+  const fileRef = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey(dealId)}))`
+    const d = await tx.deal.findUnique({ where: { id: dealId }, select: { packedAt: true } })
+    const photo = await tx.dealPackagingPhoto.findFirst({ where: { id: photoId, dealId }, select: { fileRef: true } })
+    if (!photo) throw new ArtworkError('NOT_FOUND', 'Foto não encontrada.', 404)
+    // a recorded packaging keeps at least one photo (the buyer was told there are photos)
+    if (d?.packedAt && (await tx.dealPackagingPhoto.count({ where: { dealId } })) <= 1) throw new ArtworkError('LAST_PHOTO', 'A embalagem registrada mantém ao menos uma foto.', 409)
+    await tx.dealPackagingPhoto.delete({ where: { id: photoId } })
+    return photo.fileRef
+  })
+  dropFile(fileRef)
   void audit.event({ entity: 'deal', entityId: dealId, action: 'packaging_photo_removed', userId: actorUserId, after: { photoId } })
 }
 
@@ -56,8 +80,11 @@ export async function recordPackaging(scope: Scope, dealId: number, raw: unknown
   const d = await sellerPackingDeal(scope, dealId)
   const report = conditionReportOf(raw)
   if (!report.ok) throw new ArtworkError('INVALID_REPORT', report.error, 400)
-  if ((await prisma.dealPackagingPhoto.count({ where: { dealId } })) === 0) throw new ArtworkError('NO_PHOTOS', 'Adicione ao menos uma foto da obra embalada.', 400)
-  await prisma.deal.update({ where: { id: dealId }, data: { conditionReport: report.text, packedAt: new Date() } })
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey(dealId)}))`
+    if ((await tx.dealPackagingPhoto.count({ where: { dealId } })) === 0) throw new ArtworkError('NO_PHOTOS', 'Adicione ao menos uma foto da obra embalada.', 400)
+    await tx.deal.update({ where: { id: dealId }, data: { conditionReport: report.text, packedAt: d.packedAt ?? new Date() } })
+  })
   void audit.event({ entity: 'deal', entityId: dealId, action: d.packedAt ? 'packaging_updated' : 'packaging_recorded', userId: actorUserId, after: { length: report.text.length } })
   if (!d.packedAt) {
     const buyer = await prisma.user.findUnique({ where: { id: d.buyerUserId }, select: { email: true } })

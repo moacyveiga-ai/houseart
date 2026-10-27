@@ -30,9 +30,11 @@ export function FeedCard({ item, actions, busy, myMemberId }: { item: FeedItem; 
   return (
     <article className="ha-cm-post" aria-label={item.title ?? item.body.slice(0, 60) ?? 'Post'}>
       <div className="ha-cm-post__by">
-        <span className="ha-avatar ha-cm-post__avatar" aria-hidden="true">{item.author.initials}</span>
+        {item.author.profileHref
+          ? <Link href={item.author.profileHref} className="ha-avatar ha-cm-post__avatar ha-cm-post__avatar--link" aria-label={`Perfil de ${item.author.name}`}>{item.author.initials}</Link>
+          : <span className="ha-avatar ha-cm-post__avatar" aria-hidden="true">{item.author.initials}</span>}
         <div className="ha-cm-post__who">
-          <span className="ha-cm-post__name"><span>{item.author.name}</span><span className={`ha-cm-tag${tag.official ? ' ha-cm-tag--official' : ''}`}>{tag.label}</span></span>
+          <span className="ha-cm-post__name">{item.author.profileHref ? <Link href={item.author.profileHref} className="ha-cm-post__namelink">{item.author.name}</Link> : <span>{item.author.name}</span>}<span className={`ha-cm-tag${tag.official ? ' ha-cm-tag--official' : ''}`}>{tag.label}</span></span>
           {line ? <span className="ha-cm-post__sub">{line}</span> : null}
         </div>
         {canFollow ? (

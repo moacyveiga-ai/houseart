@@ -85,3 +85,15 @@ export function dayMonthOf(ymd: string): { day: string; month: string } {
   const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
   return { day: d ?? '', month: months[Number(m) - 1] ?? '' }
 }
+
+/**
+ * Where the author's avatar and name lead (audit colecionador §7): an artist to the public artist
+ * page, gallery staff to the gallery page of the tenant (only while the gallery is active and has
+ * a page); a collector or consultant has no public page, so nothing.
+ */
+export function profileHrefOf(m: { kind: string; artistSlug: string | null; gallerySlug: string | null; tenantActive: boolean } | null): string | null {
+  if (!m) return null
+  if (m.kind === 'ARTIST' && m.artistSlug) return `/e/artist/${m.artistSlug}`
+  if (m.kind === 'GALLERY_STAFF' && m.gallerySlug && m.tenantActive) return `/e/gallery/${m.gallerySlug}`
+  return null
+}

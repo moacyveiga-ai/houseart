@@ -140,7 +140,7 @@ export function Artwork({ artwork: a, related, signedIn = false, counts = null }
                   <TalkToSellerButton artworkId={a.id} publicId={a.publicId} signedIn={signedIn} label={talkLabel} className="ha-btn ha-btn--outline ha-btn--md hp-artwork__talk" />
                 )}
                 {counts && (counts.likes || counts.comments) ? (
-                  <div className="hp-artwork__social" aria-label={`${counts.likes} curtidas e ${counts.comments} comentários`}>
+                  <div className="hp-artwork__social" role="group" aria-label={`${counts.likes} curtidas e ${counts.comments} comentários`}>
                     <span><Icon name="favorite" size={16} />{counts.likes}</span>
                     <span><Icon name="chat_bubble" size={16} />{counts.comments}</span>
                   </div>

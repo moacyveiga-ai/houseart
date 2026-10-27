@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Icon } from './Icon'
 
-type Variant = 'primary' | 'ink' | 'outline' | 'outline-paper' | 'paper' | 'ghost'
+type Variant = 'primary' | 'ink' | 'outline' | 'outline-paper' | 'paper' | 'ghost' | 'danger'
 type Size = 'xs' | 'sm' | 'md' | 'lg'
 
 interface Common { variant?: Variant; size?: Size; icon?: string; children?: ReactNode; className?: string; loading?: boolean }

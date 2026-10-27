@@ -8,6 +8,7 @@ import { useState, type ChangeEvent } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import type { GalleryAccountView } from '@/lib/gallery/account-server'
+import { Button } from '@/components/ds/Button'
 
 export function GalleryDataForm({ account }: { account: GalleryAccountView }) {
   const [form, setForm] = useState({ ...account.data })
@@ -40,7 +41,7 @@ export function GalleryDataForm({ account }: { account: GalleryAccountView }) {
         <label className="ha-gdata__field ha-gdata__field--wide"><span>Sobre a galeria</span><textarea className="ha-input ha-gdata__ta" value={form.summary} onChange={on('summary')} readOnly={ro} maxLength={200} rows={3} placeholder="Uma linha sobre a galeria, para o site e a comunidade" /><small>{form.summary.length}/200</small></label>
       </div>
       {error ? <p className="ha-gdata__err" role="alert">{error}</p> : null}
-      {ro ? null : <div className="ha-row"><button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={saving} onClick={save} aria-busy={saving || undefined}>{saving ? 'Salvando…' : 'Salvar alterações'}</button></div>}
+      {ro ? null : <div className="ha-row"><Button variant="primary" size="md" disabled={saving} onClick={save} loading={saving}>{saving ? 'Salvando…' : 'Salvar alterações'}</Button></div>}
       <Toast message={toast} onDone={() => setToast('')} />
     </div>
   )

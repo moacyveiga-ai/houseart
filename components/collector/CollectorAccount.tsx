@@ -13,6 +13,7 @@ import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
 import { ABOUT_MAX } from '@/lib/profile/core'
 import { shrinkToJpeg } from '@/components/artworks/capture-render'
 import './collector-account.css'
+import { Button } from '@/components/ds/Button'
 
 export interface AccountLinkItem { kind: 'link'; icon: string; name: string; sub: string; href: string }
 export interface AccountSwitchItem { kind: 'switch'; icon: string; name: string; sub: string; key: 'marketingOptIn'; on: boolean }
@@ -176,7 +177,7 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
               <ul className="ha-cacct__list">{DELETE_CONSEQUENCES.map((c) => <li key={c}>{c}</li>)}</ul>
               <label className="ha-cacct__field">Digite {DELETE_WORD} para confirmar<input className="ha-input" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" autoCapitalize="characters" /></label>
               {deleteError ? <p className="ha-cacct__err" role="alert">{deleteError}</p> : null}
-              <button type="button" className="ha-btn ha-btn--danger ha-btn--md" disabled={deleting || typed.trim().toUpperCase() !== DELETE_WORD} onClick={confirmDelete}>{deleting ? 'Excluindo…' : 'Excluir conta'}</button>
+              <Button variant="danger" size="md" disabled={deleting || typed.trim().toUpperCase() !== DELETE_WORD} onClick={confirmDelete} loading={deleting}>{deleting ? 'Excluindo…' : 'Excluir conta'}</Button>
             </>
           )}
         </div>

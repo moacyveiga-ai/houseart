@@ -18,6 +18,7 @@ import { ROYALTY_PCT, SECONDARY_BUYER_PCT, SECONDARY_SELLER_PCT, autoAcceptBps, 
 import { PixKeyForm } from '@/components/sales/PixKeyForm'
 import '@/components/sales/payout.css'
 import './collector-sheets.css'
+import { Button } from '@/components/ds/Button'
 
 export interface SellArtwork { artworkId: number; title: string; artist: string; cover: string | null; status: string; sealGreen: boolean; registeredCents: string | null; /** "Faixa sugerida…" line, computed on the server */ priceRange?: string | null }
 /** "Publicar sem Pix abre o cadastro de Pix e depois publica" (prototype): who receives, and whether a way to receive exists. */
@@ -172,7 +173,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify, payout }: { ar
           </div>
           <div className="ha-cs__foot ha-cs__cta-row">
             <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setStep(0)} disabled={busy}>Voltar</button>
-            <button type="button" className="ha-btn ha-btn--primary ha-btn--md" onClick={tryPublish} disabled={busy} aria-busy={busy || undefined}>{busy ? 'Publicando…' : 'Publicar no marketplace'}</button>
+            <Button variant="primary" size="md" onClick={tryPublish} disabled={busy} loading={busy}>{busy ? 'Publicando…' : 'Publicar no marketplace'}</Button>
           </div>
         </>)}
       </div>

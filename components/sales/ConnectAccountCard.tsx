@@ -4,6 +4,7 @@
 // connected → "Conectar conta"; onboarding → "Continuar cadastro"; pendências →
 // the list Stripe asks + "Completar cadastro"; ativa → "Abrir painel da Stripe".
 // `?connect=return` syncs on mount; `?connect=refresh` (an expired link) restarts.
+import { Button } from '@/components/ds/Button'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
@@ -72,8 +73,8 @@ export function ConnectAccountCard({ account: initial, connectParam }: { account
         </div>
       ) : null}
       <div className="ha-connect__foot">
-        {primary ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy !== null} onClick={() => call(primary.path)}>{busy === primary.path ? 'Abrindo a Stripe…' : primary.label}</button> : null}
-        {account.status !== 'PENDING' ? <button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" disabled={busy !== null} onClick={() => call('sync')}>{busy === 'sync' ? 'Conferindo…' : 'Atualizar situação'}</button> : null}
+        {primary ? <Button variant="primary" size="md" disabled={busy !== null} loading={busy === primary.path} onClick={() => call(primary.path)}>{busy === primary.path ? 'Abrindo a Stripe…' : primary.label}</Button> : null}
+        {account.status !== 'PENDING' ? <Button variant="ghost" size="sm" disabled={busy !== null} loading={busy === 'sync'} onClick={() => call('sync')}>{busy === 'sync' ? 'Conferindo…' : 'Atualizar situação'}</Button> : null}
       </div>
       <span className="ha-connect__note"><Icon name="info" size={16} />{account.status === 'ENABLED' ? 'Sem conta Stripe o repasse seria manual, pela chave Pix.' : 'Sem a conta Stripe, o repasse é manual, pela chave Pix cadastrada abaixo.'}</span>
       <Toast message={toast} onDone={clearToast} />

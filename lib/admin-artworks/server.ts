@@ -28,10 +28,10 @@ export async function adminArtworks(opt: { q?: string; f: ArtworkFilter; page?: 
   return totalScope('admin:artworks', async () => {
     const q = parseQuery(opt.q)
     const where = whereOf(opt.f, q)
-    const [total, byStatus, alertCerts] = await Promise.all([
+    const [total, byStatus, alert] = await Promise.all([
       prisma.artwork.count({ where }),
       prisma.artwork.groupBy({ by: ['status'], _count: { _all: true } }),
-      prisma.certificate.count({ where: { status: { in: [...ALERT_CERTIFICATE_STATUSES] } } }),
+      prisma.artwork.count({ where: whereOf('alert', parseQuery('')) }),
     ])
     const { page, pages } = pageOf(opt.page, total)
     const rows = await prisma.artwork.findMany({
@@ -52,7 +52,8 @@ export async function adminArtworks(opt: { q?: string; f: ArtworkFilter; page?: 
         all: count(byStatus.map((b) => b.status)),
         certification: count(['IN_CERTIFICATION']),
         certified: count(['AUTHENTICATED', 'LISTED', 'IN_DEAL', 'SOLD']),
-        alert: count(['STOLEN', 'DISPUTED']), alertCerts,
+        // the same union as the "Com alerta" chip: a stolen work with a revoked certificate counts once
+        alert,
       },
       rows: rows.map((r): AdminArtworkRow => ({
         id: r.id, title: r.title, year: r.year, publicId: r.publicId, status: r.status, seal: r.seal, createdAt: r.createdAt.toISOString(),

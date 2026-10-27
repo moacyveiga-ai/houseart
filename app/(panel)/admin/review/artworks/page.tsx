@@ -32,7 +32,7 @@ export default async function AdminArtworksPage({ searchParams }: { searchParams
         { label: 'Obras cadastradas', value: d.kpis.all.toLocaleString('pt-BR'), note: 'em qualquer estado' },
         { label: 'Em certificação', value: d.kpis.certification.toLocaleString('pt-BR'), note: 'esperando etiqueta, assinatura ou emissão' },
         { label: 'Autenticadas', value: d.kpis.certified.toLocaleString('pt-BR'), note: 'certificado emitido' },
-        { label: 'Com alerta', value: String(d.kpis.alert + d.kpis.alertCerts), note: `${d.kpis.alert} roubada ou em disputa · ${d.kpis.alertCerts} certificado contestado ou revogado` },
+        { label: 'Com alerta', value: d.kpis.alert.toLocaleString('pt-BR'), note: 'roubada, em disputa ou com certificado contestado ou revogado' },
       ]} />
       <form className="ha-aart__search" action="/admin/review/artworks" method="get" role="search">
         <label className="ha-field__label" htmlFor="art-q">Buscar</label>

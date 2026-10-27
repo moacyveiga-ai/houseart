@@ -59,6 +59,8 @@ export function SaleDetail({ deal, finance, payoutNote, canAnswer, closeHref, wo
           <button type="button" className="ha-sd__btn ha-sd__btn--primary" disabled={busy !== null || !ship.carrier.trim() || !ship.tracking.trim()} onClick={() => post('shipping', { carrier: ship.carrier.trim(), tracking: ship.tracking.trim(), insurer: ship.insurer.trim() || undefined }, `Envio registrado · ${first} recebeu o rastreio`)}><Icon name="local_shipping" size={20} />Registrar envio</button>
         </div>
       ) : null}
+      {/* Concluída · "Baixar comprovante" (the PDF of the Financeiro; there is no fiscal note in the platform) */}
+      {stage === 5 && !deal.exception ? <a href={`/api/deals/${deal.id}/receipt`} download className="ha-sd__btn"><Icon name="download" size={20} />Baixar comprovante</a> : null}
       {canAnswer ? <button type="button" className="ha-sd__btn" disabled={busy !== null} onClick={talk}><Icon name="chat_bubble" size={20} />Conversar com {first}</button> : null}
     </>
   )

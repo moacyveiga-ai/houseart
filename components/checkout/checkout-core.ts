@@ -50,13 +50,13 @@ export const PAY_METHODS: { key: PayMethod; name: string; sub: string; icon: str
   { key: 'BOLETO', name: 'Boleto', sub: '1 dia útil', icon: 'receipt_long' },
 ]
 
-export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null }
+export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null; /** the CEP was typed but did not quote */ cepFailed?: boolean }
 
 /** Why the order cannot be confirmed yet (null = ready). */
 export function blockedReason(i: ReadyInput): string | null {
   const method = i.method ?? 'CARD'
   if (method === 'CARD' && !i.hasCard) return 'Adicione um cartão para pagar.'
-  if (i.delivery === 'CARRIER' && !i.cepValid) return 'Informe o CEP de entrega para calcular frete e seguro.'
+  if (i.delivery === 'CARRIER' && !i.cepValid) return i.cepFailed ? 'Não foi possível calcular o frete deste CEP. Confira o CEP ou escolha outro endereço.' : 'Informe o CEP de entrega para calcular frete e seguro.'
   if (method === 'BOLETO' && i.boletoProblem) return i.boletoProblem
   return null
 }

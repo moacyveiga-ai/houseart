@@ -58,3 +58,10 @@ describe('initialAddressId', () => {
     expect(initialAddressId([])).toBeNull()
   })
 })
+
+describe('blockedReason with a CEP that did not quote', () => {
+  it('says the CEP failed instead of asking for it', () => {
+    expect(blockedReason({ delivery: 'CARRIER', cepValid: false, cepFailed: true, hasCard: true, method: 'CARD', boletoProblem: null })).toMatch(/Não foi possível calcular/)
+    expect(blockedReason({ delivery: 'CARRIER', cepValid: false, hasCard: true, method: 'CARD', boletoProblem: null })).toMatch(/Informe o CEP/)
+  })
+})

@@ -35,9 +35,11 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
   const chosen = addresses.find((x) => x.id === addressId) ?? null
   const [cep, setCep] = useState(() => { const first = addresses.find((x) => x.id === initialAddressId(addresses)); return first ? maskCep(first.cep) : '' })
   const pickAddress = (id: number | null) => {
-    setPicking(false); setAddressId(id); setQuote(null)
+    setPicking(false); setAddressId(id)
     const a = addresses.find((x) => x.id === id)
-    setCep(a ? maskCep(a.cep) : '')
+    const next = a ? maskCep(a.cep) : ''
+    // same CEP (the same address again, or two addresses in one building): keep the quote — the effect would not re-run
+    if (normalizeCep(next) !== cepNorm) { setQuote(null); setCep(next) }
   }
   const [quote, setQuote] = useState<Quote | null>(null)
   const [insurance, setInsurance] = useState(true)
@@ -67,7 +69,10 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
 
   // Shipping + insurance quote for the CEP (GET /api/public/shipping-quote).
   const cepNorm = normalizeCep(cep)
-  const quoting = !!cepNorm && !quote
+  // the CEP whose quote came back empty (or failed): "calculando" stops, and Pagar says why
+  const [failedCep, setFailedCep] = useState<string | null>(null)
+  const quoteFailed = !!cepNorm && !quote && failedCep === cepNorm
+  const quoting = !!cepNorm && !quote && !quoteFailed
   useEffect(() => {
     if (!cepNorm) return
     let alive = true
@@ -75,9 +80,10 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
       .then((r) => r.json())
       .then((d: { ok?: boolean; cep?: string | null; shippingCents?: string; insuranceCents?: string }) => {
         if (!alive) return
-        setQuote(d.ok && d.cep ? { cep: d.cep, shippingCents: Number(d.shippingCents ?? 0), insuranceCents: Number(d.insuranceCents ?? 0) } : null)
+        const q = d.ok && d.cep ? { cep: d.cep, shippingCents: Number(d.shippingCents ?? 0), insuranceCents: Number(d.insuranceCents ?? 0) } : null
+        setQuote(q); setFailedCep(q ? null : cepNorm)
       })
-      .catch(() => { if (alive) setQuote(null) })
+      .catch(() => { if (alive) { setQuote(null); setFailedCep(cepNorm) } })
     return () => { alive = false }
   }, [cepNorm, artwork.publicId, price])
 
@@ -86,7 +92,7 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
   const card = cards?.find((c) => c.id === cardId) ?? null
   const boletoBill = { ...bill, postalCode: bill.postalCode || (quote?.cep ?? '') }
   const boletoProblem = method === 'BOLETO' ? boletoBillingProblem(boletoBill) : null
-  const blocked = blockedReason({ delivery, cepValid: !!quote, hasCard: !!card, method, boletoProblem })
+  const blocked = blockedReason({ delivery, cepValid: !!quote, cepFailed: quoteFailed, hasCard: !!card, method, boletoProblem })
 
   const onCardAdded = useCallback((m: PaymentMethodView) => {
     setCards((prev) => [...(prev ?? []).map((c) => (m.isDefault ? { ...c, isDefault: false } : c)), m])
@@ -193,7 +199,7 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
                       <span>CEP de entrega</span>
                       <input className="ha-input" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" value={cep} onChange={(e) => { setCep(maskCep(e.target.value)); setQuote(null) }} aria-invalid={cep.length > 0 && !cepNorm ? true : undefined} />
                     </label>
-                    <span className="hc-address__state">{quoting ? 'Calculando…' : quote ? 'Frete e seguro calculados' : 'Informe o CEP'}</span>
+                    <span className="hc-address__state">{quoting ? 'Calculando…' : quote ? 'Frete e seguro calculados' : quoteFailed ? 'CEP sem cotação' : 'Informe o CEP'}</span>
                   </div>
                 ) : null}
                 {chosen && !picking ? <span className="hc-address__note">{quoting ? 'Calculando frete e seguro…' : quote ? 'Frete e seguro calculados para este endereço' : 'Não foi possível calcular o frete deste CEP'}</span> : null}

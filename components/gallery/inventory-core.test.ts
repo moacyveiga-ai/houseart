@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chipCounts, chipKey, emptyText, filterInventory, matchesQuery, rowPrice, rowStats, rowStatus, summaryLine, type InventoryItem } from './inventory-core'
+import { chipCounts, chipKey, emptyText, inventoryHref, filterInventory, matchesQuery, rowPrice, rowStats, rowStatus, summaryLine, type InventoryItem } from './inventory-core'
 
 const w = (p: Partial<InventoryItem> & { id: number; status: InventoryItem['status'] }): InventoryItem => ({ title: 'Obra', year: 2024, artistName: 'Artista', listPriceCents: null, saleMode: null, publicId: null, coverUrl: null, ...p })
 const items = [
@@ -49,5 +49,9 @@ describe('inventory-core', () => {
   it('has an empty text for the filter and for the search', () => {
     expect(emptyText('')).toBe('Nenhuma obra neste filtro.')
     expect(emptyText(' luz ')).toBe('Nenhuma obra para “luz”.')
+  })
+  it('href keeps the chip and drops an empty search', () => {
+    expect(inventoryHref('listed', '')).toBe('/artworks?filter=listed')
+    expect(inventoryHref('listed', '  Ana & Co ')).toBe('/artworks?filter=listed&q=Ana%20%26%20Co')
   })
 })

@@ -24,6 +24,12 @@ export const INVENTORY_CHIPS: { key: string; name: string; statuses: readonly Ar
   { key: 'drafts', name: 'Rascunhos', statuses: ['DRAFT'] },
 ]
 
+/** The Acervo URL of a chip and a search (the chip stays; an empty search drops `q`). */
+export function inventoryHref(chip: string, q: string): string {
+  const t = q.trim()
+  return `/artworks?filter=${encodeURIComponent(chip)}${t ? `&q=${encodeURIComponent(t)}` : ''}`
+}
+
 export function chipKey(raw: string | undefined): string {
   return INVENTORY_CHIPS.some((c) => c.key === raw) ? (raw as string) : 'all'
 }

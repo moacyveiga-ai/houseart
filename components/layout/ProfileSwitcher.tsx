@@ -3,9 +3,37 @@ import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { AvatarFace } from '@/components/ds/AvatarFace'
-import type { ProfileKindKey } from '@/lib/profiles/core'
+import { swapTarget, type ProfileKindKey } from '@/lib/profiles/core'
 
 export interface SwitcherProfile { kind: ProfileKindKey; name: string; icon: string; active: boolean }
+
+/** Switches the session's profile (POST /api/profiles) and opens its home; the error text when refused. */
+async function switchProfile(kind: ProfileKindKey): Promise<string | null> {
+  const res = await fetch('/api/profiles', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind }) }).catch(() => null)
+  const data = (await res?.json().catch(() => ({}))) as { home?: string; error?: string } | undefined
+  if (!res || !res.ok) return data?.error ?? 'Não foi possível trocar de perfil.'
+  window.location.assign(data?.home ?? '/')
+  return null
+}
+
+/**
+ * The pill of the design next to the account button ("Ver como colecionador" on the gallery's panel,
+ * "Ver como galeria" on the collector's): a shortcut to the counterpart profile the person also has.
+ * Nothing when there is none — the switcher menu keeps every profile.
+ */
+export function ProfileSwapPill({ profiles }: { profiles: SwitcherProfile[] }) {
+  const target = swapTarget(profiles)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  if (!target) return null
+  return (
+    <button type="button" className="ha-swap-pill" disabled={busy} title={error ?? undefined}
+      onClick={async () => { setBusy(true); setError(null); const err = await switchProfile(target.kind); if (err) { setBusy(false); setError(err) } }}>
+      <Icon name="swap_horiz" size={18} />
+      <span aria-live="polite">{busy ? 'Trocando…' : error ? 'Não foi possível trocar · tentar de novo' : target.label}</span>
+    </button>
+  )
+}
 
 /**
  * The profile button of the topbar (initials + profile + swap_horiz, as in the
@@ -34,10 +62,8 @@ export function ProfileSwitcher({ initials, label, display, avatarUrl = null, na
 
   async function pick(kind: ProfileKindKey) {
     setBusy(kind); setError(null)
-    const res = await fetch('/api/profiles', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind }) })
-    const data = await res.json().catch(() => ({})) as { home?: string; error?: string }
-    if (!res.ok) { setBusy(null); setError(data.error ?? 'Não foi possível trocar de perfil.'); return }
-    window.location.assign(data.home ?? '/')
+    const err = await switchProfile(kind)
+    if (err) { setBusy(null); setError(err) }
   }
 
   return (

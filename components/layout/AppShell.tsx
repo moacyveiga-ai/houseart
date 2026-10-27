@@ -4,7 +4,7 @@ import { Icon } from '@/components/ds/Icon'
 import { HouseArtLogo } from './HouseArtLogo'
 import { accountHrefOf, HELP_HREF, NAV, PROFILE_LABELS, type ProfileKind } from '@/lib/profiles/nav'
 import { ShellDrawer } from './ShellDrawer'
-import { ProfileSwitcher, type SwitcherProfile } from './ProfileSwitcher'
+import { ProfileSwapPill, ProfileSwitcher, type SwitcherProfile } from './ProfileSwitcher'
 
 export interface ShellUser { initials: string; profile: ProfileKind; name?: string
   /** what the profile chip says: the gallery's name for the gallery profile, else the person's */
@@ -45,6 +45,7 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
         </form>
         <div className="ha-topbar__right">
           <Link href="/notifications" className="ha-btn ha-btn--ghost ha-btn--xs ha-bell" aria-label={bell ? `Notificações, ${bell} não lidas` : 'Notificações'}><Icon name="notifications" />{bell ? <span className="ha-bell__dot" /> : null}</Link>
+          <ProfileSwapPill profiles={profiles} />
           <ProfileSwitcher initials={user.initials} label={PROFILE_LABELS[user.profile]} display={user.display} avatarUrl={user.avatarUrl ?? null} name={user.name} profiles={profiles} accountHref={accountHref} />
         </div>
       </header>

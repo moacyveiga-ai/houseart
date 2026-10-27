@@ -292,6 +292,13 @@
 .ha-kanban { display: grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: var(--ha-space-4); overflow-x: auto; padding-bottom: var(--ha-space-2); }
 .ha-kanban__col { background: var(--ha-surface); border-radius: var(--ha-radius-md); padding: var(--ha-space-3); display: flex; flex-direction: column; gap: var(--ha-space-3); min-height: 420px; }
 .ha-kanban__card { background: var(--ha-bg); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); padding: var(--ha-space-3); display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-kanban__card { cursor: grab; transition: box-shadow var(--ha-dur-fast) var(--ha-ease), opacity var(--ha-dur-fast) var(--ha-ease); }
+.ha-kanban__card:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-kanban__card--dragging { opacity: .6; cursor: grabbing; position: relative; z-index: 2; }
+.ha-kanban__col--over { outline: 2px dashed var(--ha-sand-500); outline-offset: -2px; }
+.ha-kanban__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-kanban__handle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: -6px -6px -6px 0; border: 0; background: none; color: var(--ha-fg-muted); cursor: grab; touch-action: none; border-radius: var(--ha-radius-sm); }
+@media (hover: hover) and (pointer: fine) { .ha-kanban__handle { display: none; } }
 .ha-bars { border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); padding: var(--ha-space-5); display: flex; align-items: flex-end; gap: var(--ha-space-2); height: 248px; }
 .ha-bars__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-2); height: 100%; justify-content: flex-end; }
 .ha-bars__bar { width: 100%; max-width: 28px; background: var(--ha-ink-900); }

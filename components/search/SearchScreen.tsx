@@ -12,6 +12,7 @@ import { formatBRL, ARTWORK_CATEGORIES, ARTWORK_CATEGORY_LABELS } from '@/lib/ar
 import { looksLikePublicId } from '@/lib/search/core'
 import type { SearchResult } from '@/lib/search/server'
 import type { PublicArtistCard } from '@/lib/public-content/server'
+import { RecentSearches } from './RecentSearches'
 import './search.css'
 
 const CATEGORY_CHIPS = ARTWORK_CATEGORIES
@@ -30,6 +31,8 @@ export function SearchScreen({ result, featured, workPrefix, before = null }: { 
         <input name="q" className="ha-search-box__input" defaultValue={q} placeholder="Artista, obra, galeria ou certificado" aria-label="Buscar" autoFocus={!q} />
         {q ? <Link href="/search" className="ha-search-box__clear" aria-label="Limpar"><Icon name="cancel" size={20} /></Link> : null}
       </form>
+
+      <RecentSearches q={q} />
 
       {!q ? (
         <>

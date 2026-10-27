@@ -41,6 +41,14 @@ export function roleOfProfile(profile: string): MessageRole {
   return profile === 'collector' ? 'buyer' : 'seller'
 }
 
+/** The empty conversation list by side (audit galeria §150): the buyer starts a conversation from an
+ *  artwork; the seller (artist, gallery, advisor) waits for a collector to write about one of theirs. */
+export function emptyListText(role: MessageRole): string {
+  return role === 'buyer'
+    ? 'Nenhuma conversa ainda. Toque em "Falar com a galeria" na página de uma obra para começar.'
+    : 'Nenhuma conversa ainda. Quando um colecionador escrever sobre uma obra sua, a conversa aparece aqui.'
+}
+
 const TZ = 'America/Bahia'
 const dayKey = (d: Date) => d.toLocaleDateString('pt-BR', { timeZone: TZ })
 

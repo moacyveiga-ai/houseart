@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { redactContacts, verifiedByHouse } from '@/lib/messaging/core'
-import { bubbleTime, COLLECTOR_SELLER_REPLIES, conversationIdOfPath, headerSubOf, mergeMessages, QUICK_REPLIES, quickRepliesOf, roleOfProfile, touchRow, type ConversationView, type MessageView } from './messages-core'
+import { bubbleTime, COLLECTOR_SELLER_REPLIES, conversationIdOfPath, emptyListText, headerSubOf, mergeMessages, QUICK_REPLIES, quickRepliesOf, roleOfProfile, touchRow, type ConversationView, type MessageView } from './messages-core'
 
 const m = (id: number): MessageView => ({ id, mine: false, kind: 'TEXT', body: `m${id}`, at: '2026-10-22T13:00:00.000Z', offerId: null })
 const row = (id: number, unread = 0): ConversationView => ({ id, artworkId: null, artworkTitle: null, artworkPublicId: null, artworkCoverUrl: null, other: { id: 9, name: 'Ana', initials: 'A', sub: 'Galeria' }, preview: 'p', when: 'agora', unread })
@@ -52,5 +52,13 @@ describe('messages-core', () => {
     expect(verifiedByHouse({ ...none, emailVerifiedAt: new Date(), phoneVerifiedAt: new Date() })).toBe(true)
     expect(redactContacts('me liga 71 99999-1234 ou a@b.com, site www.x.com')).toBe('me liga [contato removido] ou [contato removido], site [contato removido]')
     expect(redactContacts('pediu R$ 300 de sinal')).toBe('pediu R$ 300 de sinal')
+  })
+})
+
+describe('emptyListText', () => {
+  it('tells the buyer to start from an artwork and the seller to wait for a collector', () => {
+    expect(emptyListText('buyer')).toContain('Falar com a galeria')
+    expect(emptyListText('seller')).toContain('Quando um colecionador escrever')
+    expect(emptyListText('seller')).not.toContain('Falar com a galeria')
   })
 })

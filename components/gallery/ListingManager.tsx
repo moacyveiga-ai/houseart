@@ -24,16 +24,16 @@ export function ListingManager({ artworkId, title, artistName, publicId, year = 
   const [sharing, setSharing] = useState(false)
   const changed = priceChanged(price, state.listPriceCents)
 
-  async function patch(body: Record<string, unknown>, what: 'price' | 'offers' | 'pause'): Promise<ListingState | null> {
+  async function patch(body: Record<string, unknown>, what: 'price' | 'offers' | 'pause'): Promise<(ListingState & { notified: number }) | null> {
     if (!canManage) return null
     setBusy(what)
     try {
       const res = await fetch(`/api/artworks/${artworkId}/listing`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json().catch(() => ({})) as { error?: string; listing?: { listPriceCents: string | number; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number; saves: number; likes: number } } }
+      const data = await res.json().catch(() => ({})) as { error?: string; listing?: { listPriceCents: string | number; acceptsOffers: boolean; paused: boolean; priceDropNotified?: number; stats: { views7d: number; openOffers: number; saves: number; likes: number } } }
       if (!res.ok || !data.listing) { setToast(data.error ?? 'Não foi possível salvar.'); return null }
       const next: ListingState = { listPriceCents: String(data.listing.listPriceCents), acceptsOffers: data.listing.acceptsOffers, paused: data.listing.paused, stats: data.listing.stats }
       setState(next)
-      return next
+      return { ...next, notified: data.listing.priceDropNotified ?? 0 }
     } catch { setToast('Sem conexão. Tente de novo.'); return null } finally { setBusy(null) }
   }
 
@@ -41,7 +41,7 @@ export function ListingManager({ artworkId, title, artistName, publicId, year = 
     if (!changed || busy) return
     const previous = BigInt(state.listPriceCents)
     const next = await patch({ listPriceCents: priceCents(price).toString() }, 'price')
-    if (next) { setPrice(priceMask(Number(BigInt(next.listPriceCents) / 100n))); setToast(priceSavedMessage(BigInt(next.listPriceCents), previous)) }
+    if (next) { setPrice(priceMask(Number(BigInt(next.listPriceCents) / 100n))); setToast(priceSavedMessage(BigInt(next.listPriceCents), previous, next.notified)) }
   }
 
   return (

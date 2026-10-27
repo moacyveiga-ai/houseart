@@ -27,7 +27,7 @@ export default async function PurchasesPage() {
           <ul className="ha-list">
             {live.map((o) => (
               <li key={o.code}>
-                <Link href={`/e/offer/${o.code}`} className="ha-list__row" style={{ gridTemplateColumns: '40px minmax(0,1fr) auto auto' }}>
+                <Link href={`/purchases/offer/${o.code}`} className="ha-list__row" style={{ gridTemplateColumns: '40px minmax(0,1fr) auto auto' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- public derivative */}
                   <span className="ha-wall ha-wall--40">{o.artworkCover ? <img src={o.artworkCover} alt="" /> : null}</span>
                   <span><i style={{ fontFamily: 'var(--ha-font-display)' }}>{o.artworkTitle}</i><br /><span className="ha-muted ha-sm">{o.artistName ?? ''}{o.artistName ? ' · ' : ''}{o.code}</span></span>

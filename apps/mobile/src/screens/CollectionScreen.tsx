@@ -25,7 +25,9 @@ function statusOf(o: WalletItem): { st: string; icon: IconName; color: string } 
 export function CollectionScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const wallet = useApi<{ items: WalletItem[]; totalCents: string; holderName: string }>('/api/collector/wallet')
+  const wallet = useApi<{ items: WalletItem[]; totalCents: string; holderName: string; valuation?: { label: string; tone: 'up' | 'down' | null; note: string } | null; arriving?: { dealId: number; title: string; artist: string; cover: string | null; label: string }[] }>('/api/collector/wallet')
+  const valuation = wallet.data?.valuation ?? null
+  const arriving = wallet.data?.arriving ?? []
   const favs = useApi<{ items: FavoriteItem[] }>('/api/collector/favorites')
   const items = wallet.data?.items ?? []
   const total = Number(wallet.data?.totalCents ?? 0)
@@ -33,10 +35,10 @@ export function CollectionScreen() {
   const nSaved = (favs.data?.items ?? []).filter((f) => f.saved).length
   const nLiked = (favs.data?.items ?? []).filter((f) => f.liked).length
 
-  const kpis: { icon: IconName; v: string; k: string; onPress?: () => void }[] = [
+  const kpis: { icon: IconName; v: string; k: string; color?: string; onPress?: () => void }[] = [
     { icon: 'image', v: String(items.length), k: items.length === 1 ? 'obra' : 'obras' },
     { icon: 'account-balance', v: mil(total), k: 'valor registrado' },
-    { icon: 'trending-up', v: '—', k: 'valorização' },
+    { icon: valuation?.tone === 'down' ? 'trending-down' : 'trending-up', v: valuation?.label ?? '—', k: 'valorização', color: valuation?.tone === 'up' ? theme.success : valuation?.tone === 'down' ? theme.error : undefined },
     { icon: 'palette', v: String(artists), k: artists === 1 ? 'artista' : 'artistas' },
   ]
   const tabs: { name: string; onPress?: () => void; on?: boolean }[] = [
@@ -62,11 +64,12 @@ export function CollectionScreen() {
           {kpis.map((k) => (
             <View key={k.k} style={styles.kpi}>
               <Icon name={k.icon} size={16} color={theme.fgMuted} />
-              <Text style={styles.kpiV} numberOfLines={1}>{k.v}</Text>
+              <Text style={[styles.kpiV, k.color ? { color: k.color } : null]} numberOfLines={1}>{k.v}</Text>
               <Text style={styles.kpiK}>{k.k}</Text>
             </View>
           ))}
         </View>
+        {valuation ? <Text style={styles.note}>{valuation.note}</Text> : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16, marginTop: 6 }} contentContainerStyle={styles.tabs}>
           {tabs.map((t) => (
             <Pressable key={t.name} accessibilityRole="tab" accessibilityState={{ selected: !!t.on }} onPress={t.onPress} style={[styles.tab, t.on && styles.tabOn]}><Text style={[styles.tabText, t.on && { color: theme.fg }]}>{t.name}</Text></Pressable>
@@ -75,6 +78,18 @@ export function CollectionScreen() {
       </View>
       {wallet.loading && !wallet.data ? <Loading /> : wallet.error && !wallet.data ? <ErrorState message={wallet.error} onRetry={wallet.reload} /> : (
         <ScrollView contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={wallet.loading} onRefresh={() => { void wallet.reload(); void favs.reload() }} tintColor={theme.accent} />}>
+          {arriving.length ? (
+            <View style={styles.arriving}>
+              <Text style={styles.arrivingK}>Chegando</Text>
+              {arriving.map((p) => (
+                <Pressable key={p.dealId} accessibilityRole="button" accessibilityLabel={`${p.title} · ${p.label}`} onPress={() => router.push({ pathname: '/purchases/[id]', params: { id: String(p.dealId) } })} style={styles.arrivingRow}>
+                  <Wall uri={p.cover} padding={6} style={{ width: 48 }} />
+                  <View style={{ flex: 1, minWidth: 0 }}><Display italic size={14} line={19}>{p.title}</Display><Text style={styles.cellArtist} numberOfLines={1}>{p.artist} · {p.label}</Text></View>
+                  <Icon name="chevron-right" size={20} color={theme.fgMuted} />
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
           {items.length === 0 ? <Text style={styles.empty}>Nenhuma escritura ainda. Uma obra que já é sua entra pela opção Cadastrar obra; a que você comprar na HouseArt chega aqui depois da entrega.</Text> : null}
           <View style={styles.grid}>
             {items.map((o) => {
@@ -118,5 +133,9 @@ const styles = StyleSheet.create({
   cellArtist: { fontSize: 12, lineHeight: 16, color: theme.fgMuted },
   stRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   st: { fontSize: 11, fontWeight: '600' },
+  note: { fontSize: 11, lineHeight: 15, color: theme.fgMuted, marginTop: 6 },
+  arriving: { gap: 8, paddingBottom: 4 },
+  arrivingK: { fontSize: 12, fontWeight: '600', color: theme.fgMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  arrivingRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56 },
   foot: { textAlign: 'center', fontSize: 12, lineHeight: 17, color: theme.fgMuted },
 })

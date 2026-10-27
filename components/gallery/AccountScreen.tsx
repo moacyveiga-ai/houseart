@@ -11,9 +11,13 @@ import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
 import { Button } from '@/components/ds/Button'
+import { Toggle } from '@/components/ds/Toggle'
 
 /** `current`: the item open in the side panel over the account (it opens without scrolling the page). */
-export interface AccountItem { icon: string; name: string; sub: string; href: string; current?: boolean }
+export interface AccountLinkItem { icon: string; name: string; sub: string; href: string; current?: boolean }
+/** A switch saved by PATCH /api/auth/preferences (the same one the collector's Perfil uses). */
+export interface AccountSwitchItem { icon: string; name: string; sub: string; switchKey: 'marketingOptIn'; on: boolean }
+export type AccountItem = AccountLinkItem | AccountSwitchItem
 export interface AccountSection { name: string; items: AccountItem[] }
 export interface AccountVerification { cnpj: boolean; email: boolean; phone: boolean }
 
@@ -38,6 +42,18 @@ export function AccountScreen({ initials, name, email, verification, sections, s
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const ver = verification ? verificationLine(verification) : null
+  const [switches, setSwitches] = useState<Record<string, boolean>>(() => Object.fromEntries(sections.flatMap((g) => g.items.flatMap((i) => ('switchKey' in i ? [[i.switchKey, i.on]] : [])))))
+  const [switchError, setSwitchError] = useState<string | null>(null)
+  const [savingSwitch, setSavingSwitch] = useState(false)
+
+  // one save at a time: a quick double click never leaves the screen and the server disagreeing
+  async function flip(key: 'marketingOptIn', next: boolean) {
+    if (savingSwitch) return
+    setSavingSwitch(true); setSwitches((s) => ({ ...s, [key]: next })); setSwitchError(null)
+    const res = await fetch('/api/auth/preferences', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ [key]: next }) }).catch(() => null)
+    if (!res?.ok) { setSwitches((s) => ({ ...s, [key]: !next })); setSwitchError('Não foi possível salvar agora.') }
+    setSavingSwitch(false)
+  }
 
   async function logout() {
     setLeaving(true)
@@ -73,13 +89,22 @@ export function AccountScreen({ initials, name, email, verification, sections, s
         <section key={g.name} className="ha-account-sec" aria-label={g.name}>
           <span className="ha-account-sec__k">{g.name}</span>
           <div className="ha-account-sec__box">
-            {g.items.map((it) => (
+            {g.items.map((it) => ('switchKey' in it ? (
+              <div key={it.name} className="ha-account-item ha-account-item--switch">
+                <Icon name={it.icon} size={22} />
+                <span className="ha-stack ha-account-item__txt"><span className="ha-account-item__n">{it.name}</span><span className="ha-account-item__s">{it.sub}</span></span>
+                <span className="ha-stack" style={{ alignItems: 'flex-end', gap: 4 }}>
+                  <Toggle on={switches[it.switchKey] ?? it.on} disabled={savingSwitch} onChange={(n) => void flip(it.switchKey, n)} label={it.name} />
+                  {switchError ? <span className="ha-account-sheet__err" role="alert">{switchError}</span> : null}
+                </span>
+              </div>
+            ) : (
               <Link key={it.name} href={it.href} className="ha-account-item" scroll={it.current === undefined} aria-current={it.current ? 'true' : undefined}>
                 <Icon name={it.icon} size={22} />
                 <span className="ha-stack ha-account-item__txt"><span className="ha-account-item__n">{it.name}</span><span className="ha-account-item__s">{it.sub}</span></span>
                 <Icon name="chevron_right" size={20} className="ha-account-item__arrow" />
               </Link>
-            ))}
+            )))}
           </div>
         </section>
       ))}
@@ -89,7 +114,7 @@ export function AccountScreen({ initials, name, email, verification, sections, s
 
       <Modal open={sheet === 'logout'} title="Sair da conta?" onClose={() => setSheet(null)}>
         <div className="ha-account-sheet">
-          <p className="ha-sm">O acervo, as ofertas e as conversas da galeria continuam aqui. É só entrar de novo com o seu e-mail.</p>
+          <p className="ha-sm">O acervo, as ofertas e as conversas continuam aqui. É só entrar de novo com o seu e-mail.</p>
           <div className="ha-row" style={{ gap: 8 }}>
             <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setSheet(null)}>Cancelar</button>
             <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={leaving} onClick={logout}>Sair</button>
@@ -103,7 +128,7 @@ export function AccountScreen({ initials, name, email, verification, sections, s
               <p className="ha-sm">{del.message ?? 'A exclusão da conta de uma galeria é feita pelo atendimento da HouseArt: o acervo, os certificados emitidos e os repasses precisam de um encerramento combinado.'}</p>
               <div className="ha-row" style={{ gap: 8 }}>
                 <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setSheet(null)}>Entendi</button>
-                {supportEmail ? <a className="ha-btn ha-btn--primary ha-btn--md" href={`mailto:${supportEmail}?subject=${encodeURIComponent('Encerrar a conta da galeria')}`}>Falar com a HouseArt</a> : null}
+                {supportEmail ? <a className="ha-btn ha-btn--primary ha-btn--md" href={`mailto:${supportEmail}?subject=${encodeURIComponent('Encerrar a minha conta')}`}>Falar com a HouseArt</a> : null}
               </div>
             </>
           ) : del.blocker ? (

@@ -63,6 +63,10 @@ const COLLECTOR: NavItem[] = [
   { key: 'account', label: 'Perfil', icon: 'person', href: '/account', also: ['/wallet/cards', '/sales/payout', '/notifications'] },
 ]
 
+// The autonomous art advisor uses the gallery desk, but has no gallery: the fifth entry is the
+// painel do dia under its own name (audit galeria §0).
+const ADVISOR: NavItem[] = GALLERY.map((i) => (i.key === 'home' ? { ...i, label: 'Início', icon: 'space_dashboard', also: [...(i.also ?? []), '/account', '/notifications'] } : i))
+
 const APPRAISER: NavItem[] = [
   { key: 'appraisals', label: 'Fila de laudos', icon: 'assignment', href: '/appraisals' },
 ]
@@ -95,7 +99,7 @@ export const NAV: Record<ProfileKind, readonly NavItem[]> = {
   gallery: GALLERY,
   collector: COLLECTOR,
   appraiser: APPRAISER,
-  advisor: GALLERY,
+  advisor: ADVISOR,
   admin: ADMIN,
 }
 

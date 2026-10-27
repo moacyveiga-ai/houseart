@@ -6,12 +6,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { ConversationPane } from './ConversationPane'
-import { conversationIdOfPath, emptyListText, touchRow, type ConversationView, type MessageRole, type MessageView } from './messages-core'
+import { conversationIdOfPath, touchRow, type ConversationView, type MessageRole, type MessageView } from './messages-core'
 import { previewOf } from '@/lib/messaging/core'
 
 const LIST_POLL_MS = 15000
 
-export function MessagesScreen({ initialRows, initialConversationId, role }: { initialRows: ConversationView[]; initialConversationId: number | null; role: MessageRole }) {
+export function MessagesScreen({ initialRows, initialConversationId, role, emptyText }: { initialRows: ConversationView[]; initialConversationId: number | null; role: MessageRole; emptyText: string }) {
   const [rows, setRows] = useState(initialRows)
   const [q, setQ] = useState('')
   const [selected, setSelected] = useState<number | null>(initialConversationId)
@@ -76,7 +76,7 @@ export function MessagesScreen({ initialRows, initialConversationId, role }: { i
               </span>
             </button>
           ))}
-          {rows.length === 0 ? <div className="ha-msg-list__empty">{q ? 'Nenhuma conversa encontrada.' : emptyListText(role)}</div> : null}
+          {rows.length === 0 ? <div className="ha-msg-list__empty">{q ? 'Nenhuma conversa encontrada.' : emptyText}</div> : null}
         </div>
       </section>
       {selected ? (

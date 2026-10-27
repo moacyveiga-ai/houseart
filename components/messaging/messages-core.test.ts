@@ -56,9 +56,9 @@ describe('messages-core', () => {
 })
 
 describe('emptyListText', () => {
-  it('tells the buyer to start from an artwork and the seller to wait for a collector', () => {
-    expect(emptyListText('buyer')).toContain('Falar com a galeria')
-    expect(emptyListText('seller')).toContain('Quando um colecionador escrever')
-    expect(emptyListText('seller')).not.toContain('Falar com a galeria')
+  it('tells the collector to start from an artwork, the seller to wait for a collector, the rest neutral', () => {
+    expect(emptyListText('collector')).toContain('Falar com a galeria')
+    for (const p of ['artist', 'gallery', 'advisor']) expect(emptyListText(p)).toContain('Quando um colecionador escrever')
+    for (const p of ['admin', 'appraiser']) expect(emptyListText(p)).toBe('Nenhuma conversa ainda.')
   })
 })

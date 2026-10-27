@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { requirePanelPage } from '../../_session'
 import { listConversations } from '@/lib/messaging/server'
 import { MessagesScreen } from '@/components/messaging/MessagesScreen'
-import { conversationIdOfPath, roleOfProfile } from '@/components/messaging/messages-core'
+import { conversationIdOfPath, emptyListText, roleOfProfile } from '@/components/messaging/messages-core'
 import '@/components/messaging/messages.css'
 
 export const metadata = { title: 'Conversa — HouseArt' }
@@ -15,5 +15,5 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   if (!id) notFound()
   const { user, nav } = await requirePanelPage(`/messages/${id}`)
   const rows = await listConversations(user.id)
-  return <MessagesScreen initialRows={rows} initialConversationId={id} role={roleOfProfile(nav)} />
+  return <MessagesScreen initialRows={rows} initialConversationId={id} role={roleOfProfile(nav)} emptyText={emptyListText(nav)} />
 }

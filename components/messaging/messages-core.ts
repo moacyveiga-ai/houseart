@@ -41,12 +41,13 @@ export function roleOfProfile(profile: string): MessageRole {
   return profile === 'collector' ? 'buyer' : 'seller'
 }
 
-/** The empty conversation list by side (audit galeria §150): the buyer starts a conversation from an
- *  artwork; the seller (artist, gallery, advisor) waits for a collector to write about one of theirs. */
-export function emptyListText(role: MessageRole): string {
-  return role === 'buyer'
-    ? 'Nenhuma conversa ainda. Toque em "Falar com a galeria" na página de uma obra para começar.'
-    : 'Nenhuma conversa ainda. Quando um colecionador escrever sobre uma obra sua, a conversa aparece aqui.'
+/** The empty conversation list by profile (audit galeria §150): the collector starts a conversation from
+ *  an artwork; artist, gallery and advisor wait for a collector to write about one of theirs; the team
+ *  and the appraiser have no works of their own and get a neutral line. */
+export function emptyListText(profile: string): string {
+  if (profile === 'collector') return 'Nenhuma conversa ainda. Toque em "Falar com a galeria" na página de uma obra para começar.'
+  if (profile === 'artist' || profile === 'gallery' || profile === 'advisor') return 'Nenhuma conversa ainda. Quando um colecionador escrever sobre uma obra sua, a conversa aparece aqui.'
+  return 'Nenhuma conversa ainda.'
 }
 
 const TZ = 'America/Bahia'

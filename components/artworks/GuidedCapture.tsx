@@ -125,8 +125,8 @@ export function GuidedCapture({ startKind, media, dims, busy, onUpload, onClose,
 
   const retake = () => { setShot(null); setCam(initialCam()); setChecks(null) }
   const close = () => { stopCamera(); onClose() }
-  // Esc (audit design-system §5): back from the editor to the camera, from the camera out; never mid-upload
-  useDialogFocus(root, true, () => { if (busy) return; if (shot) retake(); else close() })
+  // Esc (audit design-system §5) closes the camera; never in the editor (it would drop the adjustments) nor mid-upload
+  useDialogFocus(root, true, () => { if (!busy && !shot) close() })
 
   const chip = checkChip(cam === 'live' ? checks : null)
   const bars = progressBars(media, kind)

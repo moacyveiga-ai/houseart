@@ -60,6 +60,7 @@ export default async function GalleryAccountPage() {
     ] },
     { name: 'Segurança', items: [
       { icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', href: '/recover-password' },
+      { icon: 'devices', name: 'Aparelhos conectados', sub: 'Onde sua conta está aberta', href: '/account/devices' },
     ] },
     { name: 'Ajuda', items: [
       { icon: 'support_agent', name: 'Falar com a HouseArt', sub: supportEmail ? `Atendimento por e-mail · ${supportEmail}` : 'Como chegar ao atendimento', href: supportEmail ? `mailto:${supportEmail}` : '/e/how-it-works#suporte' },

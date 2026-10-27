@@ -33,3 +33,12 @@
 .ha-receipt__k { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
 .ha-receipt__t { font-weight: 600; color: var(--ha-fg); }
 .ha-receipt__v { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ha-fg); text-align: right; }
+
+/* Aparelhos conectados */
+.ha-devices { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.ha-device { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ha-paper-200); }
+.ha-device > .ha-icon { color: var(--ha-ink-500); }
+.ha-device__n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-device__k { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.ha-device__here { font-size: var(--ha-text-caption); color: var(--ha-verified-500); font-weight: 600; }
+.ha-devices__all { align-self: flex-start; margin-top: var(--ha-space-3); }

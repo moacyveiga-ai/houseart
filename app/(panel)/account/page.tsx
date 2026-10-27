@@ -5,6 +5,7 @@ import { favoritesOf } from '@/lib/community/server'
 import { listPaymentMethods, payoutAccountOf } from '@/lib/payment-methods/server'
 import { PIX_KEY_TYPE_LABELS, type PixKeyType } from '@/lib/payment-methods/domain'
 import { initialsOf } from '@/lib/profiles/core'
+import { devicesOf } from '@/lib/auth/devices-server'
 import { addressesOf } from '@/lib/addresses/server'
 import { composerInstagram } from '@/lib/instagram/server'
 import { CollectorAccount, type CollectorAccountSection } from '@/components/collector/CollectorAccount'
@@ -20,7 +21,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
   // each profile its own blocks: the artist never meets the collector register, the desk no wallet
   const shape = accountShapeOf(nav)
   const view = (await searchParams).view === 'data' ? 'data' : 'menu'
-  const [identity, prefs, favorites, cards, payout, ig, addresses] = await Promise.all([
+  const [identity, prefs, favorites, cards, payout, ig, addresses, devices] = await Promise.all([
     identityOf(user.id),
     readPreferences(user.id),
     shape.work?.items.some((i) => i.href === '/favorites') ? favoritesOf(user.id).catch(() => []) : [],
@@ -28,6 +29,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
     shape.payout && user.memberId ? payoutAccountOf(user.memberId).catch(() => null) : null,
     shape.social ? composerInstagram(user.id) : null,
     shape.addresses ? addressesOf(user.id).catch(() => []) : [],
+    devicesOf(user.id, user.sessionId).then((d) => d.length).catch(() => 1),
   ])
   const defaultCard = cards.find((c) => c.isDefault) ?? cards[0]
   const me = { name: user.name, email: user.email, emailVerified: identity.emailVerified, phoneMask: identity.phoneMask, phoneVerified: identity.phoneVerified, cpfMask: identity.cpfMask, city: identity.city }
@@ -53,6 +55,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
     ] }] : []),
     { name: 'Segurança e privacidade', items: [
       { kind: 'link', icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', href: '/recover-password' },
+      { kind: 'link', icon: 'devices', name: 'Aparelhos conectados', sub: devices === 1 ? 'Só este aparelho' : `${devices} aparelhos com a conta aberta`, href: '/account/devices' },
     ] },
     { name: 'Notificações', items: [
       { kind: 'link', icon: 'notifications', name: 'Avisos', sub: 'Ofertas, mensagens e entregas', href: '/notifications' },

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Gallery } from '@/components/public/Gallery'
-import { publicGallery } from '@/lib/public-content/server'
+import { isOwnGallery, publicGallery } from '@/lib/public-content/server'
 import { getSession } from '@/lib/auth'
 import { reactedIds } from '@/lib/community/server'
 
@@ -24,6 +24,10 @@ export default async function PublicGalleryPage({ params, searchParams }: Props)
   const g = await publicGallery(slug)
   if (!g) notFound()
   const user = await getSession()
-  const following = g.followMemberId ? (await reactedIds(user?.id ?? null, 'MEMBER', 'FOLLOW', [g.followMemberId])).has(g.followMemberId) : false
-  return <Gallery g={g} artistFilter={sp.artista ?? null} viewer={{ signedIn: !!user, following }} />
+  const [followed, own] = await Promise.all([
+    g.followMemberId ? reactedIds(user?.id ?? null, 'MEMBER', 'FOLLOW', [g.followMemberId]) : null,
+    isOwnGallery(slug, user?.tenantId ?? null),
+  ])
+  const following = !!g.followMemberId && !!followed?.has(g.followMemberId)
+  return <Gallery g={g} artistFilter={sp.artista ?? null} viewer={{ signedIn: !!user, following, own }} />
 }

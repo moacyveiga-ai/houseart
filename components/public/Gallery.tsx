@@ -32,7 +32,7 @@ function WorkCard({ w, gallery }: { w: PublicWork; gallery: string }) {
   )
 }
 
-export function Gallery({ g, artistFilter, viewer = { signedIn: false, following: false } }: { g: PublicGalleryPage; artistFilter: string | null; viewer?: { signedIn: boolean; following: boolean } }) {
+export function Gallery({ g, artistFilter, viewer = { signedIn: false, following: false, own: false } }: { g: PublicGalleryPage; artistFilter: string | null; viewer?: { signedIn: boolean; following: boolean; own?: boolean } }) {
   const filterOk = artistFilter && g.artistList.some((a) => a.slug === artistFilter) ? artistFilter : null
   const works = filterOk ? g.artworks.filter((w) => w.artistSlug === filterOk) : g.artworks
   const hasAbout = g.about.length > 0 || g.milestones.length > 0
@@ -81,7 +81,7 @@ export function Gallery({ g, artistFilter, viewer = { signedIn: false, following
                     onChildren={<><Icon name="check" size={18} />Seguindo</>}><Icon name="add" size={18} />Seguir galeria</PublicReactButton>
                 ) : null}
                 {hasPlace ? <a href="#local" className="hp-gallery-btn"><Icon name="event" size={18} />Agendar visita</a> : null}
-                {g.followMemberId ? <TalkToSellerButton gallery={g.slug} signedIn={viewer.signedIn} className="hp-gallery-btn" label={<><Icon name="chat" size={18} />Falar com a galeria</>} />
+                {viewer.own ? null : g.followMemberId ? <TalkToSellerButton gallery={g.slug} signedIn={viewer.signedIn} className="hp-gallery-btn" label={<><Icon name="chat" size={18} />Falar com a galeria</>} />
                   : g.team.length || g.email || g.phone ? <a href={g.team.length ? '#equipe' : '#local'} className="hp-gallery-btn"><Icon name="chat" size={18} />Falar com a galeria</a> : null}
               </div>
             </div>

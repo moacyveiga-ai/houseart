@@ -131,6 +131,14 @@ export async function publicGallery(slug: string): Promise<PublicGalleryPage | n
   })
 }
 
+/** Whether the signed-in person belongs to the gallery behind this public page (its own team never
+ *  sees "Falar com a galeria" — the conversation would be with itself). Never exposes the tenant. */
+export async function isOwnGallery(slug: string, tenantId: number | null): Promise<boolean> {
+  if (!tenantId) return false
+  const g = await totalScope('public:gallery-own', () => prisma.galleryPublicProfile.findUnique({ where: { slug }, select: { tenantId: true } }))
+  return g?.tenantId === tenantId
+}
+
 /** The Home hero photo: the first exhibition room (lowest sortOrder) of the active gallery that saved
  *  its profile last (the editor rewrites the items, so ids follow the last save) — never a work
  *  (handoff §4.5): a "room" whose URL is the photo of an artwork is skipped, since the demo data and

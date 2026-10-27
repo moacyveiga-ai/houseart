@@ -26,7 +26,7 @@ export default async function GalleryAccountPage({ searchParams }: { searchParam
   const { user, scope } = await requirePanelPage('/gallery/account')
   // Conta › Equipe opens in the side panel over the account (Web Galeria); /gallery/team stays as the full page
   const teamOpen = (await searchParams).panel === 'team'
-  const [people, artists, payout, ig, account, usage] = await Promise.all([
+  const [people, artists, payout, ig, account, usage, role] = await Promise.all([
     teamOf(scope, user.id),
     representedArtists(scope).catch(() => []),
     user.memberId ? payoutAccountOf(user.memberId) : null,
@@ -34,6 +34,7 @@ export default async function GalleryAccountPage({ searchParams }: { searchParam
     galleryAccount(user, scope),
     // the plan line is decoration: a failure zeroes it, but a query without owner is never swallowed
     usageOf(scope).catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return null }),
+    teamOpen ? galleryRoleOf(scope) : null,
   ])
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null
   const members = people.filter((p) => p.kind === 'MEMBER').length
@@ -80,7 +81,7 @@ export default async function GalleryAccountPage({ searchParams }: { searchParam
       <AccountScreen initials={initialsOf(account?.galleryName ?? user.name)} name={account?.galleryName ?? user.name} email={user.email} verification={account?.verified ?? null} sections={sections} supportEmail={supportEmail} />
       {teamOpen ? (
         <SidePanel title="Equipe" closeHref="/gallery/account">
-          <TeamScreen people={people} canManage={(scope.kind === 'tenant' || scope.kind === 'total') && sellerPermissions(await galleryRoleOf(scope)).manageTeam} />
+          <TeamScreen people={people} canManage={(scope.kind === 'tenant' || scope.kind === 'total') && sellerPermissions(role).manageTeam} />
         </SidePanel>
       ) : null}
     </div>

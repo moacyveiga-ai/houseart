@@ -14,6 +14,7 @@ import {
 import { MarketCard, priceLabel, type MarketCardLikeState } from './MarketCard'
 import { ArtistCard } from './Artists'
 import { MarketplaceSortSelect } from './MarketplaceSortSelect'
+import { MarketplaceSearch } from './MarketplaceSearch'
 import './marketplace.css'
 
 export interface MarketArtist { slug: string; name: string; meta: string; count: number; photoUrl: string | null }
@@ -63,12 +64,7 @@ export function Marketplace({ items, artists, sel, q, sort, reactions }: { items
             <h1 id="market-title" className="hp-market-hero__title">Marketplace</h1>
             <span className="hp-market-hero__sub">Arte brasileira certificada, de galerias e colecionadores verificados.</span>
           </div>
-          <form method="get" action="/e/marketplace" className="hp-market-search" role="search">
-            <Icon name="search" size={22} />
-            <input name="q" defaultValue={q} placeholder="Obra, artista, galeria ou técnica" aria-label="Buscar" className="hp-market-search__input" />
-            {hiddenParams}
-            {sort !== 'rel' ? <input type="hidden" name="sort" value={sort} /> : null}
-          </form>
+          <MarketplaceSearch sel={sel} q={q} sort={sort} />
         </div>
       </section>
 

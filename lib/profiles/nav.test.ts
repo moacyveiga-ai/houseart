@@ -11,7 +11,9 @@ describe('NAV per profile (from the design)', () => {
     expect(NAV.appraiser).toHaveLength(1)
     expect(NAV.admin).toHaveLength(13)
     expect(NAV.admin.map((i) => i.href)).toEqual(expect.arrayContaining(['/admin/content', '/admin/deals', '/admin/users', '/admin/kyc', '/admin/audit', '/appraisals', '/admin/tenants', '/admin/transfers', '/admin/ops', '/admin/catalog']))
-    expect(NAV.advisor).toBe(NAV.gallery)
+    // the advisor uses the gallery desk, but its fifth entry is "Início" (no gallery of its own)
+    expect(NAV.advisor.map((i) => i.href)).toEqual(NAV.gallery.map((i) => i.href))
+    expect(NAV.advisor.map((i) => i.label)).toEqual(['Acervo', 'Negócios', 'Comunidade', 'Mensagens', 'Início'])
   })
   it('the gallery desk: painel do dia is home, inner screens light "Galeria", payout beats Negócios', () => {
     expect(homeOf('gallery')).toBe('/')

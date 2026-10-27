@@ -17,6 +17,8 @@
 .ha-account-item__n { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
 .ha-account-item__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ha-account-item__arrow { color: var(--ha-fg-muted); }
+.ha-account-item--switch { cursor: default; }
+.ha-account-item--switch:hover { background: var(--ha-bg); }
 .ha-account-logout { height: 50px; border: var(--ha-border-w) solid var(--ha-ink-900); border-radius: var(--ha-radius-md); background: transparent; color: var(--ha-fg); font: inherit; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .ha-account-logout:hover { background: var(--ha-surface); }
 .ha-account-logout:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }

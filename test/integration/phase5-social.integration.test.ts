@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
+import { reviewItemDetail } from '@/lib/admin-review/detail-server'
 import { listConversations, openConversation, readConversation, reportConversation, sendMessage, unreadMessages } from '@/lib/messaging/server'
 import { addComment, artworkCounts, artworkSignals, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
 import { isExpoEndpoint, pushConfig, savePushSubscription } from '@/lib/notifications/push'
@@ -141,6 +142,11 @@ describe('conversation header and report', () => {
     expect(item).toMatchObject({ kind: 'MESSAGE_REPORT', status: 'REJECTED', refId: id, artworkId: s.a1.artworkId, reporterUserId: buyerId })
     expect(item.reason).toContain('pediu Pix direto')
     expect(item.reason).not.toContain('99999')
+    // the desk's detail page shows who reported and the conversation itself
+    const detail = await reviewItemDetail(r1.id)
+    expect(detail).toMatchObject({ kind: 'MESSAGE_REPORT', artwork: { id: s.a1.artworkId }, context: { kind: 'MESSAGE_REPORT' } })
+    if (detail?.context.kind === 'MESSAGE_REPORT') expect(detail.context.reporter).toBeTruthy()
+    expect(await reviewItemDetail(999_999)).toBeNull()
     // someone outside the conversation cannot report it
     await expect(reportConversation(s.b.userId, id, { reason: 'ABUSE' })).rejects.toMatchObject({ status: 404 })
   }, 60_000)

@@ -18,7 +18,7 @@ export interface QueueItem {
 
 const DECISION_LABELS: Record<ReviewDecision, string> = { APPROVED: 'Aprovar', REJECTED: 'Rejeitar' }
 
-export function ReviewQueue({ items, readOnly = false }: { items: QueueItem[]; readOnly?: boolean }) {
+export function ReviewQueue({ items, readOnly = false, detailLinks = true }: { items: QueueItem[]; readOnly?: boolean; /** the row links to its detail page (off on the detail page itself) */ detailLinks?: boolean }) {
   const [decided, setDecided] = useState<Record<number, ReviewDecision>>({})
   const [pending, setPending] = useState<{ item: QueueItem; decision: ReviewDecision } | null>(null)
   const [note, setNote] = useState('')
@@ -65,7 +65,7 @@ export function ReviewQueue({ items, readOnly = false }: { items: QueueItem[]; r
                     </span>
                   ) : <span className="ha-review__who">Sem obra vinculada</span>}
                 </span>
-                <span role="cell" className="ha-review__reason">{i.reason}</span>
+                <span role="cell" className="ha-review__reason">{i.reason}{detailLinks ? <Link href={`/admin/review/${i.id}`} className="ha-review__open">Ver detalhe →</Link> : null}</span>
                 <span role="cell" className="ha-review__ago">{i.ago}</span>
                 <span role="cell" className="ha-review__actions">
                   {i.decided ? (

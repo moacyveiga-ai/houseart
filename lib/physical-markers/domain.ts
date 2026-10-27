@@ -7,6 +7,7 @@ export const MARKER_ORDER_STATUSES = ['REQUESTED', 'SHIPPED', 'DELIVERED'] as co
 export const MARKER_ORDER_STATUS_LABELS: Record<(typeof MARKER_ORDER_STATUSES)[number], string> = { REQUESTED: 'Pedido', SHIPPED: 'Enviado', DELIVERED: 'Entregue' }
 export const READ_PURPOSES = ['VERIFY', 'LINK', 'DELIVERY_CONFIRM', 'TRANSFER_CONFIRM'] as const
 export type ReadPurpose = (typeof READ_PURPOSES)[number]
+export const READ_PURPOSE_LABELS: Record<ReadPurpose, string> = { VERIFY: 'verificação pública', LINK: 'vínculo', DELIVERY_CONFIRM: 'confirmação de entrega', TRANSFER_CONFIRM: 'transferência' }
 
 /** R$ 15 per marker; the kit of 10 is R$ 150. */
 export const MARKER_UNIT_PRICE_CENTS = 1500n

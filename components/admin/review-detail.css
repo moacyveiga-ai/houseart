@@ -1,0 +1,20 @@
+/* Admin › Obras e certificados › item (app/(panel)/admin/review/[id]). Prefix ha-rvd. */
+.ha-rvd { display: flex; flex-direction: column; gap: var(--ha-space-5); }
+.ha-rvd__back { display: inline-flex; align-items: center; gap: 4px; font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); text-decoration: none; width: fit-content; }
+.ha-rvd__back:hover { color: var(--ha-fg); }
+.ha-rvd__work { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--ha-space-4); align-items: start; padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-rvd__wall { width: 120px; height: 120px; display: grid; place-items: center; background: var(--ha-bg); border-radius: var(--ha-radius-sm); overflow: hidden; color: var(--ha-fg-muted); }
+.ha-rvd__wall img { width: 100%; height: 100%; object-fit: cover; }
+.ha-rvd__facts { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: var(--ha-text-body-sm); }
+.ha-rvd__eyebrow { font-size: var(--ha-text-caption); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ha-fg-muted); }
+.ha-rvd__sub { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-rvd__alert { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-alert-500); }
+.ha-rvd__link { font-size: var(--ha-text-body-sm); color: var(--ha-fg); }
+.ha-rvd__ctx { display: flex; flex-direction: column; gap: var(--ha-space-3); }
+.ha-rvd__text { margin: 0; white-space: pre-wrap; padding: var(--ha-space-4); border-left: 3px solid var(--ha-border); background: var(--ha-surface); }
+.ha-rvd__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-rvd__list li { display: flex; flex-direction: column; gap: 2px; padding: var(--ha-space-3) var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
+.ha-rvd__list li:last-child { border-bottom: 0; }
+.ha-rvd__sys { color: var(--ha-fg-muted); }
+.ha-rvd__body { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .ha-rvd__work { grid-template-columns: minmax(0, 1fr); } .ha-rvd__wall { width: 100%; height: 200px; } }

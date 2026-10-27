@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
-import { BATCH_STATUS_LABELS, MARKER_ORDER_STATUS_LABELS, MARKER_STATUS_LABELS } from '@/lib/physical-markers/domain'
+import { BATCH_STATUS_LABELS, MARKER_ORDER_STATUS_LABELS, MARKER_STATUS_LABELS, READ_PURPOSE_LABELS } from '@/lib/physical-markers/domain'
 import { reviewHref } from '@/lib/admin-review/core'
 
 export interface BatchRow { id: number; code: string; quantity: number; destination: string; linked: number; status: string }
@@ -16,7 +16,7 @@ export interface OrderRow { id: number; quantity: number; status: string; who: s
 export interface AlertRow { id: number; at: string; purpose: string; /** the read's CMAC checked out (a forged `tt` link does not) */ authenticated: boolean; uid: string; markerStatus: string; artwork: { publicId: string | null; title: string } | null; reviewOpen: boolean }
 export interface FoundMarker { uid: string; status: string; artwork: { publicId: string | null; title: string } | null; batch: string; readCounter: number }
 
-const PURPOSE_LABELS: Record<string, string> = { VERIFY: 'verificação pública', LINK: 'vínculo', DELIVERY_CONFIRM: 'confirmação de entrega', TRANSFER_CONFIRM: 'transferência' }
+const PURPOSE_LABELS: Record<string, string> = READ_PURPOSE_LABELS
 /** What the desk did with the read: open review, revoked tag (approved — the decision unlinks the tag from the work), or kept (rejected). */
 function alertOutcome(al: AlertRow): { badge: string; tone: { bg: string; fg: string }; note: string | null } {
   if (al.reviewOpen) return { badge: 'Violação', tone: { bg: '--ha-alert-500', fg: '--ha-paper-50' }, note: null }

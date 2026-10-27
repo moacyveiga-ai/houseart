@@ -54,6 +54,26 @@ export function draftsAction(drafts: number): PanelAction | null {
   return { icon: 'draft', title: drafts === 1 ? '1 obra sem certificado' : `${drafts} obras sem certificado`, sub: 'Peça a certificação para colocar à venda', tag: 'rascunho', tone: 'neutral', href: '/artworks?filter=drafts' }
 }
 
+export interface CertificationItem { id: number; title: string; linked: boolean; signed: boolean; issued: boolean }
+
+/**
+ * "Precisa de você" for the works in certification, by the step that is missing — the tag, the
+ * signature (the gallery signs, never the artist) or the issue. One work opens its own step; more
+ * than one opens Certificação.
+ */
+export function certificationActions(items: readonly CertificationItem[]): PanelAction[] {
+  const toLink = items.filter((i) => !i.linked)
+  const toSign = items.filter((i) => i.linked && !i.signed)
+  const toIssue = items.filter((i) => i.linked && i.signed && !i.issued)
+  const out: PanelAction[] = []
+  if (toLink.length) out.push(toLink.length === 1
+    ? { icon: 'nfc', title: 'Vincular a etiqueta', sub: toLink[0]!.title, tag: 'etiqueta', tone: 'neutral', href: `/certification/link/${toLink[0]!.id}` }
+    : { icon: 'nfc', title: `${toLink.length} obras sem etiqueta vinculada`, sub: 'Encoste o celular na etiqueta de cada obra', tag: 'etiqueta', tone: 'neutral', href: '/certification' })
+  if (toSign.length) out.push({ icon: 'draw', title: toSign.length === 1 ? 'Assinar o certificado' : `${toSign.length} certificados para assinar`, sub: toSign.length === 1 ? toSign[0]!.title : 'A etiqueta já está vinculada', tag: 'assinar', tone: 'pending', href: '/certification' })
+  if (toIssue.length) out.push({ icon: 'verified', title: toIssue.length === 1 ? 'Emitir o certificado' : `${toIssue.length} certificados para emitir`, sub: toIssue.length === 1 ? toIssue[0]!.title : 'Assinados, falta emitir', tag: 'emitir', tone: 'pending', href: '/certification' })
+  return out
+}
+
 /** The offer line of the panel: "Construção nº 7 · Helena Vaz · 89% do preço" (the difference when there is no price). */
 export function offerSub(o: { artworkTitle: string; buyer: string; pctOfPrice: number | null; differenceLabel: string }): string {
   const tail = o.pctOfPrice != null ? `${o.pctOfPrice}% do preço` : o.differenceLabel

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Marketplace } from '@/components/public/Marketplace'
-import { listPublicArtworks, marketArtists, marketItems } from '@/lib/marketplace/public-server'
+import { marketArtists, marketItems } from '@/lib/marketplace/public-server'
 import { artworkFlags } from '@/lib/community/server'
 import { getSession } from '@/lib/auth'
-import { selectionFromParams, type SortKey } from '@/lib/marketplace/filter-core'
+import { pageFromParam, passes, selectionFromParams, sortItems, visibleCount, type SortKey } from '@/lib/marketplace/filter-core'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Marketplace — HouseArt', description: 'Obras autenticadas com escritura, à venda por artistas, galerias e colecionadores. Preço, origem e certificado em cada uma.' }
@@ -17,10 +17,14 @@ export default async function PublicMarketplacePage({ searchParams }: { searchPa
   const q = one(p.q).trim().slice(0, 120)
   const sortRaw = one(p.sort) as SortKey
   const sort: SortKey = SORTS.includes(sortRaw) ? sortRaw : 'rel'
-  const [items, artists, cards, session] = await Promise.all([marketItems(500), marketArtists(6), listPublicArtworks({}, 500), getSession()])
-  // The heart of each card: the numeric id (reactions) and whether this person already liked it.
-  const flags = await artworkFlags(session?.id ?? null, cards.map((c) => c.id))
+  const page = pageFromParam(one(p.pagina))
+  const [items, artists, session] = await Promise.all([marketItems(500), marketArtists(6), getSession()])
+  // The heart of each card shown on this page: the numeric id (reactions) and whether this person already liked it.
+  const list = sortItems(items.filter((i) => passes(i, sel, q)), sort)
+  const shown = list.slice(0, visibleCount(page, list.length))
+  const ids = shown.map((i) => i.id).filter((id): id is number => typeof id === 'number')
+  const flags = await artworkFlags(session?.id ?? null, ids)
   const byPublicId: Record<string, { id: number; liked: boolean }> = {}
-  for (const c of cards) byPublicId[c.publicId] = { id: c.id, liked: flags.get(c.id)?.liked ?? false }
-  return <Marketplace items={items} artists={artists} sel={sel} q={q} sort={sort} reactions={{ signedIn: !!session, byPublicId }} />
+  for (const i of shown) if (typeof i.id === 'number') byPublicId[i.publicId] = { id: i.id, liked: flags.get(i.id)?.liked ?? false }
+  return <Marketplace items={items} artists={artists} sel={sel} q={q} sort={sort} page={page} reactions={{ signedIn: !!session, byPublicId }} />
 }

@@ -7,7 +7,7 @@ import { Icon } from '@/components/ds/Icon'
 import { LanguageMark, type Language } from '@/components/layout/HouseArtLogo'
 import { ARTWORK_CATEGORIES, ARTWORK_CATEGORY_LABELS } from '@/lib/artworks/domain'
 import {
-  countFor, paramsOf, passes, sortItems, toggleIn, EMPTY_SELECTION,
+  countFor, paramsOf, passes, sortItems, toggleIn, visibleCount, EMPTY_SELECTION, PAGE_SIZE,
   PRICE_RANGES, SELLER_LABELS, MARKET_LABELS, SIZE_LABELS,
   type GroupKey, type MarketItem, type Selection, type SortKey,
 } from '@/lib/marketplace/filter-core'
@@ -47,11 +47,13 @@ function groupsOf(items: MarketItem[]): Group[] {
 /** The viewer's like state per publicId (numeric id + liked), from the page; absent = anonymous heart. */
 export interface MarketReactions { signedIn: boolean; byPublicId: Record<string, { id: number; liked: boolean }> }
 
-export function Marketplace({ items, artists, sel, q, sort, reactions }: { items: MarketItem[]; artists: MarketArtist[]; sel: Selection; q: string; sort: SortKey; reactions?: MarketReactions }) {
+export function Marketplace({ items, artists, sel, q, sort, page = 1, reactions }: { items: MarketItem[]; artists: MarketArtist[]; sel: Selection; q: string; sort: SortKey; page?: number; reactions?: MarketReactions }) {
   const likeOf = (publicId: string): MarketCardLikeState | undefined => reactions ? { signedIn: reactions.signedIn, id: reactions.byPublicId[publicId]?.id ?? null, liked: reactions.byPublicId[publicId]?.liked ?? false } : undefined
   const href = (s: Selection, query = q, order = sort) => '/e/marketplace' + paramsOf(s, query, order)
   const groups = groupsOf(items)
   const list = sortItems(items.filter((i) => passes(i, sel, q)), sort)
+  const shown = list.slice(0, visibleCount(page, list.length))
+  const rest = list.length - shown.length
   const chips = groups.flatMap((g) => sel[g.key].map((v) => ({ g: g.key, value: v, label: g.options.find((o) => o.value === v)?.label ?? v })))
   const featured = [...items].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3)
   const hiddenParams = (Object.keys(sel) as GroupKey[]).filter((g) => sel[g].length).map((g) => <input key={g} type="hidden" name={g} value={sel[g].join(',')} />)
@@ -126,7 +128,15 @@ export function Marketplace({ items, artists, sel, q, sort, reactions }: { items
             </div>
           ) : null}
           {list.length ? (
-            <div className="hp-market-grid">{list.map((o) => <MarketCard key={o.publicId} item={o} like={likeOf(o.publicId)} />)}</div>
+            <>
+              <div className="hp-market-grid">{shown.map((o) => <MarketCard key={o.publicId} item={o} like={likeOf(o.publicId)} />)}</div>
+              {rest > 0 ? (
+                <div className="hp-market-more">
+                  <span className="hp-market-more__count" role="status">Mostrando {shown.length} de {list.length}</span>
+                  <Link href={'/e/marketplace' + paramsOf(sel, q, sort, page + 1)} scroll={false} rel="nofollow" className="hp-btn-ink hp-market-more__btn">Ver mais {Math.min(rest, PAGE_SIZE)} {Math.min(rest, PAGE_SIZE) === 1 ? 'obra' : 'obras'}</Link>
+                </div>
+              ) : null}
+            </>
           ) : (
             <div className="hp-market-empty">Nenhuma obra com esses filtros. <Link href={href(EMPTY_SELECTION, '')}>Limpar filtros</Link></div>
           )}

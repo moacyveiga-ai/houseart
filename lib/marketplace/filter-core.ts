@@ -8,6 +8,8 @@ export interface MarketItem {
   priceCents: bigint | null; saleMode: string | null; seller: string; sellerKind: 'GALLERY' | 'PRIVATE'; market: 'PRIMARY' | 'SECONDARY' | null; uf: string | null; cover: string | null; updatedAt: number
   /** the seller's city and, for a gallery with a public page, its slug (Explorar: "Galeria · Salvador, BA" and the avatar link) */
   city?: string | null; sellerSlug?: string | null
+  /** the numeric id, for the heart (reactions); never shown */
+  id?: number
 }
 
 export const PRICE_RANGES = [
@@ -85,11 +87,28 @@ export function toggleIn(sel: Selection, g: GroupKey, value: string): Selection 
   return { ...sel, [g]: cur.includes(value) ? cur.filter((x) => x !== value) : [...cur, value] }
 }
 
-export function paramsOf(sel: Selection, q: string, sort: SortKey): string {
+/** Marketplace pages: "Ver mais obras" adds PAGE_SIZE works at a time, up to MAX_PAGE pages (the set loaded is 500). */
+export const PAGE_SIZE = 24
+export const MAX_PAGE = 21
+
+/** ?pagina= read as an integer page from 1 to MAX_PAGE; anything else is page 1. */
+export function pageFromParam(raw: string): number {
+  if (!/^\d{1,3}$/.test(raw)) return 1
+  const n = Number(raw)
+  return n >= 1 ? Math.min(n, MAX_PAGE) : 1
+}
+
+/** How many of the filtered works the page shows (cumulative: page 2 shows the first 48). */
+export function visibleCount(page: number, total: number): number {
+  return Math.min(total, page * PAGE_SIZE)
+}
+
+export function paramsOf(sel: Selection, q: string, sort: SortKey, page = 1): string {
   const u = new URLSearchParams()
   for (const g of Object.keys(sel) as GroupKey[]) if (sel[g].length) u.set(g, sel[g].join(','))
   if (q.trim()) u.set('q', q.trim())
   if (sort !== 'rel') u.set('sort', sort)
+  if (page > 1) u.set('pagina', String(page))
   const s = u.toString()
   return s ? `?${s}` : ''
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countFor, EMPTY_SELECTION, paramsOf, passes, selectionFromParams, sizeKeyOf, sortItems, toggleIn, type MarketItem } from './filter-core'
+import { countFor, EMPTY_SELECTION, MAX_PAGE, PAGE_SIZE, pageFromParam, paramsOf, visibleCount, passes, selectionFromParams, sizeKeyOf, sortItems, toggleIn, type MarketItem } from './filter-core'
 
 const item = (o: Partial<MarketItem>): MarketItem => ({ publicId: 'HA-1', artist: 'Joana Teixeira', artistSlug: 'joana', title: 'Construção nº 7', year: 2025, category: 'PAINTING', technique: 'Óleo', dimensions: '100 × 80 cm', sizeKey: 'MEDIUM', priceCents: 3_800_000n, saleMode: 'FIXED', seller: 'Galeria Ladeira', sellerKind: 'GALLERY', market: 'PRIMARY', uf: 'BA', cover: null, updatedAt: 1, ...o })
 
@@ -32,5 +32,26 @@ describe('marketplace filter core', () => {
     expect(selectionFromParams({ category: 'PAINTING,SCULPTURE', uf: 'BA' })).toEqual({ ...EMPTY_SELECTION, category: ['PAINTING', 'SCULPTURE'], uf: ['BA'] })
     expect(selectionFromParams({ category: 'WORK_ON_PAPER,PRINT' }).category).toEqual(['PRINT'])
     expect(toggleIn(sel, 'uf', 'BA').uf).toEqual([])
+  })
+})
+
+describe('marketplace pages', () => {
+  it('reads ?pagina= as a bounded integer', () => {
+    expect(pageFromParam('')).toBe(1)
+    expect(pageFromParam('0')).toBe(1)
+    expect(pageFromParam('3')).toBe(3)
+    expect(pageFromParam('-2')).toBe(1)
+    expect(pageFromParam('2.5')).toBe(1)
+    expect(pageFromParam('999')).toBe(MAX_PAGE)
+    expect(pageFromParam('abc')).toBe(1)
+  })
+  it('shows PAGE_SIZE more per page, never beyond the total', () => {
+    expect(visibleCount(1, 100)).toBe(PAGE_SIZE)
+    expect(visibleCount(2, 100)).toBe(PAGE_SIZE * 2)
+    expect(visibleCount(3, 30)).toBe(30)
+  })
+  it('keeps the page in the URL only past the first', () => {
+    expect(paramsOf(EMPTY_SELECTION, '', 'rel', 1)).toBe('')
+    expect(paramsOf(EMPTY_SELECTION, 'azul', 'lower', 2)).toBe('?q=azul&sort=lower&pagina=2')
   })
 })

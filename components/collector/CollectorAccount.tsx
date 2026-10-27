@@ -5,6 +5,7 @@
 // prototype's `ctDados` (name and CPF come from the signup and are not edited here; the city
 // saves by PATCH /api/auth/identity). "Sair da conta" is POST /api/auth/logout → /e.
 import Link from 'next/link'
+import { ContactChange } from './ContactChange'
 import { useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toggle } from '@/components/ds/Toggle'
@@ -19,7 +20,7 @@ export interface AccountLinkItem { kind: 'link'; icon: string; name: string; sub
 export interface AccountSwitchItem { kind: 'switch'; icon: string; name: string; sub: string; key: 'marketingOptIn'; on: boolean }
 export type CollectorAccountItem = AccountLinkItem | AccountSwitchItem
 export interface CollectorAccountSection { name: string; items: CollectorAccountItem[] }
-export interface PersonalData { name: string; email: string; emailVerified: boolean; phoneMask: string | null; phoneVerified: boolean; cpfMask: string | null; city: string; about: string; avatarUrl: string | null }
+export interface PersonalData { name: string; email: string; emailVerified: boolean; phoneMask: string | null; phoneVerified: boolean; cpfMask: string | null; city: string; about: string; avatarUrl: string | null; hasPassword?: boolean }
 
 export function CollectorAccount({ initials, me, sections, view }: { initials: string; me: PersonalData; sections: CollectorAccountSection[]; view: 'menu' | 'data' }) {
   const [leaving, setLeaving] = useState(false)
@@ -92,8 +93,6 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
 
   if (view === 'data') {
     const fields: { k: string; v: string; note?: string }[] = [
-      { k: 'E-mail', v: me.email, note: me.emailVerified ? 'Verificado' : 'Não verificado' },
-      { k: 'Celular', v: me.phoneMask ?? '—', note: me.phoneMask ? (me.phoneVerified ? 'Verificado' : 'Não verificado') : 'Informado na primeira oferta' },
       { k: 'CPF', v: me.cpfMask ?? '—', note: me.cpfMask ? 'O CPF não pode ser alterado' : 'Informado na primeira oferta' },
     ]
     return (
@@ -109,6 +108,8 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
           </span>
         </div>
         <label className="ha-cacct__field"><span className="ha-cacct__field-k">Nome completo<span className="ha-cacct__field-n">Como aparece nos certificados e nas conversas</span></span><input className="ha-input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
+        <ContactChange kind="email" k="E-mail" value={me.email} needsPassword={!!me.hasPassword} note={me.emailVerified ? 'Verificado' : 'Não verificado'} />
+        <ContactChange kind="phone" k="Celular" value={me.phoneMask ?? '—'} note={me.phoneMask ? (me.phoneVerified ? 'Verificado' : 'Não verificado') : 'Nenhum celular cadastrado'} />
         {fields.map((f) => (
           <label key={f.k} className="ha-cacct__field"><span className="ha-cacct__field-k">{f.k}<span className="ha-cacct__field-n">{f.note}</span></span><input className="ha-input ha-cacct__ro" value={f.v} readOnly /></label>
         ))}

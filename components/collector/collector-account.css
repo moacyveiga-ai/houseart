@@ -45,3 +45,5 @@
 .ha-cacct__avimg { object-fit: cover; }
 .ha-cacct__photo { align-items: center; gap: var(--ha-space-4); }
 .ha-cacct__about { height: auto; min-height: 88px; padding: 10px 14px; resize: vertical; font: inherit; line-height: var(--ha-lh-body-sm); }
+.ha-cacct__contact { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); align-items: center; }
+.ha-cacct__contact .ha-input { flex: 1 1 200px; min-width: 0; }

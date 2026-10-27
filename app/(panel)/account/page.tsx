@@ -32,7 +32,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
     devicesOf(user.id, user.sessionId).then((d) => d.length).catch(() => 1),
   ])
   const defaultCard = cards.find((c) => c.isDefault) ?? cards[0]
-  const me = { name: user.name, email: user.email, emailVerified: identity.emailVerified, phoneMask: identity.phoneMask, phoneVerified: identity.phoneVerified, cpfMask: identity.cpfMask, city: identity.city, about: identity.about, avatarUrl: identity.avatarUrl }
+  const me = { name: user.name, email: user.email, emailVerified: identity.emailVerified, phoneMask: identity.phoneMask, phoneVerified: identity.phoneVerified, cpfMask: identity.cpfMask, city: identity.city, about: identity.about, avatarUrl: identity.avatarUrl, hasPassword: !!identity.hasPassword }
   const favoritesSub = `${plural(favorites.filter((f) => f.saved).length, 'favorito', 'favoritos')} · ${plural(favorites.filter((f) => f.liked).length, 'curtida', 'curtidas')}`
   const cadastro: CollectorAccountSection = { name: 'Cadastro', items: [
     { kind: 'link', icon: 'person', name: 'Dados pessoais', sub: [user.email, identity.phoneMask].filter(Boolean).join(' · '), href: '/account?view=data' },

@@ -69,7 +69,7 @@ function cardOf(i: MarketItem): ArtworkCardData {
   return { href: `/e/artwork/${i.publicId}`, src: i.cover, artist: i.artist, title: i.title, year: i.year, technique: i.technique, dimensions: i.dimensions, price: i.priceCents === null ? 'Sob consulta' : formatBRL(i.priceCents), verified: true }
 }
 
-export function Artwork({ artwork: a, related, signedIn = false }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean }) {
+export function Artwork({ artwork: a, related, signedIn = false, counts = null }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean; counts?: { likes: number; comments: number } | null }) {
   const language = LANGUAGE_OF[a.category]
   const media = mediaItemsOf(a.media)
   const wall = a.size.heightMm && a.size.widthMm ? { heightMm: a.size.heightMm, widthMm: a.size.widthMm, dimensions: a.dimensions } : null
@@ -139,6 +139,12 @@ export function Artwork({ artwork: a, related, signedIn = false }: { artwork: Pu
                 ) : (
                   <TalkToSellerButton artworkId={a.id} publicId={a.publicId} signedIn={signedIn} label={talkLabel} className="ha-btn ha-btn--outline ha-btn--md hp-artwork__talk" />
                 )}
+                {counts && (counts.likes || counts.comments) ? (
+                  <div className="hp-artwork__social" role="group" aria-label={`${counts.likes} curtidas e ${counts.comments} comentários`}>
+                    <span><Icon name="favorite" size={16} />{counts.likes}</span>
+                    <span><Icon name="chat_bubble" size={16} />{counts.comments}</span>
+                  </div>
+                ) : null}
                 <div className="hp-artwork__assure">
                   <span><Icon name="lock" size={16} />Pagamento em garantia: liberado ao vendedor só depois que você confirma o recebimento.</span>
                   <span><Icon name="contract" size={16} />A escritura passa para o seu nome na entrega.</span>

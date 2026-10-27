@@ -114,8 +114,18 @@ export function realGateway(secretKey: string): StripeGateway {
     async detachPaymentMethod(id) { await s.paymentMethods.detach(id) },
     async createPaymentIntent(p, idempotencyKey) {
       const { installments, ...rest } = p
-      const plan = installments && installments > 1 ? { payment_method_options: { card: { installments: { enabled: true, plan: { count: installments, interval: 'month' as const, type: 'fixed_count' as const } } } } } : {}
-      return toPi(await s.paymentIntents.create({ ...rest, ...plan, off_session: true, confirm: true }, { idempotencyKey }))
+      if (!installments || installments < 2) return toPi(await s.paymentIntents.create({ ...rest, off_session: true, confirm: true }, { idempotencyKey }))
+      // Installments (Brazil): Stripe only takes a plan it OFFERED for this card — a plan built by hand
+      // is refused ("plan not supported"). So: create with installments enabled, read the card's
+      // available plans, confirm with the offered one; none for that count → cancel and refuse.
+      const draft = await s.paymentIntents.create({ ...rest, payment_method_options: { card: { installments: { enabled: true } } } }, { idempotencyKey: `${idempotencyKey}:draft` })
+      const plans = draft.payment_method_options?.card?.installments?.available_plans ?? []
+      const plan = plans.find((x) => x.count === installments && x.interval === 'month')
+      if (!plan) {
+        await s.paymentIntents.cancel(draft.id, {}, { idempotencyKey: `${idempotencyKey}:draft-cancel` }).catch(() => null)
+        throw Object.assign(new Error(`No ${installments}x plan for this card (offered: ${plans.map((x) => x.count).join(',') || 'none'})`), { type: 'StripeInvalidRequestError', code: 'installments_plan_unavailable' })
+      }
+      return toPi(await s.paymentIntents.confirm(draft.id, { payment_method_options: { card: { installments: { plan: { count: plan.count ?? undefined, interval: plan.interval ?? undefined, type: plan.type } } } }, off_session: true }, { idempotencyKey: `${idempotencyKey}:confirm` }))
     },
     async capturePaymentIntent(id, amountToCapture, idempotencyKey) { return toPi(await s.paymentIntents.capture(id, { amount_to_capture: amountToCapture }, { idempotencyKey })) },
     async cancelPaymentIntent(id, idempotencyKey) { return toPi(await s.paymentIntents.cancel(id, {}, { idempotencyKey })) },

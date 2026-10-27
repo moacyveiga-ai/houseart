@@ -75,3 +75,31 @@ describe('excluir minha conta', () => {
   }, 60_000)
 })
 
+
+describe('aparelhos conectados', () => {
+  it('lists the live sessions, signs out another one and never the current one or someone else’s', async () => {
+    const { createLocalSession } = await import('@/lib/auth')
+    const { devicesOf, signOutDevice, signOutOtherDevices } = await import('@/lib/auth/devices-server')
+    await createLocalSession(buyerId, { userAgent: 'Mozilla/5.0 (Windows NT 10.0) Chrome/130.0 Safari/537.36', ip: '189.12.33.4' })
+    await createLocalSession(buyerId, { userAgent: 'okhttp/4.12.0' })
+    await createLocalSession(buyerId, {})
+    const mine = await prisma.session.findMany({ where: { userId: buyerId }, orderBy: { id: 'asc' } })
+    const current = mine[0]!.id
+    const other = await prisma.user.create({ data: { email: 'outra@col.test', name: 'Outra', profile: 'collector', active: true } })
+    await createLocalSession(other.id, {})
+    const theirs = (await prisma.session.findFirstOrThrow({ where: { userId: other.id } })).id
+    await prisma.session.update({ where: { id: mine[2]!.id }, data: { expiresAt: new Date(Date.now() - 1000) } })
+
+    const list = await devicesOf(buyerId, current)
+    expect(list.map((d) => d.id)).toEqual([current, mine[1]!.id]) // the expired one is not shown
+    expect(list[0]).toMatchObject({ current: true, label: 'Chrome no Windows', where: '189.12.x.x' })
+
+    await expect(signOutDevice(buyerId, current, current)).rejects.toMatchObject({ code: 'CURRENT_SESSION' })
+    await expect(signOutDevice(buyerId, current, theirs)).rejects.toMatchObject({ code: 'NOT_FOUND' })
+    expect(await prisma.session.count({ where: { id: theirs } })).toBe(1)
+
+    expect(await signOutOtherDevices(buyerId, current)).toBe(1) // the live one; the expired leaves too, uncounted
+    expect((await prisma.session.findMany({ where: { userId: buyerId } })).map((x) => x.id)).toEqual([current])
+    expect(await prisma.session.count({ where: { id: theirs } })).toBe(1)
+  })
+})

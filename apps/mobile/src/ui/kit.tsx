@@ -32,10 +32,11 @@ export function Wall({ uri, padding = 44, style, square = true }: { uri: string 
   )
 }
 
-export function Avatar({ initials, bg, fg, size = 38 }: { initials: string; bg: string; fg: string; size?: number }) {
+/** Initials, or the profile photo over them when there is one (`uri` already absolute). */
+export function Avatar({ initials, bg, fg, size = 38, uri }: { initials: string; bg: string; fg: string; size?: number; uri?: string | null }) {
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: fg, fontSize: Math.round(size * 0.32), fontWeight: '600' }}>{initials}</Text>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      {uri ? <Image source={{ uri }} style={{ width: size, height: size }} accessibilityIgnoresInvertColors /> : <Text style={{ color: fg, fontSize: Math.round(size * 0.32), fontWeight: '600' }}>{initials}</Text>}
     </View>
   )
 }

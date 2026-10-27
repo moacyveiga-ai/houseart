@@ -69,7 +69,7 @@ export interface BuyerOfferView {
 }
 
 /** GET /api/public/community/feed → { items } */
-export interface FeedAuthor { name: string; initials: string; sub: string; memberId: number | null; memberSlug: string | null; following: boolean }
+export interface FeedAuthor { name: string; initials: string; sub: string; memberId: number | null; memberSlug: string | null; following: boolean; profileHref?: string | null; avatarUrl?: string | null }
 export interface FeedItem {
   key: string
   kind: 'PHOTO' | 'TEXT' | 'POLL' | 'EVENT' | 'NEWS' | 'AGENDA'

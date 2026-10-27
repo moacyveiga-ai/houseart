@@ -6,11 +6,14 @@
 // `?as=collector` (the collector who sells, App Colecionador › Vendas); writes:
 // POST /api/deals/[id]/{sign,shipping} (the server decides the side by the deal).
 import { useCallback, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useApi } from '@/api/hooks'
-import { bookShipping, signDeal, type DealView } from '@/api/gallery'
+import { addPackagingPhoto, bookShipping, recordPackaging, removePackagingPhoto, signDeal, type DealView } from '@/api/gallery'
+import * as ImagePicker from 'expo-image-picker'
+import { VaultImage } from '@/ui/vault-image'
+import { photoPart } from '../artist/artist-core'
 import { colors, theme } from '@/theme'
 import { Input, Label } from '@/ui/forms'
 import { Avatar, Display, ErrorState, Icon, Loading, Toast, TopBar, Wall, type IconName } from '@/ui/kit'
@@ -27,6 +30,7 @@ export function DealScreen() {
   const d = data?.deals.find((x) => x.id === dealId) ?? null
   const [ship, setShip] = useState({ carrier: '', tracking: '', insurer: '' })
   const [busy, setBusy] = useState(false)
+  const [report, setReport] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const clearToast = useCallback(() => setToast(''), [])
 
@@ -34,6 +38,20 @@ export function DealScreen() {
     if (busy) return
     setBusy(true)
     try { await fn(); setToast(done); await reload() } catch (e) { setToast((e as Error).message || 'Não foi possível concluir.') } finally { setBusy(false) }
+  }
+
+  // "Embalagem e condition report" (between the paid escrow and the shipment; the server decides): photos of the packed work and the note
+  async function addPhoto(dealIdNow: number) {
+    if (busy) return
+    // the camera when allowed; denied or missing, the gallery
+    const opts = { mediaTypes: ['images'] as ImagePicker.MediaType[], quality: 0.85, exif: false }
+    let result: ImagePicker.ImagePickerResult
+    const perm = await ImagePicker.requestCameraPermissionsAsync().catch(() => null)
+    try { result = perm?.granted ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts) } catch {
+      try { result = await ImagePicker.launchImageLibraryAsync(opts) } catch { setToast('Não foi possível abrir a câmera nem a galeria.'); return }
+    }
+    if (result.canceled || !result.assets[0]) return
+    await run(() => addPackagingPhoto(dealIdNow, photoPart(result.assets[0]!, 'embalagem')), 'Foto adicionada')
   }
 
   const stageText = (x: DealView): string => {
@@ -87,6 +105,28 @@ export function DealScreen() {
 
           {d.phase === 'ESCROW' && !d.sellerSigned ? <Button title="Assinar o termo de transferência" loading={busy} onPress={() => void run(() => signDeal(d.id), 'Termo assinado')} /> : null}
           {d.phase === 'ESCROW' && d.sellerSigned && !d.buyerSigned ? <Text style={styles.muted}>Aguardando a assinatura do comprador.</Text> : null}
+          {(d.phase === 'ESCROW' || d.phase === 'DOCUMENTS') && !d.exception && d.packaging ? (() => {
+            const pk = d.packaging
+            const text = report ?? pk.report ?? ''
+            return (
+              <View style={styles.form}>
+                <Text style={styles.stageTitle}>Embalagem e condition report</Text>
+                <Text style={styles.muted}>{pk.packedAt ? 'Registrado · o comprador vê as fotos e o texto. Você pode atualizar até o envio.' : 'Fotografe a obra embalada e descreva o estado dela antes do envio.'}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                  {pk.photos.map((p) => (
+                    <View key={p.id}>
+                      <VaultImage url={p.url} style={styles.packPhoto} label="Foto da obra embalada" />
+                      <Pressable accessibilityRole="button" accessibilityLabel="Tirar esta foto" onPress={() => void run(() => removePackagingPhoto(d.id, p.id), 'Foto retirada')} style={styles.packRemove}><Icon name="close" size={16} color={colors.paper50} /></Pressable>
+                    </View>
+                  ))}
+                  {pk.photos.length < 6 ? <Pressable accessibilityRole="button" accessibilityLabel="Adicionar foto" onPress={() => void addPhoto(d.id)} disabled={busy} style={styles.packAdd}><Icon name="add-a-photo" size={24} /></Pressable> : null}
+                </ScrollView>
+                <Label hint={`${text.trim().length}/1000`}>Estado da obra</Label>
+                <Input value={text} onChangeText={(v) => setReport(v.slice(0, 1000))} multiline placeholder="Ex.: tela sem craquelês, moldura com marca leve no canto superior" style={{ minHeight: 96, textAlignVertical: 'top' }} />
+                <Button title={pk.packedAt ? 'Atualizar embalagem' : 'Registrar embalagem'} variant={pk.packedAt ? 'ghost' : 'primary'} loading={busy} disabled={!pk.photos.length || text.trim().length < 10} onPress={() => void run(async () => { await recordPackaging(d.id, text.trim()); setReport(null) }, 'Embalagem registrada · o comprador foi avisado')} />
+              </View>
+            )
+          })() : null}
           {d.phase === 'DOCUMENTS' ? (
             <View style={styles.form}>
               <Label>Transportadora</Label><Input value={ship.carrier} onChangeText={(v) => setShip({ ...ship, carrier: v })} placeholder="Nome da transportadora" />
@@ -125,6 +165,9 @@ const styles = StyleSheet.create({
   finK: { flex: 1, fontSize: 13, color: theme.fgMuted },
   finV: { fontSize: 13, color: theme.fg, fontVariant: ['tabular-nums'] },
   form: { gap: 8 },
+  packPhoto: { width: 88, height: 88, borderRadius: theme.radiusSm, backgroundColor: theme.surface },
+  packRemove: { position: 'absolute', top: 4, right: 4, width: 26, height: 26, borderRadius: 13, backgroundColor: theme.fg, alignItems: 'center', justifyContent: 'center' },
+  packAdd: { width: 88, height: 88, borderRadius: theme.radiusSm, borderWidth: 1, borderStyle: 'dashed', borderColor: theme.fgDisabled, alignItems: 'center', justifyContent: 'center' },
   note: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: theme.radiusMd, backgroundColor: colors.pending100 },
   noteText: { flex: 1, fontSize: 13, lineHeight: 18, color: theme.fg },
 })

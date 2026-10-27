@@ -13,7 +13,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string; me
     if (!id || !messageId) return NextResponse.json({ error: 'Foto não encontrada.' }, { status: 404 })
     const ref = await photoOf(u.id, id, messageId)
     if (!ref) return NextResponse.json({ error: 'Foto não encontrada.' }, { status: 404 })
-    const file = await openVaultFileStream(ref)
+    // a ref whose file left the vault is a missing photo, not a server error
+    const file = await openVaultFileStream(ref).catch((e: unknown) => { if (e instanceof PrivateVaultUnavailableError) throw e; return null })
+    if (!file) return NextResponse.json({ error: 'Foto não encontrada.' }, { status: 404 })
     return new NextResponse(file.stream, { status: 200, headers: {
       'content-type': 'image/jpeg', ...(file.size !== null ? { 'content-length': String(file.size) } : {}),
       'content-disposition': 'inline; filename="foto.jpg"', 'x-content-type-options': 'nosniff', 'content-security-policy': 'sandbox', 'cache-control': 'private, max-age=3600',

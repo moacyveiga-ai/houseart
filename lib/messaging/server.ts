@@ -180,6 +180,9 @@ export async function sendMessage(me: number, conversationId: number, raw: unkno
  * 10 MB), re-encoded (≤ 2048 px JPEG, EXIF and GPS dropped) and kept in the PRIVATE vault — a photo of a
  * collection is not public content. The line carries "Foto" for the preview and the push.
  */
+/** a 10 MB PNG can decode to hundreds of MB: anything above 40 MP is refused before decoding */
+const PHOTO_MAX_PIXELS = 40_000_000
+
 export async function sendPhoto(me: number, conversationId: number, bytes: Buffer): Promise<MessageRow> {
   await requireParticipant(me, conversationId)
   const type = contentTypeOf(bytes.subarray(0, 32), null)
@@ -187,7 +190,7 @@ export async function sendPhoto(me: number, conversationId: number, bytes: Buffe
   if (!v.ok) throw new ArtworkError('INVALID_FILE', v.error, v.status)
   let out: Buffer
   try {
-    out = await sharp(bytes, { failOn: 'error' }).rotate()
+    out = await sharp(bytes, { failOn: 'error', limitInputPixels: PHOTO_MAX_PIXELS }).rotate()
       .resize({ width: CONTENT_IMAGE_MAX_SIDE, height: CONTENT_IMAGE_MAX_SIDE, fit: 'inside', withoutEnlargement: true })
       .flatten({ background: '#ffffff' }).jpeg({ quality: 85 }).toBuffer()
   } catch { throw new ArtworkError('INVALID_FILE', 'Imagem ilegível.', 415) }

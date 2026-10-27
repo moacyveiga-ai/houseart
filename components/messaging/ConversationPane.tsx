@@ -30,6 +30,8 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
   const [error, setError] = useState<string | null>(null)
   const [text, setText] = useState('')
   const [guard, setGuard] = useState<string | null>(null)
+  /** the photo failure is its own line: it never locks the text "Enviar" (that is the contact guard's job) */
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [reporting, setReporting] = useState(false)
   const [reported, setReported] = useState(false)
@@ -74,7 +76,7 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
     if (!body || sending) return
     if (hasContactLeak(body)) { setGuard(CONTACT_GUARD); return }
     if (body.length > MESSAGE_MAX) { setGuard(`A mensagem passa de ${MESSAGE_MAX} caracteres.`); return }
-    setSending(true); setGuard(null)
+    setSending(true); setGuard(null); setPhotoError(null)
     try {
       const r = await fetch(`/api/messages/${conversationId}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ body }) })
       const j = (await r.json().catch(() => ({}))) as { message?: MessageView; error?: string; code?: string }
@@ -90,18 +92,18 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
   /** "Enviar foto": reduced in the browser, re-encoded and kept private on the server. */
   const sendPhoto = useCallback(async (file: File | undefined) => {
     if (!file || sending) return
-    setSending(true); setGuard(null)
+    setSending(true); setPhotoError(null)
     try {
       let blob: Blob = file
       try { blob = await shrinkToJpeg(file) } catch { /* the server re-encodes and says what is wrong */ }
       const form = new FormData(); form.append('file', blob, 'foto.jpg')
       const r = await fetch(`/api/messages/${conversationId}/photos`, { method: 'POST', body: form })
       const j = (await r.json().catch(() => ({}))) as { message?: MessageView; error?: string }
-      if (!r.ok || !j.message) { setGuard(j.error ?? 'Não foi possível enviar a foto. Tente de novo.'); return }
+      if (!r.ok || !j.message) { setPhotoError(j.error ?? 'Não foi possível enviar a foto. Tente de novo.'); return }
       const m = j.message
       const cur = dataRef.current
       if (cur) { const messages = mergeMessages(cur.messages, [m]); lastId.current = lastIdOf(messages); setData({ ...cur, messages }); changed.current(cur.header, m) }
-    } catch { setGuard('Não foi possível enviar a foto. Tente de novo.') } finally { setSending(false); if (picker.current) picker.current.value = '' }
+    } catch { setPhotoError('Não foi possível enviar a foto. Tente de novo.') } finally { setSending(false); if (picker.current) picker.current.value = '' }
   }, [conversationId, sending])
 
   const onSubmit = (e: FormEvent) => { e.preventDefault(); void send(text) }
@@ -151,8 +153,9 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
         {quickRepliesOf(role, data?.header.myRole).map((q) => <button key={q} type="button" className="ha-msg-quick__chip" disabled={sending || !data} onClick={() => void send(q)}>{q}</button>)}
       </div>
       {guard ? <div className="ha-msg-guard" role="alert"><Icon name="shield" size={17} />{guard}</div> : null}
+      {photoError ? <div className="ha-msg-guard" role="alert"><Icon name="image" size={17} />{photoError}</div> : null}
       <form className="ha-msg-composer" onSubmit={onSubmit}>
-        <input ref={picker} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden onChange={(e) => void sendPhoto(e.target.files?.[0])} />
+        <input ref={picker} type="file" accept="image/*" hidden onChange={(e) => void sendPhoto(e.target.files?.[0])} />
         <button type="button" className="ha-msg-composer__photo" aria-label="Enviar foto" disabled={sending || !data} onClick={() => picker.current?.click()}><Icon name="photo_camera" size={22} /></button>
         <input ref={input} className="ha-msg-composer__input" value={text} onChange={(e) => onInput(e.target.value)} onKeyDown={onKey} placeholder="Mensagem" aria-label="Mensagem" maxLength={MESSAGE_MAX} disabled={!data} autoComplete="off" />
         <button type="submit" className="ha-msg-composer__send" aria-label="Enviar" disabled={sending || !data || !text.trim() || !!guard}><Icon name="send" size={20} /></button>

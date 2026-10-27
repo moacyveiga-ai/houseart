@@ -65,3 +65,21 @@ export function initialsOf(name: string): string {
   if (parts.length === 0) return '?'
   return ((parts[0][0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '')).toUpperCase()
 }
+
+const SWAP_NAMES: Partial<Record<ProfileKindKey, string>> = { COLLECTOR: 'colecionador', GALLERY: 'galeria', ADVISOR: 'consultor', ARTIST: 'artista' }
+
+/**
+ * The topbar shortcut of the design ("Ver como colecionador" on the gallery's panel, "Ver como
+ * galeria" on the collector's): the counterpart profile the person also has. Selling profiles
+ * point to the collector; the collector points to the first selling profile it has (gallery,
+ * advisor, artist). Null when there is no counterpart — the switcher menu still lists them all.
+ */
+export function swapTarget(profiles: readonly { kind: ProfileKindKey; active: boolean }[]): { kind: ProfileKindKey; label: string } | null {
+  const active = profiles.find((p) => p.active)?.kind
+  const has = (k: ProfileKindKey) => profiles.some((p) => p.kind === k && !p.active)
+  if (!active) return null
+  const target: ProfileKindKey | undefined = active === 'COLLECTOR'
+    ? (['GALLERY', 'ADVISOR', 'ARTIST'] as const).find(has)
+    : active === 'GALLERY' || active === 'ADVISOR' || active === 'ARTIST' ? (has('COLLECTOR') ? 'COLLECTOR' : undefined) : undefined
+  return target ? { kind: target, label: `Ver como ${SWAP_NAMES[target]}` } : null
+}

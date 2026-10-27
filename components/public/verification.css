@@ -92,3 +92,6 @@
   .hp-verification { padding: 0; }
   .hp-verification__card { max-width: none; box-shadow: none; }
 }
+/* the laudo (HA-L-…) uses the same card inside the site's header and footer: no full-height stage */
+.hp-verification--embedded { min-height: 0; }
+.hp-verification--embedded .hp-verification-kv__row dd { min-width: 0; text-align: right; }

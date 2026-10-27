@@ -11,7 +11,9 @@ import { PublicHeader } from '@/components/public/PublicHeader'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { publicAccount } from '@/app/e/_shared/public-account'
 import { Verification } from '@/components/public/Verification'
-import { Badge } from '@/components/ds/Badge'
+import { Icon } from '@/components/ds/Icon'
+import { dataBR } from '@/lib/timezone'
+import '@/components/public/verification.css'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import { publicCertificate } from '@/lib/certificates/server'
 import { recordPublicRead, ipHashOf } from '@/lib/physical-markers/server'
@@ -56,26 +58,32 @@ async function CertificateVerify({ publicId, sp }: { publicId: string; sp: Recor
 async function AppraisalVerify({ code }: { code: string }) {
   const a = await publicAppraisal(code)
   if (!a) notFound()
+  const current = a.status === 'ISSUED'
+  // the same card as the certificate's verification (audit público: the laudo was in the old look)
   return (
-    <div className="ha-page ha-page--loose" style={{ maxWidth: 720, margin: '0 auto', padding: 'var(--ha-space-12) var(--ha-space-6)' }}>
-      <p className="ha-eyebrow">Verificação pública · laudo de opinião de valor</p>
-      <h1 className="ha-h1">{a.code}</h1>
-      <div className="ha-row"><Badge tone={a.status === 'ISSUED' ? 'verified' : 'neutral'}>{a.status === 'ISSUED' ? 'Laudo vigente' : 'Laudo substituído'}</Badge></div>
-      <section className="ha-deed">
-        <div className="ha-kv">
-          <span>Obra</span><span>{a.artwork.title}{a.artwork.year ? `, ${a.artwork.year}` : ''}</span>
-          <span>Artista</span><span>{a.artwork.artist}</span>
-          <span>Técnica</span><span>{a.artwork.technique ?? '—'}</span>
-          <span>Dimensões</span><span>{a.artwork.dimensions}</span>
-          <span>Finalidade</span><span>{a.purpose}</span>
-          <span>Faixa</span><span className="ha-num">{formatBRL(BigInt(a.minCents))} — <b>{formatBRL(BigInt(a.suggestedCents))}</b> — {formatBRL(BigInt(a.maxCents))}</span>
-          <span>Avaliador</span><span>{a.appraiser}</span>
-          <span>Emitido em</span><span>{new Date(a.issuedAt).toLocaleDateString('pt-BR')}</span>
-          <span>Hash do conteúdo</span><span className="ha-sm" style={{ wordBreak: 'break-all' }}>{a.contentHash}</span>
-          {a.artwork.publicId ? <><span>Certificado</span><span><a className="ha-link" href={`/verify/${a.artwork.publicId}`}>{a.artwork.publicId}</a></span></> : null}
+    <div className="hp-verification hp-verification--embedded">
+      <article className="hp-verification__card">
+        <header className="hp-verification__top"><span>Verificação pública · laudo de opinião de valor</span></header>
+        <div className={`hp-verification-banner${current ? ' hp-verification-banner--authenticated' : ''}`}>
+          <Icon name={current ? 'verified' : 'history'} size={36} filled />
+          <div><h2>{current ? 'Laudo vigente' : 'Laudo substituído'}</h2><p>{current ? 'Emitido e assinado pela HouseArt. O conteúdo abaixo confere com o código.' : 'Existe um laudo mais novo para esta obra.'}</p></div>
         </div>
-      </section>
-      <p className="ha-muted ha-sm">Opinião de valor para a finalidade declarada. Não substitui laudo pericial nem avaliação judicial.</p>
+        <div className="hp-verification-title">
+          <span className="hp-verification-title__artist">{a.artwork.artist}</span>
+          <h1>{a.artwork.title}{a.artwork.year ? <>, <span>{a.artwork.year}</span></> : null}</h1>
+          <div className="hp-verification-title__meta">{[a.artwork.technique, a.artwork.dimensions].filter(Boolean).join(' · ')}</div>
+        </div>
+        <dl className="hp-verification-kv">
+          <div className="hp-verification-kv__row"><dt>Código do laudo</dt><dd>{a.code}</dd></div>
+          <div className="hp-verification-kv__row"><dt>Finalidade</dt><dd>{a.purpose}</dd></div>
+          <div className="hp-verification-kv__row"><dt>Faixa de valor</dt><dd className="ha-num">{formatBRL(BigInt(a.minCents))} — <b>{formatBRL(BigInt(a.suggestedCents))}</b> — {formatBRL(BigInt(a.maxCents))}</dd></div>
+          <div className="hp-verification-kv__row"><dt>Avaliador</dt><dd>{a.appraiser}</dd></div>
+          <div className="hp-verification-kv__row"><dt>Emitido em</dt><dd>{dataBR(a.issuedAt)}</dd></div>
+          <div className="hp-verification-kv__row"><dt>Hash do conteúdo</dt><dd style={{ wordBreak: 'break-all' }}>{a.contentHash}</dd></div>
+          {a.artwork.publicId ? <div className="hp-verification-kv__row"><dt>Certificado</dt><dd><a className="ha-link" href={`/verify/${a.artwork.publicId}`}>{a.artwork.publicId}</a></dd></div> : null}
+        </dl>
+        <div className="hp-verification-note"><Icon name="info" size={18} />Opinião de valor para a finalidade declarada. Não substitui laudo pericial nem avaliação judicial.</div>
+      </article>
     </div>
   )
 }

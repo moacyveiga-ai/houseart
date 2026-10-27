@@ -117,7 +117,7 @@ export function PurchaseScreen() {
           </Pressable>
         ) : null}
         {done ? <Button title="Ver na coleção" onPress={() => router.navigate('/(tabs)/wallet' as never)} /> : null}
-        {!done ? <Button title="Falar com o vendedor" variant="ghost" onPress={() => void talk()} /> : null}
+        {!done && d.exception !== 'CANCELLED' ? <Button title="Falar com o vendedor" variant="ghost" onPress={() => void talk()} /> : null}
       </View>
       <Toast message={toast} onDone={clearToast} />
     </View>

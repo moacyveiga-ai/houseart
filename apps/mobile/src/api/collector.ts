@@ -15,6 +15,8 @@ export interface PurchaseDeal {
   steps: { phase: DealPhase; title: string; icon: string; description: string; date: string | null; state: 'done' | 'on' | 'todo' }[]
   shipping: { carrier: string | null; tracking: string | null; insurer: string | null } | null
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
+  /** CANCELLED | DISPUTE | … (the web hides "Falar com o vendedor" on a cancelled deal; the server refuses it) */
+  exception?: string | null
 }
 export interface Purchases { deals: PurchaseDeal[]; simulateAllowed: boolean }
 export const purchases = (): Promise<Purchases> => api<Purchases>('/api/collector/purchases')

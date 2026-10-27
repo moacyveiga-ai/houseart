@@ -1123,6 +1123,10 @@ model GalleryItem {
   title     String
   subtitle  String? // role of a team member · year of a milestone · caption
   url       String? // media URL / room image
+  // TEAM only (audit público "Responsáveis"): short bio and the person's public contacts
+  body      String?
+  email     String?
+  phone     String?
   sortOrder Int     @default(0)
 
   @@index([tenantId, kind, sortOrder])

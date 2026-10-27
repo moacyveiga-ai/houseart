@@ -14,7 +14,7 @@ import type { GalleryProfileView } from '@/lib/public-content/editor-server'
 import { callJson, ChipsInput, ImageInput, listOps, RowHead } from './parts'
 import { PublicationsEditor, pubFormOf, pubsBody, type PubForm } from './PublicationsEditor'
 
-interface ItemForm { kind: GalleryItemKind; title: string; subtitle: string; url: string | null }
+interface ItemForm { kind: GalleryItemKind; title: string; subtitle: string; url: string | null; body: string; email: string; phone: string }
 interface Form {
   name: string; city: string; uf: string; foundedYear: string; summary: string; about: string; tags: string[]
   street: string; district: string; lat: string; lng: string; coverUrl: string | null
@@ -26,7 +26,7 @@ const formOf = (v: GalleryProfileView): Form => ({
   name: v.name, city: s(v.city), uf: s(v.uf), foundedYear: s(v.foundedYear), summary: s(v.summary), about: s(v.about), tags: v.tags,
   street: s(v.street), district: s(v.district), lat: s(v.lat), lng: s(v.lng), coverUrl: v.coverUrl,
   websiteUrl: s(v.websiteUrl), instagram: v.instagram ? `@${v.instagram}` : '', email: s(v.email), phone: s(v.phone), hours: s(v.hours),
-  items: v.items.map((i) => ({ kind: i.kind as GalleryItemKind, title: i.title, subtitle: s(i.subtitle), url: i.url })),
+  items: v.items.map((i) => ({ kind: i.kind as GalleryItemKind, title: i.title, subtitle: s(i.subtitle), url: i.url, body: s(i.body), email: s(i.email), phone: s(i.phone) })),
   publications: v.publications.map(pubFormOf),
 })
 
@@ -105,6 +105,13 @@ export function GalleryProfileEditor({ initial }: { initial: GalleryProfileView 
                     : it.kind === 'VIDEO'
                       ? <div className="ha-ce-span"><Field label="Link do vídeo" type="url" value={it.url ?? ''} maxLength={500} placeholder="https://…" onChange={(e) => set({ items: listOps.set(form.items, i, { url: e.target.value || null }) })} /></div>
                       : null}
+                  {it.kind === 'TEAM' ? (
+                    <>
+                      <div className="ha-ce-span"><TextareaField label="Bio" value={it.body} maxLength={400} rows={3} placeholder="Duas ou três linhas sobre a pessoa" onChange={(e) => set({ items: listOps.set(form.items, i, { body: e.target.value }) })} /></div>
+                      <Field label="E-mail" type="email" value={it.email} maxLength={160} onChange={(e) => set({ items: listOps.set(form.items, i, { email: e.target.value }) })} />
+                      <Field label="Telefone" type="tel" value={it.phone} maxLength={30} onChange={(e) => set({ items: listOps.set(form.items, i, { phone: e.target.value }) })} />
+                    </>
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -112,7 +119,7 @@ export function GalleryProfileEditor({ initial }: { initial: GalleryProfileView 
         ) : <p className="ha-ce__empty">Nenhum item ainda.</p>}
         <div className="ha-ce__actions">
           {(['MILESTONE', 'TEAM', 'PHOTO', 'ROOM', 'VIDEO'] as const).map((k) => (
-            <Button key={k} variant="outline" size="xs" icon="add" disabled={form.items.length >= MAX_GALLERY_ITEMS} onClick={() => set({ items: [...form.items, { kind: k, title: '', subtitle: '', url: null }] })}>{GALLERY_ITEM_KIND_LABELS[k]}</Button>
+            <Button key={k} variant="outline" size="xs" icon="add" disabled={form.items.length >= MAX_GALLERY_ITEMS} onClick={() => set({ items: [...form.items, { kind: k, title: '', subtitle: '', url: null, body: '', email: '', phone: '' }] })}>{GALLERY_ITEM_KIND_LABELS[k]}</Button>
           ))}
         </div>
       </section>

@@ -132,8 +132,8 @@ export function Marketplace({ items, artists, sel, q, sort, page = 1, reactions 
               <div className="hp-market-grid">{shown.map((o) => <MarketCard key={o.publicId} item={o} like={likeOf(o.publicId)} />)}</div>
               {rest > 0 ? (
                 <div className="hp-market-more">
-                  <span className="hp-market-more__count">Mostrando {shown.length} de {list.length}</span>
-                  <Link href={'/e/marketplace' + paramsOf(sel, q, sort, page + 1)} scroll={false} className="hp-btn-ink hp-market-more__btn">Ver mais {Math.min(rest, PAGE_SIZE)} {Math.min(rest, PAGE_SIZE) === 1 ? 'obra' : 'obras'}</Link>
+                  <span className="hp-market-more__count" role="status">Mostrando {shown.length} de {list.length}</span>
+                  <Link href={'/e/marketplace' + paramsOf(sel, q, sort, page + 1)} scroll={false} rel="nofollow" className="hp-btn-ink hp-market-more__btn">Ver mais {Math.min(rest, PAGE_SIZE)} {Math.min(rest, PAGE_SIZE) === 1 ? 'obra' : 'obras'}</Link>
                 </div>
               ) : null}
             </>

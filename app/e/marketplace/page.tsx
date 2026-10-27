@@ -20,7 +20,8 @@ export default async function PublicMarketplacePage({ searchParams }: { searchPa
   const page = pageFromParam(one(p.pagina))
   const [items, artists, session] = await Promise.all([marketItems(500), marketArtists(6), getSession()])
   // The heart of each card shown on this page: the numeric id (reactions) and whether this person already liked it.
-  const shown = sortItems(items.filter((i) => passes(i, sel, q)), sort).slice(0, visibleCount(page, items.length))
+  const list = sortItems(items.filter((i) => passes(i, sel, q)), sort)
+  const shown = list.slice(0, visibleCount(page, list.length))
   const ids = shown.map((i) => i.id).filter((id): id is number => typeof id === 'number')
   const flags = await artworkFlags(session?.id ?? null, ids)
   const byPublicId: Record<string, { id: number; liked: boolean }> = {}

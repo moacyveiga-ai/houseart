@@ -12,6 +12,7 @@ import { brandOf, checkCard, CARD_BRAND_LABELS, type PaymentMethodView } from '@
 import { StripeCardForm } from '@/components/wallet/StripeCardForm'
 import { normalizeCep } from '@/lib/shipping/quote-core'
 import { initialAddressId, type CheckoutAddress, blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, PAY_METHODS, previewCardNumber, summaryLines, type DeliveryMode, type PayMethod } from './checkout-core'
+import { clampInstallments, installmentOptions } from '@/lib/payments/installments-core'
 import { boletoBillingProblem, type PaymentInstructions } from '@/lib/payments/async-core'
 import { PaymentInstructionsCard } from '@/components/payments/PaymentInstructionsCard'
 
@@ -49,8 +50,10 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [done, setDone] = useState<{ code: string; card: PaymentMethodView | null; dealId: number | null; instructions: PaymentInstructions | null; paid: boolean } | null>(null)
+  const [done, setDone] = useState<{ code: string; installments: number; card: PaymentMethodView | null; dealId: number | null; instructions: PaymentInstructions | null; paid: boolean } | null>(null)
   const [method, setMethod] = useState<PayMethod>('PIX')
+  // the plan the buyer picked; the one used is the largest the current total still allows
+  const [installmentsPicked, setInstallmentsPicked] = useState(1)
   const [bill, setBill] = useState({ taxId: '', line1: '', city: '', state: '', postalCode: '' })
 
   // Saved cards (GET /api/collector/payment-methods); the default one selected.
@@ -89,6 +92,8 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
 
   const totals = useMemo(() => checkoutTotals({ priceCents: price, delivery, shippingCents: quote?.shippingCents ?? 0, insuranceCents: quote?.insuranceCents ?? 0, insurance }), [price, delivery, quote, insurance])
   const lines = summaryLines(totals, brl)
+  const plans = installmentOptions(totals.total)
+  const installments = clampInstallments(totals.total, installmentsPicked)
   const card = cards?.find((c) => c.id === cardId) ?? null
   const boletoBill = { ...bill, postalCode: bill.postalCode || (quote?.cep ?? '') }
   const boletoProblem = method === 'BOLETO' ? boletoBillingProblem(boletoBill) : null
@@ -105,11 +110,11 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
     if (method === 'CARD' && !card) { setAdding(true); return }
     if (blocked) { setError(blocked); return }
     setBusy(true); setError(null)
-    const res = await fetch('/api/public/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ publicId: artwork.publicId, method, paymentMethodId: method === 'CARD' ? card?.id ?? null : null, billing: method === 'BOLETO' ? { ...boletoBill, postalCode: boletoBill.postalCode.replace(/\D/g, '') } : undefined, deliveryCep: delivery === 'CARRIER' ? quote?.cep ?? null : null, insurance: delivery === 'CARRIER' && insurance }) })
+    const res = await fetch('/api/public/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ publicId: artwork.publicId, method, paymentMethodId: method === 'CARD' ? card?.id ?? null : null, installments: method === 'CARD' ? installments : undefined, billing: method === 'BOLETO' ? { ...boletoBill, postalCode: boletoBill.postalCode.replace(/\D/g, '') } : undefined, deliveryCep: delivery === 'CARRIER' ? quote?.cep ?? null : null, insurance: delivery === 'CARRIER' && insurance }) })
     const data = await res.json().catch(() => ({})) as { ok?: boolean; code?: string; dealId?: number | null; instructions?: PaymentInstructions | null; error?: string }
     setBusy(false)
     if (!res.ok || !data.ok) { setError(data.error ?? 'Não foi possível confirmar o pedido.'); return }
-    setDone({ code: data.code ?? '', card: method === 'CARD' ? card : null, dealId: data.dealId ?? null, instructions: data.instructions ?? null, paid: method === 'CARD' })
+    setDone({ code: data.code ?? '', installments: method === 'CARD' ? installments : 1, card: method === 'CARD' ? card : null, dealId: data.dealId ?? null, instructions: data.instructions ?? null, paid: method === 'CARD' })
   }
 
   const subtitle = `${artwork.artist} · ${artwork.seller.name}`
@@ -131,7 +136,7 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
           <section className="hc-main hc-done" aria-live="polite">
             <span className="hc-done__icon"><Icon name="lock" size={28} /></span>
             <h1 className="hc-done__title">Pago em garantia</h1>
-            <p className="hc-done__text">{done.card ? `${done.card.brandLabel} •••• ${done.card.last4} · ` : ''}o vendedor só recebe na entrega.</p>
+            <p className="hc-done__text">{done.card ? `${done.card.brandLabel} •••• ${done.card.last4} · ` : ''}{done.installments > 1 ? `${done.installments}× de ${brl(Math.ceil(totals.total / done.installments))} sem juros · ` : ''}o vendedor só recebe na entrega.</p>
             <p className="hc-muted">O valor de <b className="hc-num">{brl(totals.total)}</b> fica retido na HouseArt. Quando a obra chegar, confirme a entrega com o toque na etiqueta: o pagamento é liberado ao vendedor e a escritura passa para o seu nome no mesmo instante.{done.code ? <> Pedido <span className="hc-num">{done.code}</span>.</> : null}</p>
             <a href="/purchases" className="ha-btn ha-btn--primary ha-btn--md hc-cta"><Icon name="local_shipping" size={18} />Acompanhar a compra</a>
             <a href={`/e/artwork/${artwork.publicId}`} className="ha-link ha-link--quiet">Voltar para a obra</a>
@@ -251,6 +256,18 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
                 ))}
               </div>
             ) : null}
+            {card && plans.length > 1 ? (
+              <div className="hc-installments">
+                <span className="hc-block__label">Parcelas sem juros</span>
+                <div role="radiogroup" aria-label="Parcelas" className="hc-installments__grid">
+                  {plans.map((p) => (
+                    <button key={p.count} type="button" role="radio" aria-checked={installments === p.count} className={`hc-installment${installments === p.count ? ' hc-installment--on' : ''}`} onClick={() => setInstallmentsPicked(p.count)}>
+                      <span className="hc-installment__n">{p.count}×</span><span className="hc-num">{brl(p.eachCents)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {cards && !adding ? <button type="button" className="hc-add-card" onClick={() => setAdding(true)}><Icon name="add_card" size={20} />Adicionar cartão</button> : null}
             {adding ? (stripeCfg
               ? <StripeCardForm publishableKey={stripeCfg.publishableKey} holderDefault={buyerName} firstCard={!cards || cards.length === 0} onSaved={onCardAdded} onCancel={cards && cards.length ? () => setAdding(false) : null} />
@@ -272,7 +289,7 @@ export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
           {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
           <div className="hc-foot">
             <span className="hc-foot__lock"><Icon name="lock" size={14} />Em garantia até você confirmar a entrega</span>
-            <button type="button" className="ha-btn ha-btn--primary ha-btn--md hc-cta" disabled={busy || ((method !== 'CARD' || !!card) && !!blocked)} aria-busy={busy || undefined} onClick={confirm}>{busy ? 'Confirmando…' : ctaLabel({ hasCard: !!card, total: totals.total, method }, brl)}</button>
+            <button type="button" className="ha-btn ha-btn--primary ha-btn--md hc-cta" disabled={busy || ((method !== 'CARD' || !!card) && !!blocked)} aria-busy={busy || undefined} onClick={confirm}>{busy ? 'Confirmando…' : ctaLabel({ hasCard: !!card, total: totals.total, method, installments }, brl)}</button>
           </div>
         </section>
         <ArtworkAside artwork={artwork} lines={lines} total={totals.total} />

@@ -160,3 +160,11 @@
 .hc-billing { display: flex; flex-direction: column; gap: 10px; }
 .hc-billing__row { display: grid; grid-template-columns: minmax(0, 2fr) 72px minmax(0, 1.2fr); gap: 8px; }
 @media (max-width: 520px) { .hc-billing__row { grid-template-columns: minmax(0, 1fr) 72px; } }
+
+/* Parcelas sem juros: 1× · 3× · 6× · 10× (prototype `ckParc`) */
+.hc-installments { display: flex; flex-direction: column; gap: 8px; }
+.hc-installments__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 420px) { .hc-installments__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hc-installment { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 44px; padding: 10px 12px; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); color: var(--ha-ink-900); cursor: pointer; text-align: left; font-size: var(--ha-text-body-sm); }
+.hc-installment__n { font-weight: 600; }
+.hc-installment--on { border-color: var(--ha-ink-900); box-shadow: inset 0 0 0 1px var(--ha-ink-900); }

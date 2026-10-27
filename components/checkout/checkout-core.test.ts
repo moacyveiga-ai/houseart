@@ -65,3 +65,10 @@ describe('blockedReason with a CEP that did not quote', () => {
     expect(blockedReason({ delivery: 'CARRIER', cepValid: false, hasCard: true, method: 'CARD', boletoProblem: null })).toMatch(/Informe o CEP/)
   })
 })
+
+describe('CTA parcelado', () => {
+  it('diz o valor de cada parcela', () => {
+    expect(ctaLabel({ hasCard: true, total: 3_878_400, method: 'CARD', installments: 10 }, brl)).toBe('Pagar 10× de R$ 3878.4')
+    expect(ctaLabel({ hasCard: true, total: 3_878_400, method: 'CARD', installments: 1 }, brl)).toBe('Confirmar pedido · R$ 38784')
+  })
+})

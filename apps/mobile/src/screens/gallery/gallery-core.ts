@@ -90,7 +90,7 @@ export function acceptsOffersSub(on: boolean, rules: { refuseBelowBps: number; r
   if (!rules) return 'Ofertas pelas regras da galeria'
   return `Regras: recusa abaixo de ${Math.round(rules.refuseBelowBps / 100)}% · prazo ${rules.responseHours} h`
 }
-export const pausedSub = (paused: boolean): string => (paused ? 'Fora do marketplace · mandato e ofertas mantidos' : 'Some do marketplace sem perder o mandato')
+export const pausedSub = (paused: boolean): string => (paused ? 'Fora do marketplace · curtidas, salvos e ofertas mantidos' : 'Some do marketplace sem perder curtidas nem ofertas')
 export const pauseToggledMessage = (nowPaused: boolean): string => (nowPaused ? 'Anúncio pausado' : 'Anúncio de volta ao marketplace')
 
 /** The four stats of the block; saves and likes come from the reactions (an older server without them: "—"). */

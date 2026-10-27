@@ -43,9 +43,12 @@ export function DealScreen() {
   // "Embalagem e condition report" (between the paid escrow and the shipment; the server decides): photos of the packed work and the note
   async function addPhoto(dealIdNow: number) {
     if (busy) return
+    // the camera when allowed; denied or missing, the gallery
+    const opts = { mediaTypes: ['images'] as ImagePicker.MediaType[], quality: 0.85, exif: false }
     let result: ImagePicker.ImagePickerResult
-    try { result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.85, exif: false }) } catch {
-      try { result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85, exif: false }) } catch { setToast('Não foi possível abrir a câmera nem a galeria.'); return }
+    const perm = await ImagePicker.requestCameraPermissionsAsync().catch(() => null)
+    try { result = perm?.granted ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts) } catch {
+      try { result = await ImagePicker.launchImageLibraryAsync(opts) } catch { setToast('Não foi possível abrir a câmera nem a galeria.'); return }
     }
     if (result.canceled || !result.assets[0]) return
     await run(() => addPackagingPhoto(dealIdNow, photoPart(result.assets[0]!, 'embalagem')), 'Foto adicionada')

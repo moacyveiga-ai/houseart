@@ -37,6 +37,8 @@ export interface SessionUser extends ProfilePrincipal {
   tenantSuspended: boolean
   /** Session row id (to switch the active profile). */
   sessionId: number | null
+  /** The person's own profile photo (public derivative) — their "me" in comments and the composer. */
+  avatarUrl?: string | null
 }
 
 export function hashPassword(plain: string): Promise<string> { return bcrypt.hash(plain, 10) }
@@ -47,6 +49,7 @@ type UserRow = {
   memberId: number | null; tenantId: number | null; tenantRole: string | null
   member?: { kind: string } | null
   tenant?: { status: string } | null
+  avatarUrl?: string | null
 }
 
 export function userForSession(u: UserRow, session: { id: number | null; activeProfileKind: string | null } = { id: null, activeProfileKind: null }): SessionUser {
@@ -63,6 +66,7 @@ export function userForSession(u: UserRow, session: { id: number | null; activeP
     tenantSuspended: !!u.tenantId && u.tenant?.status === 'SUSPENDED' && !hasTotalScope(knownProfile(u.profile)),
     activeProfileKind: session.activeProfileKind,
     sessionId: session.id,
+    avatarUrl: u.avatarUrl ?? null,
   }
 }
 

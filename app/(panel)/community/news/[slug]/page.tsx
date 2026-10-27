@@ -40,7 +40,7 @@ export default async function PanelNewsPage({ params }: Params) {
       kicker={n.category} title={n.title} lead={n.summary} author="Redação HouseArt" meta={`${newsDateLabel(n.publishedAt)} · ${readMinutesLabel(n.readMinutes)}`}
       imageUrl={n.imageUrl} blocks={paragraphBlocks(n.body)} source={n.sourceName ? { name: n.sourceName, url: n.sourceUrl } : null}
       trail={null} next={null} related={n.related.map((r) => ({ kicker: r.category, title: r.title, href: `/community/news/${r.slug}` }))}
-      backHref="/community" sharePath={`/e/news/${n.slug}`} social={social} viewer={{ signedIn: true, initials: initialsOf(user.name) }}
+      backHref="/community" sharePath={`/e/news/${n.slug}`} social={social} viewer={{ signedIn: true, initials: initialsOf(user.name), avatarUrl: user.avatarUrl ?? null }}
     />
   )
 }

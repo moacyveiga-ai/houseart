@@ -26,7 +26,7 @@ async function fetchComments(it: CommentSubject): Promise<CommentRow[]> {
 
 export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
   item: CommentSubject | null
-  me: { initials: string }
+  me: { initials: string; avatarUrl?: string | null }
   onClose: () => void
   /** The feed card keeps its counter in step with the sheet. */
   onCount: (key: string, delta: number) => void
@@ -97,7 +97,7 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
           {rows && rows.length === 0 ? <div className="ha-cm-empty">Seja a primeira pessoa a comentar.</div> : null}
           {rows?.map((c) => (
             <div key={c.id} className="ha-cm-comment">
-              <span className="ha-avatar" aria-hidden="true">{c.mine ? me.initials : <AvatarFace initials={c.author.initials} url={c.author.avatarUrl} />}</span>
+              <span className="ha-avatar" aria-hidden="true">{c.mine ? <AvatarFace initials={me.initials} url={me.avatarUrl} /> : <AvatarFace initials={c.author.initials} url={c.author.avatarUrl} />}</span>
               <div className="ha-cm-comment__body">
                 <span className="ha-cm-comment__name">{c.mine ? 'Você' : c.author.profileHref ? <Link href={c.author.profileHref} className="ha-cm-post__namelink" onClick={onClose}>{c.author.name}</Link> : c.author.name}{isAuthor(c) ? <span className="ha-cm-comment__author">autor</span> : null}<span className="ha-cm-comment__when">{c.when}</span></span>
                 <span className="ha-cm-comment__text">{c.body}</span>
@@ -112,7 +112,7 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
         </div>
         {blocked ? <div className="ha-cm-guard" role="alert">{COMMENT_GUARD}</div> : null}
         <div className="ha-cm-composer">
-          <span className="ha-avatar" aria-hidden="true">{me.initials}</span>
+          <span className="ha-avatar" aria-hidden="true"><AvatarFace initials={me.initials} url={me.avatarUrl} /></span>
           <input ref={inputRef} className="ha-cm-composer__input" value={text} onChange={(e) => { setText(e.target.value); setBlocked(false) }} onKeyDown={onKey} placeholder="Adicione um comentário" aria-label="Adicione um comentário" maxLength={500} />
           <button type="button" className="ha-cm-composer__send" disabled={!text.trim() || sending} onClick={() => send()}>Publicar</button>
         </div>

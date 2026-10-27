@@ -38,8 +38,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const panel = p.work ? await collectorPanel(user, { work: p.work }) : null
   return (
     <div className="ha-page">
-      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} me={{ initials: initialsOf(user.name) }} />
-      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref={exploreHref(view, chip)} /> : null}
+      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} me={{ initials: initialsOf(user.name), avatarUrl: user.avatarUrl ?? null }} />
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} meAvatarUrl={user.avatarUrl ?? null} closeHref={exploreHref(view, chip)} /> : null}
     </div>
   )
 }

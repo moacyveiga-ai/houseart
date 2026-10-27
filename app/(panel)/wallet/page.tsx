@@ -29,7 +29,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="works" /> : null}
       <WalletScreen items={items} totalCents={w.totalCents.toString()} holderName={user.name} inCollection={!!summary} openId={panel?.id ?? null} drafts={drafts} arriving={arriving} />
-      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref="/wallet" /> : null}
+      {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} meAvatarUrl={user.avatarUrl ?? null} closeHref="/wallet" /> : null}
     </div>
   )
 }

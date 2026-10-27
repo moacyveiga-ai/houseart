@@ -7,18 +7,21 @@ import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { Toggle } from '@/components/ds/Toggle'
 import { Toast } from '@/components/ds/Toast'
-import { acceptsOffersSub, listingStats, pauseToggledMessage, pausedSub, priceCents, priceChanged, priceMask, priceSavedMessage, publicArtworkPath, shareMessage, type ToggleRules } from './listing-manager-core'
+import { ShareSheet } from '@/components/public/ShareSheet'
+import { formatBRL } from '@/lib/artworks/domain'
+import { acceptsOffersSub, listingStats, pauseToggledMessage, pausedSub, priceCents, priceChanged, priceMask, priceSavedMessage, type ToggleRules } from './listing-manager-core'
 import './listing-manager.css'
 
 export interface ListingState { listPriceCents: string; acceptsOffers: boolean; paused: boolean; stats: { views7d: number; openOffers: number; saves: number; likes: number } }
 /** `canManage` false (the gallery's Acervo role): the listing is shown, nothing changes and `blockedReason` says why. */
-interface Props { artworkId: number; title: string; artistName: string; publicId: string | null; initial: ListingState; rules: ToggleRules | null; canManage?: boolean; blockedReason?: string; /** the viewer holds the deed: "Vendida fora" shows */ canTransfer?: boolean }
+interface Props { artworkId: number; title: string; artistName: string; publicId: string | null; year?: number | null; cover?: string | null; initial: ListingState; rules: ToggleRules | null; canManage?: boolean; blockedReason?: string; /** the viewer holds the deed: "Vendida fora" shows */ canTransfer?: boolean }
 
-export function ListingManager({ artworkId, title, artistName, publicId, initial, rules, canManage = true, blockedReason, canTransfer = false }: Props) {
+export function ListingManager({ artworkId, title, artistName, publicId, year = null, cover = null, initial, rules, canManage = true, blockedReason, canTransfer = false }: Props) {
   const [state, setState] = useState<ListingState>(initial)
   const [price, setPrice] = useState(priceMask(Number(BigInt(initial.listPriceCents) / 100n)))
   const [busy, setBusy] = useState<'price' | 'offers' | 'pause' | null>(null)
   const [toast, setToast] = useState('')
+  const [sharing, setSharing] = useState(false)
   const changed = priceChanged(price, state.listPriceCents)
 
   async function patch(body: Record<string, unknown>, what: 'price' | 'offers' | 'pause'): Promise<ListingState | null> {
@@ -39,12 +42,6 @@ export function ListingManager({ artworkId, title, artistName, publicId, initial
     const previous = BigInt(state.listPriceCents)
     const next = await patch({ listPriceCents: priceCents(price).toString() }, 'price')
     if (next) { setPrice(priceMask(Number(BigInt(next.listPriceCents) / 100n))); setToast(priceSavedMessage(BigInt(next.listPriceCents), previous)) }
-  }
-
-  async function share() {
-    const url = `${window.location.origin}${publicArtworkPath(publicId ?? '')}`
-    const text = shareMessage({ title, artistName }, url)
-    try { await navigator.clipboard.writeText(text); setToast('Mensagem com o link copiada') } catch { setToast(url) }
   }
 
   return (
@@ -70,10 +67,12 @@ export function ListingManager({ artworkId, title, artistName, publicId, initial
       {!canManage && blockedReason ? <p className="ha-callout ha-sm">{blockedReason}</p> : null}
       <div className="ha-lm__btns">
         <Link href={`/sales?artwork=${artworkId}`} className="ha-lm__btn"><Icon name="request_quote" size={16} />Ofertas desta obra</Link>
-        <button type="button" className="ha-lm__btn" onClick={() => { void share() }} disabled={!publicId}><Icon name="share" size={16} />Enviar a um cliente</button>
+        <button type="button" className="ha-lm__btn" onClick={() => setSharing(true)} disabled={!publicId}><Icon name="share" size={16} />Enviar a um cliente</button>
         {/* "Vendida fora": only the HOLDER of the deed transfers it (a gallery colleague is not; the page would open another work) */}
         {canTransfer ? <Link href={`/transfer?artworkId=${artworkId}`} className="ha-lm__btn"><Icon name="storefront" size={16} />Vendida fora</Link> : null}
       </div>
+      {/* "Enviar a um cliente" (audit galeria §3): the share sheet of the design, with the price */}
+      {publicId ? <ShareSheet open={sharing} onClose={() => setSharing(false)} onDone={setToast} artwork={{ publicId, title, artist: artistName, year, cover, price: formatBRL(BigInt(state.listPriceCents)) }} /> : null}
       <Toast message={toast} onDone={() => setToast('')} />
     </section>
   )

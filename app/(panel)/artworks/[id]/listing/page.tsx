@@ -35,7 +35,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         <Link href={`/artworks/${a.id}/edit`} className="ha-btn ha-btn--outline ha-btn--sm"><Icon name="edit" size={18} />Editar cadastro</Link>
       </div>
       {listing ? (
-        <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={ROLE_REASONS.listing} artworkId={a.id} title={a.title} artistName={a.artist.name} publicId={a.publicId} rules={rules}
+        <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={ROLE_REASONS.listing} artworkId={a.id} title={a.title} artistName={a.artist.name} publicId={a.publicId} year={a.year} rules={rules}
           initial={{ listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, saves: listing.stats.saves, likes: listing.stats.likes } }} />
       ) : (
         <div className="ha-callout ha-callout--warn"><Icon name="info" size={20} /><span>A obra não está à venda. <Link href={`/artworks/${a.id}/edit`} className="ha-link">Abra o cadastro</Link> para listar no marketplace.</span></div>

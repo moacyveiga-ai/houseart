@@ -53,7 +53,7 @@ export function ArtworkPanel({ a, closeHref, listing, rules, canManage, canTrans
       {listing ? (
         <section className="ha-stack" style={{ gap: 8 }}>
           <h3 className="ha-ap__h">Gestão do anúncio</h3>
-          <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={blockedReason} artworkId={a.id} title={a.title} artistName={a.artist} publicId={a.publicId} rules={rules} initial={listing} />
+          <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={blockedReason} artworkId={a.id} title={a.title} artistName={a.artist} publicId={a.publicId} year={a.year} cover={cover?.url ?? null} rules={rules} initial={listing} />
         </section>
       ) : null}
       <section className="ha-stack" style={{ gap: 8 }}>

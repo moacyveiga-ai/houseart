@@ -51,7 +51,7 @@ export function OfferRulesScreen({ rules: initial, readOnly = false }: { rules: 
 
   return (
     <div className="ha-rules">
-      <p className="ha-rules__intro">Regras valem para todas as obras que aceitam ofertas. Você pode mudar obra a obra na página dela.</p>
+      <p className="ha-rules__intro">Regras valem para todas as obras da galeria que aceitam ofertas. Na página da obra você escolhe se ela aceita ofertas.</p>
       {items.map((it) => (
         <section key={it.key} className="ha-rules-item" aria-labelledby={`rule-${it.key}`}>
           <div className="ha-rules-item__row">

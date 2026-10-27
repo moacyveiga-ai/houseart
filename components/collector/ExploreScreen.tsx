@@ -166,7 +166,7 @@ function DiscoverDeck({ items, react, onShare, workHref }: { items: ExploreItem[
       <div className="ha-deck ha-deck--empty">
         <Icon name="style" size={36} className="ha-deck__empty-ic" />
         <span className="ha-deck__empty-t">Você viu todas as obras de hoje.</span>
-        <span className="ha-deck__empty-s">As curtidas e as salvas estão nos seus favoritos. Novas obras entram toda manhã.</span>
+        <span className="ha-deck__empty-s">As curtidas e as salvas estão na sua coleção, na aba Favoritos. Novas obras entram toda manhã.</span>
         <div className="ha-row"><Link href="/favorites" className="ha-btn ha-btn--primary ha-btn--md">Ver salvas</Link><button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setDecided({})}>Recomeçar</button></div>
       </div>
     )

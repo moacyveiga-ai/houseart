@@ -11,6 +11,7 @@ import { Toast } from '@/components/ds/Toast'
 import { GALLERY_ITEM_IMAGE_KINDS, GALLERY_ITEM_KIND_LABELS, GALLERY_ITEM_KINDS, GALLERY_ITEM_SUBTITLE_HINT, type GalleryItemKind } from '@/lib/public-content/domain'
 import { MAX_GALLERY_ITEMS, MAX_TAGS } from '@/lib/public-content/editor-core'
 import type { GalleryProfileView } from '@/lib/public-content/editor-server'
+import { tidyPhone } from '@/lib/sms/core'
 import { callJson, ChipsInput, ImageInput, listOps, RowHead } from './parts'
 import { PublicationsEditor, pubFormOf, pubsBody, type PubForm } from './PublicationsEditor'
 
@@ -80,7 +81,7 @@ export function GalleryProfileEditor({ initial }: { initial: GalleryProfileView 
           <Field label="Latitude" value={form.lat} inputMode="decimal" placeholder="-12.97" onChange={(e) => set({ lat: e.target.value })} />
           <Field label="Longitude" value={form.lng} inputMode="decimal" placeholder="-38.51" onChange={(e) => set({ lng: e.target.value })} />
           <Field label="Horários" value={form.hours} maxLength={200} placeholder="Ter a sáb, 10h às 19h" className="" onChange={(e) => set({ hours: e.target.value })} />
-          <Field label="Telefone" value={form.phone} maxLength={30} inputMode="tel" onChange={(e) => set({ phone: e.target.value })} />
+          <Field label="Telefone" value={form.phone} maxLength={30} inputMode="tel" placeholder="(71) 3333-0000" onChange={(e) => set({ phone: e.target.value })} onBlur={(e) => set({ phone: tidyPhone(e.target.value) })} />
           <Field label="E-mail" type="email" value={form.email} maxLength={254} onChange={(e) => set({ email: e.target.value })} />
           <Field label="Site" type="url" value={form.websiteUrl} maxLength={500} placeholder="https://…" onChange={(e) => set({ websiteUrl: e.target.value })} />
           <Field label="Instagram" value={form.instagram} maxLength={120} placeholder="@galeria" onChange={(e) => set({ instagram: e.target.value })} />

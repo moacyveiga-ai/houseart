@@ -53,7 +53,7 @@ export function RulesSection({ onToast }: { onToast: (message: string) => void }
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.intro}>Regras valem para todas as obras que aceitam ofertas. Você pode mudar obra a obra na página dela.</Text>
+      <Text style={styles.intro}>Regras valem para todas as obras da galeria que aceitam ofertas. Na página da obra você escolhe se ela aceita ofertas.</Text>
       {items.map((it) => (
         <View key={it.key} style={styles.item}>
           <View style={styles.row}>

@@ -43,7 +43,7 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
   return (
     <header className={`hp-header${home ? ' hp-header--home' : ''}${solid ? ' hp-header--solid' : ''}${light ? ' hp-header--light' : ''}`}>
       <div className="hp-header__inner">
-        <Link href="/e" className="hp-header__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone={light ? 'color' : 'negativo'} height={home ? 48 : light ? 30 : 44} /></Link>
+        <Link href="/e" className="hp-header__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone={light ? 'color' : 'negativo'} height={home ? 48 : light || pathname.startsWith('/verify') ? 30 : 44} /></Link>
         <nav className="hp-nav" aria-label="Navegação pública">
           {PUBLIC_NAV.map((n) => <Link key={n.href} href={n.href} className={`hp-nav__link${active(n.href) ? ' hp-nav__link--on' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>{n.label}</Link>)}
         </nav>

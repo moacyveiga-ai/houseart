@@ -133,9 +133,10 @@ export function ArtworkScreen({ publicId, mine }: { publicId: string; mine: bool
         </View>
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
-        {mine ? (
+        {mine ? (<>
+          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/wallet/restore/[id]', params: { id: String(a.id) } })} style={styles.btnOutline}><Text style={styles.btnOutlineText}>Registrar restauro</Text></Pressable>
           <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/wallet/sell/[id]', params: { id: String(a.id) } })} style={styles.btnInk}><Text style={styles.btnInkText}>Vender esta obra</Text></Pressable>
-        ) : listed ? (<>
+        </>) : listed ? (<>
           {a.acceptsOffers ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${a.publicId}/offer`)} style={styles.btnOutline}><Text style={styles.btnOutlineText}>Fazer oferta</Text></Pressable> : null}
           {a.priceCents !== null ? <Pressable accessibilityRole="button" onPress={() => router.push(`/artwork/${a.publicId}/buy`)} style={styles.btnPrimary}><Text style={styles.btnPrimaryText}>Comprar agora</Text></Pressable> : null}
         </>) : a.status === 'IN_DEAL' ? (

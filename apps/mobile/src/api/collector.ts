@@ -77,3 +77,7 @@ export const searchCertificates = async (q: { id: string } | { artist: string; t
 export const publicCertificate = (publicId: string): Promise<PublicCertificate> => api<PublicCertificate>(`/api/v1/certificates/${encodeURIComponent(publicId)}`, { anonymous: true })
 export const readTag = async (publicId: string, sun: { uid: string; ctr: number; cmac: string }): Promise<TagReadResult> =>
   (await api<{ ok: boolean; read: TagReadResult }>(`/api/public/certificates/${encodeURIComponent(publicId)}/read`, { body: sun, anonymous: true })).read
+
+/** POST /api/wallet/[artworkId]/restore — the holder records a restoration on the certificate chain (the server decides who and when). */
+export const recordRestoration = (artworkId: number, body: { description: string; restorer: string; on: string }) =>
+  api<{ ok: boolean; seq: number }>(`/api/wallet/${artworkId}/restore`, { body })

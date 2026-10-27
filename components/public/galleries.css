@@ -53,3 +53,7 @@
 .hp-galleries-who__text { display: flex; flex-direction: column; gap: 2px; }
 .hp-galleries-who__text b { font-weight: 600; }
 .hp-galleries-who__text span { font-size: var(--ha-text-body-sm); color: var(--ha-paper-200); }
+/* the CTA of the design's footer ("Sua galeria na HouseArt", Galerias), at the end of the dark box */
+.hp-galleries-who__cta { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: var(--ha-space-2); min-height: 44px; color: var(--ha-paper-50); font-weight: 600; text-decoration: none; }
+.hp-galleries-who__cta:hover { color: var(--ha-sand-500); }
+.hp-galleries-who__cta:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 4px; }

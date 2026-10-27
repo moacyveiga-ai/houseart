@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Button, ButtonLink } from '@/components/ds/Button'
 import { Field } from '@/components/ds/Field'
+import { Modal } from '@/components/ds/Modal'
 import { formatBRL } from '@/lib/artworks/domain'
 import { OfferAside, type OfferArtwork } from './OfferFrame'
 import { TalkToSellerButton } from '@/components/public/TalkToSellerButton'
@@ -21,6 +22,8 @@ export function OfferSent({ code, offer, artwork, token, deliveryCep, talkArtwor
   const [countering, setCountering] = useState(false)
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
+  // the DS confirmation in place of window.confirm (audit público, Oferta): recusar a contraproposta or cancel the offer
+  const [confirming, setConfirming] = useState<null | { title: string; text: string; cta: string; key: 'refuse' | 'retract' }>(null)
   const r = responseOf(offer)
   const seller = artwork.seller
   const card = statusCard(offer, r, sellerPhrase(seller))
@@ -70,7 +73,7 @@ export function OfferSent({ code, offer, artwork, token, deliveryCep, talkArtwor
                   <Button variant="primary" size="md" loading={busy === 'accept'} onClick={() => void post('reply', { accept: true }, 'accept')}>Aceitar {formatBRL(offer.counterCents)}</Button>
                   <Button variant="outline" size="md" onClick={() => setCountering(true)}>Fazer nova oferta</Button>
                   {talkArtworkId ? <TalkToSellerButton artworkId={talkArtworkId} publicId={artwork.publicId} signedIn label="Conversar antes" className="ha-btn ha-btn--outline ha-btn--md" /> : null}
-                  {offer.canRetract ? <button type="button" className="hp-offer__edit" disabled={busy === 'refuse'} onClick={() => { if (window.confirm('Recusar a contraproposta retira a sua oferta. Continuar?')) void post('retract', {}, 'refuse') }}>Recusar</button> : null}
+                  {offer.canRetract ? <button type="button" className="hp-offer__edit" disabled={busy === 'refuse'} onClick={() => setConfirming({ title: 'Recusar a contraproposta?', text: 'Recusar a contraproposta retira a sua oferta e desfaz a reserva da garantia.', cta: 'Recusar', key: 'refuse' })}>Recusar</button> : null}
                 </div>
               )}
             </div>
@@ -91,10 +94,18 @@ export function OfferSent({ code, offer, artwork, token, deliveryCep, talkArtwor
           <div className="hp-offer__final">
             {actions.map((a) => a.href
               ? <ButtonLink key={a.name} href={a.href} variant={a.kind} size="md">{a.name}</ButtonLink>
-              : <Button key={a.name} variant={a.kind} size="md" loading={busy === 'retract'} onClick={() => { if (window.confirm('Cancelar a oferta? A reserva da garantia é desfeita na hora.')) void post('retract', {}, 'retract') }}>{a.name}</Button>)}
+              : <Button key={a.name} variant={a.kind} size="md" loading={busy === 'retract'} onClick={() => setConfirming({ title: 'Cancelar a oferta?', text: 'A reserva da garantia é desfeita na hora.', cta: 'Cancelar a oferta', key: 'retract' })}>{a.name}</Button>)}
           </div>
         </section>
       </main>
+      <Modal open={!!confirming} title={confirming?.title ?? ''} onClose={() => setConfirming(null)} footer={confirming ? (
+        <div className="ha-row" style={{ gap: 8 }}>
+          <Button variant="outline" size="md" onClick={() => setConfirming(null)}>Voltar</Button>
+          <Button variant="danger" size="md" onClick={() => { const k = confirming.key; setConfirming(null); void post('retract', {}, k) }}>{confirming.cta}</Button>
+        </div>
+      ) : null}>
+        <p className="ha-sm">{confirming?.text}</p>
+      </Modal>
       <OfferAside artwork={artwork} summary={{ offerCents: buyerCents, shippingCents: offer.shippingCents, insuranceCents: offer.insuranceCents, shippingIncluded, destination: deliveryCep ? `o CEP ${deliveryCep}` : null }} />
     </div>
   )

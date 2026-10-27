@@ -87,6 +87,8 @@ export function Galleries({ items, tags, ufs, f }: { items: PublicGalleryCard[];
           </div>
           <div className="hp-galleries-who__item"><Icon name="storefront" size={24} /><div className="hp-galleries-who__text"><b>Galeria</b><span>Parceira verificada, com nome, cidade e artistas que representa.</span></div></div>
           <div className="hp-galleries-who__item"><Icon name="person" size={24} /><div className="hp-galleries-who__text"><b>Particular</b><span>Colecionador com identidade verificada e escritura da obra em seu nome.</span></div></div>
+          {/* the design's footer link (Galerias): the public footer is shared by every page, so it lives here */}
+          <Link href="/signup?plan=GALLERY" className="hp-galleries-who__cta">Sua galeria na HouseArt<Icon name="arrow_forward" size={18} /></Link>
         </div>
       </section>
     </>

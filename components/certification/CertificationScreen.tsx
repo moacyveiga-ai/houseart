@@ -6,6 +6,7 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { Badge } from '@/components/ds/Badge'
 import { CERT_STAGES, MARKER_KIT_MAX, MARKER_KIT_MIN } from '@/lib/physical-markers/domain'
+import { Button } from '@/components/ds/Button'
 
 export interface CertItem { id: number; certificateId: number | null; title: string; publicId: string | null; cover: string | null; stage: number; label: string; action: string; status: string }
 export interface CertOrder { id: number; quantity: number; status: string }
@@ -127,7 +128,7 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
           ))}
         </div>
       </section>
-      <Modal open={!!signing} title="Assinar certificado" onClose={() => setSigning(null)} footer={<button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={signStep === 1} onClick={confirmSign}>{signStep === 1 ? 'Assinando…' : 'Assinar digitalmente'}</button>}>
+      <Modal open={!!signing} title="Assinar certificado" onClose={() => setSigning(null)} footer={<Button variant="primary" size="md" disabled={signStep === 1} onClick={confirmSign} loading={signStep === 1}>{signStep === 1 ? 'Assinando…' : 'Assinar digitalmente'}</Button>}>
         <div className="ha-eyebrow">HouseSign</div>
         <p><b>{signing?.title}</b><br /><span className="ha-muted ha-sm">{signing?.publicId}</span></p>
         <p className="ha-muted ha-sm">Ao assinar, você declara ser a autora desta obra. O certificado recebe carimbo do tempo ICP-Brasil e não pode ser alterado; mudanças futuras viram novos eventos na cadeia de titularidade.</p>

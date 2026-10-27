@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
+import { Button } from '@/components/ds/Button'
 
 export interface AccountItem { icon: string; name: string; sub: string; href: string }
 export interface AccountSection { name: string; items: AccountItem[] }
@@ -115,7 +116,7 @@ export function AccountScreen({ initials, name, email, verification, sections, s
               <ul className="ha-account-sheet__list">{DELETE_CONSEQUENCES.map((c) => <li key={c}>{c}</li>)}</ul>
               <label className="ha-account-sheet__field">Digite {DELETE_WORD} para confirmar<input className="ha-input" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" autoCapitalize="characters" /></label>
               {deleteError ? <p className="ha-account-sheet__err" role="alert">{deleteError}</p> : null}
-              <button type="button" className="ha-btn ha-btn--danger ha-btn--md" disabled={deleting || typed.trim().toUpperCase() !== DELETE_WORD} onClick={confirmDelete}>{deleting ? 'Excluindo…' : 'Excluir conta'}</button>
+              <Button variant="danger" size="md" disabled={deleting || typed.trim().toUpperCase() !== DELETE_WORD} onClick={confirmDelete} loading={deleting}>{deleting ? 'Excluindo…' : 'Excluir conta'}</Button>
             </>
           )}
         </div>

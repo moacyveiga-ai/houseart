@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { checkPixKey, type PixKeyType } from '@/lib/payment-methods/domain'
 import type { PayoutAccountView } from '@/lib/payment-methods/server'
+import { Button } from '@/components/ds/Button'
 
 export type PixFormType = Extract<PixKeyType, 'CPF' | 'EMAIL' | 'PHONE' | 'RANDOM'>
 const TYPES: { key: PixFormType; name: string; icon: string; label: string; placeholder: string; mode: 'numeric' | 'email' | 'tel' | 'text' }[] = [
@@ -89,7 +90,7 @@ export function PixKeyForm({ holderName, cpfMask, intro, submitLabel, onSaved, o
         <span className="ha-payout-holder__s">A chave precisa estar no seu CPF. Não aceitamos chaves de terceiros, para proteger a venda e a escritura.</span>
       </div>
       <div className="ha-payout-foot">
-        <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={saving || !key.trim()} onClick={save}>{saving ? 'Consultando a chave no Banco Central…' : submitLabel}</button>
+        <Button variant="primary" size="md" disabled={saving || !key.trim()} onClick={save} loading={saving}>{saving ? 'Consultando a chave no Banco Central…' : submitLabel}</Button>
         {secondary}
       </div>
     </>

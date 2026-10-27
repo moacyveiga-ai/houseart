@@ -19,6 +19,7 @@ import { RESTORATION_DESCRIPTION_MAX, RESTORATION_DESCRIPTION_MIN } from '@/lib/
 import type { CollectorPanelData } from '@/lib/collector-wallet/panel-core'
 import './collector-panel.css'
 import '@/components/sales/sales-progress.css'
+import { Button } from '@/components/ds/Button'
 
 /** Today's day as the browser sees it: only the `max` of the date field (the server is the rule, in the house timezone). */
 const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -190,7 +191,7 @@ export function CollectorArtworkPanel({ a, closeHref, meInitials }: { a: Collect
       {o && sheet === 'sell' ? createPortal(<SellSheet open onClose={() => setSheet(null)} onCertify={() => setSheet('services')} payout={o.payout} artwork={{ artworkId: a.id, title: a.title, artist: a.artist, cover: o.cover, status: o.status, sealGreen: o.sealGreen, registeredCents: o.registeredCents, priceRange: o.priceRange ?? null }} />, document.body) : null}
       {o && sheet === 'services' ? createPortal(<ServicesSheet open onClose={() => setSheet(null)} onDone={setToast} artworkId={a.id} title={a.title} sealGreen={o.sealGreen} />, document.body) : null}
       {o && sheet === 'restore' ? createPortal(
-        <Modal open title="Registrar restauro" onClose={() => setSheet(null)} footer={<button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={submitRestoration}>{busy ? 'Registrando…' : 'Registrar na proveniência'}</button>}>
+        <Modal open title="Registrar restauro" onClose={() => setSheet(null)} footer={<Button variant="primary" size="md" disabled={busy} onClick={submitRestoration} loading={busy}>{busy ? 'Registrando…' : 'Registrar na proveniência'}</Button>}>
           <p className="ha-muted ha-sm">O restauro entra na cadeia do certificado como um evento assinado: quem vier a comprar a obra lê que ela passou por intervenção, quando e por quem. Não dá para editar depois.</p>
           <label className="ha-label">O que foi feito<textarea className="ha-textarea" rows={4} maxLength={RESTORATION_DESCRIPTION_MAX} value={restore.description} onChange={(e) => setRestore({ ...restore, description: e.target.value })} placeholder="Limpeza da superfície, reentelamento e verniz refeito" /></label>
           <span className="ha-muted ha-sm">{restore.description.trim().length} de {RESTORATION_DESCRIPTION_MAX} · mínimo {RESTORATION_DESCRIPTION_MIN}</span>

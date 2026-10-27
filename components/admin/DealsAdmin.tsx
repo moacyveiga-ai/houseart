@@ -12,6 +12,7 @@ import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
 import { dataBR } from '@/lib/timezone'
 import { canMarkPaid, exceptionLabel, isOwed, MANUAL_NOTE_MAX, type AdminDealRow, type AdminSplitLine, type DealFilter } from '@/lib/admin-deals/core'
+import { Button } from '@/components/ds/Button'
 
 const brl = (cents: string) => formatBRL(BigInt(cents))
 const SELLER_KIND: Record<string, string> = { ARTIST: 'artista', GALLERY_STAFF: 'galeria', ADVISOR: 'consultor', COLLECTOR: 'colecionador' }
@@ -116,7 +117,7 @@ export function DealsAdmin({ rows: initial, filter, filters, openId = null }: { 
             {error ? <p className="ha-adeals__err" role="alert">{error}</p> : null}
             <div className="ha-row" style={{ gap: 8 }}>
               <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setPaying(null)}>Cancelar</button>
-              <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy !== null || !note.trim()} onClick={confirmPaid}>{busy ? 'Registrando…' : 'Registrar pagamento'}</button>
+              <Button variant="primary" size="md" disabled={busy !== null || !note.trim()} onClick={confirmPaid} loading={busy !== null}>{busy ? 'Registrando…' : 'Registrar pagamento'}</Button>
             </div>
           </div>
         ) : null}

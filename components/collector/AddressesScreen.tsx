@@ -8,6 +8,7 @@ import { Modal } from '@/components/ds/Modal'
 import { UFS } from '@/lib/addresses/core'
 import type { AddressView } from '@/lib/addresses/server'
 import './collector-account.css'
+import { Button } from '@/components/ds/Button'
 
 type Draft = { label: string; recipient: string; cep: string; street: string; number: string; complement: string; district: string; city: string; uf: string; isDefault: boolean }
 const blank = (recipient: string): Draft => ({ label: 'Casa', recipient, cep: '', street: '', number: '', complement: '', district: '', city: '', uf: 'BA', isDefault: false })
@@ -84,7 +85,7 @@ export function AddressesScreen({ items: initial, recipient }: { items: AddressV
             </div>
             <label className="ha-row ha-cacct__check"><input type="checkbox" checked={editing.d.isDefault} onChange={(e) => set({ isDefault: e.target.checked })} />Usar como padrão</label>
             {error ? <p className="ha-cacct__err" role="alert">{error}</p> : null}
-            <button type="submit" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy}>{busy ? 'Salvando…' : 'Salvar endereço'}</button>
+            <Button type="submit" variant="primary" size="md" disabled={busy} loading={busy}>{busy ? 'Salvando…' : 'Salvar endereço'}</Button>
           </form>
         ) : null}
       </Modal>

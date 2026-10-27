@@ -11,3 +11,6 @@
 .ha-col__kpi span:last-child { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .ha-col__tabs { overflow-x: auto; scrollbar-width: none; }
 @media (max-width: 600px) { .ha-col__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ha-col__kpi--up b, .ha-col__kpi--up .ha-icon { color: var(--ha-verified-500); }
+.ha-col__kpi--down b, .ha-col__kpi--down .ha-icon { color: var(--ha-alert-500); }
+.ha-col__note { margin: 0; }

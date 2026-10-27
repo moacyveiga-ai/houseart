@@ -11,8 +11,10 @@ import '@/components/auth/signup.css'
 
 export const metadata = { title: 'Criar conta — HouseArt' }
 
-export default async function SignupPage({ searchParams }: { searchParams: Promise<{ plan?: string; social?: string; provider?: string }> }) {
-  const sp = await searchParams
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ plan?: string; plano?: string; social?: string; provider?: string }> }) {
+  const raw = await searchParams
+  // links in Portuguese say ?plano= (pricing pages, e-mails); both name the same plan
+  const sp = { ...raw, plan: raw.plan ?? raw.plano }
   // Someone already signed in resumes the onboarding (phone, interests) instead of a second account.
   if (await getSession()) redirect(`/signup/welcome${sp.plan ? `?plan=${encodeURIComponent(sp.plan)}` : ''}`)
   const plans = (await listPublicPlans()).map(toSignupPlan)

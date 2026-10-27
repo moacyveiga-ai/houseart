@@ -93,7 +93,7 @@ export function rowStats(a: Pick<InventoryItem, 'status' | 'listing' | 'deal'>):
     case 'IN_DEAL': return a.deal ? `${a.deal.phase === 'OFFER_ACCEPTED' ? 'Reservada' : 'Vendida'} para ${a.deal.buyerName} · ${saleAction(a.deal).label.toLowerCase()}` : 'Negócio em andamento'
     case 'IN_CERTIFICATION': return 'Vincule a etiqueta e assine o certificado'
     case 'AUTHENTICATED': return 'Liste no marketplace para vender'
-    case 'DRAFT': return 'Complete o cadastro e peça a certificação'
+    case 'DRAFT': return 'Peça a certificação para anunciar'
     case 'SOLD': return a.deal ? `Vendida para ${a.deal.buyerName}` : 'Vendida'
     default: return ARTWORK_STATUS_LABELS[a.status]
   }

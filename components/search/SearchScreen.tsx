@@ -40,7 +40,7 @@ export function SearchScreen({ result, featured, workPrefix, before = null, rece
           <section className="ha-search-sec" aria-label="Em alta na HouseArt">
             <span className="ha-search-sec__k">Em alta na HouseArt</span>
             <div className="ha-search-chips">
-              {CATEGORY_CHIPS.map((c) => <Link key={c} href={`/e/marketplace?category=${c}`} className="ha-search-chip"><Icon name="trending_up" size={16} />{ARTWORK_CATEGORY_LABELS[c]}</Link>)}
+              {CATEGORY_CHIPS.map((c) => <Link key={c} href={`/marketplace?category=${c}`} className="ha-search-chip"><Icon name="trending_up" size={16} />{ARTWORK_CATEGORY_LABELS[c]}</Link>)}
             </div>
           </section>
           {featured.length ? (

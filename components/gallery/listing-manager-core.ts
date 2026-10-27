@@ -40,9 +40,9 @@ export function acceptsOffersSub(on: boolean, rules: ToggleRules | null): string
   return `Regras: recusa abaixo de ${Math.round(rules.refuseBelowBps / 100)}% · prazo ${rules.responseHours} h`
 }
 
-/** Sub-text of "Pausar anúncio". The product keeps the mandate and the offers while paused (no likes/saves yet). */
+/** Sub-text of "Pausar anúncio". Pausing keeps the mandate, the offers and the reactions (likes and saves). */
 export function pausedSub(paused: boolean): string {
-  return paused ? 'Fora do marketplace · mandato e ofertas mantidos' : 'Some do marketplace sem perder o mandato'
+  return paused ? 'Fora do marketplace · curtidas, salvos e ofertas mantidos' : 'Some do marketplace sem perder curtidas nem ofertas'
 }
 
 export function pauseToggledMessage(nowPaused: boolean): string {

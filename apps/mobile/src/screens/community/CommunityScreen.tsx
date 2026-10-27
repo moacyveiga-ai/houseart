@@ -14,7 +14,7 @@ import { useSession } from '@/auth/session'
 import { API_URL } from '@/config'
 import { colors, theme } from '@/theme'
 import { Avatar, Display, ErrorState, Icon, IconButton, Loading, Toast, Wall } from '@/ui/kit'
-import { avatarTint, initialsOf } from '@/ui/format'
+import { absUrl, avatarTint, initialsOf } from '@/ui/format'
 import { COMMUNITY_TABS, applyVote, authorLineOf, filterTab, goingLabel, personTagOf, reactionTargetOf, votesLabel, type CommunityTab } from './community-core'
 import { CommentsSheet } from './CommentsSheet'
 import { Composer } from './Composer'
@@ -88,7 +88,7 @@ export function CommunityScreen() {
               <Icon name="add-photo-alternate" size={22} color={theme.fgMuted} />
             </Pressable>
           }
-          renderItem={({ item }) => <FeedCard item={item} onOpenArtwork={() => item.artwork?.publicId && router.push(`/artwork/${item.artwork.publicId}`)} onLike={() => void react(item, 'LIKE')} onSave={() => void react(item, 'SAVE')} onGoing={() => void react(item, 'RSVP')} onFollow={() => void follow(item)} onVote={(o) => void vote(item, o)} onComment={() => setComments(item)} onShare={() => share(item)} onRead={() => read(item)} />}
+          renderItem={({ item }) => <FeedCard item={item} onOpenArtwork={() => item.artwork?.publicId && router.push(`/artwork/${item.artwork.publicId}`)} onLike={() => void react(item, 'LIKE')} onSave={() => void react(item, 'SAVE')} onGoing={() => void react(item, 'RSVP')} onFollow={() => void follow(item)} onVote={(o) => void vote(item, o)} onComment={() => setComments(item)} onShare={() => share(item)} onRead={() => read(item)} onProfile={() => item.author.profileHref && router.push({ pathname: '/web', params: { path: item.author.profileHref, title: item.author.name } })} />}
           ListEmptyComponent={<Text style={styles.empty}>{tab === 'following' ? 'Siga artistas, galerias e colecionadores para ver os posts deles aqui.' : tab === 'saved' ? 'Toque no marcador de um post para guardá-lo aqui.' : 'Nada por aqui ainda.'}</Text>}
           contentContainerStyle={{ paddingBottom: 24 }}
         />
@@ -100,7 +100,7 @@ export function CommunityScreen() {
   )
 }
 
-function FeedCard({ item, onOpenArtwork, onLike, onSave, onGoing, onFollow, onVote, onComment, onShare, onRead }: { item: FeedItem; onOpenArtwork: () => void; onLike: () => void; onSave: () => void; onGoing: () => void; onFollow: () => void; onVote: (o: number) => void; onComment: () => void; onShare: () => void; onRead: () => void }) {
+function FeedCard({ item, onOpenArtwork, onLike, onSave, onGoing, onFollow, onVote, onComment, onShare, onRead, onProfile }: { item: FeedItem; onOpenArtwork: () => void; onLike: () => void; onSave: () => void; onGoing: () => void; onFollow: () => void; onVote: (o: number) => void; onComment: () => void; onShare: () => void; onRead: () => void; onProfile: () => void }) {
   const tag = personTagOf(item)
   const tint = tag.official ? { bg: theme.accent, fg: theme.fg } : avatarTint(item.author.name)
   const canFollow = !tag.official && !!item.author.memberId && !item.author.following
@@ -108,11 +108,14 @@ function FeedCard({ item, onOpenArtwork, onLike, onSave, onGoing, onFollow, onVo
   return (
     <View style={styles.card}>
       <View style={styles.author}>
-        <Avatar initials={item.author.initials} bg={tint.bg} fg={tint.fg} size={38} />
+        {/* the author with a public page (artist, active gallery) opens it, as on the web */}
+        <Pressable accessibilityRole={item.author.profileHref ? 'link' : undefined} accessibilityLabel={item.author.profileHref ? `Perfil de ${item.author.name}` : undefined} disabled={!item.author.profileHref} onPress={onProfile} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+        <Avatar initials={item.author.initials} bg={tint.bg} fg={tint.fg} size={38} uri={absUrl(item.author.avatarUrl)} />
         <View style={{ flex: 1 }}>
           <View style={styles.nameRow}><Text style={styles.name} numberOfLines={1}>{item.author.name}</Text><Text style={[styles.tag, tag.official && { backgroundColor: theme.accent }]}>{tag.label}</Text></View>
           <Text style={styles.sub} numberOfLines={1}>{authorLineOf(item)}</Text>
         </View>
+        </Pressable>
         {canFollow ? <Pressable accessibilityRole="button" onPress={onFollow} style={styles.follow}><Text style={styles.followText}>Seguir</Text></Pressable> : null}
       </View>
       {item.body && item.kind !== 'NEWS' ? <Text style={styles.body}>{item.body}</Text> : null}

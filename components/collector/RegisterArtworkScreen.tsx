@@ -19,6 +19,7 @@ import { ACQUISITION_KIND_CARDS, CONDITION_GRADES, CONDITION_GRADE_LABELS, REQUI
 import { categoryOfTechnique, cmOf, dimensionsLabel, EDITION_CHIPS, editionChipOf, NEXT_STEPS, REGISTER_STEPS, resumeStep, sheetMessage, sheetProblems, SIGNATURE_CHIPS, signatureChipOf, SUPPORT_CHIPS, supportChipOf, TECHNIQUE_CHIPS, techniqueChipOf, yearOf, yearPatch, type RegisterStep } from '@/lib/collectors/register-core'
 import { digitsOf, formatThousands, reaisDigitsToCents } from './seller-core'
 import { ServicesSheet } from './ServicesSheet'
+import { hasContactLeakInProse } from '@/lib/messaging/core'
 import './register-artwork.css'
 
 interface ArtistHit { slug: string; name: string; meta: string; photoUrl: string | null }
@@ -57,6 +58,8 @@ export interface RegisterDraft {
   id: number; acquisitionKind: string; artistName: string; title: string; year: number | null
   technique: string | null; materials: string | null; heightMm: number | null; widthMm: number | null; depthMm: number | null
   edition: string | null; signatureLocation: string | null; conditionGrade: string | null
+  /** "Sobre a obra" (the public page shows it) */
+  description: string | null
   acquisitionYear: number | null; acquisitionFrom: string | null; acquisitionNote: string | null; acquisitionPriceCents: string | null
   media: DraftMedia[]
   /** concluded before (wizardStep 5): opens on the review */
@@ -115,6 +118,7 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
   const [edition, setEdition] = useState<string | null>(chipOf(draft?.edition, EDITION_CHIPS, editionChipOf))
   const [signature, setSignature] = useState<string | null>(chipOf(draft?.signatureLocation, SIGNATURE_CHIPS, signatureChipOf))
   const [condition, setCondition] = useState<string | null>(draft?.conditionGrade ?? null)
+  const [about, setAbout] = useState(draft?.description ?? '')
   const [h, setH] = useState(cmOf(draft?.heightMm ?? null))
   const [w, setW] = useState(cmOf(draft?.widthMm ?? null))
   const [d, setD] = useState(cmOf(draft?.depthMm ?? null))
@@ -174,7 +178,7 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
 
   const sheetBody = () => ({
     title: title.trim() && title.trim() !== 'Nova obra' ? title.trim() : undefined, year: yearPatch(year), technique, materials: support, edition, signatureLocation: signature,
-    conditionGrade: condition, heightMm: h || null, widthMm: w || null, depthMm: d || null,
+    conditionGrade: condition, description: about.trim() || null, heightMm: h || null, widthMm: w || null, depthMm: d || null,
     ...(categoryOfTechnique(technique) ? { category: categoryOfTechnique(technique) } : {}),
     acquisitionKind: kind, acquisitionYear: yearPatch(acqYear), acquisitionFrom: from.trim() || null, acquisitionNote: note.trim() || null,
     acquisitionPriceCents: digitsOf(paid) ? reaisDigitsToCents(paid).toString() : null,
@@ -220,6 +224,7 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
     if (step === 2) { if (!hasFront) { setError('Fotografe ao menos a frente da obra (com o cartão de cor) para seguir.'); return } go(3); return }
     if (step === 3) {
       if (problems.length) { setTried(true); setError(sheetMessage(problems)); return }
+      if (aboutLeak) { setError('Tire telefone, e-mail, link ou Pix do texto “Sobre a obra” para seguir.'); return }
       if (await patch(sheetBody())) { setTried(false); setFromReview(false); setStep(4) }
       return
     }
@@ -260,6 +265,8 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
   const S = V.steps[step]!
   const canGo = step === 0 ? !!kind : step === 1 ? (V.kind === 'gallery' && !free ? pickedId != null : artistName.length >= 2) : step === 2 ? hasFront : true
   const cta = step === 1 && !id ? (busy ? 'Começando…' : 'Continuar para as fotos') : step === 2 ? (hasFront ? 'Continuar para a ficha' : 'Falta a foto da frente') : step === 3 ? 'Revisar' : step === 4 ? (busy ? 'Concluindo…' : 'Concluir cadastro') : 'Continuar'
+  // the server refuses contacts in "Sobre a obra" (same filter as the chat); the screen says it before saving
+  const aboutLeak = !!about.trim() && hasContactLeakInProse(about)
   const bad = (v: boolean) => (tried && !v ? ' ha-reg__field--bad' : '')
 
   return (
@@ -360,6 +367,10 @@ export function RegisterArtworkScreen({ draft, variant: V = COLLECTOR_VARIANT }:
             <span className="ha-reg__field-k">Estado de conservação</span>
             <span className="ha-reg__chips">{CONDITION_GRADES.map((g) => <button type="button" key={g} aria-pressed={condition === g} className={`ha-reg__chip${condition === g ? ' ha-reg__chip--on' : ''}`} onClick={() => setCondition(condition === g ? null : g)}>{CONDITION_GRADE_LABELS[g]}</button>)}</span>
           </div>
+          <label className={`ha-reg__field${aboutLeak ? ' ha-reg__field--bad' : ''}`}><span className="ha-reg__field-k">Sobre a obra <span className="ha-reg__field-n">· opcional, aparece na página pública</span></span>
+            <textarea className="ha-textarea" rows={4} value={about} maxLength={2000} placeholder="O que a obra é, de onde vem, o que a artista quis" onChange={(e) => setAbout(e.target.value)} />
+            {aboutLeak ? <span className="ha-field-error" role="alert">Tire telefone, e-mail, link ou Pix do texto para ele ser salvo.</span> : <span className="ha-muted ha-sm">Até 2.000 caracteres, sem telefone, e-mail ou redes.</span>}
+          </label>
           <h2 className="ha-reg__sub">{V.provenance.title}</h2>
           <label className="ha-reg__field"><span className="ha-reg__field-k">{V.provenance.from.label}</span><input className="ha-input" value={from} maxLength={160} placeholder={V.provenance.from.placeholder} onChange={(e) => setFrom(e.target.value)} /></label>
           <div className="ha-reg__two">

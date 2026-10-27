@@ -20,7 +20,7 @@ export default async function RegisterArtworkPage({ searchParams }: { searchPara
     draft = {
       id: a.id, acquisitionKind: a.acquisitionKind!, artistName: a.artist.name, title: a.title === 'Nova obra' ? '' : a.title,
       year: a.year, technique: a.technique, materials: a.materials, heightMm: a.heightMm, widthMm: a.widthMm, depthMm: a.depthMm,
-      edition: a.edition, signatureLocation: a.signatureLocation, conditionGrade: a.conditionGrade,
+      edition: a.edition, signatureLocation: a.signatureLocation, conditionGrade: a.conditionGrade, description: a.description,
       acquisitionYear: a.acquisitionYear, acquisitionFrom: a.acquisitionFrom, acquisitionNote: a.acquisitionNote,
       acquisitionPriceCents: a.acquisitionPriceCents === null ? null : a.acquisitionPriceCents.toString(),
       media: a.media.map((m) => ({ kind: m.kind, publicUrl: m.publicUrl, quality: m.quality })),

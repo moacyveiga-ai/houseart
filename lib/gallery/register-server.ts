@@ -44,7 +44,7 @@ export async function registerGalleryArtwork(scope: Scope, i: RegisterGalleryArt
 export interface GalleryRegisterDraft {
   id: number; acquisitionKind: string; artistName: string; title: string; year: number | null
   technique: string | null; materials: string | null; heightMm: number | null; widthMm: number | null; depthMm: number | null
-  edition: string | null; signatureLocation: string | null; conditionGrade: string | null
+  edition: string | null; signatureLocation: string | null; conditionGrade: string | null; description: string | null
   acquisitionYear: number | null; acquisitionFrom: string | null; acquisitionNote: string | null; acquisitionPriceCents: string | null
   media: { kind: string; publicUrl: string | null; quality: string | null }[]
   completed: boolean
@@ -58,7 +58,7 @@ export async function galleryRegisterDraft(scope: Scope, artworkId: number): Pro
   return {
     id: a.id, acquisitionKind: a.acquisitionKind, artistName: a.artist.name, title: a.title === 'Nova obra' ? '' : a.title,
     year: a.year, technique: a.technique, materials: a.materials, heightMm: a.heightMm, widthMm: a.widthMm, depthMm: a.depthMm,
-    edition: a.edition, signatureLocation: a.signatureLocation, conditionGrade: a.conditionGrade,
+    edition: a.edition, signatureLocation: a.signatureLocation, conditionGrade: a.conditionGrade, description: a.description,
     acquisitionYear: a.acquisitionYear, acquisitionFrom: a.acquisitionFrom, acquisitionNote: a.acquisitionNote,
     acquisitionPriceCents: a.acquisitionPriceCents === null ? null : a.acquisitionPriceCents.toString(),
     media: a.media.map((m) => ({ kind: m.kind, publicUrl: m.publicUrl, quality: m.quality })),

@@ -23,7 +23,7 @@ import { royaltyFor } from '@/lib/resale-royalty/core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
 import { counterpartOfMember, openConversationWith } from '@/lib/messaging/server'
-import { dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
+import { arrivingLabel, dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
 import { hasReceipt, receiptOf } from './receipt-core'
 import { escrowChargedCents } from '@/lib/payment-methods/ledger-core'
 import { renderReceiptPdf } from './receipt-pdf'
@@ -165,6 +165,24 @@ export async function dealLinesByArtwork(scope: Scope, artworkIds: readonly numb
 export async function sellerDeals(scope: Scope): Promise<DealView[]> {
   const ids = await prisma.deal.findMany({ where: { ...memberFilter(scope) }, select: { id: true }, orderBy: { createdAt: 'desc' }, take: 50 })
   return Promise.all(ids.map((d) => loadDeal(d.id).then(toView)))
+}
+
+/** Coleção › "Chegando": the person's purchases still on the way (not completed, not cancelled), newest first. */
+export interface ArrivingPurchase { dealId: number; title: string; artist: string; cover: string | null; label: string }
+
+export async function arrivingPurchases(userId: number): Promise<ArrivingPurchase[]> {
+  const rows = await prisma.deal.findMany({
+    where: { buyerUserId: userId, phase: { not: 'COMPLETED' }, OR: [{ exceptionStatus: null }, { exceptionStatus: { not: 'CANCELLED' } }] },
+    orderBy: { createdAt: 'desc' }, take: 20,
+    select: { id: true, phase: true, exceptionStatus: true, artwork: { select: { title: true, year: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } } },
+  })
+  const out: ArrivingPurchase[] = []
+  for (const r of rows) {
+    const label = arrivingLabel(r.phase as DealPhase, r.exceptionStatus ?? null)
+    if (!label) continue
+    out.push({ dealId: r.id, title: `${r.artwork.title}${r.artwork.year ? `, ${r.artwork.year}` : ''}`, artist: r.artwork.artist.name, cover: r.artwork.media[0]?.publicUrl ?? null, label })
+  }
+  return out
 }
 
 export async function buyerDeals(userId: number): Promise<DealView[]> {

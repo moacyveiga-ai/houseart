@@ -17,7 +17,7 @@ import { createBatch, linkMarker, requestMarkers, shipOrder } from '@/lib/physic
 import { mockSunMessage } from '@/lib/physical-markers/sun-core'
 import { certificationView, issueCertificate, publicCertificate, signCertificate } from '@/lib/certificates/server'
 import { confirmPublicOffer, listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
-import { bookShipping, buyerDeals, confirmDelivery, dealReceiptPdf, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
+import { arrivingPurchases, bookShipping, buyerDeals, confirmDelivery, dealReceiptPdf, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
 import { buyerAcceptTransfer, buyerTap, createTransfer, payTransferFee, royaltyPreview, sellerSign } from '@/lib/ownership/server'
 import { walletOf, insureArtwork } from '@/lib/collector-wallet/server'
 import { royaltyView } from '@/lib/resale-royalty/server'
@@ -136,6 +136,8 @@ describe('deal flow', () => {
       await expect(bookShipping(scope, deal.id, { carrier: 'x', tracking: 'y' })).rejects.toMatchObject({ status: 404 })
     })
 
+    // Coleção › "Chegando": the purchase in transit shows before the deed is the buyer's
+    expect((await arrivingPurchases(buyer.id)).map((p) => [p.dealId, p.label])).toEqual([[deal.id, 'Chegando · em trânsito']])
     // the receipt only exists once the deal is completed
     await expect(dealReceiptPdf(deal.id, 'BUYER', { userId: buyer.id, scope: null })).rejects.toMatchObject({ code: 'NOT_COMPLETED' })
 
@@ -181,6 +183,7 @@ describe('deal flow', () => {
     await asPanel(s.a1.userId, async ({ scope }) => {
       await expect(dealReceiptPdf(deal.id, 'SELLER', { userId: s.a1.userId, scope })).rejects.toMatchObject({ status: 404 })
     })
+    expect(await arrivingPurchases(buyer.id)).toEqual([])
     const wallet = await walletOf(buyer.id)
     expect(wallet.items.map((i) => [i.publicId, i.version, i.insured])).toEqual([[publicId, 2, false]])
     expect(wallet.totalCents).toBe(4_400_000n)

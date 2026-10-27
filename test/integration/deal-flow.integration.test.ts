@@ -17,6 +17,7 @@ import { createBatch, linkMarker, requestMarkers, shipOrder } from '@/lib/physic
 import { mockSunMessage } from '@/lib/physical-markers/sun-core'
 import { certificationView, issueCertificate, publicCertificate, signCertificate } from '@/lib/certificates/server'
 import { confirmPublicOffer, listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
+import { addPackagingPhoto, packagingPhotoRef, recordPackaging, removePackagingPhoto } from '@/lib/deals/packaging-server'
 import { arrivingPurchases, bookShipping, buyerDeals, confirmDelivery, dealReceiptPdf, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
 import { buyerAcceptTransfer, buyerTap, createTransfer, payTransferFee, royaltyPreview, sellerSign } from '@/lib/ownership/server'
 import { walletOf, insureArtwork } from '@/lib/collector-wallet/server'
@@ -128,13 +129,26 @@ describe('deal flow', () => {
       await expect(bookShipping(scope, deal.id, { carrier: 'ArtTrans', tracking: 'AT-1' })).rejects.toMatchObject({ code: 'WRONG_PHASE' })
       await signAgreement('SELLER', deal.id, { userId: user.id, scope })
       expect((await prisma.deal.findUniqueOrThrow({ where: { id: deal.id } })).phase).toBe('DOCUMENTS')
+      // "Embalagem e condition report": a note needs a photo; the photo stays in the vault; the last one of a recorded packaging stays
+      await expect(recordPackaging(scope, deal.id, 'Tela íntegra, caixa de madeira.', user.id)).rejects.toMatchObject({ code: 'NO_PHOTOS' })
+      const photo = await addPackagingPhoto(scope, deal.id, await png({ r: 200, g: 180, b: 150 }), user.id)
+      expect(photo.url).toBe(`/api/deals/${deal.id}/packaging/photos/${photo.id}`)
+      expect(await packagingPhotoRef(deal.id, photo.id)).toBeTruthy()
+      await expect(recordPackaging(scope, deal.id, 'curto', user.id)).rejects.toMatchObject({ code: 'INVALID_REPORT' })
+      await recordPackaging(scope, deal.id, 'Tela íntegra, caixa de madeira.', user.id)
+      await expect(removePackagingPhoto(scope, deal.id, photo.id, user.id)).rejects.toMatchObject({ code: 'LAST_PHOTO' })
       await bookShipping(scope, deal.id, { carrier: 'ArtTrans', tracking: 'AT-1', insurer: 'Chubb', policyRef: 'CH-9', shippingCents: 85_000n, insuranceCents: 32_000n })
+      // after the shipment the record is closed
+      await expect(addPackagingPhoto(scope, deal.id, await png({ r: 1, g: 2, b: 3 }), user.id)).rejects.toMatchObject({ code: 'WRONG_PHASE' })
     }, 'ARTIST')
     // the gallery never sees the artist's deal
     await asPanel(s.a1.userId, async ({ scope }) => {
       expect(await sellerDeals(scope)).toEqual([])
       await expect(bookShipping(scope, deal.id, { carrier: 'x', tracking: 'y' })).rejects.toMatchObject({ status: 404 })
+      await expect(recordPackaging(scope, deal.id, 'Tela íntegra, caixa de madeira.', s.a1.userId)).rejects.toMatchObject({ status: 404 })
     })
+    // the buyer sees the same packaging record
+    expect((await buyerDeals(buyer.id))[0]!.packaging).toMatchObject({ report: 'Tela íntegra, caixa de madeira.', photos: [{ url: expect.stringContaining('/packaging/photos/') }] })
 
     // Coleção › "Chegando": the purchase in transit shows before the deed is the buyer's
     expect((await arrivingPurchases(buyer.id)).map((p) => [p.dealId, p.label])).toEqual([[deal.id, 'Chegando · em trânsito']])

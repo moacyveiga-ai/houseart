@@ -7,6 +7,8 @@ import { formatBRL } from '@/lib/artworks/domain'
 import type { SerializableDeal as Serializable } from './deal-view'
 import { EscrowPay } from '@/components/payments/EscrowPay'
 import { TalkToSellerButton } from '@/components/public/TalkToSellerButton'
+import { PackagingForm, PackagingView } from './Packaging'
+import { canRecordPackaging } from '@/lib/deals/packaging-core'
 
 type Side = 'seller' | 'buyer'
 
@@ -54,6 +56,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
         <div className="ha-stack">
           <h3 className="ha-h3">Repartição dos valores</h3>
           <div className="ha-kv">{deal.split.map((s) => [<span key={`k${s.party}`}>{s.label}{s.party === 'PLATFORM' ? ` · ${deal.market === 'PRIMARY' ? '12%' : '4%'}` : ''}</span>, <span key={`v${s.party}`} className="ha-num">{formatBRL(BigInt(s.amountCents))}{s.payoutLabel ? ` · ${s.payoutLabel}` : s.status === 'RELEASED' ? ' · liberado' : ''}</span>])}</div>
+          {canRecordPackaging(deal.phase, deal.exception) ? <PackagingForm dealId={deal.id} p={deal.packaging} onDone={setToast} /> : <PackagingView p={deal.packaging} />}
           {deal.shipping ? <p className="ha-muted ha-sm">Transporte {deal.shipping.carrier} · rastreio {deal.shipping.tracking}{deal.shipping.insurer ? ` · seguro de trânsito ${deal.shipping.insurer}` : ''}</p> : null}
           {deal.phase === 'ESCROW' && !deal.sellerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'DOCUMENTS' ? (
@@ -74,6 +77,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
             <span>Seguro</span><span className="ha-num">{insurance ? formatBRL(insurance) : '—'}</span>
             <span><b>{deal.escrowPaid || done ? 'Pago em garantia' : 'A pagar em garantia'}</b></span><span className="ha-num"><b>{formatBRL(amount + extras)}</b></span>
           </div>
+          <PackagingView p={deal.packaging} />
           {deal.phase === 'OFFER_ACCEPTED' && !deal.exception ? <EscrowPay dealId={deal.id} totalCents={(amount + extras).toString()} pending={deal.escrowPending} /> : null}
           {/* Compras · "Falar com o vendedor" (HouseArt Web App.dc.html): the conversation with who SOLD, about this artwork */}
           {deal.exception !== 'CANCELLED' ? <div className="ha-row"><TalkToSellerButton dealId={deal.id} signedIn label="Falar com o vendedor" className="ha-btn ha-btn--outline ha-btn--sm" /></div> : null}

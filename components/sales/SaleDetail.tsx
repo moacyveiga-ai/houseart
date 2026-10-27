@@ -11,6 +11,8 @@ import { SidePanel } from '@/components/ds/SidePanel'
 import { formatBRL } from '@/lib/artworks/domain'
 import { saleAction, saleStage, saleStageTitle, saleSteps, SALE_STAGES } from '@/lib/deals/sale-progress-core'
 import type { SerializableDeal } from '@/components/deals/deal-view'
+import { PackagingForm, PackagingView } from '@/components/deals/Packaging'
+import { canRecordPackaging } from '@/lib/deals/packaging-core'
 
 export interface FinanceRow { label: string; cents: string; sign: string; strong: boolean }
 
@@ -91,6 +93,8 @@ export function SaleDetail({ deal, finance, payoutNote, canAnswer, closeHref, wo
           </li>
         ))}
       </ol>
+      {/* "Embalar e condition report" (VE): between the escrow and the shipment the seller records it; afterwards it is read-only */}
+      {canRecordPackaging(deal.phase, deal.exception) ? <PackagingForm dealId={deal.id} p={deal.packaging} onDone={setToast} /> : <PackagingView p={deal.packaging} />}
       <div className="ha-sd__fin">
         <h3>Financeiro</h3>
         {finance.map((l) => <div key={l.label} className={`ha-sd__row${l.strong ? ' ha-sd__row--strong' : ''}`}><span>{l.label}</span><span>{l.sign ? `${l.sign} ` : ''}{formatBRL(BigInt(l.cents))}</span></div>)}

@@ -12,12 +12,14 @@ import { formatBRL, ARTWORK_CATEGORIES, ARTWORK_CATEGORY_LABELS } from '@/lib/ar
 import { looksLikePublicId } from '@/lib/search/core'
 import type { SearchResult } from '@/lib/search/server'
 import type { PublicArtistCard } from '@/lib/public-content/server'
+import { RecentSearches } from './RecentSearches'
 import './search.css'
 
 const CATEGORY_CHIPS = ARTWORK_CATEGORIES
 
 /** `workPrefix`: the search URL ending in `work=` — the artwork opens in the side panel over the results. */
-export function SearchScreen({ result, featured, workPrefix, before = null }: { result: SearchResult; featured: PublicArtistCard[]; workPrefix: string; before?: ReactNode }) {
+/** `recentKey`: where this person's "Buscas recentes" live in the browser; null = none (the team searches other people's e-mails and ids). */
+export function SearchScreen({ result, featured, workPrefix, before = null, recentKey = null }: { result: SearchResult; featured: PublicArtistCard[]; workPrefix: string; before?: ReactNode; recentKey?: string | null }) {
   const q = result.q
   const cert = q && looksLikePublicId(q) ? result.artworks[0] ?? null : null
   const works = cert ? result.artworks.slice(1) : result.artworks
@@ -30,6 +32,8 @@ export function SearchScreen({ result, featured, workPrefix, before = null }: { 
         <input name="q" className="ha-search-box__input" defaultValue={q} placeholder="Artista, obra, galeria ou certificado" aria-label="Buscar" autoFocus={!q} />
         {q ? <Link href="/search" className="ha-search-box__clear" aria-label="Limpar"><Icon name="cancel" size={20} /></Link> : null}
       </form>
+
+      {recentKey ? <RecentSearches q={q} storageKey={recentKey} /> : null}
 
       {!q ? (
         <>

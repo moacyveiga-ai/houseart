@@ -64,3 +64,9 @@
 /* the desk's rows (components/search/AdminSearchResults.tsx) */
 .ha-search-admin__acts { display: flex; gap: var(--ha-space-2); flex: none; }
 .ha-search-admin .ha-search-row__n { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Buscas recentes (prototype `bRecentes`): history icon, the term, × to remove; 44 px rows */
+.ha-search-recent { list-style: none; margin: 0; padding: 0; }
+.ha-search-recent__row { display: flex; align-items: center; gap: 10px; min-height: 44px; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); color: var(--ha-ink-500); }
+.ha-search-recent__t { flex: 1; min-width: 0; font-size: 14px; color: var(--ha-ink-900); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-search-recent__x { width: 36px; height: 36px; border: 0; background: none; color: var(--ha-ink-500); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }

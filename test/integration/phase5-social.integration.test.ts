@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
 import { reviewItemDetail } from '@/lib/admin-review/detail-server'
-import { listConversations, openConversation, photoOf, readConversation, reportConversation, sendMessage, sendPhoto, unreadMessages } from '@/lib/messaging/server'
+import { listConversations, openConversation, openGalleryConversation, photoOf, readConversation, reportConversation, sendMessage, sendPhoto, unreadMessages } from '@/lib/messaging/server'
 import { addComment, artworkCounts, artworkSignals, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
 import { isExpoEndpoint, pushConfig, savePushSubscription } from '@/lib/notifications/push'
 import { createScenario, type Scenario } from './fixtures'
@@ -45,6 +45,22 @@ describe('conversations', () => {
     const after = await readConversation(buyerId, id)
     expect(after.messages.at(-1)).toMatchObject({ kind: 'OFFER', body: expect.stringContaining('Proposta enviada') })
   }, 60_000)
+})
+
+describe('talk to the gallery', () => {
+  it('opens the conversation (no artwork) with the gallery desk; an unknown or suspended gallery is 404', async () => {
+    await prisma.galleryPublicProfile.deleteMany({})
+    await prisma.galleryPublicProfile.create({ data: { tenantId: s.galleryTenantId, slug: 'galeria-ladeira', name: 'Galeria Ladeira' } })
+    const id = await openGalleryConversation(buyerId, 'galeria-ladeira')
+    expect(await openGalleryConversation(buyerId, 'galeria-ladeira')).toBe(id)
+    const row = await prisma.conversation.findUniqueOrThrow({ where: { id } })
+    expect(row.artworkId).toBeNull()
+    expect([row.userAId, row.userBId]).toContain(s.a1.userId)
+    await expect(openGalleryConversation(buyerId, 'nao-existe')).rejects.toMatchObject({ status: 404 })
+    await prisma.tenant.update({ where: { id: s.galleryTenantId }, data: { status: 'SUSPENDED' } })
+    await expect(openGalleryConversation(buyerId, 'galeria-ladeira')).rejects.toMatchObject({ status: 404 })
+    await prisma.tenant.update({ where: { id: s.galleryTenantId }, data: { status: 'ACTIVE' } })
+  })
 })
 
 describe('photos in a conversation', () => {

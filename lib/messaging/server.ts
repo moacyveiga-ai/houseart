@@ -36,9 +36,10 @@ export async function counterpartOfArtwork(artworkId: number): Promise<{ userId:
 
 /** Who answers for a member: its own login, or the tenant's first active ADMIN (a gallery member without a login). */
 export async function counterpartOfMember(memberId: number): Promise<{ userId: number; label: string } | null> {
-  const m = await prisma.member.findUnique({ where: { id: memberId }, select: { userId: true, displayName: true, tenantId: true } })
+  const m = await prisma.member.findUnique({ where: { id: memberId }, select: { userId: true, displayName: true, tenantId: true, user: { select: { active: true } } } })
   if (!m) return null
-  if (m.userId) return { userId: m.userId, label: m.displayName }
+  // a member whose own login is blocked answers through the tenant's admin, never into an unread inbox
+  if (m.userId && m.user?.active) return { userId: m.userId, label: m.displayName }
   const admin = await prisma.user.findFirst({ where: { tenantId: m.tenantId, tenantRole: 'ADMIN', active: true }, select: { id: true }, orderBy: { id: 'asc' } })
   return admin ? { userId: admin.id, label: m.displayName } : null
 }
@@ -60,6 +61,17 @@ export async function openConversation(me: number, artworkId: number | null, oth
   }
   if (other == null) throw new ArtworkError('NO_COUNTERPART', artworkId != null ? 'Esta obra ainda não tem quem responda por ela.' : 'Pessoa não encontrada.', 404)
   return openConversationWith(me, other, artworkId)
+}
+
+/** "Falar com a galeria" of the public gallery page: the conversation (no artwork) with who answers for the
+ *  gallery — its first active team member's login, else the tenant's first active ADMIN. Only an ACTIVE gallery. */
+export async function openGalleryConversation(me: number, slug: string): Promise<number> {
+  const g = await prisma.galleryPublicProfile.findUnique({ where: { slug }, select: { tenantId: true, tenant: { select: { status: true } } } })
+  if (!g || g.tenant.status !== 'ACTIVE') throw new ArtworkError('NOT_FOUND', 'Galeria não encontrada.', 404)
+  const desk = await prisma.member.findFirst({ where: { tenantId: g.tenantId, kind: 'GALLERY_STAFF', status: 'ACTIVE' }, orderBy: { id: 'asc' }, select: { id: true } })
+  const c = desk ? await counterpartOfMember(desk.id) : null
+  if (!c) throw new ArtworkError('NO_COUNTERPART', 'A galeria ainda não tem quem responda pela HouseArt.', 404)
+  return openConversationWith(me, c.userId, null)
 }
 
 /** The row between two KNOWN users about an artwork — only for callers that already authorized the pair

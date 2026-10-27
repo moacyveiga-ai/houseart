@@ -4,6 +4,7 @@
 // embed (the prototype uses Leaflet; no dependency here).
 import Link from 'next/link'
 import { PublicReactButton } from './PublicReactButton'
+import { TalkToSellerButton } from './TalkToSellerButton'
 import { Icon } from '@/components/ds/Icon'
 import type { PublicGalleryPage, PublicWork } from '@/lib/public-content/server'
 import { galleryInitial, initialsOf, mapLinks, osmEmbedUrl, workPriceLabel } from '@/lib/public-content/profile-core'
@@ -80,7 +81,8 @@ export function Gallery({ g, artistFilter, viewer = { signedIn: false, following
                     onChildren={<><Icon name="check" size={18} />Seguindo</>}><Icon name="add" size={18} />Seguir galeria</PublicReactButton>
                 ) : null}
                 {hasPlace ? <a href="#local" className="hp-gallery-btn"><Icon name="event" size={18} />Agendar visita</a> : null}
-                {g.team.length || g.email || g.phone ? <a href={g.team.length ? '#equipe' : '#local'} className="hp-gallery-btn"><Icon name="chat" size={18} />Falar com a galeria</a> : null}
+                {g.followMemberId ? <TalkToSellerButton gallery={g.slug} signedIn={viewer.signedIn} className="hp-gallery-btn" label={<><Icon name="chat" size={18} />Falar com a galeria</>} />
+                  : g.team.length || g.email || g.phone ? <a href={g.team.length ? '#equipe' : '#local'} className="hp-gallery-btn"><Icon name="chat" size={18} />Falar com a galeria</a> : null}
               </div>
             </div>
           </div>

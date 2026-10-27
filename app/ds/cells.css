@@ -183,7 +183,7 @@
 .ha-ticker b { color: var(--ha-paper-50); font-weight: 600; }
 .ha-ticker .ha-ticker__delta { color: var(--ha-ink-300); }
 .ha-topbar { height: 64px; display: flex; align-items: center; gap: var(--ha-space-6); padding: 0 var(--ha-space-6); border-bottom: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); position: sticky; top: 0; z-index: 20; }
-.ha-topbar__brand { width: 192px; /* the wordmark without the symbol, 24 px, as the apps */ flex: none; display: flex; align-items: center; gap: var(--ha-space-2); color: var(--ha-fg); text-decoration: none; }
+.ha-topbar__brand { min-width: 192px; /* the wordmark without the symbol, 24 px, as the apps */ flex: none; display: flex; align-items: center; gap: var(--ha-space-2); color: var(--ha-fg); text-decoration: none; }
 .ha-topbar__search { flex: 0 1 420px; min-width: 0; display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-sm); color: var(--ha-fg-muted); font-size: var(--ha-text-body-sm); white-space: nowrap; overflow: hidden; }
 .ha-topbar__search .ha-icon { font-size: 20px; }
 .ha-topbar__right { margin-left: auto; display: flex; align-items: center; gap: var(--ha-space-4); flex: none; }
@@ -194,7 +194,9 @@
 .ha-bell__dot { position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--ha-sand-500); }
 .ha-profilebtn { display: flex; align-items: center; gap: var(--ha-space-2); border: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); border-radius: var(--ha-radius-full); padding: var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-1); cursor: pointer; text-decoration: none; }
 .ha-profilebtn:hover { border-color: var(--ha-ink-900); }
-.ha-profilebtn__name { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); white-space: nowrap; }
+.ha-profilebtn__name { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+/* the system label beside the wordmark ("Galeria", "Colecionador"…) */
+.ha-topbar__system { font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); padding-left: var(--ha-space-2); border-left: var(--ha-border-w) solid var(--ha-border); white-space: nowrap; }
 .ha-profilebtn .ha-icon { font-size: 18px; color: var(--ha-fg-muted); }
 .ha-profilebtn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .ha-switcher { position: relative; }
@@ -224,7 +226,7 @@
 .ha-main__inner { max-width: var(--ha-max); margin: 0 auto; }
 .ha-menubtn { display: none; }
 /* below ~1024 px the side panel layout stacks (handoff §7): the sidebar becomes the drawer */
-@media (max-width: 1023px) { .ha-sidebar { display: none; } .ha-menubtn { display: inline-flex; } .ha-topbar__brand { width: auto; } .ha-topbar { gap: var(--ha-space-3); } .ha-main { padding: var(--ha-space-6) var(--ha-space-5) var(--ha-space-12); } }
+@media (max-width: 1023px) { .ha-sidebar { display: none; } .ha-menubtn { display: inline-flex; } .ha-topbar__brand { width: auto; min-width: 0; } .ha-topbar__system { display: none; } .ha-topbar { gap: var(--ha-space-3); } .ha-main { padding: var(--ha-space-6) var(--ha-space-5) var(--ha-space-12); } }
 @media (max-width: 900px) { .ha-main { padding: var(--ha-space-5) var(--ha-space-4) var(--ha-space-12); } .ha-topbar__search { display: none; } }
 .ha-drawer { position: fixed; inset: 0; z-index: 85; }
 .ha-drawer__scrim { position: absolute; inset: 0; border: 0; padding: 0; background: var(--ha-scrim); cursor: default; animation: ha-fade var(--ha-dur-panel) var(--ha-ease) both; }
@@ -236,7 +238,7 @@
 .ha-drawer__nav { display: flex; flex-direction: column; gap: var(--ha-space-1); }
 .ha-drawer .ha-nav-item { min-height: 44px; }
 .ha-topbar__search:focus-within { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
-@media (max-width: 720px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
+@media (max-width: 720px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name, .ha-topbar__system { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
 
 /* ── overlays ───────────────────────────────────────────────────────────── */
 .ha-scrim { position: fixed; inset: 0; z-index: 80; background: var(--ha-scrim); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-6); }

@@ -36,3 +36,14 @@ export async function activeNavProfile(user: ProfileSession): Promise<ProfileKin
   const kind = defaultProfileKind(cards, def?.kind ?? null)
   return kind ? navProfileOf(kind) : null
 }
+
+/**
+ * Who the topbar shows (audit "Topbar": the person's or the gallery's name, never the profile kind):
+ * the gallery's name for the gallery profile, else the person; and the person's photo.
+ */
+export async function shellIdentity(userId: number, nav: ProfileKind): Promise<{ name: string | null; avatarUrl: string | null }> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, avatarUrl: true, member: { select: { kind: true, tenant: { select: { name: true } } } } } })
+  if (!u) return { name: null, avatarUrl: null }
+  const gallery = nav === 'gallery' && u.member?.kind === 'GALLERY_STAFF' ? u.member.tenant.name : null
+  return { name: gallery ?? u.name, avatarUrl: u.avatarUrl }
+}

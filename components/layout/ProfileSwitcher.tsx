@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import { AvatarFace } from '@/components/ds/AvatarFace'
 import type { ProfileKindKey } from '@/lib/profiles/core'
 
 export interface SwitcherProfile { kind: ProfileKindKey; name: string; icon: string; active: boolean }
@@ -12,7 +13,8 @@ export interface SwitcherProfile { kind: ProfileKindKey; name: string; icon: str
  * session's profile in place (POST /api/profiles) — there is no separate
  * "choose a profile" screen. With one profile it only shows who is in.
  */
-export function ProfileSwitcher({ initials, label, name, profiles, accountHref = '/account' }: { initials: string; label: string; name?: string; profiles: SwitcherProfile[]; accountHref?: string }) {
+export function ProfileSwitcher({ initials, label, display, avatarUrl = null, name, profiles, accountHref = '/account' }: { initials: string; label: string; display?: string; avatarUrl?: string | null; name?: string; profiles: SwitcherProfile[]; accountHref?: string }) {
+  const who = display || name || label
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -41,9 +43,9 @@ export function ProfileSwitcher({ initials, label, name, profiles, accountHref =
   return (
     <div className="ha-switcher" ref={wrap}>
       <button ref={button} type="button" className="ha-profilebtn" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
-        aria-label={many ? `Perfil ativo: ${label}. Trocar de perfil` : `Conta: ${label}`} onClick={() => setOpen((v) => !v)}>
-        <span className="ha-avatar">{initials}</span>
-        <span className="ha-profilebtn__name">{label}</span>
+        aria-label={many ? `${who}, perfil ${label}. Trocar de perfil` : `Conta de ${who}`} onClick={() => setOpen((v) => !v)}>
+        <span className="ha-avatar"><AvatarFace initials={initials} url={avatarUrl} /></span>
+        <span className="ha-profilebtn__name">{who}</span>
         <Icon name={many ? 'swap_horiz' : 'expand_more'} size={18} />
       </button>
       {open ? (

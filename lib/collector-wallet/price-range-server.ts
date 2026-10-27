@@ -1,5 +1,5 @@
 // "Faixa sugerida" — I/O: the completed sales of an artist in the last 12 months, across the house
-// (total scope on purpose: the range is an aggregate and only shows with five sales or more).
+// (total scope on purpose: the range is an aggregate and only shows with six sales or more, coarse on purpose).
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'

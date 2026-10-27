@@ -20,12 +20,21 @@ export interface PanelInput {
   openOffers: number; biggestOpenOfferCents: bigint | null
   escrowCents: bigint
   views7d: number
+  /** sales of the same stretch of the previous month (day 1 up to the same moment), for "+18% vs. setembro" */
+  prevSalesCents?: bigint; prevMonthName?: string
+}
+
+/** "+18% vs. setembro" · "−5% vs. setembro"; null without a previous stretch to compare (or nothing to say). */
+export function salesComparison(cur: bigint, prev: bigint | undefined, prevMonthName: string | undefined): string | null {
+  if (prev === undefined || !prevMonthName || prev <= 0n) return null
+  const pct = Math.round((Number(cur - prev) / Number(prev)) * 100)
+  return `${pct > 0 ? '+' : pct < 0 ? '−' : ''}${Math.abs(pct)}% vs. ${prevMonthName}`
 }
 export interface PanelKpi { key: string; label: string; value: string; detail: string; icon: string; href: string; dark?: true }
 const brl = (c: bigint) => Number(c / 100n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 export function panelKpis(i: PanelInput, monthName: string): PanelKpi[] {
   return [
-    { key: 'sales', label: `Vendas em ${monthName}`, value: brl(i.monthSalesCents), detail: `${i.monthSalesCount} ${i.monthSalesCount === 1 ? 'obra' : 'obras'}`, icon: 'trending_up', href: '/sales?tab=deals', dark: true },
+    { key: 'sales', label: `Vendas em ${monthName}`, value: brl(i.monthSalesCents), detail: [`${i.monthSalesCount} ${i.monthSalesCount === 1 ? 'obra' : 'obras'}`, salesComparison(i.monthSalesCents, i.prevSalesCents, i.prevMonthName)].filter(Boolean).join(' · '), icon: 'trending_up', href: '/sales?tab=deals', dark: true },
     { key: 'offers', label: 'Ofertas abertas', value: String(i.openOffers), detail: i.biggestOpenOfferCents ? `maior: ${brl(i.biggestOpenOfferCents)}` : 'nenhuma agora', icon: 'request_quote', href: '/sales' },
     { key: 'escrow', label: 'Em garantia', value: brl(i.escrowCents), detail: 'libera na entrega', icon: 'lock', href: '/sales?tab=deals' },
     { key: 'views', label: 'Visualizações', value: i.views7d.toLocaleString('pt-BR'), detail: 'acervo · últimos 7 dias', icon: 'visibility', href: '/artworks' },

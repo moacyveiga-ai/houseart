@@ -7,7 +7,7 @@
 /* header */
 .hp-header { position: sticky; top: 0; z-index: 50; background: var(--ha-ink-900); color: var(--ha-paper-50); border-bottom: var(--ha-border-w) solid var(--ha-ink-700); }
 .hp-header__inner { max-width: var(--ha-max); margin: 0 auto; padding: 0 var(--ha-space-6); height: 64px; display: flex; align-items: center; gap: var(--ha-space-8); }
-.hp-header--home { position: fixed; left: 0; right: 0; background: transparent; border-bottom-color: transparent; transition: background 240ms ease, border-color 240ms ease; backdrop-filter: blur(10px); }
+.hp-header--home { position: fixed; left: 0; right: 0; background: transparent; border-bottom-color: transparent; transition: background var(--ha-dur-panel) var(--ha-ease), border-color var(--ha-dur-panel) var(--ha-ease); backdrop-filter: blur(10px); }
 .hp-header--home .hp-header__inner { height: 72px; }
 .hp-header--home.hp-header--solid { background: rgba(20, 18, 15, .92); border-bottom-color: var(--ha-ink-700); }
 .hp-header__brand { flex: none; display: flex; align-items: center; text-decoration: none; }
@@ -49,9 +49,12 @@
 .hp-btn-sand { display: inline-flex; align-items: center; gap: var(--ha-space-2); font-weight: 600; padding: var(--ha-space-4) var(--ha-space-8); border-radius: var(--ha-radius-md); background: var(--ha-sand-500); color: var(--ha-ink-900); text-decoration: none; }
 .hp-btn-sand:hover { background: var(--ha-sand-600); color: var(--ha-ink-900); }
 .hp-btn-paper { display: inline-flex; align-items: center; font-weight: 600; padding: var(--ha-space-4) var(--ha-space-6); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-paper-50); color: var(--ha-paper-50); text-decoration: none; }
-.hp-btn-paper:hover { background: rgba(251, 250, 247, .08); color: var(--ha-paper-50); }
+.hp-btn-paper:hover { background: color-mix(in srgb, var(--ha-paper-50) 8%, transparent); color: var(--ha-paper-50); }
 .hp-btn-ink { display: inline-flex; align-items: center; gap: var(--ha-space-2); font-weight: 600; padding: var(--ha-space-3) var(--ha-space-5); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-ink-900); color: var(--ha-ink-900); text-decoration: none; background: transparent; cursor: pointer; }
 .hp-btn-ink:hover { background: var(--ha-paper-100); color: var(--ha-ink-900); }
+/* audit design-system §2: the public buttons hover by the 160 ms token and show the sand ring on keyboard focus, like .ha-btn */
+.hp-btn-sand, .hp-btn-paper, .hp-btn-ink, .hp-header__login, .hp-header__cta { transition: background var(--ha-dur-fast) var(--ha-ease), color var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease); }
+.hp-btn-sand:focus-visible, .hp-btn-paper:focus-visible, .hp-btn-ink:focus-visible, .hp-header__login:focus-visible, .hp-header__cta:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .hp-chip { cursor: pointer; font-size: var(--ha-text-body-sm); padding: var(--ha-space-2) var(--ha-space-4); border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-paper-200); background: transparent; color: var(--ha-ink-700); text-decoration: none; white-space: nowrap; }
 .hp-chip--on { border-color: var(--ha-ink-900); background: var(--ha-ink-900); color: var(--ha-paper-50); }
 .hp-section-title { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); color: var(--ha-ink-900); }

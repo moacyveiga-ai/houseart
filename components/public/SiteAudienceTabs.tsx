@@ -9,11 +9,16 @@ export interface AudienceImage { src: string; alt: string }
 
 const AUDIENCES = [
   { name: 'Artistas', title: 'Sua obra com nome, data e dono para sempre.', cta: 'Certificar minhas obras', href: '/signup', items: ['Cadastro pelo celular em menos de dez minutos por obra', 'Certificado com assinatura digital e carimbo do tempo', '5% da valorização a cada revenda, automático', 'Perfil público ligado ao seu Instagram'] },
-  { name: 'Galerias', title: 'Seu inventário inteiro com escritura.', cta: 'Falar com a equipe', href: '/signup', items: ['Certificação em lote em nome dos artistas representados', 'Viewing rooms privados e CRM de colecionadores', 'Frete, seguro e exportação assistida no checkout', 'Repartição automática entre galeria, artista e parceiros'] },
+  { name: 'Galerias', title: 'Seu inventário inteiro com escritura.', cta: 'Falar com a equipe', href: 'contact', items: ['Certificação em lote em nome dos artistas representados', 'Viewing rooms privados e CRM de colecionadores', 'Frete, seguro e exportação assistida no checkout', 'Repartição automática entre galeria, artista e parceiros'] },
   { name: 'Colecionadores', title: 'Sua coleção como patrimônio registrado.', cta: 'Abrir minha carteira', href: '/wallet', items: ['Carteira de escrituras com certificado e proveniência', 'Pagamento em garantia: só libera depois que a obra chega', 'Seguro, laudo de valor e revenda a partir da carteira', 'Transferência registrada mesmo em vendas fora da plataforma'] },
 ] as const
 
-export function SiteAudienceTabs({ images }: { images: (AudienceImage | null)[] }) {
+/** "Falar com a equipe" promises a conversation: the support mail (subject set), else the Suporte section of the page — never the sign-up. */
+function contactHref(supportEmail: string | null): string {
+  return supportEmail ? `mailto:${supportEmail}?subject=${encodeURIComponent('Galeria na HouseArt')}` : '#suporte'
+}
+
+export function SiteAudienceTabs({ images, supportEmail = null }: { images: (AudienceImage | null)[]; supportEmail?: string | null }) {
   const [active, setActive] = useState(0)
   const a = AUDIENCES[active]
   const img = images[active] ?? null
@@ -30,7 +35,9 @@ export function SiteAudienceTabs({ images }: { images: (AudienceImage | null)[] 
           <div className="hp-site-for__items">
             {a.items.map((t) => <div key={t} className="hp-site-for__item"><Icon name="check" size={20} /><span>{t}</span></div>)}
           </div>
-          <Link href={a.href} className="hp-site-btn-ink">{a.cta}</Link>
+          {a.href === 'contact'
+            ? <a href={contactHref(supportEmail)} className="hp-site-btn-ink">{a.cta}</a>
+            : <Link href={a.href} className="hp-site-btn-ink">{a.cta}</Link>}
         </div>
         {img ? (
           <div className="hp-site-for__wall">

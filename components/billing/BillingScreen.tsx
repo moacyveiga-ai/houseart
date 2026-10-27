@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import './billing.css'
 import { Modal } from '@/components/ds/Modal'
 import { Progress } from '@/components/ds/Progress'
 import { Badge } from '@/components/ds/Badge'
@@ -29,27 +30,29 @@ export function BillingScreen({ plan, options, monthLabel, bars, invoices, plans
   return (
     <div className="ha-stack" style={{ gap: 'var(--ha-space-6)' }}>
       <h1 className="ha-h1">Cobrança</h1>
-      <section className="ha-card ha-stack">
-        <div className="ha-eyebrow">Seu plano</div>
+      {/* The prototype's top: the plan in a dark card and the month's usage beside it (stacked below 720 px). */}
+      <div className="ha-billing__top">
         {plan ? (
-          <div className="ha-row ha-row--between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--ha-space-4)' }}>
-            <div><h2 className="ha-h2">{plan.name}</h2><p className="ha-muted">{plan.description}</p></div>
-            <div style={{ textAlign: 'right' }}><div className="ha-h2 ha-num">{plan.priceLabel}<span className="ha-muted ha-sm"> /mês</span></div>
-              {plansOn ? <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => setOpen(true)}>Mudar de plano</button> : null}</div>
-          </div>
-        ) : <p className="ha-muted">Sua conta não tem plano: colecionadores e a equipe pagam só pelos serviços que usam.</p>}
-      </section>
-      {bars.length > 0 ? (
-        <section className="ha-card ha-stack">
-          <div className="ha-eyebrow">Uso em {monthLabel}</div>
-          {bars.map((b) => (
-            <div key={b.key} className="ha-stack" style={{ gap: 'var(--ha-space-1)' }}>
-              <div className="ha-row ha-row--between"><span>{b.label}</span><span className="ha-num ha-muted">{b.text}</span></div>
-              <Progress value={b.pct} label={b.label} />
-            </div>
-          ))}
-        </section>
-      ) : null}
+          <section className="ha-billing__plan">
+            <span className="ha-billing__plan-eyebrow">Seu plano</span>
+            <span className="ha-billing__plan-name">{plan.name}</span>
+            {plan.description ? <span className="ha-billing__plan-desc">{plan.description}</span> : null}
+            <span className="ha-billing__plan-price ha-num">{plan.priceLabel}<span className="ha-billing__plan-per"> /mês</span></span>
+            {plansOn ? <button type="button" className="ha-billing__plan-btn" onClick={() => setOpen(true)}>Mudar de plano</button> : null}
+          </section>
+        ) : <section className="ha-billing__plan"><span className="ha-billing__plan-eyebrow">Seu plano</span><span className="ha-billing__plan-desc">Sua conta não tem plano: colecionadores e a equipe pagam só pelos serviços que usam.</span></section>}
+        {bars.length > 0 ? (
+          <section className="ha-billing__usage">
+            <span className="ha-billing__usage-title">Uso em {monthLabel}</span>
+            {bars.map((b) => (
+              <div key={b.key} className="ha-stack" style={{ gap: 'var(--ha-space-1)' }}>
+                <div className="ha-row ha-row--between ha-sm"><span>{b.label}</span><span className="ha-num">{b.text}</span></div>
+                <Progress value={b.pct} label={b.label} />
+              </div>
+            ))}
+          </section>
+        ) : null}
+      </div>
       <section className="ha-stack">
         <div className="ha-eyebrow">Faturas e notas fiscais</div>
         <div className="ha-table" style={{ '--ha-cols': '110px 2fr 1fr 150px 80px' } as React.CSSProperties}>

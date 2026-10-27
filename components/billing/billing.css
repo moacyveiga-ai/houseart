@@ -1,0 +1,14 @@
+/* Cobrança (handoff "HouseArt Web App" › Cobrança): the plan in a dark card beside the month's usage. */
+.ha-billing__top { display: flex; flex-wrap: wrap; gap: var(--ha-space-6); }
+.ha-billing__plan, .ha-billing__usage { flex: 1 1 320px; padding: var(--ha-space-6); border-radius: var(--ha-radius-md); display: flex; flex-direction: column; gap: var(--ha-space-3); }
+.ha-billing__plan { background: var(--ha-ink-900); color: var(--ha-paper-50); border: var(--ha-border-w) solid var(--ha-ink-700); }
+.ha-billing__plan-eyebrow { font-size: var(--ha-text-caption); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ha-ink-300); }
+.ha-billing__plan-name { font-family: var(--ha-font-display); font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); }
+.ha-billing__plan-desc { font-size: var(--ha-text-body-sm); color: var(--ha-paper-200); }
+.ha-billing__plan-price { font-size: var(--ha-text-h3); }
+.ha-billing__plan-per { font-size: var(--ha-text-body-sm); color: var(--ha-ink-300); }
+.ha-billing__plan-btn { align-self: flex-start; font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; padding: var(--ha-space-2) var(--ha-space-4); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-paper-50); background: transparent; color: var(--ha-paper-50); cursor: pointer; transition: background var(--ha-dur-fast) var(--ha-ease); }
+.ha-billing__plan-btn:hover { background: var(--ha-ink-700); }
+.ha-billing__plan-btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-billing__usage { border: var(--ha-border-w) solid var(--ha-border); }
+.ha-billing__usage-title { font-weight: 600; }

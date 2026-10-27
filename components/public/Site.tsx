@@ -126,7 +126,7 @@ export function Site({ hero, audienceImages, plans, fees, users, supportEmail = 
 
       <section id="para" className="hp-site-for">
         <div className="hp-site-for__inner">
-          <SiteAudienceTabs images={audienceImages} />
+          <SiteAudienceTabs images={audienceImages} supportEmail={supportEmail} />
         </div>
       </section>
 

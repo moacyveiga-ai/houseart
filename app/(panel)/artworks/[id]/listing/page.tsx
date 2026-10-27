@@ -40,7 +40,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={ROLE_REASONS.listing} artworkId={a.id} title={a.title} artistName={a.artist.name} publicId={a.publicId} year={a.year} cover={a.media.find((m) => m.kind === 'FRONT_COLOR_CARD')?.publicUrl ?? null} rules={rules}
           initial={{ listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, saves: listing.stats.saves, likes: listing.stats.likes } }} />
       ) : (
-        <UnlistedCard artworkId={a.id} title={a.title} listPriceCents={a.listPriceCents} state={unlistedState({ id: a.id, status: a.status, seal: a.seal, publicId: a.publicId }, { manage: canManage, edit: true })} />
+        <UnlistedCard artworkId={a.id} title={a.title} listPriceCents={a.listPriceCents} state={unlistedState({ id: a.id, status: a.status, seal: a.seal, publicId: a.publicId }, { manage: canManage && scope.kind !== 'total', edit: true })} />
       )}
     </div>
   )

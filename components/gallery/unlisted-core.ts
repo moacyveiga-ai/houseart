@@ -22,6 +22,9 @@ export function unlistedState(a: { id: number; status: string; seal: string; pub
     case 'AUTHENTICATED':
       if (a.seal !== 'GREEN') return { icon: 'pending', title: 'Selo em análise', sub: 'A obra só vai ao marketplace com o selo "Obra Autenticada" verde.', action: null }
       return { icon: 'sell', title: 'Vender esta obra', sub: can.manage ? 'Defina o preço e o piso — o piso só você vê.' : 'Quem tem o papel de Vendas ou Admin publica a obra no marketplace.', action: can.manage ? { kind: 'sell' } : null }
+    case 'LISTED':
+      // listed without an active mandate (the listing manager needs one): say so, never "fora do marketplace"
+      return { icon: 'warning', title: 'Anúncio sem mandato ativo', sub: 'A obra está marcada como à venda, mas sem preço e piso vigentes. Abra o cadastro para retirar e listar de novo.', action: edit }
     case 'IN_DEAL':
       return { icon: 'handshake', title: 'Reservada · em negociação', sub: 'Há um negócio em andamento para esta obra.', action: { kind: 'link', label: 'Acompanhar a venda', href: '/sales?tab=deals', icon: 'local_shipping' } }
     case 'SOLD':

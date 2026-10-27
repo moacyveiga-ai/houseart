@@ -20,5 +20,6 @@ describe('unlistedState', () => {
     expect(unlistedState(art('IN_DEAL'), { manage: false, edit: false }).action).toMatchObject({ href: '/sales?tab=deals' })
     expect(unlistedState(art('STOLEN'), all).action).toBeNull()
     expect(unlistedState(art('SOLD'), all).action).toBeNull()
+    expect(unlistedState(art('LISTED'), all)).toMatchObject({ title: 'Anúncio sem mandato ativo', action: { href: '/artworks/7/edit' } })
   })
 })

@@ -14,7 +14,7 @@ export function UnlistedCard({ artworkId, title, listPriceCents, state }: { artw
         <span className="ha-muted ha-sm">{state.sub}</span>
       </div>
       {a?.kind === 'link' ? <Link href={a.href} className="ha-btn ha-btn--ink ha-btn--sm"><Icon name={a.icon} size={18} />{a.label}</Link> : null}
-      {a?.kind === 'sell' ? <ListForSaleDialog artworkId={artworkId} title={title} defaultPrice={listPriceCents ? String(Number(listPriceCents) / 100) : ''} listed={false} /> : null}
+      {a?.kind === 'sell' ? <ListForSaleDialog artworkId={artworkId} title={title} defaultPrice={listPriceCents ? String(listPriceCents / 100n) : ''} listed={false} /> : null}
     </section>
   )
 }

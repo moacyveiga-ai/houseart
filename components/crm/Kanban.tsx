@@ -1,11 +1,11 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import type { KanbanCard } from '@/lib/crm/server'
 import type { Stage } from '@/lib/crm/core'
 import { Icon } from '@/components/ds/Icon'
-import { moveCard, neighbourStage, stageOf } from './kanban-core'
+import { moveCard, neighbourStage, placeOf, stageAtPoint } from './kanban-core'
 
 export function Kanban({ columns: initial }: { columns: { stage: Stage; label: string; cards: KanbanCard[] }[] }) {
   const [columns, setColumns] = useState(initial)
@@ -15,19 +15,40 @@ export function Kanban({ columns: initial }: { columns: { stage: Stage; label: s
   const [dragging, setDragging] = useState<number | null>(null)
   const [over, setOver] = useState<Stage | null>(null)
   const [live, setLive] = useState('')
-  const pointer = useRef<{ id: number; pointerId: number; x: number; y: number } | null>(null)
+  const pointer = useRef<{ id: number; pointerId: number; x: number; y: number; scroll: number } | null>(null)
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null)
+  const board = useRef<HTMLDivElement>(null)
+  const inFlight = useRef(new Set<number>())
+  const refocus = useRef<number | null>(null)
   const labelOf = (st: Stage) => columns.find((c) => c.stage === st)?.label ?? st
 
-  // optimistic: the card moves now; a refusal puts it back where it was
-  async function move(cardId: number, stage: Stage) {
-    const before = columns
-    const next = moveCard(before, cardId, stage)
-    if (next === before) return
-    setColumns(next)
+  // a card that changes column is remounted by React: give the keyboard focus back to it
+  useEffect(() => {
+    if (refocus.current === null) return
+    board.current?.querySelector<HTMLElement>(`[data-card="${refocus.current}"]`)?.focus()
+    refocus.current = null
+  }, [columns])
+
+  // optimistic: the card moves now; a refusal puts it back where it was. One move per card at a time.
+  async function move(cardId: number, stage: Stage, keepFocus = false) {
+    if (inFlight.current.has(cardId)) return
+    const from = placeOf(columns, cardId)
+    if (!from || from.stage === stage) return
+    inFlight.current.add(cardId)
+    setColumns((cur) => moveCard(cur, cardId, stage))
+    if (keepFocus) refocus.current = cardId
     const res = await fetch(`/api/crm/opportunities/${cardId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stage, outcome: stage === 'CLOSED' ? 'WON' : null }) }).catch(() => null)
+    inFlight.current.delete(cardId)
+    if (res?.status === 409) {
+      // someone else moved it: the board on screen is stale, read it again
+      setToast('Este cartão mudou em outro lugar. Atualizando o quadro…')
+      setLive('O cartão mudou em outro lugar. Atualizando o quadro.')
+      window.location.reload()
+      return
+    }
     if (!res || !res.ok) {
-      setColumns((cur) => { const from = stageOf(before, cardId); return from ? moveCard(cur, cardId, from) : cur })
+      setColumns((cur) => moveCard(cur, cardId, from.stage, from.index))
+      if (keepFocus) refocus.current = cardId
       setToast('Não foi possível mover. O cartão voltou para onde estava.')
       setLive('Não foi possível mover o cartão.')
       return
@@ -36,22 +57,31 @@ export function Kanban({ columns: initial }: { columns: { stage: Stage; label: s
   }
 
   function endDrag() { setDragging(null); setOver(null); setOffset(null); pointer.current = null }
-  // touch and pen: drag by the handle (mouse uses the browser's drag and drop on the whole card)
+  // touch and pen: drag by the handle (mouse uses the browser's drag and drop on the whole card).
+  // The column is found by the columns' boxes: the dragged card sits under the finger.
   function stageAt(x: number, y: number): Stage | null {
-    const el = document.elementFromPoint(x, y)?.closest('[data-stage]') as HTMLElement | null
-    return (el?.dataset.stage as Stage | undefined) ?? null
+    const boxes = [...(board.current?.querySelectorAll<HTMLElement>('[data-stage]') ?? [])].map((el) => {
+      const r = el.getBoundingClientRect()
+      return { stage: el.dataset.stage as Stage, left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+    })
+    return stageAtPoint(boxes, x, y)
   }
   function onHandleDown(e: React.PointerEvent, cardId: number) {
     if (e.pointerType === 'mouse') return
     e.preventDefault()
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    pointer.current = { id: cardId, pointerId: e.pointerId, x: e.clientX, y: e.clientY }
+    pointer.current = { id: cardId, pointerId: e.pointerId, x: e.clientX, y: e.clientY, scroll: board.current?.scrollLeft ?? 0 }
     setDragging(cardId)
   }
   function onHandleMove(e: React.PointerEvent) {
     const p = pointer.current
-    if (!p || p.pointerId !== e.pointerId) return
-    setOffset({ x: e.clientX - p.x, y: e.clientY - p.y })
+    const el = board.current
+    if (!p || p.pointerId !== e.pointerId || !el) return
+    // near the board's edge, scroll it so the columns off screen are reachable
+    const r = el.getBoundingClientRect()
+    if (e.clientX > r.right - 40) el.scrollLeft += 12
+    else if (e.clientX < r.left + 40) el.scrollLeft -= 12
+    setOffset({ x: e.clientX - p.x + (el.scrollLeft - p.scroll), y: e.clientY - p.y })
     setOver(stageAt(e.clientX, e.clientY))
   }
   function onHandleUp(e: React.PointerEvent) {
@@ -65,7 +95,7 @@ export function Kanban({ columns: initial }: { columns: { stage: Stage; label: s
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
     e.preventDefault()
     const to = neighbourStage(columns, card.stage, e.key === 'ArrowLeft' ? -1 : 1)
-    if (to) void move(card.id, to)
+    if (to) void move(card.id, to, true)
   }
 
   async function add(e: React.FormEvent) {
@@ -78,7 +108,7 @@ export function Kanban({ columns: initial }: { columns: { stage: Stage; label: s
     <div className="ha-stack">
       <div className="ha-row ha-row--end"><button type="button" className="ha-btn ha-btn--primary ha-btn--sm" onClick={() => setAdding(true)}>+ Interessado</button></div>
       <p id="crm-drag-help" className="ha-muted ha-sm">Arraste os cartões entre as colunas. No teclado, selecione o cartão e use as setas ← e →.</p>
-      <div className="ha-kanban">
+      <div className="ha-kanban" ref={board}>
         {columns.map((col) => (
           <div key={col.stage} data-stage={col.stage} className={`ha-kanban__col${over === col.stage && dragging !== null ? ' ha-kanban__col--over' : ''}`}
             onDragOver={(e) => { if (dragging === null) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (over !== col.stage) setOver(col.stage) }}
@@ -87,7 +117,7 @@ export function Kanban({ columns: initial }: { columns: { stage: Stage; label: s
             <div className="ha-row"><b>{col.label}</b><span className="ha-nav-badge">{col.cards.length}</span></div>
             {col.cards.map((card) => (
               <div key={card.id} data-card={card.id} className={`ha-kanban__card${dragging === card.id ? ' ha-kanban__card--dragging' : ''}`}
-                draggable tabIndex={0} aria-describedby="crm-drag-help" aria-label={`${card.name}, ${col.label}`}
+                draggable tabIndex={0} role="group" aria-describedby="crm-drag-help" aria-label={`${card.name}, ${col.label}`}
                 style={dragging === card.id && offset ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined}
                 onDragStart={(e) => { e.dataTransfer.setData('text/plain', String(card.id)); e.dataTransfer.effectAllowed = 'move'; setDragging(card.id) }}
                 onDragEnd={endDrag}

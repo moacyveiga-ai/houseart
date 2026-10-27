@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { moveCard, neighbourStage, stageOf, type Column } from './kanban-core'
+import { moveCard, neighbourStage, placeOf, stageAtPoint, stageOf, type Column } from './kanban-core'
 
 const card = (id: number, stage: Column['stage']) => ({ id, initials: 'AB', name: 'Ana', interest: '—', value: '—', when: 'hoje', stage })
 const board = (): Column[] => [
@@ -27,5 +27,19 @@ describe('kanban-core', () => {
     expect(neighbourStage(board(), 'INTERESTED', -1)).toBeNull()
     expect(neighbourStage(board(), 'INTERESTED', 1)).toBe('IN_CONVERSATION')
     expect(neighbourStage(board(), 'CLOSED', 1)).toBeNull()
+  })
+  it('devolve o cartão à posição de antes', () => {
+    const b = board()
+    const where = placeOf(b, 2)!
+    expect(where).toEqual({ stage: 'INTERESTED', index: 1 })
+    const back = moveCard(moveCard(b, 2, 'OFFER'), 2, where.stage, where.index)
+    expect(back[0].cards.map((c) => c.id)).toEqual([1, 2])
+    expect(moveCard(b, 2, 'OFFER', 9)[2].cards.map((c) => c.id)).toEqual([3, 2])
+  })
+  it('acha a coluna pelo retângulo', () => {
+    const boxes = [{ stage: 'INTERESTED' as const, left: 0, right: 100, top: 0, bottom: 500 }, { stage: 'OFFER' as const, left: 110, right: 210, top: 0, bottom: 500 }]
+    expect(stageAtPoint(boxes, 150, 40)).toBe('OFFER')
+    expect(stageAtPoint(boxes, 105, 40)).toBeNull()
+    expect(stageAtPoint(boxes, 50, 900)).toBeNull()
   })
 })

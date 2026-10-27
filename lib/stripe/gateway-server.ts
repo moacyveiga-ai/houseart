@@ -34,6 +34,8 @@ export interface PaymentIntentInput {
   description: string
   capture_method: 'automatic' | 'manual'
   metadata: Record<string, string>
+  /** Card installments (Brazil, no interest): 2+ asks Stripe for a fixed-count monthly plan. */
+  installments?: number
 }
 
 /** Pix or boleto: an async PaymentIntent confirmed at once; the buyer pays outside (QR / voucher) and the webhook says when. */
@@ -111,7 +113,9 @@ export function realGateway(secretKey: string): StripeGateway {
     },
     async detachPaymentMethod(id) { await s.paymentMethods.detach(id) },
     async createPaymentIntent(p, idempotencyKey) {
-      return toPi(await s.paymentIntents.create({ ...p, off_session: true, confirm: true }, { idempotencyKey }))
+      const { installments, ...rest } = p
+      const plan = installments && installments > 1 ? { payment_method_options: { card: { installments: { enabled: true, plan: { count: installments, interval: 'month' as const, type: 'fixed_count' as const } } } } } : {}
+      return toPi(await s.paymentIntents.create({ ...rest, ...plan, off_session: true, confirm: true }, { idempotencyKey }))
     },
     async capturePaymentIntent(id, amountToCapture, idempotencyKey) { return toPi(await s.paymentIntents.capture(id, { amount_to_capture: amountToCapture }, { idempotencyKey })) },
     async cancelPaymentIntent(id, idempotencyKey) { return toPi(await s.paymentIntents.cancel(id, {}, { idempotencyKey })) },

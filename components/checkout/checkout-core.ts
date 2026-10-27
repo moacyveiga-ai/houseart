@@ -50,6 +50,11 @@ export const PAY_METHODS: { key: PayMethod; name: string; sub: string; icon: str
   { key: 'BOLETO', name: 'Boleto', sub: '1 dia útil', icon: 'receipt_long' },
 ]
 
+/** The card's line under "Cartão": the largest plan this total allows, or the escrow note when it is 1× only. */
+export function cardSub(maxInstallments: number): string {
+  return maxInstallments > 1 ? `até ${maxInstallments}× sem juros` : 'cobrado agora, em garantia'
+}
+
 export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null; /** the CEP was typed but did not quote */ cepFailed?: boolean }
 
 /** Why the order cannot be confirmed yet (null = ready). */
@@ -62,11 +67,13 @@ export function blockedReason(i: ReadyInput): string | null {
 }
 
 /** The primary button (prototype `ckCta`): "Pagar R$ … com Pix" / "no boleto"; the card says "Confirmar pedido" or asks for a card. */
-export function ctaLabel(i: { hasCard: boolean; total: number; method?: PayMethod }, format: (cents: number) => string): string {
+export function ctaLabel(i: { hasCard: boolean; total: number; method?: PayMethod; installments?: number }, format: (cents: number) => string): string {
   const method = i.method ?? 'CARD'
   if (method === 'PIX') return `Pagar ${format(i.total)} com Pix`
   if (method === 'BOLETO') return `Pagar ${format(i.total)} no boleto`
-  return i.hasCard ? `Confirmar pedido · ${format(i.total)}` : 'Adicionar cartão para pagar'
+  if (!i.hasCard) return 'Adicionar cartão para pagar'
+  const n = i.installments ?? 1
+  return n > 1 ? `Pagar ${n}× de ${format(Math.ceil(i.total / n))}` : `Confirmar pedido · ${format(i.total)}`
 }
 
 // ── card form masks (prototype `onNcNum` / `onNcExp` / `onNcCep`) ────────

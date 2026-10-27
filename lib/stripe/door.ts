@@ -117,7 +117,7 @@ const toCents = (v: bigint): number => {
   return Number(v)
 }
 
-async function confirmIntent(i: { amountCents: bigint; description: string; payerUserId: number; paymentMethodId: number | null; idempotencyKey: string; capture: 'automatic' | 'manual'; metadata: Record<string, string> }): Promise<{ pi: GwPaymentIntent; paymentMethodId: number }> {
+async function confirmIntent(i: { amountCents: bigint; description: string; payerUserId: number; paymentMethodId: number | null; idempotencyKey: string; capture: 'automatic' | 'manual'; metadata: Record<string, string>; installments?: number }): Promise<{ pi: GwPaymentIntent; paymentMethodId: number }> {
   const card = await payerCard(i.payerUserId, i.paymentMethodId)
   if (!card) throw fail(NO_CARD)
   const customer = await customerOf(i.payerUserId)
@@ -125,8 +125,12 @@ async function confirmIntent(i: { amountCents: bigint; description: string; paye
   try {
     // The key carries the card: Stripe replays a stored decline for the same key for 24 h, so paying
     // again with ANOTHER card must be a new request; the same card stays one charge (double clicks, retries).
-    pi = await stripeGateway().createPaymentIntent({ amount: toCents(i.amountCents), currency: 'brl', customer, payment_method: card.providerRef, description: i.description.slice(0, 200), capture_method: i.capture, metadata: { ...i.metadata, userId: String(i.payerUserId) } }, `${i.idempotencyKey}:pm${card.id}`)
-  } catch (e) { throw stripeFailure(e) }
+    pi = await stripeGateway().createPaymentIntent({ amount: toCents(i.amountCents), currency: 'brl', customer, payment_method: card.providerRef, description: i.description.slice(0, 200), capture_method: i.capture, metadata: { ...i.metadata, userId: String(i.payerUserId) }, ...(i.installments && i.installments > 1 ? { installments: i.installments } : {}) }, `${i.idempotencyKey}:pm${card.id}${i.installments && i.installments > 1 ? `:x${i.installments}` : ''}`)
+  } catch (e) {
+    // a card (or account) that does not take installments: say so, the buyer can pay 1× right after
+    if (i.installments && i.installments > 1 && (e as { type?: string })?.type === 'StripeInvalidRequestError') throw new ArtworkError('INSTALLMENTS_REFUSED', 'Este cartão não aceitou o parcelamento. Pague em 1× ou use outro cartão.', 400)
+    throw stripeFailure(e)
+  }
   const f = failureOfStatus(pi.status, i.capture === 'manual' ? 'requires_capture' : 'succeeded')
   if (f) {
     // nothing is left half-way at Stripe: a PI that did not reach the state is cancelled
@@ -169,7 +173,7 @@ export async function chargeCard(i: { amountCents: bigint; description: string; 
 }
 
 /** Authorizes (does not charge) the amount on a saved card: the offer guarantee. Test/live only. */
-export async function authorizeHold(i: { amountCents: bigint; description: string; payerUserId: number; paymentMethodId: number | null; idempotencyKey: string; metadata: Record<string, string> }): Promise<{ ref: string; paymentMethodId: number }> {
+export async function authorizeHold(i: { amountCents: bigint; description: string; payerUserId: number; paymentMethodId: number | null; idempotencyKey: string; metadata: Record<string, string>; installments?: number }): Promise<{ ref: string; paymentMethodId: number }> {
   assertChargeAllowed()
   const { pi, paymentMethodId } = await confirmIntent({ ...i, capture: 'manual' })
   return { ref: pi.id, paymentMethodId }

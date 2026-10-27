@@ -4,6 +4,7 @@ import '@/components/checkout/checkout.css'
 import { ButtonLink } from '@/components/ds/Button'
 import { CheckoutScreen } from '@/components/checkout/CheckoutScreen'
 import { getSession } from '@/lib/auth'
+import { flagOn } from '@/lib/flags'
 import { addressesOf } from '@/lib/addresses/server'
 import { isPublicId } from '@/lib/physical-markers/domain'
 import { publicArtwork } from '@/lib/marketplace/public-server'
@@ -56,6 +57,7 @@ export default async function BuyArtworkPage({ params }: Params) {
   return (
     <CheckoutScreen
       buyerName={session.name}
+      installmentsOn={flagOn('FLAG_CARD_INSTALLMENTS')}
       addresses={(await addressesOf(session.id).catch(() => [])).map((x) => ({ id: x.id, label: x.label, line: x.line, cep: x.cep, isDefault: x.isDefault }))}
       artwork={{
         publicId: a.publicId, title: a.title, year: a.year, artist: a.artist, technique: a.technique, dimensions: a.dimensions, cover: a.cover,

@@ -208,6 +208,21 @@ describe('buy now', () => {
     expect(fake.intents.get(row.guaranteeRef!)).toMatchObject({ status: 'succeeded', amount_received: total })
     expect((await prisma.deal.findUniqueOrThrow({ where: { id: r.dealId! } })).phase).toBe('ESCROW')
   })
+  it('parcela no cartão: o plano vai à Stripe e fica na proposta; plano fora da régua é recusado sem cobrar', async () => {
+    const c = await saveCard(buyerId)
+    const off = await buyNow({ publicId: PUBLIC_ID, buyerUserId: buyerId, buyerName: 'Mariana Barreto', buyerEmail: 'mariana@col.test', buyerDocument: null, paymentMethodId: c.id, deliveryCep: '40140180', insurance: true, installments: 3 })
+    expect(off).toMatchObject({ ok: false }) // FLAG_CARD_INSTALLMENTS off: only 1×
+    process.env.FLAG_CARD_INSTALLMENTS = '1'
+    try {
+    const bad = await buyNow({ publicId: PUBLIC_ID, buyerUserId: buyerId, buyerName: 'Mariana Barreto', buyerEmail: 'mariana@col.test', buyerDocument: null, paymentMethodId: c.id, deliveryCep: '40140180', insurance: true, installments: 4 })
+    expect(bad).toMatchObject({ ok: false })
+    expect(fake.calls.filter((x) => x.op === 'pi')).toHaveLength(0)
+    const r = await buyNow({ publicId: PUBLIC_ID, buyerUserId: buyerId, buyerName: 'Mariana Barreto', buyerEmail: 'mariana@col.test', buyerDocument: null, paymentMethodId: c.id, deliveryCep: '40140180', insurance: true, installments: 3 })
+    expect(r).toMatchObject({ ok: true }); if (!r.ok) return
+    expect((await prisma.offer.findUniqueOrThrow({ where: { code: r.code } })).cardInstallments).toBe(3)
+    expect(fake.calls.find((x) => x.op === 'pi')?.params).toMatchObject({ installments: 3 })
+    } finally { delete process.env.FLAG_CARD_INSTALLMENTS }
+  })
 })
 
 describe('webhook', () => {

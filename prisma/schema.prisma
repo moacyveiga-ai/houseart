@@ -574,6 +574,7 @@ model Offer {
   guaranteeStatus     String? // GUARANTEE_STATUSES of lib/stripe/mode-core.ts; null = mock or no hold
   paymentMethodId     Int?
   deliveryCep         String?
+  cardInstallments    Int? // direct buy by card: 1, 3, 6 or 10 installments of the same total (no interest); null = not a card buy or before installments
   shippingCents       BigInt        @default(0)
   insuranceCents      BigInt        @default(0)
   createdAt           DateTime      @default(now())

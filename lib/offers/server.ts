@@ -21,6 +21,7 @@ import { formatBRL as formatReais } from '@/lib/format'
 const formatBRL = (c: bigint) => formatReais(Number(c) / 100, { casas: 0 })
 import { syncOpportunityFromOffer } from '@/lib/crm/server'
 import { cancelUnpaidDeal, createDealFromOffer, startEscrowPayment } from '@/lib/deals/server'
+import { validInstallments } from '@/lib/payments/installments-core'
 import { boletoBillingProblem, type BoletoBilling, type EscrowMethod, type PaymentInstructions } from '@/lib/payments/async-core'
 import { LIVE_STATUSES, OFFER_VALIDITY_DAYS, offerCode, OTP_MAX_ATTEMPTS, OTP_TTL_MS, RETRACTION_WINDOW_MS, type OfferStatus } from './domain'
 import { evaluateOffer, mandateProblems } from './mandate-core'
@@ -417,7 +418,9 @@ export async function buyerReply(code: string, token: BuyerAuth, reply: { accept
 // ── direct purchase ("Comprar direto") ────────────────────────────────────
 export interface BuyNowInput { publicId: string; buyerUserId: number; buyerName: string; buyerEmail: string; buyerDocument: string | null; buyerCity?: string | null; paymentMethodId: number | null; deliveryCep: string | null; insurance: boolean
   /** How the escrow is paid: CARD (default — captured now), PIX or BOLETO (instructions; paid when the bank confirms). */
-  method?: EscrowMethod; billing?: BoletoBilling | null }
+  method?: EscrowMethod; billing?: BoletoBilling | null
+  /** Card only: 1×, 3×, 6× or 10× of the same total (no interest), checked against `installmentOptions`. */
+  installments?: number }
 
 /**
  * Buys at the list price: the offer is born ACCEPTED (the list price always
@@ -450,9 +453,12 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     let ref = `mock_capture_${card.id}_${price}_${Date.now()}`
     let status: 'AUTHORIZED' | null = null
     const total = price + quote.shippingCents + insurance
+    const installments = i.installments ?? 1
+    if (installments > 1 && !flagOn('FLAG_CARD_INSTALLMENTS')) return { ok: false, error: 'O parcelamento ainda não está disponível.' }
+    if (!validInstallments(Number(total), installments)) return { ok: false, error: 'Este parcelamento não está disponível para o valor da compra.' }
     if (stripeMode() !== 'mock') {
       try {
-        const h = await authorizeHold({ amountCents: total, description: 'Compra direta · HouseArt', payerUserId: i.buyerUserId, paymentMethodId: card.id, idempotencyKey: `buy-now:${a.id}:${i.buyerUserId}:${randomBytes(9).toString('base64url')}`, metadata: { kind: 'buy_now', artworkId: String(a.id) } })
+        const h = await authorizeHold({ amountCents: total, description: 'Compra direta · HouseArt', payerUserId: i.buyerUserId, paymentMethodId: card.id, idempotencyKey: `buy-now:${a.id}:${i.buyerUserId}:${randomBytes(9).toString('base64url')}`, metadata: { kind: 'buy_now', artworkId: String(a.id), installments: String(installments) }, installments })
         ref = h.ref; status = 'AUTHORIZED'
       } catch (e) {
         if (e instanceof ArtworkError) return { ok: false, error: e.message }
@@ -468,7 +474,7 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
           code: offerCode(year, seq + 1), artworkId: a.id, mandateId: mandate?.id ?? null, sellerMemberId: a.memberId, memberId: a.memberId,
           buyerUserId: i.buyerUserId, buyerName: i.buyerName.trim().slice(0, 120), buyerEmail: email, buyerDocumentHash: doc?.hash ?? null, buyerDocumentEnc: doc?.enc ?? null, buyerDocumentMask: doc?.mask ?? null,
           buyerKind: 'COLLECTOR', buyerCity: i.buyerCity?.trim().slice(0, 80) || null, offeredCents: price, acceptedCents: price, status: 'ACCEPTED', expiresAt: new Date(Date.now() + 86_400_000),
-          validityHours: 24, guaranteeMethod: 'CARD_HOLD', guaranteeRef: ref, guaranteeStatus: status, paymentMethodId: card.id, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: insurance,
+          validityHours: 24, guaranteeMethod: 'CARD_HOLD', guaranteeRef: ref, guaranteeStatus: status, paymentMethodId: card.id, cardInstallments: installments, deliveryCep: quote.cep, shippingCents: quote.shippingCents, insuranceCents: insurance,
           retractionTokenHash: null, retractionIssuedAt: new Date(),
           rounds: { create: { number: 1, author: 'BUYER', amountCents: price, message: 'Compra direta ao preço pedido.' } },
           events: { create: [{ kind: 'CREATED', actorKind: 'BUYER', payloadJson: JSON.stringify({ offeredCents: price.toString(), direct: true }) }, { kind: 'CONFIRMED', actorKind: 'BUYER' }, { kind: 'ACCEPTED', actorKind: 'SYSTEM', payloadJson: JSON.stringify({ amountCents: price.toString(), reason: 'list_price' }) }] },
@@ -486,7 +492,7 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     await notify({ userId: seller?.userId ?? null, email: seller?.user?.email, kind: 'offer.auto_accepted', title: `Compra direta · ${offer.code}`, body: 'A obra foi comprada ao preço pedido e o valor está em garantia.', href: '/sales?tab=deals', emailSubject: 'Sua obra foi comprada' })
     await syncOpportunityFromOffer(offer.id)
     const deal = await createDealFromOffer(offer.id)
-    void audit.event({ entity: 'offer', entityId: offer.id, action: 'buy_now', userId: i.buyerUserId, after: { code: offer.code } })
+    void audit.event({ entity: 'offer', entityId: offer.id, action: 'buy_now', userId: i.buyerUserId, after: { code: offer.code, installments } })
     return { ok: true, code: offer.code, dealId: deal?.id ?? null }
   })
 }

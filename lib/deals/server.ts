@@ -22,6 +22,7 @@ import { computeSplit, SPLIT_PARTY_LABELS, type SplitLine } from '@/lib/commissi
 import { royaltyFor } from '@/lib/resale-royalty/core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
+import { counterpartOfMember, openConversationWith } from '@/lib/messaging/server'
 import { dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
 import { hasReceipt, receiptOf } from './receipt-core'
 import { escrowChargedCents } from '@/lib/payment-methods/ledger-core'
@@ -204,6 +205,20 @@ export async function dealReceiptPdf(id: number, side: 'BUYER' | 'SELLER', actor
   const finance = side === 'SELLER' ? saleFinance({ amountCents: v.amountCents, market: v.market, sellerKind: v.sellerKind, artistName: v.artist, split: v.split }) : []
   const receipt = receiptOf({ side, code: v.code, artworkTitle: v.artworkTitle, artist: v.artist, sellerName: v.sellerName, buyerName: v.buyerName, market: v.market, completedAt: v.completedAt, amountCents: v.amountCents, shippingCents: v.shippingCents, insuranceCents: v.insuranceCents, chargedCents: escrowChargedCents({ ...d, offerHoldRef: d.offer.guaranteeRef }), finance })
   return { pdf: await renderReceiptPdf(receipt, new Date()), filename: `houseart-comprovante-${v.code}.pdf` }
+}
+
+/**
+ * "Falar com o vendedor" in the buyer's purchase: the conversation about the artwork with who SOLD it
+ * (the deal's seller member), never the artwork's current holder — after the deed the holder is the buyer.
+ */
+export async function openDealConversation(userId: number, id: number): Promise<number> {
+  const d = await prisma.deal.findFirst({ where: { id, buyerUserId: userId }, select: { sellerMemberId: true, artworkId: true, exceptionStatus: true } })
+  if (!d) throw new ArtworkError('NOT_FOUND', 'Negócio não encontrado.', 404)
+  // the button is not offered on a cancelled deal; the route says the same
+  if (d.exceptionStatus === 'CANCELLED') throw new ArtworkError('DEAL_CANCELLED', 'Este negócio foi cancelado.', 409)
+  const seller = await counterpartOfMember(d.sellerMemberId)
+  if (!seller) throw new ArtworkError('NO_COUNTERPART', 'O vendedor não tem quem responda agora. Fale com a HouseArt.', 404)
+  return openConversationWith(userId, seller.userId, d.artworkId)
 }
 
 async function buyerDeal(userId: number, id: number) {

@@ -188,6 +188,9 @@
 .ha-topbar__search .ha-icon { font-size: 20px; }
 .ha-topbar__right { margin-left: auto; display: flex; align-items: center; gap: var(--ha-space-4); flex: none; }
 .ha-bell { position: relative; color: var(--ha-fg); }
+/* audit design-system §4: 44 px touch targets on the phone — bell, menu button, modal close */
+@media (max-width: 720px) { .ha-bell, .ha-menubtn, .ha-modal__close { min-width: 44px; min-height: 44px; justify-content: center; } }
+.ha-modal:focus, .ha-cap:focus { outline: none; }
 .ha-bell__dot { position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--ha-sand-500); }
 .ha-profilebtn { display: flex; align-items: center; gap: var(--ha-space-2); border: var(--ha-border-w) solid var(--ha-border); background: var(--ha-bg); border-radius: var(--ha-radius-full); padding: var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-1); cursor: pointer; text-decoration: none; }
 .ha-profilebtn:hover { border-color: var(--ha-ink-900); }

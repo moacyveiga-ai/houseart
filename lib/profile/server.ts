@@ -4,7 +4,7 @@
 import sharp from 'sharp'
 import { prisma } from '@/lib/prisma'
 import { contentTypeOf } from '@/lib/storage/content-type'
-import { savePublicFile } from '@/lib/storage/blob'
+import { deletePublicFile, savePublicFile } from '@/lib/storage/blob'
 import { contentImageVerdict } from '@/lib/public-content/editor-core'
 import { AVATAR_SIDE, cleanAbout } from './core'
 
@@ -26,7 +26,7 @@ export class AvatarError extends Error {
 /**
  * The profile photo: the bytes are checked (JPEG, PNG or WebP, 10 MB), re-encoded as a 512 px square
  * JPEG without EXIF/GPS (refused above 40 MP before decoding) and kept as a public derivative —
- * it is the face beside the person's name. The previous file is not deleted (it is unlinked).
+ * it is the face beside the person's name. The previous file is deleted after the new one is saved.
  */
 export async function setAvatar(userId: number, bytes: Buffer): Promise<string> {
   const v = contentImageVerdict(contentTypeOf(bytes.subarray(0, 32), null), bytes.length)
@@ -38,10 +38,15 @@ export async function setAvatar(userId: number, bytes: Buffer): Promise<string> 
       .flatten({ background: '#ffffff' }).jpeg({ quality: 85 }).toBuffer()
   } catch { throw new AvatarError(415, 'Imagem ilegível.') }
   const url = await savePublicFile({ buffer: out, contentType: 'image/jpeg', prefix: 'content/avatars' })
+  const before = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarUrl: true } })
   await prisma.user.update({ where: { id: userId }, data: { avatarUrl: url } })
+  if (before.avatarUrl && before.avatarUrl !== url) await deletePublicFile(before.avatarUrl)
   return url
 }
 
+/** "Remover": the column is cleared and the file deleted (it is a photo of the person). */
 export async function clearAvatar(userId: number): Promise<void> {
+  const before = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarUrl: true } })
   await prisma.user.update({ where: { id: userId }, data: { avatarUrl: null } })
+  if (before.avatarUrl) await deletePublicFile(before.avatarUrl)
 }

@@ -112,6 +112,10 @@ describe('sobre você e foto', () => {
     expect(await setAbout(buyerId, '  Coleciono   gravura baiana ')).toEqual({ ok: true })
     await prisma.user.update({ where: { id: buyerId }, data: { avatarUrl: '/api/public/media/content/avatars/x.jpg', preferencesJson: JSON.stringify({ city: 'Salvador', about: 'Coleciono gravura baiana' }) } })
     expect(await identityOf(buyerId)).toMatchObject({ about: 'Coleciono gravura baiana', city: 'Salvador', avatarUrl: '/api/public/media/content/avatars/x.jpg' })
+    // the onboarding preferences keep the about line
+    const { savePreferences } = await import('@/lib/accounts/preferences-server')
+    await savePreferences(buyerId, { city: 'Salvador' })
+    expect((await identityOf(buyerId)).about).toBe('Coleciono gravura baiana')
     await setAbout(buyerId, '')
     await clearAvatar(buyerId)
     expect(await identityOf(buyerId)).toMatchObject({ about: '', city: 'Salvador', avatarUrl: null })

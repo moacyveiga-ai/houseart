@@ -5,7 +5,7 @@
 //    `public/<key>` and is served by the app at `/api/public/media/<key>`, with an
 //    immutable cache header so the CDN keeps it — one store is enough in production;
 //  · neither (dev/test): `public/uploads`.
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { privateStoreToken } from './private-vault'
 
@@ -77,4 +77,34 @@ export async function readPublicFile(url: string): Promise<Buffer> {
     return Buffer.from(await res.arrayBuffer())
   }
   return readFile(path.join(process.cwd(), 'public', url.replace(/^\//, '')))
+}
+
+/**
+ * Deletes a public file saved by `savePublicFile` (best-effort: a file already gone is fine). Used
+ * when a person removes or replaces something personal, like the profile photo.
+ */
+export async function deletePublicFile(url: string): Promise<void> {
+  try {
+    if (url.startsWith(PUBLIC_MEDIA_ROUTE)) {
+      const key = url.slice(PUBLIC_MEDIA_ROUTE.length)
+      const token = privateStoreToken()
+      if (!isPublicMediaKey(key) || !token) return
+      const { del } = await import('@vercel/blob')
+      await del(`${DERIVATIVE_FOLDER}${key}`, { token })
+      return
+    }
+    if (/^https?:\/\//i.test(url)) {
+      if (!process.env.BLOB_READ_WRITE_TOKEN) return
+      const { del } = await import('@vercel/blob')
+      await del(url)
+      return
+    }
+    if (url.startsWith('/uploads/')) {
+      const rel = url.slice('/uploads/'.length)
+      if (!isPublicMediaKey(rel)) return
+      await unlink(path.join(process.cwd(), 'public', 'uploads', rel))
+    }
+  } catch (e) {
+    console.error('[blob] delete failed', e instanceof Error ? e.name : e)
+  }
 }

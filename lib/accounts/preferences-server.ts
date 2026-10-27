@@ -13,6 +13,11 @@ export async function readPreferences(userId: number): Promise<{ preferences: Pr
 
 export async function savePreferences(userId: number, input: { uses?: string[]; interests?: string[]; city?: string; marketingOptIn?: boolean; termsAccepted?: true }) {
   const current = await readPreferences(userId)
+  // keys this screen does not own (e.g. "Sobre você", lib/profile) are kept as they are
+  const row = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferencesJson: true } })
+  let others: Record<string, unknown> = {}
+  try { others = JSON.parse(row.preferencesJson) as Record<string, unknown> } catch { others = {} }
+  if (!others || typeof others !== 'object' || Array.isArray(others)) others = {}
   const merged = sanitizePreferences({
     uses: input.uses ?? current.preferences.uses,
     interests: input.interests ?? current.preferences.interests,
@@ -21,7 +26,7 @@ export async function savePreferences(userId: number, input: { uses?: string[]; 
   await prisma.user.update({
     where: { id: userId },
     data: {
-      preferencesJson: JSON.stringify(merged),
+      preferencesJson: JSON.stringify({ ...others, ...merged }),
       ...(input.marketingOptIn === undefined ? {} : { marketingOptIn: input.marketingOptIn }),
       ...(input.termsAccepted ? { termsAcceptedAt: current.termsAcceptedAt ? undefined : new Date() } : {}),
     },

@@ -48,8 +48,8 @@ describe('mobile JSON routes', () => {
     const favs = (await (await favoritesGet()).json()) as { items: { publicId: string; saved: boolean; liked: boolean; priceCents: string | null; status: string }[] }
     expect(favs.items).toMatchObject([{ publicId: PUBLIC_ID, saved: true, liked: false, priceCents: '1000000', status: 'LISTED' }])
 
-    const wallet = (await (await walletGet()).json()) as { items: unknown[]; totalCents: string; holderName: string }
-    expect(wallet).toEqual({ items: [], totalCents: '0', holderName: 'Lia Souza' })
+    const wallet = (await (await walletGet()).json()) as { items: unknown[]; totalCents: string; holderName: string; valuation: unknown; arriving: unknown[] }
+    expect(wallet).toEqual({ items: [], totalCents: '0', holderName: 'Lia Souza', valuation: null, arriving: [] })
   }, 60_000)
 
   it('the public artwork by publicId carries the page projection, the viewer flags and never the floor', async () => {

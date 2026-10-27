@@ -3,15 +3,22 @@
 import { prisma } from '@/lib/prisma'
 import { maskPhone } from '@/lib/sms/core'
 
-export interface IdentityView { name: string; cpfMask: string | null; phoneMask: string | null; phoneVerified: boolean; emailVerified: boolean; city: string }
+export interface IdentityView { name: string; cpfMask: string | null; phoneMask: string | null; phoneVerified: boolean; emailVerified: boolean; city: string
+  /** "Sobre você" and the profile photo (Perfil › Dados pessoais) */
+  about: string; avatarUrl: string | null }
 
 const maskCpf = (d: string) => `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`
 
 export async function identityOf(userId: number): Promise<IdentityView> {
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, cpf: true, phone: true, phoneVerifiedAt: true, emailVerifiedAt: true, preferencesJson: true } })
+  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, cpf: true, phone: true, phoneVerifiedAt: true, emailVerifiedAt: true, preferencesJson: true, avatarUrl: true } })
   let city = ''
   try { city = String((JSON.parse(u.preferencesJson) as { city?: unknown }).city ?? '') } catch { city = '' }
-  return { name: u.name, cpfMask: u.cpf ? maskCpf(u.cpf) : null, phoneMask: u.phone ? maskPhone(u.phone) : null, phoneVerified: !!u.phoneVerifiedAt, emailVerified: !!u.emailVerifiedAt, city }
+  return { name: u.name, cpfMask: u.cpf ? maskCpf(u.cpf) : null, phoneMask: u.phone ? maskPhone(u.phone) : null, phoneVerified: !!u.phoneVerifiedAt, emailVerified: !!u.emailVerifiedAt, city, about: aboutOf(u.preferencesJson), avatarUrl: u.avatarUrl }
+}
+
+/** The "about" saved in the preferences JSON (string or nothing); written by lib/profile. */
+export function aboutOf(prefsJson: string): string {
+  try { const v = (JSON.parse(prefsJson) as { about?: unknown }).about; return typeof v === 'string' ? v : '' } catch { return '' }
 }
 
 function validCpf(d: string): boolean {
@@ -42,7 +49,8 @@ export async function setIdentity(userId: number, input: { cpf?: string | null; 
     const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferencesJson: true } })
     let prefs: Record<string, unknown> = {}
     try { prefs = JSON.parse(u.preferencesJson) as Record<string, unknown> } catch { prefs = {} }
-    await prisma.user.update({ where: { id: userId }, data: { preferencesJson: JSON.stringify({ ...prefs, city: input.city.trim().slice(0, 80) }) } })
+    prefs.city = input.city.trim().slice(0, 80)
+    await prisma.user.update({ where: { id: userId }, data: { preferencesJson: JSON.stringify(prefs) } })
   }
   return { ok: true, identity: await identityOf(userId) }
 }

@@ -5,18 +5,20 @@
 // prototype's `ctDados` (name and CPF come from the signup and are not edited here; the city
 // saves by PATCH /api/auth/identity). "Sair da conta" is POST /api/auth/logout → /e.
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toggle } from '@/components/ds/Toggle'
 import { Modal } from '@/components/ds/Modal'
 import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
+import { ABOUT_MAX } from '@/lib/profile/core'
+import { shrinkToJpeg } from '@/components/artworks/capture-render'
 import './collector-account.css'
 
 export interface AccountLinkItem { kind: 'link'; icon: string; name: string; sub: string; href: string }
 export interface AccountSwitchItem { kind: 'switch'; icon: string; name: string; sub: string; key: 'marketingOptIn'; on: boolean }
 export type CollectorAccountItem = AccountLinkItem | AccountSwitchItem
 export interface CollectorAccountSection { name: string; items: CollectorAccountItem[] }
-export interface PersonalData { name: string; email: string; emailVerified: boolean; phoneMask: string | null; phoneVerified: boolean; cpfMask: string | null; city: string }
+export interface PersonalData { name: string; email: string; emailVerified: boolean; phoneMask: string | null; phoneVerified: boolean; cpfMask: string | null; city: string; about: string; avatarUrl: string | null }
 
 export function CollectorAccount({ initials, me, sections, view }: { initials: string; me: PersonalData; sections: CollectorAccountSection[]; view: 'menu' | 'data' }) {
   const [leaving, setLeaving] = useState(false)
@@ -55,11 +57,35 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
     if (!res.ok) { setSwitches((s) => ({ ...s, [key]: !next })); setNote('Não foi possível salvar agora.') }
   }
   const [name, setName] = useState(me.name)
+  const [about, setAbout] = useState(me.about)
+  const [savedAbout, setSavedAbout] = useState(me.about)
+  const [avatar, setAvatar] = useState(me.avatarUrl)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const picker = useRef<HTMLInputElement>(null)
+  async function changePhoto(file: File | undefined) {
+    if (!file || photoBusy) return
+    setPhotoBusy(true); setNote('')
+    try {
+      let blob: Blob = file
+      try { blob = await shrinkToJpeg(file, 1024) } catch { /* the server re-encodes and says what is wrong */ }
+      const form = new FormData(); form.append('file', blob, 'foto.jpg')
+      const r = await fetch('/api/account/avatar', { method: 'POST', body: form })
+      const j = (await r.json().catch(() => ({}))) as { url?: string; error?: string }
+      if (r.ok && j.url) { setAvatar(j.url); setNote('Foto atualizada') } else setNote(j.error ?? 'Não foi possível enviar a foto.')
+    } catch { setNote('Não foi possível enviar a foto.') } finally { setPhotoBusy(false); if (picker.current) picker.current.value = '' }
+  }
+  async function removePhoto() {
+    setPhotoBusy(true); setNote('')
+    const r = await fetch('/api/account/avatar', { method: 'DELETE' }).catch(() => null)
+    setPhotoBusy(false)
+    if (r?.ok) { setAvatar(null); setNote('Foto removida') } else setNote('Não foi possível remover agora.')
+  }
   async function saveData() {
     setSaving(true); setNote('')
-    const res = await fetch('/api/auth/identity', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city, name }) })
+    const res = await fetch('/api/auth/identity', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city, name, about }) })
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     setSaving(false)
+    if (res.ok) setSavedAbout(about)
     setNote(res.ok ? 'Dados atualizados' : data.error ?? 'Não foi possível salvar agora.')
   }
 
@@ -72,13 +98,22 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
     return (
       <div className="ha-account ha-cacct">
         <div className="ha-cacct__bar"><Link href="/account" className="ha-iconbtn ha-cacct__back" aria-label="Voltar"><Icon name="arrow_back" size={24} /></Link><span className="ha-cacct__bar-t">Dados pessoais</span></div>
-        <div className="ha-account-me"><span className="ha-account-me__av">{initials}</span></div>
+        <div className="ha-account-me ha-cacct__photo">
+          {/* eslint-disable-next-line @next/next/no-img-element -- public derivative of the profile photo */}
+        {avatar ? <img className="ha-account-me__av ha-cacct__avimg" src={avatar} alt="" /> : <span className="ha-account-me__av">{initials}</span>}
+          <span className="ha-row" style={{ gap: 8 }}>
+            <input ref={picker} type="file" accept="image/*" hidden onChange={(e) => void changePhoto(e.target.files?.[0])} />
+            <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" disabled={photoBusy} onClick={() => picker.current?.click()}>{avatar ? 'Trocar foto' : 'Adicionar foto'}</button>
+            {avatar ? <button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" disabled={photoBusy} onClick={() => void removePhoto()}>Remover</button> : null}
+          </span>
+        </div>
         <label className="ha-cacct__field"><span className="ha-cacct__field-k">Nome completo<span className="ha-cacct__field-n">Como aparece nos certificados e nas conversas</span></span><input className="ha-input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
         {fields.map((f) => (
           <label key={f.k} className="ha-cacct__field"><span className="ha-cacct__field-k">{f.k}<span className="ha-cacct__field-n">{f.note}</span></span><input className="ha-input ha-cacct__ro" value={f.v} readOnly /></label>
         ))}
         <label className="ha-cacct__field"><span className="ha-cacct__field-k">Cidade</span><input className="ha-input" value={city} maxLength={80} onChange={(e) => setCity(e.target.value)} placeholder="Onde você está" /></label>
-        <div className="ha-row"><button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={saving || (city === me.city && name.trim() === me.name)} onClick={saveData}>Salvar</button>{note ? <span className="ha-cacct__note" role="status">{note}</span> : null}</div>
+        <label className="ha-cacct__field"><span className="ha-cacct__field-k">Sobre você<span className="ha-cacct__field-n">{about.length}/{ABOUT_MAX} · sem telefone, e-mail ou redes</span></span><textarea className="ha-input ha-cacct__about" value={about} maxLength={ABOUT_MAX} rows={3} onChange={(e) => setAbout(e.target.value)} placeholder="O que você coleciona, o que procura" /></label>
+        <div className="ha-row"><button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={saving || (city === me.city && name.trim() === me.name && about === savedAbout)} onClick={saveData}>Salvar</button>{note ? <span className="ha-cacct__note" role="status">{note}</span> : null}</div>
       </div>
     )
   }
@@ -86,7 +121,8 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
   return (
     <div className="ha-account ha-cacct">
       <div className="ha-account-me">
-        <span className="ha-account-me__av">{initials}</span>
+        {/* eslint-disable-next-line @next/next/no-img-element -- public derivative of the profile photo */}
+        {avatar ? <img className="ha-account-me__av ha-cacct__avimg" src={avatar} alt="" /> : <span className="ha-account-me__av">{initials}</span>}
         <span className="ha-stack ha-account-me__txt">
           <span className="ha-account-me__n">{me.name}</span>
           <span className="ha-account-me__e">{me.email}</span>

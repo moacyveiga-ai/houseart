@@ -10,6 +10,7 @@ import { ensureCollectorMember } from '@/lib/tenant/member-server'
 import { withScope } from '@/lib/scope/context'
 import { POST as signPost } from '@/app/api/deals/[id]/sign/route'
 import { POST as shippingPost } from '@/app/api/deals/[id]/shipping/route'
+import { POST as talkPost } from '@/app/api/deals/[id]/conversation/route'
 import { createScenario, type Scenario } from './fixtures'
 import { asPanel, signIn, signOut } from './session'
 import { truncateTables } from './db'
@@ -40,6 +41,20 @@ describe('deal side', () => {
 
     await signIn(stranger.id, 'COLLECTOR')
     expect((await post(signPost, deal.id)).status).toBe(404)
+    expect((await post(talkPost, deal.id)).status).toBe(404)
+
+    // "Falar com o vendedor": the buyer talks to who sold (the seller member), about the artwork
+    await signIn(buyer.id, 'COLLECTOR')
+    const talk = await post(talkPost, deal.id)
+    expect(talk.status).toBe(200)
+    const conv = await prisma.conversation.findUniqueOrThrow({ where: { id: ((await talk.json()) as { id: number }).id } })
+    expect([conv.userAId, conv.userBId].sort()).toEqual([seller.id, buyer.id].sort())
+    expect(conv.artworkId).toBe(art.id)
+    expect(((await (await post(talkPost, deal.id)).json()) as { id: number }).id).toBe(conv.id)
+
+    // the seller side has no "talk to the seller"
+    await signIn(seller.id, 'COLLECTOR')
+    expect((await post(talkPost, deal.id)).status).toBe(404)
 
     await signIn(seller.id, 'COLLECTOR')
     expect((await post(signPost, deal.id)).status).toBe(200)

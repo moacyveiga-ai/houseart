@@ -22,6 +22,7 @@ import { computeSplit, SPLIT_PARTY_LABELS, type SplitLine } from '@/lib/commissi
 import { royaltyFor } from '@/lib/resale-royalty/core'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
+import { counterpartOfMember, openConversationWith } from '@/lib/messaging/server'
 import { dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
 
 /** Default gallery share of the seller's part until the Consignment agreement exists (HOUSEART_BUILD.md §J). */
@@ -184,6 +185,18 @@ export async function sideOfDeal(dealId: number, userId: number, scope: Scope | 
   if (d.buyerUserId === userId) return 'BUYER'
   if (scope && canView(scope, d)) return 'SELLER'
   return null
+}
+
+/**
+ * "Falar com o vendedor" in the buyer's purchase: the conversation about the artwork with who SOLD it
+ * (the deal's seller member), never the artwork's current holder — after the deed the holder is the buyer.
+ */
+export async function openDealConversation(userId: number, id: number): Promise<number> {
+  const d = await prisma.deal.findFirst({ where: { id, buyerUserId: userId }, select: { sellerMemberId: true, artworkId: true } })
+  if (!d) throw new ArtworkError('NOT_FOUND', 'Negócio não encontrado.', 404)
+  const seller = await counterpartOfMember(d.sellerMemberId)
+  if (!seller) throw new ArtworkError('NO_COUNTERPART', 'O vendedor não tem quem responda agora. Fale com a HouseArt.', 404)
+  return openConversationWith(userId, seller.userId, d.artworkId)
 }
 
 async function buyerDeal(userId: number, id: number) {

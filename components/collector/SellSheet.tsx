@@ -6,7 +6,8 @@
 // top, 4 % the seller leaves, the resale royalty of 5 % over the appreciation, the net). Without
 // the green seal the sheet is the "Certifique primeiro" state and leads to the services sheet.
 // POST /api/collector/artworks/<id>/sell → /artworks/<id>/listing.
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useDialogFocus } from '@/components/ds/useDialogFocus'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
@@ -36,12 +37,8 @@ export function SellSheet({ artwork: a, open, onClose, onCertify, payout }: { ar
   const [error, setError] = useState('')
   const [sealBlocked, setSealBlocked] = useState(false)
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !pixSaving) onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose, pixSaving])
+  const box = useRef<HTMLDivElement>(null)
+  useDialogFocus(box, open, () => { if (!pixSaving) onClose() })
   if (!open) return null
 
   const registered = a.registeredCents && /^\d+$/.test(a.registeredCents) ? BigInt(a.registeredCents) : null
@@ -88,7 +85,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify, payout }: { ar
 
   return (
     <div className="ha-scrim ha-cs-scrim" onClick={() => { if (!pixSaving) onClose() }} role="presentation">
-      <div className="ha-cs" role="dialog" aria-modal="true" aria-label="Vender uma obra" onClick={(e) => e.stopPropagation()}>
+      <div ref={box} tabIndex={-1} className="ha-cs" role="dialog" aria-modal="true" aria-label="Vender uma obra" onClick={(e) => e.stopPropagation()}>
         <div className="ha-cs__grip"><span /></div>
         {blocked ? (<>
           {head('Vender uma obra')}

@@ -4,7 +4,8 @@
 // the message and the note "O link abre a página pública…". No API: the Web Share API when
 // the browser has it, else copy / WhatsApp / Facebook / X / Pinterest / LinkedIn / Telegram /
 // e-mail / SMS by their public share URLs. The link is `<origin>/e/artwork/<publicId>`.
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useDialogFocus } from '@/components/ds/useDialogFocus'
 import { Icon } from '@/components/ds/Icon'
 import './share-sheet.css'
 
@@ -33,12 +34,8 @@ export const defaultShareMessage = (a: ShareArtwork) => `Olha esta obra: ${a.tit
 export function ShareSheet({ artwork: a, open, onClose, onDone }: { artwork: ShareArtwork; open: boolean; onClose: () => void; onDone?: (message: string) => void }) {
   const [msg, setMsg] = useState(() => defaultShareMessage(a))
   const [showPrice, setShowPrice] = useState(true)
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const box = useRef<HTMLDivElement>(null)
+  useDialogFocus(box, open, onClose)
   if (!open) return null
   // Rendered only after a click (never on the server), so the browser is known here.
   const canNative = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
@@ -61,7 +58,7 @@ export function ShareSheet({ artwork: a, open, onClose, onDone }: { artwork: Sha
   const channels = CHANNELS.filter((c) => !c.native || canNative)
   return (
     <div className="ha-scrim ha-share-scrim" onClick={onClose} role="presentation">
-      <div className="ha-share" role="dialog" aria-modal="true" aria-label="Compartilhar obra" onClick={(e) => e.stopPropagation()}>
+      <div ref={box} tabIndex={-1} className="ha-share" role="dialog" aria-modal="true" aria-label="Compartilhar obra" onClick={(e) => e.stopPropagation()}>
         <div className="ha-share__head">
           <span className="ha-share__title">Compartilhar obra</span>
           <button type="button" className="ha-iconbtn" aria-label="Fechar" onClick={onClose}><Icon name="close" size={22} /></button>

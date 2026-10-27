@@ -5,7 +5,8 @@
 // first and reads "Necessária para vender" while the artwork has no green seal; once the seal is
 // green it leaves the list, as in the new prototype ("Certificação…" is not offered). Confirm →
 // POST /api/collector/artworks/<id>/services per service → the caller's toast.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useDialogFocus } from '@/components/ds/useDialogFocus'
 import { Icon } from '@/components/ds/Icon'
 import { formatBRL } from '@/lib/artworks/domain'
 import { SERVICE_ICONS, orderServices, servicePriceLabel } from './seller-core'
@@ -20,12 +21,8 @@ export function ServicesSheet({ artworkId, title, sealGreen, open, onClose, onDo
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const box = useRef<HTMLDivElement>(null)
+  useDialogFocus(box, open, onClose)
   useEffect(() => {
     if (!open) return
     let gone = false
@@ -61,7 +58,7 @@ export function ServicesSheet({ artworkId, title, sealGreen, open, onClose, onDo
 
   return (
     <div className="ha-scrim ha-cs-scrim" onClick={onClose} role="presentation">
-      <div className="ha-cs" role="dialog" aria-modal="true" aria-label="Serviços para esta obra" onClick={(e) => e.stopPropagation()}>
+      <div ref={box} tabIndex={-1} className="ha-cs" role="dialog" aria-modal="true" aria-label="Serviços para esta obra" onClick={(e) => e.stopPropagation()}>
         <div className="ha-cs__grip"><span /></div>
         <div className="ha-cs__head">
           <span className="ha-cs__head-t"><span className="ha-cs__title">Serviços para esta obra</span><span className="ha-cs__step">{title}</span></span>

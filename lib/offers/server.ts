@@ -454,6 +454,7 @@ export async function buyNow(i: BuyNowInput): Promise<{ ok: true; code: string; 
     let status: 'AUTHORIZED' | null = null
     const total = price + quote.shippingCents + insurance
     const installments = i.installments ?? 1
+    if (installments > 1 && !flagOn('FLAG_CARD_INSTALLMENTS')) return { ok: false, error: 'O parcelamento ainda não está disponível.' }
     if (!validInstallments(Number(total), installments)) return { ok: false, error: 'Este parcelamento não está disponível para o valor da compra.' }
     if (stripeMode() !== 'mock') {
       try {

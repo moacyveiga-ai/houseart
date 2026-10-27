@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockedReason, checkoutTotals, initialAddressId, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, previewCardNumber, summaryLines } from './checkout-core'
+import { cardSub, blockedReason, checkoutTotals, initialAddressId, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, previewCardNumber, summaryLines } from './checkout-core'
 
 const brl = (c: number) => `R$ ${c / 100}`
 
@@ -70,5 +70,13 @@ describe('CTA parcelado', () => {
   it('diz o valor de cada parcela', () => {
     expect(ctaLabel({ hasCard: true, total: 3_878_400, method: 'CARD', installments: 10 }, brl)).toBe('Pagar 10× de R$ 3878.4')
     expect(ctaLabel({ hasCard: true, total: 3_878_400, method: 'CARD', installments: 1 }, brl)).toBe('Confirmar pedido · R$ 38784')
+  })
+})
+
+describe('linha do cartão', () => {
+  it('promete só o plano que o total permite', () => {
+    expect(cardSub(10)).toBe('até 10× sem juros')
+    expect(cardSub(3)).toBe('até 3× sem juros')
+    expect(cardSub(1)).toBe('cobrado agora, em garantia')
   })
 })

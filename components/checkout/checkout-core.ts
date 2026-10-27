@@ -46,9 +46,14 @@ export type PayMethod = 'PIX' | 'CARD' | 'BOLETO'
 /** The three ways of the prototype (`ckPags`), in its order. */
 export const PAY_METHODS: { key: PayMethod; name: string; sub: string; icon: string }[] = [
   { key: 'PIX', name: 'Pix', sub: 'aprovação na hora', icon: 'qr_code_2' },
-  { key: 'CARD', name: 'Cartão', sub: 'até 10× sem juros', icon: 'credit_card' },
+  { key: 'CARD', name: 'Cartão', sub: 'cobrado agora, em garantia', icon: 'credit_card' },
   { key: 'BOLETO', name: 'Boleto', sub: '1 dia útil', icon: 'receipt_long' },
 ]
+
+/** The card's line under "Cartão": the largest plan this total allows, or the escrow note when it is 1× only. */
+export function cardSub(maxInstallments: number): string {
+  return maxInstallments > 1 ? `até ${maxInstallments}× sem juros` : 'cobrado agora, em garantia'
+}
 
 export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null; /** the CEP was typed but did not quote */ cepFailed?: boolean }
 

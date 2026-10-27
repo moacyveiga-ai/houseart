@@ -41,6 +41,7 @@ export const FLAGS = {
   FLAG_COMMISSION: { what: 'Commission born on offer acceptance, split by party' },
   FLAG_BILLING: { what: 'Stripe billing, Connect and the ledger' },
   FLAG_ESCROW: { what: 'Escrow: payment held at the platform until the transfer completes' },
+  FLAG_CARD_INSTALLMENTS: { what: 'Card installments (3×/6×/10×, no interest) at direct buy; off until checked in Stripe test mode with a Brazilian card' },
   FLAG_LOGISTICS: { what: 'Shipping and transit insurance inside the checkout' },
   FLAG_APPRAISAL: { what: 'Appraisal queue and signed valuation report' },
   // ── channels / integrations ─────────────────────────────────────────────

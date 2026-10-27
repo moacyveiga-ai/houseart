@@ -15,7 +15,7 @@ export default async function EditArtworkPage({ params }: { params: Promise<{ id
   if (!a) notFound()
   const initial: WizardArtwork = {
     id: a.id, title: a.title, year: a.year, category: a.category, technique: a.technique, materials: a.materials, heightMm: a.heightMm, widthMm: a.widthMm, depthMm: a.depthMm,
-    edition: a.edition, signatureLocation: a.signatureLocation, series: a.series, status: a.status, conditionGrade: a.conditionGrade,
+    edition: a.edition, signatureLocation: a.signatureLocation, series: a.series, description: a.description, status: a.status, conditionGrade: a.conditionGrade,
     conditionBy: a.conditionBy, conditionAt: a.conditionAt?.toISOString() ?? null, saleMode: a.saleMode,
     listPriceCents: a.listPriceCents === null ? null : Number(a.listPriceCents), wizardStep: a.wizardStep,
     media: a.media.map((m) => ({ id: m.id, kind: m.kind, publicUrl: m.publicUrl, quality: m.quality })),

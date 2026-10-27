@@ -41,7 +41,7 @@ export interface PublicArtworkPage extends PublicArtworkCard {
   id: number
   status: string; certificateStatus: 'PENDING' | 'ACTIVE' | 'CONTESTED' | 'REVOKED'
   artistSlug: string; technique: string | null; materials: string | null; dimensions: string; size: { heightMm: number | null; widthMm: number | null; depthMm: number | null }
-  edition: string | null; signatureLocation: string | null; series: string | null; conditionGrade: string | null; conditionAt: string | null
+  edition: string | null; signatureLocation: string | null; series: string | null; description: string | null; conditionGrade: string | null; conditionAt: string | null
   media: { kind: string; url: string }[]; fixedPrice: boolean; acceptsOffers: boolean
   history: { kind: string; description: string; occurredOn: string }[]
   events: PublicArtworkEvent[]
@@ -83,7 +83,7 @@ export async function publicArtwork(publicId: string): Promise<PublicArtworkPage
       priceCents: listed && a.saleMode !== 'ON_REQUEST' ? a.listPriceCents : null, saleMode: a.saleMode,
       cover: a.media.find((m) => m.kind === 'FRONT_COLOR_CARD')?.publicUrl ?? null,
       technique: a.technique, materials: a.materials, dimensions: formatDimensions(a), size: { heightMm: a.heightMm, widthMm: a.widthMm, depthMm: a.depthMm },
-      edition: a.edition, signatureLocation: a.signatureLocation, series: a.series, conditionGrade: a.conditionGrade, conditionAt: a.conditionAt?.toISOString() ?? null,
+      edition: a.edition, signatureLocation: a.signatureLocation, series: a.series, description: a.description?.trim() || null, conditionGrade: a.conditionGrade, conditionAt: a.conditionAt?.toISOString() ?? null,
       media: a.media.filter((m) => m.publicUrl).map((m) => ({ kind: m.kind, url: m.publicUrl! })),
       fixedPrice, acceptsOffers: listed && a.saleMode !== 'ON_REQUEST',
       history: a.historyItems.map((h) => ({ kind: h.kind, description: h.description, occurredOn: h.occurredOn })),

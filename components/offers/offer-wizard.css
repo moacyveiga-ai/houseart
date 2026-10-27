@@ -109,7 +109,7 @@
 .hp-offer__card-grid > :nth-child(2), .hp-offer__card-grid > :nth-child(3) { grid-column: span 3; }
 .hp-offer__card-grid > :nth-child(4) { grid-column: span 4; }
 .hp-offer__card-grid > :nth-child(5) { grid-column: span 2; }
-@media (max-width: 560px) { .hp-offer__card-grid > * { grid-column: span 6 !important; } }
+@media (max-width: 480px) { .hp-offer__card-grid > * { grid-column: span 6 !important; } }
 .hp-offer__lock { display: flex; gap: var(--ha-space-3); padding: var(--ha-space-4); border-radius: var(--ha-radius-sm); background: var(--ha-paper-100); font-size: var(--ha-text-body-sm); }
 .hp-offer__lock .ha-icon { color: var(--ha-ink-900); flex: none; }
 .hp-offer__cep { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); align-items: flex-end; }

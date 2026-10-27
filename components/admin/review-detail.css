@@ -17,4 +17,4 @@
 .ha-rvd__list li:last-child { border-bottom: 0; }
 .ha-rvd__sys { color: var(--ha-fg-muted); }
 .ha-rvd__body { white-space: pre-wrap; overflow-wrap: anywhere; }
-@media (max-width: 600px) { .ha-rvd__work { grid-template-columns: minmax(0, 1fr); } .ha-rvd__wall { width: 100%; height: 200px; } }
+@media (max-width: 720px) { .ha-rvd__work { grid-template-columns: minmax(0, 1fr); } .ha-rvd__wall { width: 100%; height: 200px; } }

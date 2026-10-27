@@ -46,4 +46,4 @@
 .ha-gdata__ro { background: var(--ha-paper-100); color: var(--ha-fg-body); }
 .ha-gdata__ta { height: auto; min-height: 84px; padding-top: 10px; resize: vertical; font: inherit; }
 .ha-gdata__err { margin: 0; color: var(--ha-alert-500); font-size: var(--ha-text-caption); }
-@media (max-width: 640px) { .ha-gdata__grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .ha-gdata__grid { grid-template-columns: 1fr; } }

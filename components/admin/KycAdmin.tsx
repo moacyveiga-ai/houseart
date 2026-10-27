@@ -10,6 +10,7 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { dataBR } from '@/lib/timezone'
 import { DECISION_NOTE_MAX, KYC_STATE_LABELS, type AdminKycRow, type KycFilter, type KycState } from '@/lib/admin-kyc/core'
+import { Button } from '@/components/ds/Button'
 
 type Action = 'approve' | 'reject' | 'revalidate'
 type Pending = { row: AdminKycRow; action: Action }
@@ -82,7 +83,7 @@ export function KycAdmin({ rows: initial, filter, filters, decides }: { rows: Ad
             {error ? <p className="ha-akyc__err" role="alert">{error}</p> : null}
             <div className="ha-row" style={{ gap: 8 }}>
               <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setPending(null)} disabled={busy}>Cancelar</button>
-              <button type="button" className={`ha-btn ha-btn--md ${pending.action === 'reject' ? 'ha-btn--danger' : 'ha-btn--primary'}`} disabled={busy || (pending.action === 'reject' && !note.trim())} onClick={confirm}>{busy ? 'Aguarde…' : TITLE[pending.action]}</button>
+              <Button variant={pending.action === 'reject' ? 'danger' : 'primary'} size="md" loading={busy} disabled={pending.action === 'reject' && !note.trim()} onClick={confirm}>{TITLE[pending.action]}</Button>
             </div>
           </div>
         ) : null}

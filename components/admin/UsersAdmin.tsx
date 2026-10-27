@@ -11,6 +11,7 @@ import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
 import { dataBR } from '@/lib/timezone'
 import { ACCOUNT_STATE_LABELS, KYC_LABELS, MEMBER_KIND_LABELS, MEMBER_STATUS_LABELS, PROFILE_KIND_LABELS, STAFF_PROFILE_OPTIONS, LOGIN_PROFILE_LABELS, type AdminUserRow, type UserFilter } from '@/lib/admin-users/core'
+import { Button } from '@/components/ds/Button'
 
 type Pending = { row: AdminUserRow; action: 'block' | 'unblock' | 'reset' | 'invite' | 'profile'; profile?: string }
 const STATE_TONE: Record<AdminUserRow['state'], BadgeTone> = { ACTIVE: 'verified', BLOCKED: 'alert', DELETION: 'pending' }
@@ -122,7 +123,7 @@ export function UsersAdmin({ rows: initial, filter, filters, query, viewerId }: 
             {error ? <p className="ha-ausers__err" role="alert">{error}</p> : null}
             <div className="ha-row" style={{ gap: 8 }}>
               <button type="button" className="ha-btn ha-btn--outline ha-btn--md" onClick={() => setPending(null)} disabled={busy}>Cancelar</button>
-              <button type="button" className={`ha-btn ha-btn--md ${pending.action === 'block' ? 'ha-btn--danger' : 'ha-btn--primary'}`} disabled={busy} onClick={confirm}>{busy ? 'Aguarde…' : TITLE[pending.action]}</button>
+              <Button variant={pending.action === 'block' ? 'danger' : 'primary'} size="md" loading={busy} onClick={confirm}>{TITLE[pending.action]}</Button>
             </div>
           </div>
         ) : null}

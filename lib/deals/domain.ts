@@ -33,3 +33,19 @@ export function dealCode(year: number, seq: number): string {
 }
 
 export const ESCROW_HOURS = 24
+
+/**
+ * Coleção › "Chegando" (handoff "HouseArt Web Colecionador"): what a purchase still on its way says
+ * in the buyer's collection, by the LAST phase done. Null when it is not arriving (completed).
+ */
+export function arrivingLabel(phase: DealPhase): string | null {
+  switch (phase) {
+    case 'OFFER_ACCEPTED': return 'Reservada · aguardando pagamento'
+    case 'ESCROW': return 'Chegando · termo a assinar'
+    case 'DOCUMENTS': return 'Chegando · aguardando envio'
+    case 'SHIPPING': return 'Chegando · em trânsito'
+    case 'DELIVERY':
+    case 'TRANSFER': return 'Chegando · escritura em emissão'
+    default: return null
+  }
+}

@@ -66,7 +66,8 @@ describe('admin transfers', () => {
     expect(await prisma.notification.count({ where: { kind: 'transfer.invite' } })).toBe(0)
     expect(await buyerTransfer(oldToken)).toBeNull()
     expect(await buyerTransfer(newToken)).not.toBeNull()
-    expect(await prisma.auditLog.count({ where: { entity: 'ownership_transfer', entityId: String(t.id), action: 'invite_resent' } })).toBe(1)
+    // the audit write runs detached: poll, as the other admin tests do
+    await expect.poll(() => prisma.auditLog.count({ where: { entity: 'ownership_transfer', entityId: String(t.id), action: 'invite_resent' } })).toBe(1)
     // once the buyer signed, no more resending
     expect(await buyerAcceptTransfer(newToken, '529.982.247-25')).toEqual({ ok: true })
     expect((await call(t.id, { action: 'resend' })).status).toBe(409)

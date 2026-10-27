@@ -104,6 +104,6 @@ describe('admin tenants', () => {
     expect(await publicArtwork('HA-2026-TEN-0001')).not.toBeNull()
     await signIn(s.a1.userId)
     expect(await panelSession()).not.toBeNull()
-    expect(await prisma.auditLog.count({ where: { entity: 'tenant', entityId: String(s.galleryTenantId), action: { in: ['suspend', 'reinstate'] } } })).toBe(2)
+    await expect.poll(() => prisma.auditLog.count({ where: { entity: 'tenant', entityId: String(s.galleryTenantId), action: { in: ['suspend', 'reinstate'] } } })).toBe(2)
   })
 })

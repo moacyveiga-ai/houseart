@@ -103,3 +103,21 @@ describe('aparelhos conectados', () => {
     expect(await prisma.session.count({ where: { id: theirs } })).toBe(1)
   })
 })
+
+describe('sobre você e foto', () => {
+  it('saves the about line (contacts refused), reads it back and clears the photo', async () => {
+    const { setAbout, clearAvatar } = await import('@/lib/profile/server')
+    const { identityOf } = await import('@/lib/accounts/identity-server')
+    expect(await setAbout(buyerId, 'me chama no 71 99999-1234')).toMatchObject({ ok: false })
+    expect(await setAbout(buyerId, '  Coleciono   gravura baiana ')).toEqual({ ok: true })
+    await prisma.user.update({ where: { id: buyerId }, data: { avatarUrl: '/api/public/media/content/avatars/x.jpg', preferencesJson: JSON.stringify({ city: 'Salvador', about: 'Coleciono gravura baiana' }) } })
+    expect(await identityOf(buyerId)).toMatchObject({ about: 'Coleciono gravura baiana', city: 'Salvador', avatarUrl: '/api/public/media/content/avatars/x.jpg' })
+    // the onboarding preferences keep the about line
+    const { savePreferences } = await import('@/lib/accounts/preferences-server')
+    await savePreferences(buyerId, { city: 'Salvador' })
+    expect((await identityOf(buyerId)).about).toBe('Coleciono gravura baiana')
+    await setAbout(buyerId, '')
+    await clearAvatar(buyerId)
+    expect(await identityOf(buyerId)).toMatchObject({ about: '', city: 'Salvador', avatarUrl: null })
+  }, 60_000)
+})

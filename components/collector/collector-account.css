@@ -42,3 +42,6 @@
 .ha-device__k { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .ha-device__here { font-size: var(--ha-text-caption); color: var(--ha-verified-500); font-weight: 600; }
 .ha-devices__all { align-self: flex-start; margin-top: var(--ha-space-3); }
+.ha-cacct__avimg { object-fit: cover; }
+.ha-cacct__photo { align-items: center; gap: var(--ha-space-4); }
+.ha-cacct__about { height: auto; min-height: 88px; padding: 10px 14px; resize: vertical; font: inherit; line-height: var(--ha-lh-body-sm); }

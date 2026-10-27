@@ -59,6 +59,7 @@ model User {
   collectorVerifiedAt  DateTime?
   deletionRequestedAt  DateTime?
   lastLoginAt          DateTime?
+  avatarUrl            String? // profile photo: public derivative (512 px square JPEG, no EXIF) under content/avatars
   stripeCustomerId     String? // Stripe Customer (cus_…) of the payer; created on the first saved card (test/live)
   stripeCustomerMode   String? // test | live — a customer of one mode does not exist in the other
   createdAt            DateTime      @default(now())

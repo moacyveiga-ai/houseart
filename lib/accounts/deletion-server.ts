@@ -1,5 +1,6 @@
 // Excluir minha conta — I/O. Blocked while the person is in a negotiation (as buyer or seller); otherwise the
 // account is closed at once (inactive, every session ended, request stamped for the team's legal follow-up).
+import { deletePublicFile } from '@/lib/storage/blob'
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
@@ -45,12 +46,15 @@ export async function requestAccountDeletion(userId: number, typed: unknown, ctx
   if (!(await canSelfDelete(userId))) throw new ArtworkError('NOT_SELF_SERVICE', NOT_SELF_SERVICE_MESSAGE, 403)
   const blocker = deletionBlocker(await openNegotiations(userId))
   if (blocker) throw new ArtworkError('IN_NEGOTIATION', blocker, 409)
+  const photo = (await prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } }))?.avatarUrl ?? null
   const u = await prisma.$transaction(async (tx) => {
-    const row = await tx.user.update({ where: { id: userId }, data: { active: false, deletionRequestedAt: new Date() }, select: { id: true, name: true } })
+    const row = await tx.user.update({ where: { id: userId }, data: { active: false, deletionRequestedAt: new Date(), avatarUrl: null }, select: { id: true, name: true } })
     // every way back in or out: sessions (cookie and app bearer) and the push subscriptions (web and Expo)
     await tx.session.deleteMany({ where: { userId } })
     await tx.pushSubscription.deleteMany({ where: { userId } })
     return row
   })
+  // the profile photo is personal: it leaves with the account
+  if (photo) await deletePublicFile(photo)
   void audit.event({ entity: 'user', entityId: u.id, action: 'account_deletion_requested', userId: u.id, userName: u.name, ip: ctx.ip, userAgent: ctx.userAgent, after: { active: false } })
 }

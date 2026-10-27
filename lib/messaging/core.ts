@@ -4,7 +4,9 @@
 // with the guard sentence of the prototype.
 
 export const MESSAGE_MAX = 2000
-export const MESSAGE_KINDS = ['TEXT', 'SYSTEM', 'OFFER', 'COUNTER'] as const
+export const MESSAGE_KINDS = ['TEXT', 'SYSTEM', 'OFFER', 'COUNTER', 'IMAGE'] as const
+/** The body a photo line carries (preview, notification, the apps that do not draw images). */
+export const PHOTO_BODY = 'Foto'
 export type MessageKind = (typeof MESSAGE_KINDS)[number]
 
 export const CONTACT_GUARD = 'Para manter a garantia, contatos e pagamentos só pela HouseArt. Edite a mensagem para enviar.'

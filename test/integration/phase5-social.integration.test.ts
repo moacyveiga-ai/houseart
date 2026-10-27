@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
 import { reviewItemDetail } from '@/lib/admin-review/detail-server'
-import { listConversations, openConversation, readConversation, reportConversation, sendMessage, unreadMessages } from '@/lib/messaging/server'
+import { listConversations, openConversation, photoOf, readConversation, reportConversation, sendMessage, sendPhoto, unreadMessages } from '@/lib/messaging/server'
 import { addComment, artworkCounts, artworkSignals, commentsOf, createPost, deleteComment, feed, toggleReaction, vote } from '@/lib/community/server'
 import { isExpoEndpoint, pushConfig, savePushSubscription } from '@/lib/notifications/push'
 import { createScenario, type Scenario } from './fixtures'
@@ -44,6 +44,23 @@ describe('conversations', () => {
     expect(r.ok).toBe(true)
     const after = await readConversation(buyerId, id)
     expect(after.messages.at(-1)).toMatchObject({ kind: 'OFFER', body: expect.stringContaining('Proposta enviada') })
+  }, 60_000)
+})
+
+describe('photos in a conversation', () => {
+  it('only the two participants reach the photo; the vault ref never leaves; non-images are refused before the vault', async () => {
+    const id = await openConversation(buyerId, s.a1.artworkId)
+    const other = await openConversation(buyerId, s.a2.artworkId).catch(() => null)
+    const m = await prisma.message.create({ data: { conversationId: id, senderUserId: buyerId, kind: 'IMAGE', body: 'Foto', imageRef: 'vault:messages/x.jpg' } })
+    expect(await photoOf(buyerId, id, m.id)).toBe('vault:messages/x.jpg')
+    expect(await photoOf(s.a1.userId, id, m.id)).toBe('vault:messages/x.jpg')
+    await expect(photoOf(s.a2.userId, id, m.id)).rejects.toMatchObject({ status: 404 })
+    if (other) expect(await photoOf(buyerId, other, m.id)).toBeNull()
+    const read = await readConversation(s.a1.userId, id)
+    expect(read.messages.at(-1)).toMatchObject({ kind: 'IMAGE', body: 'Foto', imageUrl: `/api/messages/${id}/photos/${m.id}` })
+    expect(JSON.stringify(read)).not.toContain('vault:')
+    await expect(sendPhoto(buyerId, id, Buffer.from('not an image at all'))).rejects.toMatchObject({ status: 415 })
+    await expect(sendPhoto(s.a2.userId, id, Buffer.from('x'))).rejects.toMatchObject({ status: 404 })
   }, 60_000)
 })
 

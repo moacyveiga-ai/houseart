@@ -100,3 +100,10 @@
 .ha-msg-report__label { display: flex; flex-direction: column; gap: 6px; font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .ha-msg-report__note { resize: vertical; }
 .ha-msg-report__error { margin: 0; color: var(--ha-alert-500); font-size: var(--ha-text-caption); }
+.ha-msg-composer__photo { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: transparent; color: var(--ha-ink-500); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: color var(--ha-dur-fast) var(--ha-ease); }
+.ha-msg-composer__photo:hover { color: var(--ha-fg); }
+.ha-msg-composer__photo:disabled { color: var(--ha-ink-300); cursor: default; }
+.ha-msg-composer__photo:focus-visible { outline: 2px solid var(--ha-sand-500); outline-offset: 2px; }
+.ha-msg-bubble--photo { padding: 4px; text-decoration: none; }
+.ha-msg-bubble--photo img { display: block; max-width: 240px; max-height: 320px; width: auto; height: auto; border-radius: 10px; }
+.ha-msg-bubble--photo .ha-msg-bubble__time { padding: 2px 6px 0; }

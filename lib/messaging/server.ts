@@ -8,7 +8,11 @@ import { notify } from '@/lib/notifications/server'
 import { ArtworkError } from '@/lib/artworks/server'
 import { formatBRL } from '@/lib/artworks/domain'
 import { openReviewItem } from '@/lib/admin-review/server'
-import { checkMessage, isReportReason, otherOf, pairOf, previewOf, redactContacts, REPORT_NOTE_MAX, reportReasonLabel, sideOfConversation, verifiedByHouse, whenLabel, type MessageKind } from './core'
+import sharp from 'sharp'
+import { contentTypeOf } from '@/lib/storage/content-type'
+import { savePrivateFile } from '@/lib/storage/private-vault'
+import { CONTENT_IMAGE_MAX_SIDE, contentImageVerdict } from '@/lib/public-content/editor-core'
+import { PHOTO_BODY, checkMessage, isReportReason, otherOf, pairOf, previewOf, redactContacts, REPORT_NOTE_MAX, reportReasonLabel, sideOfConversation, verifiedByHouse, whenLabel, type MessageKind } from './core'
 
 export interface ConversationRow {
   id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null
@@ -16,7 +20,11 @@ export interface ConversationRow {
   /** only on the open conversation: my side of the counter, the asking price and whether "Ofertar" applies */
   myRole?: 'buyer' | 'seller'; artworkPrice?: string | null; canOffer?: boolean
 }
-export interface MessageRow { id: number; mine: boolean; kind: MessageKind; body: string; at: string; offerId: number | null }
+export interface MessageRow { id: number; mine: boolean; kind: MessageKind; body: string; at: string; offerId: number | null
+  /** kind IMAGE: the scoped route that streams the photo (only the two participants); never the vault ref. */
+  imageUrl?: string | null }
+
+const photoUrl = (conversationId: number, messageId: number) => `/api/messages/${conversationId}/photos/${messageId}`
 
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
 
@@ -109,7 +117,7 @@ export async function unansweredConversations(me: number, take = 20): Promise<{ 
   const rows = await prisma.conversation.findMany({ where: { OR: [{ userAId: me }, { userBId: me }], lastMessageAt: { not: null } }, orderBy: { lastMessageAt: 'desc' }, take: 50, select: { id: true, userAId: true, userBId: true } })
   if (!rows.length) return []
   const last = await prisma.message.findMany({ where: { conversationId: { in: rows.map((r) => r.id) } }, orderBy: [{ conversationId: 'asc' }, { id: 'desc' }], distinct: ['conversationId'], select: { conversationId: true, senderUserId: true, kind: true } })
-  const waiting = new Set(last.filter((m) => m.kind === 'TEXT' && m.senderUserId != null && m.senderUserId !== me).map((m) => m.conversationId))
+  const waiting = new Set(last.filter((m) => (m.kind === 'TEXT' || m.kind === 'IMAGE') && m.senderUserId != null && m.senderUserId !== me).map((m) => m.conversationId))
   const out = rows.filter((r) => waiting.has(r.id)).slice(0, take)
   const users = out.length ? await prisma.user.findMany({ where: { id: { in: out.map((r) => otherOf(r, me)) } }, select: { id: true, name: true, member: { select: { displayName: true } } } }) : []
   const byUser = new Map(users.map((u) => [u.id, u.member?.displayName ?? u.name]))
@@ -139,14 +147,14 @@ export async function readConversation(me: number, conversationId: number, after
   return {
     header: { id: c.id, artworkId: c.artworkId, artworkTitle: a?.title ?? null, artworkPublicId: a?.publicId ?? null, artworkCoverUrl: a?.media[0]?.publicUrl ?? null, other: { id: u.id, name, initials: initials(name), sub: await subOf(u.id), verified: verifiedByHouse({ memberStatus: u.member?.status ?? null, memberApprovedAt: u.member?.approvedAt ?? null, collectorVerifiedAt: u.collectorVerifiedAt, emailVerifiedAt: u.emailVerifiedAt, phoneVerifiedAt: u.phoneVerifiedAt }) }, preview: c.lastPreview ?? '', when: c.lastMessageAt ? whenLabel(c.lastMessageAt) : '', unread: 0,
       myRole, artworkPrice, canOffer: listed && myRole === 'buyer' && a!.saleMode === 'FIXED_WITH_OFFERS' },
-    messages: msgs.map((m) => ({ id: m.id, mine: m.senderUserId === me, kind: m.kind as MessageKind, body: m.body, at: m.createdAt.toISOString(), offerId: m.offerId })),
+    messages: msgs.map((m) => ({ id: m.id, mine: m.senderUserId === me, kind: m.kind as MessageKind, body: m.body, at: m.createdAt.toISOString(), offerId: m.offerId, imageUrl: m.kind === 'IMAGE' && m.imageRef ? photoUrl(conversationId, m.id) : null })),
   }
 }
 
-async function append(conversationId: number, sender: number | null, kind: MessageKind, body: string, offerId: number | null): Promise<MessageRow> {
+async function append(conversationId: number, sender: number | null, kind: MessageKind, body: string, offerId: number | null, imageRef: string | null = null): Promise<MessageRow> {
   const c = await prisma.conversation.findUniqueOrThrow({ where: { id: conversationId } })
   const m = await prisma.$transaction(async (tx) => {
-    const row = await tx.message.create({ data: { conversationId, senderUserId: sender, kind, body, offerId } })
+    const row = await tx.message.create({ data: { conversationId, senderUserId: sender, kind, body, offerId, imageRef } })
     await tx.conversation.update({ where: { id: conversationId }, data: { lastMessageAt: row.createdAt, lastPreview: previewOf(body, false, kind) } })
     await tx.conversationParticipant.updateMany({ where: { conversationId, userId: sender == null ? undefined : { not: sender } }, data: { unread: { increment: 1 } } })
     return row
@@ -156,7 +164,7 @@ async function append(conversationId: number, sender: number | null, kind: Messa
     const sName = await prisma.user.findUnique({ where: { id: sender }, select: { name: true, member: { select: { displayName: true } } } })
     await notify({ userId: otherOf(c, sender), kind: 'message.received', title: `Mensagem de ${sName?.member?.displayName ?? sName?.name ?? 'alguém'}`, body: body.slice(0, 120), href: `/messages/${conversationId}` })
   }
-  return { id: m.id, mine: false, kind, body, at: m.createdAt.toISOString(), offerId }
+  return { id: m.id, mine: false, kind, body, at: m.createdAt.toISOString(), offerId, imageUrl: imageRef ? photoUrl(conversationId, m.id) : null }
 }
 
 export async function sendMessage(me: number, conversationId: number, raw: unknown): Promise<MessageRow> {
@@ -165,6 +173,37 @@ export async function sendMessage(me: number, conversationId: number, raw: unkno
   if (!chk.ok) throw new ArtworkError(chk.code, chk.error, 422)
   const m = await append(conversationId, me, 'TEXT', chk.body, null)
   return { ...m, mine: true }
+}
+
+/**
+ * "Enviar foto" (the camera button of the composer): the bytes are checked (JPEG, PNG or WebP, up to
+ * 10 MB), re-encoded (≤ 2048 px JPEG, EXIF and GPS dropped) and kept in the PRIVATE vault — a photo of a
+ * collection is not public content. The line carries "Foto" for the preview and the push.
+ */
+/** a 10 MB PNG can decode to hundreds of MB: anything above 40 MP is refused before decoding */
+const PHOTO_MAX_PIXELS = 40_000_000
+
+export async function sendPhoto(me: number, conversationId: number, bytes: Buffer): Promise<MessageRow> {
+  await requireParticipant(me, conversationId)
+  const type = contentTypeOf(bytes.subarray(0, 32), null)
+  const v = contentImageVerdict(type, bytes.length)
+  if (!v.ok) throw new ArtworkError('INVALID_FILE', v.error, v.status)
+  let out: Buffer
+  try {
+    out = await sharp(bytes, { failOn: 'error', limitInputPixels: PHOTO_MAX_PIXELS }).rotate()
+      .resize({ width: CONTENT_IMAGE_MAX_SIDE, height: CONTENT_IMAGE_MAX_SIDE, fit: 'inside', withoutEnlargement: true })
+      .flatten({ background: '#ffffff' }).jpeg({ quality: 85 }).toBuffer()
+  } catch { throw new ArtworkError('INVALID_FILE', 'Imagem ilegível.', 415) }
+  const ref = await savePrivateFile({ buffer: out, contentType: 'image/jpeg', prefix: `messages/${conversationId}` })
+  const m = await append(conversationId, me, 'IMAGE', PHOTO_BODY, null, ref)
+  return { ...m, mine: true }
+}
+
+/** The photo of a message, for one of the two participants only (404 for anyone else or any other line). */
+export async function photoOf(me: number, conversationId: number, messageId: number): Promise<string | null> {
+  await requireParticipant(me, conversationId)
+  const m = await prisma.message.findFirst({ where: { id: messageId, conversationId, kind: 'IMAGE' }, select: { imageRef: true } })
+  return m?.imageRef ?? null
 }
 
 /** A system line in the conversation of the offer's buyer and seller (best-effort; a buyer without login has no conversation). */

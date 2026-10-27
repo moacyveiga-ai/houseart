@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, previewCardNumber, summaryLines } from './checkout-core'
+import { blockedReason, checkoutTotals, initialAddressId, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, previewCardNumber, summaryLines } from './checkout-core'
 
 const brl = (c: number) => `R$ ${c / 100}`
 
@@ -47,5 +47,21 @@ describe('Pix e boleto no checkout', () => {
     expect(blockedReason({ delivery: 'PICKUP', cepValid: false, hasCard: false, method: 'BOLETO', boletoProblem: 'Informe o CPF' })).toBe('Informe o CPF')
     expect(ctaLabel({ hasCard: false, total: 100, method: 'PIX' }, brl)).toBe('Pagar R$ 1 com Pix')
     expect(ctaLabel({ hasCard: false, total: 100, method: 'BOLETO' }, brl)).toBe('Pagar R$ 1 no boleto')
+  })
+})
+
+describe('initialAddressId', () => {
+  const a = (id: number, isDefault = false) => ({ id, label: 'Casa', line: 'Rua A, 1', cep: '40000000', isDefault })
+  it('opens on the default address, else the first, else none', () => {
+    expect(initialAddressId([a(1), a(2, true)])).toBe(2)
+    expect(initialAddressId([a(3), a(4)])).toBe(3)
+    expect(initialAddressId([])).toBeNull()
+  })
+})
+
+describe('blockedReason with a CEP that did not quote', () => {
+  it('says the CEP failed instead of asking for it', () => {
+    expect(blockedReason({ delivery: 'CARRIER', cepValid: false, cepFailed: true, hasCard: true, method: 'CARD', boletoProblem: null })).toMatch(/Não foi possível calcular/)
+    expect(blockedReason({ delivery: 'CARRIER', cepValid: false, hasCard: true, method: 'CARD', boletoProblem: null })).toMatch(/Informe o CEP/)
   })
 })

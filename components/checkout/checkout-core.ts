@@ -50,13 +50,13 @@ export const PAY_METHODS: { key: PayMethod; name: string; sub: string; icon: str
   { key: 'BOLETO', name: 'Boleto', sub: '1 dia útil', icon: 'receipt_long' },
 ]
 
-export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null }
+export interface ReadyInput { delivery: DeliveryMode; cepValid: boolean; hasCard: boolean; method?: PayMethod; boletoProblem?: string | null; /** the CEP was typed but did not quote */ cepFailed?: boolean }
 
 /** Why the order cannot be confirmed yet (null = ready). */
 export function blockedReason(i: ReadyInput): string | null {
   const method = i.method ?? 'CARD'
   if (method === 'CARD' && !i.hasCard) return 'Adicione um cartão para pagar.'
-  if (i.delivery === 'CARRIER' && !i.cepValid) return 'Informe o CEP de entrega para calcular frete e seguro.'
+  if (i.delivery === 'CARRIER' && !i.cepValid) return i.cepFailed ? 'Não foi possível calcular o frete deste CEP. Confira o CEP ou escolha outro endereço.' : 'Informe o CEP de entrega para calcular frete e seguro.'
   if (method === 'BOLETO' && i.boletoProblem) return i.boletoProblem
   return null
 }
@@ -99,4 +99,12 @@ export function previewCardNumber(masked: string, brand: string): string {
   let j = 0
   for (const g of groups) { parts.push(padded.slice(j, j + g)); j += g }
   return parts.join(' ')
+}
+
+/** A saved delivery address offered at checkout (Perfil › Endereços de entrega). */
+export interface CheckoutAddress { id: number; label: string; line: string; cep: string; isDefault: boolean }
+
+/** The address the checkout opens on: the default one, else the first; none → the CEP field. */
+export function initialAddressId(addresses: readonly CheckoutAddress[]): number | null {
+  return (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null
 }

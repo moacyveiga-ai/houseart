@@ -39,7 +39,7 @@ export default async function BuyerOfferPage({ params, searchParams }: { params:
   return (
     <>
       <OfferBar backHref={o.artworkPublicId ? `/e/artwork/${o.artworkPublicId}` : '/e/marketplace'} backLabel={o.artworkPublicId ? 'Voltar à obra' : 'Marketplace'} />
-      <OfferSent code={o.code} offer={offer} artwork={artwork} token={token} deliveryCep={o.deliveryCep ? formatCep(o.deliveryCep) : null} />
+      <OfferSent code={o.code} offer={offer} artwork={artwork} token={token} deliveryCep={o.deliveryCep ? formatCep(o.deliveryCep) : null} talkArtworkId={session && a ? a.id : null} />
     </>
   )
 }

@@ -8,7 +8,7 @@ export type ReaderState = 'reading' | 'valid' | 'removed' | 'confirm'
 
 export function TagReader({ state, title, subtitle, children }: { state: ReaderState; title: string; subtitle?: ReactNode; children?: ReactNode }) {
   return (
-    <div className={`ha-reader${state === 'confirm' ? ' ha-reader--confirm' : ''}`} role="status" aria-live="polite">
+    <div className={`ha-reader${state === 'confirm' ? ' ha-reader--confirm' : ''}`}>
       {state === 'reading' ? (
         <div className="ha-reader__ring"><span className="ha-reader__pulse" /><span className="ha-reader__pulse ha-reader__pulse--late" /><span className="ha-reader__core"><Icon name="contactless" size={32} /></span></div>
       ) : state === 'valid' ? (
@@ -18,7 +18,7 @@ export function TagReader({ state, title, subtitle, children }: { state: ReaderS
       ) : (
         <div className="ha-reader__ring ha-reader__ring--idle"><Icon name="contactless" size={44} /></div>
       )}
-      <div><div className="ha-reader__title">{title}</div>{subtitle ? <div className="ha-reader__sub">{subtitle}</div> : null}</div>
+      <div role="status" aria-live="polite"><div className="ha-reader__title">{title}</div>{subtitle ? <div className="ha-reader__sub">{subtitle}</div> : null}</div>
       {children}
     </div>
   )

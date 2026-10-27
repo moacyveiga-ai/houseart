@@ -190,7 +190,7 @@ export function DesignSystemGallery() {
         </section>
 
         <section id="herdados" className="dsg-section">
-          <h2 className="ha-h1" style={{ marginBottom: 'var(--ha-space-2)' }}>Herdados das plataformas House</h2>
+          <h2 className="ha-h1" style={{ marginBottom: 'var(--ha-space-2)' }}>Herdados da Housebroker</h2>
           <p className="ha-muted dsg-mb-8" style={{ margin: 0, maxWidth: 720 }}>Mesmos componentes, revestidos com tokens <code>--ha-*</code>. Um botão primário (color · sand) por tela; foco sempre com anel sand de 2 px.</p>
           <div className="ha-strong dsg-mb-4">Button · Átomo <span className="ha-muted" style={{ fontWeight: 400 }}>— passe o mouse nas linhas “interativo”</span></div>
           <div className="dsg-table-wrap">

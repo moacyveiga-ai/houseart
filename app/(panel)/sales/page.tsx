@@ -76,7 +76,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   return (
     <div className="ha-page">
       {summary ? <CollectionHeader s={summary} active="sales" /> : <div className="ha-page__head"><h1 className="ha-h1">{desk ? 'Negócios' : 'Vendas e ofertas'}</h1></div>}
-      <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector || !can.manageRules ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules' }])]} />
+      <Tabs active={tab} items={[{ key: 'offers', label: desk ? 'Ofertas' : 'Ofertas recebidas', href: '/sales', count: open }, { key: 'deals', label: desk ? 'Vendas' : 'Em andamento', href: '/sales?tab=deals', count: live }, ...(collector ? [] : [{ key: 'rules', label: 'Regras', href: '/sales/rules', locked: !can.manageRules }])]} />
       {onlyWork ? (
         <div className="ha-row" style={{ gap: 8, alignItems: 'center' }}><span className="ha-chip ha-chip--on">{offers.length ? 'Ofertas de' : 'Nenhuma oferta para'} <i>{onlyWork.title}</i></span><Link href="/sales" className="ha-link ha-sm">Ver todas as ofertas</Link></div>
       ) : null}

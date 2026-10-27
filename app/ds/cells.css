@@ -22,7 +22,7 @@
 .ha-strong { font-weight: 600; color: var(--ha-fg); }
 
 /* ── buttons ────────────────────────────────────────────────────────────── */
-.ha-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--ha-space-2); font-weight: 600; font-size: var(--ha-text-body-sm); padding: var(--ha-space-3) var(--ha-space-5); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease), transform var(--ha-dur-fast) var(--ha-ease); }
+.ha-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--ha-space-2); font-weight: 600; font-size: var(--ha-text-body-sm); box-sizing: border-box; min-height: 40px; line-height: var(--ha-lh-body-sm); padding: 0 var(--ha-space-5); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background var(--ha-dur-fast) var(--ha-ease), border-color var(--ha-dur-fast) var(--ha-ease), transform var(--ha-dur-fast) var(--ha-ease); }
 .ha-btn:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .ha-btn--primary { background: var(--ha-sand-500); color: var(--ha-ink-900); }
 .ha-btn--primary:hover { background: var(--ha-sand-600); }
@@ -38,11 +38,13 @@
 .ha-btn--ghost { background: transparent; color: var(--ha-fg); padding-left: var(--ha-space-3); padding-right: var(--ha-space-3); }
 .ha-btn--ghost:hover { text-decoration: underline; text-underline-offset: 4px; }
 /* sizes of the handoff table: xs/sm = 32 (caption), md = 40 (body-sm), lg = 48 (body). The screens of the
-   Web App were built with `sm` = 40 and `md` = 48 by default, so the names below keep those heights. */
-.ha-btn--xs { padding: var(--ha-space-1) var(--ha-space-3); font-size: var(--ha-text-caption); }
-.ha-btn--sm { padding: var(--ha-space-2) var(--ha-space-4); }
-.ha-btn--md { padding: var(--ha-space-3) var(--ha-space-6); font-size: var(--ha-text-body); }
-.ha-btn--lg { padding: var(--ha-space-3) var(--ha-space-6); font-size: var(--ha-text-body); }
+   Web App were built with `sm` = 40 and `md` = 48 by default, so the names below keep those heights.
+   The height is set (border-box, the 1 px border inside it), not derived from padding + line-height:
+   padding plus the transparent border made them 34/42/50. */
+.ha-btn--xs { min-height: 32px; padding: 0 var(--ha-space-3); font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); }
+.ha-btn--sm { min-height: 40px; padding: 0 var(--ha-space-4); }
+.ha-btn--md { min-height: 48px; padding: 0 var(--ha-space-6); font-size: var(--ha-text-body); line-height: var(--ha-lh-body); }
+.ha-btn--lg { min-height: 48px; padding: 0 var(--ha-space-6); font-size: var(--ha-text-body); line-height: var(--ha-lh-body); }
 .ha-btn:active:not([disabled]) { transform: translateY(1px); }
 .ha-btn--outline:active:not([disabled]) { background: var(--ha-paper-200); }
 .ha-btn--ghost:active:not([disabled]) { color: var(--ha-ink-500); }
@@ -335,7 +337,7 @@
 .ha-media-slot__q--pending { color: var(--ha-ink-500); }
 .ha-media-slot { flex-direction: column; gap: var(--ha-space-2); padding: var(--ha-space-3); position: relative; }
 .ha-media-slot img { position: absolute; inset: 0; opacity: .9; }
-.ha-media-slot__name, .ha-media-slot__q, .ha-media-slot .ha-btn { position: relative; z-index: 1; background: var(--ha-bg); padding: 2px 6px; border-radius: var(--ha-radius-sm); }
+.ha-media-slot__name, .ha-media-slot__q, .ha-media-slot .ha-btn { position: relative; z-index: 1; background: var(--ha-bg); padding: 2px 6px; min-height: 0; border-radius: var(--ha-radius-sm); }
 .ha-grid-cards--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ha-grid-cards--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 720px) { .ha-grid-cards--2, .ha-grid-cards--3 { grid-template-columns: 1fr; } }

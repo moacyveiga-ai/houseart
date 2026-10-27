@@ -186,7 +186,7 @@ export function Gallery({ g, artistFilter, viewer = { signedIn: false, following
                   {p.bio ? <p className="hp-gallery-person__bio">{p.bio}</p> : null}
                   {p.email || p.phone ? (
                     <span className="hp-gallery-person__contacts">
-                      {p.email ? <a href={`mailto:${p.email}`}><Icon name="mail" size={16} />{p.email}</a> : null}
+                      {p.email ? <a href={`mailto:${encodeURIComponent(p.email)}`}><Icon name="mail" size={16} />{p.email}</a> : null}
                       {p.phone ? <a href={`tel:${p.phone.replace(/[^\d+]/g, '')}`}><Icon name="call" size={16} />{p.phone}</a> : null}
                     </span>
                   ) : null}

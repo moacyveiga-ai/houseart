@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, verifyPassword, createLocalSession, getSessionByToken } from '@/lib/auth'
-import { completePasswordReset, resendPhoneCode, startPasswordReset, startPhoneCode, verifyPhoneCode } from '@/lib/auth/access-code-server'
+import { completePasswordReset, resendEmailChange, resendPhoneCode, startEmailChange, startPasswordReset, startPhoneCode, verifyAccessCode, verifyEmailChange, verifyPhoneCode } from '@/lib/auth/access-code-server'
 import { sha256 } from '@/lib/auth/access-code-core'
 import { completeOAuth } from '@/lib/auth/oauth/server'
 import { savePreferences } from '@/lib/accounts/preferences-server'
@@ -40,6 +40,34 @@ describe('phone by SMS', () => {
     expect(row.purpose).toBe('SILENT')
     expect(await verifyPhoneCode(b.id, s2.token, await codeOf(s2.token))).toMatchObject({ ok: false })
     expect(await resendPhoneCode(b.id, s2.token)).toMatchObject({ ok: true })
+  }, 60_000)
+})
+
+describe('e-mail change by code', () => {
+  it('the code goes to the new address; only the owner of the request confirms; a taken address is silent', async () => {
+    const a = await prisma.user.create({ data: { email: 'a@t.test', name: 'A', passwordHash: await hashPassword('senha-forte-1'), profile: 'collector', active: true } })
+    const b = await prisma.user.create({ data: { email: 'b@t.test', name: 'B', passwordHash: await hashPassword('senha-forte-1'), profile: 'collector', active: true } })
+    expect(await startEmailChange(a.id, 'nao-e-email')).toMatchObject({ ok: false })
+    expect(await startEmailChange(a.id, 'A@t.test')).toMatchObject({ ok: false })
+    const s = await startEmailChange(a.id, 'Nova@T.test')
+    expect(s.ok).toBe(true)
+    if (!s.ok) return
+    // the public code door never takes it
+    expect(await verifyAccessCode(s.token, await codeOf(s.token), {})).toMatchObject({ ok: false })
+    expect(await verifyEmailChange(b.id, s.token, await codeOf(s.token))).toMatchObject({ ok: false })
+    expect(await verifyEmailChange(a.id, s.token, '000000')).toMatchObject({ ok: false })
+    expect(await verifyEmailChange(a.id, s.token, await codeOf(s.token))).toMatchObject({ ok: true, email: 'nova@t.test' })
+    const ua = await prisma.user.findUniqueOrThrow({ where: { id: a.id } })
+    expect(ua.email).toBe('nova@t.test'); expect(ua.emailVerifiedAt).not.toBeNull()
+    expect(await verifyEmailChange(a.id, s.token, await codeOf(s.token))).toMatchObject({ ok: false })
+    // B asks for A's new address: blind ok, SILENT row, never verifies
+    const s2 = await startEmailChange(b.id, 'nova@t.test')
+    expect(s2.ok).toBe(true)
+    if (!s2.ok) return
+    expect((await prisma.accessCode.findUniqueOrThrow({ where: { tokenHash: sha256(s2.token) } })).purpose).toBe('SILENT')
+    expect(await verifyEmailChange(b.id, s2.token, await codeOf(s2.token))).toMatchObject({ ok: false })
+    expect(await resendEmailChange(b.id, s2.token)).toMatchObject({ ok: true })
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: b.id } })).email).toBe('b@t.test')
   }, 60_000)
 })
 

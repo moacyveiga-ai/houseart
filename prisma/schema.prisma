@@ -108,11 +108,11 @@ model Session {
 model AccessCode {
   id           Int       @id @default(autoincrement())
   tokenHash    String    @unique
-  purpose      String // SIGNUP | LOGIN | SILENT | PHONE | RESET
+  purpose      String // SIGNUP | LOGIN | SILENT | PHONE | RESET | EMAIL_CHANGE
   email        String
   channel      String    @default("EMAIL") // EMAIL | SMS
   phone        String? // E.164, for PHONE
-  userId       Int? // the logged user who verifies a phone
+  userId       Int? // the logged user who verifies a phone or a new e-mail
   codeHash     String
   attempts     Int       @default(0)
   resends      Int       @default(0)

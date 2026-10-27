@@ -2,7 +2,7 @@
 // client access codes: blind responses, hashed code, atomic attempts, blocks.
 import { createHash, randomBytes, randomInt } from 'node:crypto'
 
-export const CODE_PURPOSES = ['SIGNUP', 'LOGIN', 'SILENT', 'PHONE', 'RESET'] as const
+export const CODE_PURPOSES = ['SIGNUP', 'LOGIN', 'SILENT', 'PHONE', 'RESET', 'EMAIL_CHANGE'] as const
 export const RESET_TTL_MS = 60 * 60_000
 /** Outside production, AUTH_CODE_ECHO=1 returns the code in the start response (smoke/dev). Never on Vercel production. */
 export function codeEchoAllowed(env: Record<string, string | undefined> = process.env): boolean {

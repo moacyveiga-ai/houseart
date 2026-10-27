@@ -2,6 +2,8 @@
 // the last five terms, newest first, a repeated term moves to the top. Pure — the screen keeps the
 // list in this viewer's localStorage (a per-viewer convenience; nothing reaches the server).
 export const RECENT_KEY = 'ha-search-recent'
+/** One list per account: two people on the same browser never see each other's searches. */
+export const recentKeyOf = (userId: number) => `${RECENT_KEY}:${userId}`
 export const RECENT_MAX = 5
 const TERM_MAX = 120
 

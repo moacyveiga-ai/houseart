@@ -121,7 +121,7 @@
 .hp-home-event__save { cursor: pointer; display: flex; align-items: center; gap: var(--ha-space-1); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 600; padding: var(--ha-space-2) var(--ha-space-3); min-height: 44px; border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-paper-200); background: transparent; color: var(--ha-ink-900); white-space: nowrap; }
 .hp-home-event__save:hover { border-color: var(--ha-ink-900); }
 .hp-home-event__save[aria-disabled="true"] { cursor: not-allowed; opacity: .7; }
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .hp-home-event { grid-template-columns: 64px minmax(0, 1fr); }
   .hp-home-event__save { grid-column: 2; justify-self: start; }
 }

@@ -153,3 +153,5 @@ a.hp-artwork__seller-name:hover { text-decoration: underline; color: var(--ha-in
 /* likes and comments of the artwork, beside the price (handoff "HouseArt Obra" › bloco de preço) */
 .hp-artwork__social { display: flex; gap: var(--ha-space-4); font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); font-variant-numeric: tabular-nums; }
 .hp-artwork__social span { display: inline-flex; align-items: center; gap: 6px; }
+/* "Sobre a obra" written by whoever registered the work: single line breaks are kept */
+.hp-artwork__written { white-space: pre-line; }

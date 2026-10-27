@@ -21,6 +21,14 @@ export function hasContactLeak(text: string): boolean {
   return CONTACT_LEAK.test(text.replace(MONEY, ' '))
 }
 
+/** A run of years ("2019-2021", "1998 2004 2010") reads as a phone to the chat filter. */
+const YEAR_RUN = /\b(?:1\d{3}|20\d{2})(?:\s*[-–/,\s]\s*(?:1\d{3}|20\d{2}))+\b/g
+
+/** The chat filter for descriptive text ("Sobre a obra"): the same contacts, but runs of years pass. */
+export function hasContactLeakInProse(text: string): boolean {
+  return hasContactLeak(text.replace(YEAR_RUN, ' anos '))
+}
+
 export type MessageCheck = { ok: true; body: string } | { ok: false; error: string; code: 'EMPTY' | 'TOO_LONG' | 'CONTACT' }
 
 export function checkMessage(raw: unknown): MessageCheck {

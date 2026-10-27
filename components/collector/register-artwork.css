@@ -49,7 +49,7 @@
 .ha-reg__foot > * { flex: 1; }
 .ha-reg__cta { height: 50px; }
 .ha-reg__two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ha-space-2); }
-@media (max-width: 420px) { .ha-reg__two { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .ha-reg__two { grid-template-columns: 1fr; } }
 /* chips of the sheet (prototype cbGrupos), dimensions, review and the Pronto screen */
 .ha-reg__chips { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); }
 .ha-reg__chip { height: 36px; padding: 0 14px; border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-bg); font: inherit; font-size: var(--ha-text-body-sm); font-weight: 500; color: var(--ha-fg); cursor: pointer; }

@@ -12,6 +12,8 @@ export interface WizardState {
   category: string
   heightMm: number | null; widthMm: number | null; depthMm: number | null
   edition: string | null; signatureLocation: string | null; series: string | null
+  /** "Sobre a obra" of the public page */
+  description?: string | null
   conditionGrade: string | null; saleMode: string | null; listPriceCents: number | null
   media: WizardMedia[]; conditionRegions: WizardRegion[]; historyItems: WizardHistory[]
 }
@@ -55,5 +57,6 @@ export function sheetPatch(s: WizardState) {
     ...((ARTWORK_CATEGORIES as readonly string[]).includes(s.category) ? { category: s.category } : {}),
     heightMm: s.heightMm === null ? null : s.heightMm / 10, widthMm: s.widthMm === null ? null : s.widthMm / 10, depthMm: s.depthMm === null ? null : s.depthMm / 10,
     edition: s.edition, signatureLocation: s.signatureLocation, series: s.series,
+    ...(s.description !== undefined ? { description: s.description } : {}),
   }
 }

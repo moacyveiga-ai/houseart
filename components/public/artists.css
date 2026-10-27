@@ -29,4 +29,4 @@
 .hp-artists-card__count { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-900); }
 
 @media (max-width: 1023px) { .hp-artists-search { flex-basis: 100%; min-width: 0; } }
-@media (max-width: 600px) { .hp-artists-grid, .hp-market-artists__grid { grid-template-columns: repeat(2, 1fr); gap: var(--ha-space-4); } }
+@media (max-width: 720px) { .hp-artists-grid, .hp-market-artists__grid { grid-template-columns: repeat(2, 1fr); gap: var(--ha-space-4); } }

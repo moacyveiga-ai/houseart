@@ -88,7 +88,7 @@
 .hp-verification-foot p { margin: 0; font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); text-wrap: pretty; }
 .hp-verification-foot small { font-size: var(--ha-text-caption); color: var(--ha-ink-300); }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .hp-verification { padding: 0; }
   .hp-verification__card { max-width: none; box-shadow: none; }
 }

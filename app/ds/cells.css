@@ -238,7 +238,7 @@
 .ha-drawer__nav { display: flex; flex-direction: column; gap: var(--ha-space-1); }
 .ha-drawer .ha-nav-item { min-height: 44px; }
 .ha-topbar__search:focus-within { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
-@media (max-width: 600px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name, .ha-topbar__system { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
+@media (max-width: 720px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name, .ha-topbar__system { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
 
 /* ── overlays ───────────────────────────────────────────────────────────── */
 .ha-scrim { position: fixed; inset: 0; z-index: 80; background: var(--ha-scrim); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-6); }

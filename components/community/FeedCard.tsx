@@ -5,6 +5,7 @@
 // (curtir · comentar · compartilhar · salvar).
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
+import { AvatarFace } from '@/components/ds/AvatarFace'
 import type { FeedItem } from '@/lib/community/server'
 import { authorLineOf, goingLabel, panelNewsHref, personTagOf, votesLabel } from './community-core'
 
@@ -31,8 +32,8 @@ export function FeedCard({ item, actions, busy, myMemberId }: { item: FeedItem; 
     <article className="ha-cm-post" aria-label={item.title ?? item.body.slice(0, 60) ?? 'Post'}>
       <div className="ha-cm-post__by">
         {item.author.profileHref
-          ? <Link href={item.author.profileHref} className="ha-avatar ha-cm-post__avatar ha-cm-post__avatar--link" aria-label={`Perfil de ${item.author.name}`}>{item.author.initials}</Link>
-          : <span className="ha-avatar ha-cm-post__avatar" aria-hidden="true">{item.author.initials}</span>}
+          ? <Link href={item.author.profileHref} className="ha-avatar ha-cm-post__avatar ha-cm-post__avatar--link" aria-label={`Perfil de ${item.author.name}`}><AvatarFace initials={item.author.initials} url={item.author.avatarUrl} /></Link>
+          : <span className="ha-avatar ha-cm-post__avatar" aria-hidden="true"><AvatarFace initials={item.author.initials} url={item.author.avatarUrl} /></span>}
         <div className="ha-cm-post__who">
           <span className="ha-cm-post__name">{item.author.profileHref ? <Link href={item.author.profileHref} className="ha-cm-post__namelink">{item.author.name}</Link> : <span>{item.author.name}</span>}<span className={`ha-cm-tag${tag.official ? ' ha-cm-tag--official' : ''}`}>{tag.label}</span></span>
           {line ? <span className="ha-cm-post__sub">{line}</span> : null}

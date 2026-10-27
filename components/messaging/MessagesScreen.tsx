@@ -5,6 +5,7 @@
 // in the URL (/messages/<id>) by pushState, so the two pages share this island.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import { AvatarFace } from '@/components/ds/AvatarFace'
 import { ConversationPane } from './ConversationPane'
 import { conversationIdOfPath, touchRow, type ConversationView, type MessageRole, type MessageView } from './messages-core'
 import { previewOf } from '@/lib/messaging/core'
@@ -67,7 +68,7 @@ export function MessagesScreen({ initialRows, initialConversationId, role, empty
               <span className="ha-msg-row__pic">
                 <span className="ha-msg-thumb" aria-hidden="true">{/* eslint-disable-next-line @next/next/no-img-element -- derivative served by the public store */}
                   {c.artworkCoverUrl ? <img src={c.artworkCoverUrl} alt="" /> : <Icon name="person" size={22} />}</span>
-                <span className="ha-msg-avatar ha-msg-avatar--badge" aria-hidden="true">{c.other.initials}</span>
+                <span className="ha-msg-avatar ha-msg-avatar--badge" aria-hidden="true"><AvatarFace initials={c.other.initials} url={c.other.avatarUrl} /></span>
               </span>
               <span className="ha-msg-row__col">
                 <span className="ha-msg-row__top"><span className="ha-msg-row__name">{c.other.name}</span><span className="ha-msg-row__when">{c.when}</span></span>

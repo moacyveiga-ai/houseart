@@ -575,6 +575,8 @@ a.ha-review__title:hover { text-decoration: underline; }
 .ha-offer__value span { font-size: var(--ha-text-caption); font-weight: 600; }
 .ha-offer__who { display: flex; align-items: center; gap: var(--ha-space-3); }
 .ha-avatar--32 { width: 32px; height: 32px; }
+/* the profile photo inside any avatar circle (components/ds/AvatarFace) */
+.ha-avatar__img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
 .ha-offer__name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ha-offer__name b { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-ink-900); }
 .ha-offer__name span { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }

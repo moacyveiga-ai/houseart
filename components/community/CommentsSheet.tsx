@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
+import { AvatarFace } from '@/components/ds/AvatarFace'
 import { Modal } from '@/components/ds/Modal'
 import { hasContactLeak } from '@/lib/messaging/core'
 import type { CommentRow, FeedItem } from '@/lib/community/server'
@@ -96,7 +97,7 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
           {rows && rows.length === 0 ? <div className="ha-cm-empty">Seja a primeira pessoa a comentar.</div> : null}
           {rows?.map((c) => (
             <div key={c.id} className="ha-cm-comment">
-              <span className="ha-avatar" aria-hidden="true">{c.mine ? me.initials : c.author.initials}</span>
+              <span className="ha-avatar" aria-hidden="true">{c.mine ? me.initials : <AvatarFace initials={c.author.initials} url={c.author.avatarUrl} />}</span>
               <div className="ha-cm-comment__body">
                 <span className="ha-cm-comment__name">{c.mine ? 'Você' : c.author.profileHref ? <Link href={c.author.profileHref} className="ha-cm-post__namelink" onClick={onClose}>{c.author.name}</Link> : c.author.name}{isAuthor(c) ? <span className="ha-cm-comment__author">autor</span> : null}<span className="ha-cm-comment__when">{c.when}</span></span>
                 <span className="ha-cm-comment__text">{c.body}</span>

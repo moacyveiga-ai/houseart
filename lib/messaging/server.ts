@@ -36,9 +36,10 @@ export async function counterpartOfArtwork(artworkId: number): Promise<{ userId:
 
 /** Who answers for a member: its own login, or the tenant's first active ADMIN (a gallery member without a login). */
 export async function counterpartOfMember(memberId: number): Promise<{ userId: number; label: string } | null> {
-  const m = await prisma.member.findUnique({ where: { id: memberId }, select: { userId: true, displayName: true, tenantId: true } })
+  const m = await prisma.member.findUnique({ where: { id: memberId }, select: { userId: true, displayName: true, tenantId: true, user: { select: { active: true } } } })
   if (!m) return null
-  if (m.userId) return { userId: m.userId, label: m.displayName }
+  // a member whose own login is blocked answers through the tenant's admin, never into an unread inbox
+  if (m.userId && m.user?.active) return { userId: m.userId, label: m.displayName }
   const admin = await prisma.user.findFirst({ where: { tenantId: m.tenantId, tenantRole: 'ADMIN', active: true }, select: { id: true }, orderBy: { id: 'asc' } })
   return admin ? { userId: admin.id, label: m.displayName } : null
 }

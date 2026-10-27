@@ -19,7 +19,10 @@ export async function POST(req: Request) {
     const u = await requireAuth()
     const limited = await socialWriteLimit(u.id, 'open'); if (limited) return limited
     const body = (await req.json().catch(() => ({}))) as { artworkId?: unknown; userId?: unknown; gallery?: unknown }
-    if (typeof body.gallery === 'string' && /^[a-z0-9-]{1,80}$/.test(body.gallery)) return NextResponse.json({ ok: true, id: await openGalleryConversation(u.id, body.gallery) })
+    if (body.gallery !== undefined) {
+      if (typeof body.gallery !== 'string' || !/^[a-z0-9-]{1,80}$/.test(body.gallery)) return NextResponse.json({ error: 'Galeria não encontrada.' }, { status: 404 })
+      return NextResponse.json({ ok: true, id: await openGalleryConversation(u.id, body.gallery) })
+    }
     const artworkId = typeof body.artworkId === 'number' && Number.isInteger(body.artworkId) ? body.artworkId : null
     const other = typeof body.userId === 'number' && Number.isInteger(body.userId) ? body.userId : undefined
     if (artworkId == null && other == null) return NextResponse.json({ error: 'Informe a obra ou a pessoa.' }, { status: 400 })

@@ -6,6 +6,7 @@ import { TagReader } from '@/components/ds/TagReader'
 import { formatBRL } from '@/lib/artworks/domain'
 import type { SerializableDeal as Serializable } from './deal-view'
 import { EscrowPay } from '@/components/payments/EscrowPay'
+import { TalkToSellerButton } from '@/components/public/TalkToSellerButton'
 
 type Side = 'seller' | 'buyer'
 
@@ -74,6 +75,8 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
             <span><b>{deal.escrowPaid || done ? 'Pago em garantia' : 'A pagar em garantia'}</b></span><span className="ha-num"><b>{formatBRL(amount + extras)}</b></span>
           </div>
           {deal.phase === 'OFFER_ACCEPTED' && !deal.exception ? <EscrowPay dealId={deal.id} totalCents={(amount + extras).toString()} pending={deal.escrowPending} /> : null}
+          {/* Compras · "Falar com o vendedor" (HouseArt Web App.dc.html): the conversation with who SOLD, about this artwork */}
+          {deal.exception !== 'CANCELLED' ? <div className="ha-row"><TalkToSellerButton dealId={deal.id} signedIn label="Falar com o vendedor" className="ha-btn ha-btn--outline ha-btn--sm" /></div> : null}
           {deal.exception === 'CANCELLED' ? <p className="ha-muted">Negócio cancelado: o pagamento não foi identificado no prazo e a reserva da obra foi desfeita.</p> : null}
           {deal.phase === 'ESCROW' && !deal.buyerSigned ? <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => post('sign')}>Assinar o termo de transferência</button> : null}
           {deal.phase === 'ESCROW' && deal.buyerSigned && !deal.sellerSigned ? <p className="ha-muted">Aguardando a assinatura do vendedor.</p> : null}

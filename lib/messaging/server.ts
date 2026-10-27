@@ -22,11 +22,17 @@ const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((
 
 /** The login that answers for an artwork: the member's user, else an admin of its tenant. */
 export async function counterpartOfArtwork(artworkId: number): Promise<{ userId: number; label: string } | null> {
-  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { member: { select: { userId: true, displayName: true, tenantId: true, kind: true } } } })
-  if (!a) return null
-  if (a.member.userId) return { userId: a.member.userId, label: a.member.displayName }
-  const admin = await prisma.user.findFirst({ where: { tenantId: a.member.tenantId, tenantRole: 'ADMIN', active: true }, select: { id: true }, orderBy: { id: 'asc' } })
-  return admin ? { userId: admin.id, label: a.member.displayName } : null
+  const a = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { memberId: true } })
+  return a ? counterpartOfMember(a.memberId) : null
+}
+
+/** Who answers for a member: its own login, or the tenant's first active ADMIN (a gallery member without a login). */
+export async function counterpartOfMember(memberId: number): Promise<{ userId: number; label: string } | null> {
+  const m = await prisma.member.findUnique({ where: { id: memberId }, select: { userId: true, displayName: true, tenantId: true } })
+  if (!m) return null
+  if (m.userId) return { userId: m.userId, label: m.displayName }
+  const admin = await prisma.user.findFirst({ where: { tenantId: m.tenantId, tenantRole: 'ADMIN', active: true }, select: { id: true }, orderBy: { id: 'asc' } })
+  return admin ? { userId: admin.id, label: m.displayName } : null
 }
 
 async function subOf(userId: number): Promise<string> {

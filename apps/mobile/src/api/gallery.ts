@@ -15,13 +15,15 @@ export type ArtworkStatus = 'DRAFT' | 'IN_CERTIFICATION' | 'AUTHENTICATED' | 'LI
 export interface InventoryItem {
   id: number; title: string; year: number | null; artistName: string; status: ArtworkStatus
   listPriceCents: string | null; saleMode: string | null; publicId: string | null; coverUrl: string | null
-  listing: { views7d: number; openOffers: number; paused: boolean } | null
+  listing: { views7d: number; openOffers: number; paused: boolean; saves?: number } | null
+  /** the newest deal of a reserved/sold work (buyer and phase) */
+  deal?: { buyerName: string; phase: string } | null
 }
 export interface Inventory { items: InventoryItem[]; counts: Record<string, number>; summary: string }
 
 /** GET /api/gallery/artworks/[id] → { ok, artwork, listing, rules } */
 export interface ListingHead { id: number; title: string; year: number | null; artistName: string; publicId: string | null; coverUrl: string | null; status: ArtworkStatus }
-export interface ListingState { listPriceCents: string; acceptsOffers: boolean; fixedPrice: boolean; paused: boolean; stats: { views7d: number; views30d: number; openOffers: number } }
+export interface ListingState { listPriceCents: string; acceptsOffers: boolean; fixedPrice: boolean; paused: boolean; stats: { views7d: number; views30d: number; openOffers: number; saves?: number; likes?: number } }
 export interface ListingRules { refuseBelowBps: number; responseHours: number }
 export interface ListingDetail { artwork: ListingHead; listing: ListingState | null; rules: ListingRules | null }
 
@@ -31,7 +33,7 @@ export const listingDetail = (artworkId: number): Promise<ListingDetail> => api<
 
 /** PATCH /api/artworks/[id]/listing — one field at a time; the server answers with the listing (or the error, e.g. a price under the minimum). */
 export async function patchListing(artworkId: number, body: { listPriceCents?: string } | { acceptsOffers: boolean } | { paused: boolean }): Promise<ListingState> {
-  const r = await api<{ listing: { listPriceCents: string | number; acceptsOffers: boolean; fixedPrice: boolean; paused: boolean; stats: { views7d: number; views30d: number; openOffers: number } } }>(`/api/artworks/${artworkId}/listing`, { method: 'PATCH', body })
+  const r = await api<{ listing: { listPriceCents: string | number; acceptsOffers: boolean; fixedPrice: boolean; paused: boolean; stats: { views7d: number; views30d: number; openOffers: number; saves?: number; likes?: number } } }>(`/api/artworks/${artworkId}/listing`, { method: 'PATCH', body })
   return { ...r.listing, listPriceCents: String(r.listing.listPriceCents) }
 }
 

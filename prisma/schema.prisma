@@ -725,6 +725,7 @@ model Deal {
   @@index([tenantId, phase])
   @@index([buyerUserId, phase])
   @@index([escrowPendingRef])
+  @@index([artworkId]) // "Faixa sugerida": completed sales of an artist go Deal → Artwork
 }
 
 model DealPhaseEvent {

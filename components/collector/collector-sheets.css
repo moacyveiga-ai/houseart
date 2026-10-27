@@ -25,6 +25,8 @@
 .ha-cs__cta-row { display: flex; gap: var(--ha-space-2); }
 .ha-cs__cta-row > * { flex: 1; }
 .ha-cs__lead { font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-fg-muted); }
+.ha-cs__hint { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--ha-radius-md); background: var(--ha-sand-100); color: var(--ha-ink-900); font-size: var(--ha-text-body-sm); line-height: 19px; }
+.ha-cs__hint .ha-icon { color: var(--ha-sand-600); flex: none; }
 .ha-cs__err { font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-alert-500); font-weight: 600; }
 /* the artwork line (wall · title · sub) */
 .ha-cs__work { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; }

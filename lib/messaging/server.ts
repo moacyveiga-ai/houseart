@@ -147,11 +147,12 @@ export async function readConversation(me: number, conversationId: number, after
   const other = otherOf(c, me)
   const u = await prisma.user.findUniqueOrThrow({ where: { id: other }, select: { id: true, name: true, avatarUrl: true, collectorVerifiedAt: true, emailVerifiedAt: true, phoneVerifiedAt: true, member: { select: { displayName: true, kind: true, status: true, approvedAt: true } } } })
   const meRow = await prisma.user.findUniqueOrThrow({ where: { id: me }, select: { tenantId: true, member: { select: { kind: true } } } })
-  const a = c.artworkId ? await prisma.artwork.findUnique({ where: { id: c.artworkId }, select: { title: true, publicId: true, status: true, seal: true, saleMode: true, listPriceCents: true, listingPausedAt: true, member: { select: { userId: true, tenantId: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : null
+  const a = c.artworkId ? await prisma.artwork.findUnique({ where: { id: c.artworkId }, select: { title: true, publicId: true, status: true, seal: true, saleMode: true, listPriceCents: true, listingPausedAt: true, member: { select: { userId: true, tenantId: true, tenant: { select: { status: true } } } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : null
   // the artwork's member lost its login (SetNull): the tenant ADMIN answers for it, as in counterpartOfArtwork
   const answerer = a ? a.member.userId ?? (await prisma.user.findFirst({ where: { tenantId: a.member.tenantId, tenantRole: 'ADMIN', active: true }, select: { id: true }, orderBy: { id: 'asc' } }))?.id ?? null : null
   const myRole = a ? sideOfConversation({ artworkMemberUserId: answerer, artworkTenantId: a.member.tenantId, me, myTenantId: meRow.tenantId, myMemberKind: meRow.member?.kind ?? null }) : undefined
-  const listed = !!a && a.status === 'LISTED' && a.seal === 'GREEN' && !!a.publicId && !a.listingPausedAt
+  // a suspended gallery's work is off the site: no price and no "Ofertar" in the strip either
+  const listed = !!a && a.status === 'LISTED' && a.seal === 'GREEN' && !!a.publicId && !a.listingPausedAt && a.member.tenant.status === 'ACTIVE'
   const artworkPrice = !listed ? null : a!.saleMode === 'ON_REQUEST' || a!.listPriceCents === null ? 'Sob consulta' : formatBRL(a!.listPriceCents)
   const msgs = await prisma.message.findMany({ where: { conversationId, id: { gt: afterId } }, orderBy: { id: 'asc' }, take: 200 })
   await prisma.conversationParticipant.updateMany({ where: { conversationId, userId: me }, data: { unread: 0, lastReadAt: new Date() } })

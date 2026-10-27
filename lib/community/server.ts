@@ -85,7 +85,7 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
   ])
   const authors = await authorsOf(posts.map((p) => p.authorUserId), viewer)
   const artIds = posts.map((p) => p.artworkId).filter((v): v is number => v != null)
-  const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds } }, select: { id: true, publicId: true, title: true, status: true, saleMode: true, listPriceCents: true, listingPausedAt: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
+  const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds }, member: { tenant: { status: 'ACTIVE' } } }, select: { id: true, publicId: true, title: true, status: true, saleMode: true, listPriceCents: true, listingPausedAt: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
   const byArt = new Map(arts.map((a) => [a.id, a]))
   const mine = await myReactions(viewer, [...posts.map((p) => ({ kind: 'POST' as const, id: p.id })), ...news.map((n) => ({ kind: 'NEWS' as const, id: n.id })), ...agenda.map((e) => ({ kind: 'EVENT' as const, id: e.id }))])
   const [newsCounts, eventCounts, newsComments] = await Promise.all([countsOf('NEWS', news.map((n) => n.id)), countsOf('EVENT', agenda.map((e) => e.id)), commentCounts('NEWS', news.map((n) => n.id))])

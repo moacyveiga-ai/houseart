@@ -24,6 +24,10 @@ import { recordEvent } from '@/lib/certificate-events/server'
 import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
 import { counterpartOfMember, openConversationWith } from '@/lib/messaging/server'
 import { arrivingLabel, dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
+import { hasReceipt, receiptOf } from './receipt-core'
+import { escrowChargedCents } from '@/lib/payment-methods/ledger-core'
+import { renderReceiptPdf } from './receipt-pdf'
+import { saleFinance } from './sale-progress-core'
 
 /** Default gallery share of the seller's part until the Consignment agreement exists (HOUSEART_BUILD.md §J). */
 export const DEFAULT_GALLERY_BPS = 4614
@@ -203,6 +207,22 @@ export async function sideOfDeal(dealId: number, userId: number, scope: Scope | 
   if (d.buyerUserId === userId) return 'BUYER'
   if (scope && canView(scope, d)) return 'SELLER'
   return null
+}
+
+/**
+ * "Baixar comprovante" of a completed deal, for the side the route already decided: the buyer's
+ * (what was paid) or the seller's (the Financeiro). Drawn on request; nothing is stored.
+ */
+export async function dealReceiptPdf(id: number, side: 'BUYER' | 'SELLER', actor: { userId: number; scope: Scope | null }): Promise<{ pdf: Uint8Array; filename: string }> {
+  if (side === 'BUYER') await buyerDeal(actor.userId, id)
+  else if (actor.scope) await sellerDeal(actor.scope, id)
+  else throw new ArtworkError('NOT_FOUND', 'Negócio não encontrado.', 404)
+  const d = await loadDeal(id)
+  const v = toView(d, side === 'BUYER')
+  if (!hasReceipt(v.phase, v.exception)) throw new ArtworkError('NOT_COMPLETED', 'O comprovante sai quando o negócio é concluído.', 409)
+  const finance = side === 'SELLER' ? saleFinance({ amountCents: v.amountCents, market: v.market, sellerKind: v.sellerKind, artistName: v.artist, split: v.split }) : []
+  const receipt = receiptOf({ side, code: v.code, artworkTitle: v.artworkTitle, artist: v.artist, sellerName: v.sellerName, buyerName: v.buyerName, market: v.market, completedAt: v.completedAt, amountCents: v.amountCents, shippingCents: v.shippingCents, insuranceCents: v.insuranceCents, chargedCents: escrowChargedCents({ ...d, offerHoldRef: d.offer.guaranteeRef }), finance })
+  return { pdf: await renderReceiptPdf(receipt, new Date()), filename: `houseart-comprovante-${v.code}.pdf` }
 }
 
 /**

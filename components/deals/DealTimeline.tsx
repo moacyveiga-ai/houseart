@@ -89,7 +89,10 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
                   <b>Escritura emitida em seu nome</b>
                   <p className="ha-sm">A obra entrou na sua carteira e o pagamento foi liberado ao vendedor.</p>
                 </div>
-                <a href="/wallet" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="collections" size={18} />Ver na coleção</a>
+                <div className="ha-row">
+                  <a href="/wallet" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="collections" size={18} />Ver na coleção</a>
+                  {deal.exception ? null : <a href={`/api/deals/${deal.id}/receipt`} download className="ha-btn ha-btn--outline ha-btn--sm"><Icon name="download" size={18} />Baixar comprovante</a>}
+                </div>
               </div>
             </div>
           ) : deal.phase === 'SHIPPING' ? (

@@ -17,7 +17,7 @@ import { createBatch, linkMarker, requestMarkers, shipOrder } from '@/lib/physic
 import { mockSunMessage } from '@/lib/physical-markers/sun-core'
 import { certificationView, issueCertificate, publicCertificate, signCertificate } from '@/lib/certificates/server'
 import { confirmPublicOffer, listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
-import { arrivingPurchases, bookShipping, buyerDeals, confirmDelivery, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
+import { arrivingPurchases, bookShipping, buyerDeals, confirmDelivery, dealReceiptPdf, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
 import { buyerAcceptTransfer, buyerTap, createTransfer, payTransferFee, royaltyPreview, sellerSign } from '@/lib/ownership/server'
 import { walletOf, insureArtwork } from '@/lib/collector-wallet/server'
 import { royaltyView } from '@/lib/resale-royalty/server'
@@ -138,6 +138,8 @@ describe('deal flow', () => {
 
     // Coleção › "Chegando": the purchase in transit shows before the deed is the buyer's
     expect((await arrivingPurchases(buyer.id)).map((p) => [p.dealId, p.label])).toEqual([[deal.id, 'Chegando · em trânsito']])
+    // the receipt only exists once the deal is completed
+    await expect(dealReceiptPdf(deal.id, 'BUYER', { userId: buyer.id, scope: null })).rejects.toMatchObject({ code: 'NOT_COMPLETED' })
 
     // the buyer confirms delivery: wrong tag refused, valid tap completes the transfer
     await expect(confirmDelivery(buyer.id, deal.id, { uid: '00deadbeef0000', ctr: 2, cmac: 'FFFFFFFFFFFFFFFF' })).rejects.toMatchObject({ code: 'BAD_READ' })
@@ -170,6 +172,17 @@ describe('deal flow', () => {
     const [bv] = await buyerDeals(buyer.id)
     expect(bv).toMatchObject({ phase: 'COMPLETED', progressPct: 100, escrowPaid: true, sellerSigned: true, buyerSigned: true })
     expect(json(bv)).not.toContain('3800000')
+    // "Baixar comprovante": a PDF for each side; another seller and another buyer never get it
+    const br = await dealReceiptPdf(deal.id, 'BUYER', { userId: buyer.id, scope: null })
+    expect(Buffer.from(br.pdf).subarray(0, 5).toString()).toBe('%PDF-')
+    expect(br.filename).toBe(`houseart-comprovante-${deal.code}.pdf`)
+    await expect(dealReceiptPdf(deal.id, 'BUYER', { userId: s.a1.userId, scope: null })).rejects.toMatchObject({ status: 404 })
+    await asPanel(s.b.userId, async ({ scope }) => {
+      expect(Buffer.from((await dealReceiptPdf(deal.id, 'SELLER', { userId: s.b.userId, scope })).pdf).subarray(0, 5).toString()).toBe('%PDF-')
+    }, 'ARTIST')
+    await asPanel(s.a1.userId, async ({ scope }) => {
+      await expect(dealReceiptPdf(deal.id, 'SELLER', { userId: s.a1.userId, scope })).rejects.toMatchObject({ status: 404 })
+    })
     expect(await arrivingPurchases(buyer.id)).toEqual([])
     const wallet = await walletOf(buyer.id)
     expect(wallet.items.map((i) => [i.publicId, i.version, i.insured])).toEqual([[publicId, 2, false]])

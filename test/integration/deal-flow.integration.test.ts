@@ -17,7 +17,7 @@ import { createBatch, linkMarker, requestMarkers, shipOrder } from '@/lib/physic
 import { mockSunMessage } from '@/lib/physical-markers/sun-core'
 import { certificationView, issueCertificate, publicCertificate, signCertificate } from '@/lib/certificates/server'
 import { confirmPublicOffer, listArtworkForSale, startPublicOffer } from '@/lib/offers/server'
-import { bookShipping, buyerDeals, confirmDelivery, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
+import { arrivingPurchases, bookShipping, buyerDeals, confirmDelivery, payEscrow, sellerDeals, signAgreement } from '@/lib/deals/server'
 import { buyerAcceptTransfer, buyerTap, createTransfer, payTransferFee, royaltyPreview, sellerSign } from '@/lib/ownership/server'
 import { walletOf, insureArtwork } from '@/lib/collector-wallet/server'
 import { royaltyView } from '@/lib/resale-royalty/server'
@@ -136,6 +136,9 @@ describe('deal flow', () => {
       await expect(bookShipping(scope, deal.id, { carrier: 'x', tracking: 'y' })).rejects.toMatchObject({ status: 404 })
     })
 
+    // Coleção › "Chegando": the purchase in transit shows before the deed is the buyer's
+    expect((await arrivingPurchases(buyer.id)).map((p) => [p.dealId, p.label])).toEqual([[deal.id, 'Chegando · em trânsito']])
+
     // the buyer confirms delivery: wrong tag refused, valid tap completes the transfer
     await expect(confirmDelivery(buyer.id, deal.id, { uid: '00deadbeef0000', ctr: 2, cmac: 'FFFFFFFFFFFFFFFF' })).rejects.toMatchObject({ code: 'BAD_READ' })
     await expect(confirmDelivery(buyer.id, deal.id, { ...mockSunMessage(uid, 2), cmac: 'FFFFFFFFFFFFFFFF' })).rejects.toMatchObject({ code: 'BAD_READ' })
@@ -167,6 +170,7 @@ describe('deal flow', () => {
     const [bv] = await buyerDeals(buyer.id)
     expect(bv).toMatchObject({ phase: 'COMPLETED', progressPct: 100, escrowPaid: true, sellerSigned: true, buyerSigned: true })
     expect(json(bv)).not.toContain('3800000')
+    expect(await arrivingPurchases(buyer.id)).toEqual([])
     const wallet = await walletOf(buyer.id)
     expect(wallet.items.map((i) => [i.publicId, i.version, i.insured])).toEqual([[publicId, 2, false]])
     expect(wallet.totalCents).toBe(4_400_000n)

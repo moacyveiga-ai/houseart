@@ -127,8 +127,14 @@ async function confirmIntent(i: { amountCents: bigint; description: string; paye
     // again with ANOTHER card must be a new request; the same card stays one charge (double clicks, retries).
     pi = await stripeGateway().createPaymentIntent({ amount: toCents(i.amountCents), currency: 'brl', customer, payment_method: card.providerRef, description: i.description.slice(0, 200), capture_method: i.capture, metadata: { ...i.metadata, userId: String(i.payerUserId) }, ...(i.installments && i.installments > 1 ? { installments: i.installments } : {}) }, `${i.idempotencyKey}:pm${card.id}${i.installments && i.installments > 1 ? `:x${i.installments}` : ''}`)
   } catch (e) {
-    // a card (or account) that does not take installments: say so, the buyer can pay 1× right after
-    if (i.installments && i.installments > 1 && (e as { type?: string })?.type === 'StripeInvalidRequestError') throw new ArtworkError('INSTALLMENTS_REFUSED', 'Este cartão não aceitou o parcelamento. Pague em 1× ou use outro cartão.', 400)
+    // a card (or account) that does not take installments: say so, the buyer can pay 1× right after.
+    // Stripe's code, param and message go to the log (they never carry card data) — the only way to
+    // tell an account without installments from a plan the card does not offer.
+    if (i.installments && i.installments > 1 && (e as { type?: string })?.type === 'StripeInvalidRequestError') {
+      const se = e as { code?: string; param?: string; message?: string }
+      console.warn(JSON.stringify({ event: 'stripe_installments_refused', code: se.code ?? null, param: se.param ?? null, message: (se.message ?? '').slice(0, 300) }))
+      throw new ArtworkError('INSTALLMENTS_REFUSED', 'Este cartão não aceitou o parcelamento. Pague em 1× ou use outro cartão.', 400)
+    }
     throw stripeFailure(e)
   }
   const f = failureOfStatus(pi.status, i.capture === 'manual' ? 'requires_capture' : 'succeeded')

@@ -17,6 +17,11 @@ export interface PurchaseDeal {
   sellerSigned: boolean; buyerSigned: boolean; escrowPaid: boolean; completedAt: string | null
   /** CANCELLED | DISPUTE | … (the web hides "Falar com o vendedor" on a cancelled deal; the server refuses it) */
   exception?: string | null
+  /** The buyer's five steps of the web (`purchaseSteps`); absent on an older server — fall back to `steps`. */
+  buyerSteps?: { title: string; icon: string; description: string; date: string | null; state: 'done' | 'on' | 'todo' }[]
+  buyerPct?: number
+  /** "Embalagem e condition report": the seller's note and the photo URLs (the photos need the bearer). */
+  packaging?: { report: string | null; packedAt: string | null; photos: { id: number; url: string }[] }
 }
 export interface Purchases { deals: PurchaseDeal[]; simulateAllowed: boolean }
 export const purchases = (): Promise<Purchases> => api<Purchases>('/api/collector/purchases')

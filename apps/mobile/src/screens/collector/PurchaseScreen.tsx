@@ -6,8 +6,8 @@
 // (SHIPPING → /purchases/[id]/receive), "Ver na coleção" (COMPLETED) — plus
 // "Falar com o vendedor". Data: the deal of GET /api/collector/purchases by id;
 // writes: POST /api/deals/[id]/{escrow,sign}. The server decides each phase.
-import { useCallback, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useCallback, useEffect, useState } from 'react'
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useApi, useReloadOnFocus } from '@/api/hooks'
@@ -16,7 +16,8 @@ import { colors, theme } from '@/theme'
 import { KeyValue } from '@/ui/forms'
 import { Display, ErrorState, Icon, Loading, Toast, TopBar, Wall, type IconName } from '@/ui/kit'
 import { Button, ErrorText } from '@/ui/primitives'
-import { brl } from '@/ui/format'
+import { absUrl, brl } from '@/ui/format'
+import { readToken } from '@/auth/token-store'
 import { symbolIcon } from '../gallery/gallery-core'
 import { buyerAction, escrowTotalCents, purchaseStage } from './collector-core'
 
@@ -55,6 +56,10 @@ export function PurchaseScreen() {
   const stage = purchaseStage(d)
   const done = action === 'done'
   const total = escrowTotalCents(d)
+  // the buyer's five steps (Pagamento · Embalagem · Em trânsito · Entrega · Escritura); an older server sends only the six phases
+  const steps = d.buyerSteps ?? d.steps
+  const pct = d.buyerPct ?? d.progressPct
+  const packaging = d.packaging && (d.packaging.report || d.packaging.photos.length) ? d.packaging : null
   const shipping = Number(d.shippingCents)
   const insurance = Number(d.insuranceCents)
 
@@ -68,7 +73,7 @@ export function PurchaseScreen() {
             <Display italic size={16} line={21} numberOfLines={2}>{d.artworkTitle}</Display>
             <Text style={styles.muted}>{d.artist} · {d.sellerName}</Text>
           </View>
-          <Text style={styles.pct}>{d.progressPct}%</Text>
+          <Text style={styles.pct}>{pct}%</Text>
         </View>
 
         <View style={[styles.stage, { backgroundColor: done ? colors.verified100 : action === 'receive' ? colors.sand100 : theme.surface }]}>
@@ -87,14 +92,14 @@ export function PurchaseScreen() {
         {d.shipping ? <Text style={styles.muted}>Transporte {d.shipping.carrier}{d.shipping.tracking ? ` · rastreio ${d.shipping.tracking}` : ''}{d.shipping.insurer ? ` · seguro ${d.shipping.insurer}` : ''}</Text> : null}
 
         <View style={styles.timeline}>
-          {d.steps.map((s, i) => {
+          {steps.map((s, i) => {
             const isDone = s.state === 'done' || done
             const on = s.state === 'on' && !done
             return (
-              <View key={s.phase} style={styles.tl}>
+              <View key={s.title} style={styles.tl}>
                 <View style={styles.tlRail}>
                   <View style={[styles.tlDot, isDone && styles.tlDotDone, on && styles.tlDotOn]}><Icon name={isDone ? 'check' : (symbolIcon(s.icon) as IconName)} size={16} color={isDone ? theme.bg : theme.fg} /></View>
-                  {i < d.steps.length - 1 ? <View style={[styles.tlLine, isDone && { backgroundColor: theme.success }]} /> : null}
+                  {i < steps.length - 1 ? <View style={[styles.tlLine, isDone && { backgroundColor: theme.success }]} /> : null}
                 </View>
                 <View style={{ flex: 1, paddingBottom: 16 }}>
                   <Text style={[styles.tlName, on && { fontWeight: '700' }, !isDone && !on && { color: theme.fgMuted }]}>{s.title}</Text>
@@ -105,6 +110,14 @@ export function PurchaseScreen() {
             )
           })}
         </View>
+        {packaging ? (
+          <View style={styles.pack}>
+            <Text style={styles.packTitle}>Embalagem e condition report</Text>
+            {packaging.packedAt ? <Text style={styles.muted}>Registrado pelo vendedor em {new Date(packaging.packedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Bahia' })}</Text> : null}
+            {packaging.report ? <Text style={styles.stageText}>{packaging.report}</Text> : null}
+            {packaging.photos.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{packaging.photos.map((p) => <VaultPhoto key={p.id} url={p.url} />)}</ScrollView> : null}
+          </View>
+        ) : null}
         <ErrorText>{actError}</ErrorText>
       </ScrollView>
 
@@ -122,6 +135,15 @@ export function PurchaseScreen() {
       <Toast message={toast} onDone={clearToast} />
     </View>
   )
+}
+
+/** A packaging photo: it lives in the private vault, so the image request carries the bearer. */
+function VaultPhoto({ url }: { url: string }) {
+  const [token, setToken] = useState<string | null | undefined>(undefined)
+  useEffect(() => { let live = true; void readToken().then((t) => { if (live) setToken(t) }); return () => { live = false } }, [])
+  const uri = absUrl(url)
+  if (token === undefined || !uri) return <View style={styles.packPhoto} />
+  return <Image accessibilityLabel="Foto da obra embalada" source={{ uri, headers: token ? { authorization: `Bearer ${token}` } : undefined }} style={styles.packPhoto} />
 }
 
 const styles = StyleSheet.create({
@@ -145,6 +167,9 @@ const styles = StyleSheet.create({
   tlName: { fontSize: 14, fontWeight: '600', color: theme.fg },
   tlSub: { fontSize: 12, lineHeight: 16, color: theme.fgMuted },
   tlWhen: { fontSize: 11, color: theme.fgMuted, paddingTop: 6 },
+  pack: { gap: 6, padding: 14, borderRadius: theme.radiusMd, borderWidth: 1, borderColor: theme.border },
+  packTitle: { fontSize: 14, fontWeight: '600', color: theme.fg },
+  packPhoto: { width: 96, height: 96, borderRadius: theme.radiusSm, backgroundColor: theme.surface },
   footer: { gap: 8, paddingHorizontal: 16, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.border, backgroundColor: theme.bg },
   cta: { height: 52, borderRadius: theme.radiusSm, backgroundColor: theme.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   ctaText: { fontSize: 16, fontWeight: '600', color: theme.fg },

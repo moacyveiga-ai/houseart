@@ -12,13 +12,20 @@ import { priceLabel } from '@/lib/plans/core'
 import { ScopeNotApplied } from '@/lib/scope/extension-core'
 import { AccountScreen, type AccountSection } from '@/components/gallery/AccountScreen'
 import '@/components/gallery/account.css'
+import { SidePanel } from '@/components/ds/SidePanel'
+import { TeamScreen } from '@/components/gallery/TeamScreen'
+import '@/components/gallery/team.css'
+import { galleryRoleOf } from '@/lib/offers/seller-role-server'
+import { sellerPermissions } from '@/lib/offers/seller-role-core'
 
 export const metadata = { title: 'Conta da galeria — HouseArt' }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-export default async function GalleryAccountPage() {
+export default async function GalleryAccountPage({ searchParams }: { searchParams: Promise<{ panel?: string }> }) {
   const { user, scope } = await requirePanelPage('/gallery/account')
+  // Conta › Equipe opens in the side panel over the account (Web Galeria); /gallery/team stays as the full page
+  const teamOpen = (await searchParams).panel === 'team'
   const [people, artists, payout, ig, account, usage] = await Promise.all([
     teamOf(scope, user.id),
     representedArtists(scope).catch(() => []),
@@ -34,7 +41,7 @@ export default async function GalleryAccountPage() {
   const sections: AccountSection[] = [
     { name: 'Galeria', items: [
       { icon: 'storefront', name: 'Dados da galeria', sub: account ? [account.cnpjMask ? `CNPJ ${account.cnpjMask}` : null, account.data.city || null].filter(Boolean).join(' · ') || 'Nome, CNPJ, contato e cidade' : 'Nome, CNPJ, contato e cidade', href: '/gallery/account/data' },
-      { icon: 'groups', name: 'Equipe', sub: `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}`, href: '/gallery/team' },
+      { icon: 'groups', name: 'Equipe', sub: `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}`, href: '/gallery/account?panel=team', current: teamOpen },
       { icon: 'palette', name: 'Artistas representados', sub: `${plural(artists.length, 'artista', 'artistas')} · ${plural(artists.filter((a) => a.contract).length, 'contrato ativo', 'contratos ativos')}`, href: '/gallery/artists' },
       { icon: 'location_on', name: 'Endereço e horários', sub: addressLine(account?.address ?? null), href: '/gallery/public' },
       { icon: 'public', name: 'Perfil público', sub: 'Página da galeria no site: sobre, endereço, equipe, fotos e publicações', href: '/gallery/public' },
@@ -71,6 +78,11 @@ export default async function GalleryAccountPage() {
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Conta da galeria</h1></div>
       <AccountScreen initials={initialsOf(account?.galleryName ?? user.name)} name={account?.galleryName ?? user.name} email={user.email} verification={account?.verified ?? null} sections={sections} supportEmail={supportEmail} />
+      {teamOpen ? (
+        <SidePanel title="Equipe" closeHref="/gallery/account">
+          <TeamScreen people={people} canManage={(scope.kind === 'tenant' || scope.kind === 'total') && sellerPermissions(await galleryRoleOf(scope)).manageTeam} />
+        </SidePanel>
+      ) : null}
     </div>
   )
 }

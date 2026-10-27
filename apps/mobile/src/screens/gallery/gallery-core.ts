@@ -47,19 +47,21 @@ export function rowPrice(a: Pick<InventoryItem, 'saleMode' | 'listPriceCents'>):
 }
 
 /** The third line of the row: engagement for listed works, the next step for the others. */
-export function rowStats(a: Pick<InventoryItem, 'status' | 'listing'>): string {
+export function rowStats(a: Pick<InventoryItem, 'status' | 'listing' | 'deal'>): string {
   switch (a.status) {
     case 'LISTED': {
       const l = a.listing
       if (!l) return 'Sem visualizações ainda'
+      const saves = typeof l.saves === 'number' ? ` · ${l.saves} ${l.saves === 1 ? 'salvo' : 'salvos'}` : ''
       const offers = l.openOffers ? ` · ${l.openOffers} ${l.openOffers === 1 ? 'oferta' : 'ofertas'}` : ''
-      return `${l.views7d.toLocaleString('pt-BR')} views · 7 dias${offers}`
+      return `${l.views7d.toLocaleString('pt-BR')} views · 7 dias${saves}${offers}`
     }
-    case 'IN_DEAL': return 'Negócio em andamento'
+    // same reading as the web Acervo: before the escrow is paid the work is only reserved
+    case 'IN_DEAL': return a.deal ? (a.deal.phase === 'OFFER_ACCEPTED' ? `Reservada para ${a.deal.buyerName} · aguardando pagamento` : `Vendida para ${a.deal.buyerName} · venda em andamento`) : 'Negócio em andamento'
     case 'IN_CERTIFICATION': return 'Aguardando assinatura da artista'
     case 'AUTHENTICATED': return 'Liste no marketplace para vender'
     case 'DRAFT': return 'Peça a certificação para anunciar'
-    case 'SOLD': return 'Vendida'
+    case 'SOLD': return a.deal ? `Vendida para ${a.deal.buyerName}` : 'Vendida'
     default: return STATUS_LABEL[a.status]
   }
 }
@@ -91,12 +93,13 @@ export function acceptsOffersSub(on: boolean, rules: { refuseBelowBps: number; r
 export const pausedSub = (paused: boolean): string => (paused ? 'Fora do marketplace · mandato e ofertas mantidos' : 'Some do marketplace sem perder o mandato')
 export const pauseToggledMessage = (nowPaused: boolean): string => (nowPaused ? 'Anúncio pausado' : 'Anúncio de volta ao marketplace')
 
-/** The four stats of the block; saves and likes do not exist yet ("—"). */
-export function listingStats(s: { views7d: number; openOffers: number }): { value: string; label: string }[] {
+/** The four stats of the block; saves and likes come from the reactions (an older server without them: "—"). */
+export function listingStats(s: { views7d: number; openOffers: number; saves?: number; likes?: number }): { value: string; label: string }[] {
+  const n = (v: number | undefined) => (typeof v === 'number' ? v.toLocaleString('pt-BR') : '—')
   return [
     { value: s.views7d.toLocaleString('pt-BR'), label: 'views · 7 dias' },
-    { value: '—', label: 'salvos' },
-    { value: '—', label: 'curtidas' },
+    { value: n(s.saves), label: 'salvos' },
+    { value: n(s.likes), label: 'curtidas' },
     { value: String(s.openOffers), label: s.openOffers === 1 ? 'oferta' : 'ofertas' },
   ]
 }

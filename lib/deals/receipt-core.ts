@@ -15,6 +15,8 @@ export interface ReceiptInput {
   amountCents: bigint
   shippingCents: bigint
   insuranceCents: bigint
+  /** what the escrow really charged (escrowChargedCents): an offer whose hold was captured charged only the price */
+  chargedCents: bigint
   /** the seller's Financeiro (saleFinance); ignored on the buyer's receipt */
   finance: FinanceLine[]
 }
@@ -39,15 +41,17 @@ export function receiptOf(i: ReceiptInput): Receipt {
     { label: 'Concluído em', value: day(i.completedAt), strong: false },
   ]
   if (i.side === 'BUYER') {
-    const total = i.amountCents + i.shippingCents + i.insuranceCents
+    // a captured offer hold charged only the price: shipping and insurance were not part of the guarantee
+    const extrasOutside = i.chargedCents < i.amountCents + i.shippingCents + i.insuranceCents
+    const extra = (cents: bigint, none: string) => (cents ? `${formatBRL(cents)}${extrasOutside ? ' · fora da garantia' : ''}` : none)
     return {
       title: 'Comprovante de compra',
       head,
       money: [
         { label: 'Obra', value: formatBRL(i.amountCents), strong: false },
-        { label: 'Frete', value: i.shippingCents ? formatBRL(i.shippingCents) : 'Grátis', strong: false },
-        { label: 'Seguro de transporte', value: i.insuranceCents ? formatBRL(i.insuranceCents) : '—', strong: false },
-        { label: 'Total pago', value: formatBRL(total), strong: true },
+        { label: 'Frete', value: extra(i.shippingCents, 'Grátis'), strong: false },
+        { label: 'Seguro de transporte', value: extra(i.insuranceCents, '—'), strong: false },
+        { label: 'Total pago em garantia', value: formatBRL(i.chargedCents), strong: true },
       ],
       note: 'Valor pago em garantia na HouseArt e liberado ao vendedor com a leitura da etiqueta na entrega. A escritura da obra está em seu nome. Este comprovante não substitui nota fiscal.',
     }

@@ -24,6 +24,7 @@ import { recordEvent } from '@/lib/certificate-events/server'
 import { verifyBuyerTap } from '@/lib/physical-markers/tap-server'
 import { dealCode, nextPhase, PHASE_STEPS, phaseIndex, type DealPhase } from './domain'
 import { hasReceipt, receiptOf } from './receipt-core'
+import { escrowChargedCents } from '@/lib/payment-methods/ledger-core'
 import { renderReceiptPdf } from './receipt-pdf'
 import { saleFinance } from './sale-progress-core'
 
@@ -197,10 +198,11 @@ export async function dealReceiptPdf(id: number, side: 'BUYER' | 'SELLER', actor
   if (side === 'BUYER') await buyerDeal(actor.userId, id)
   else if (actor.scope) await sellerDeal(actor.scope, id)
   else throw new ArtworkError('NOT_FOUND', 'Negócio não encontrado.', 404)
-  const v = toView(await loadDeal(id), side === 'BUYER')
+  const d = await loadDeal(id)
+  const v = toView(d, side === 'BUYER')
   if (!hasReceipt(v.phase, v.exception)) throw new ArtworkError('NOT_COMPLETED', 'O comprovante sai quando o negócio é concluído.', 409)
   const finance = side === 'SELLER' ? saleFinance({ amountCents: v.amountCents, market: v.market, sellerKind: v.sellerKind, artistName: v.artist, split: v.split }) : []
-  const receipt = receiptOf({ side, code: v.code, artworkTitle: v.artworkTitle, artist: v.artist, sellerName: v.sellerName, buyerName: v.buyerName, market: v.market, completedAt: v.completedAt, amountCents: v.amountCents, shippingCents: v.shippingCents, insuranceCents: v.insuranceCents, finance })
+  const receipt = receiptOf({ side, code: v.code, artworkTitle: v.artworkTitle, artist: v.artist, sellerName: v.sellerName, buyerName: v.buyerName, market: v.market, completedAt: v.completedAt, amountCents: v.amountCents, shippingCents: v.shippingCents, insuranceCents: v.insuranceCents, chargedCents: escrowChargedCents({ ...d, offerHoldRef: d.offer.guaranteeRef }), finance })
   return { pdf: await renderReceiptPdf(receipt, new Date()), filename: `houseart-comprovante-${v.code}.pdf` }
 }
 

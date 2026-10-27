@@ -88,7 +88,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
                 </div>
                 <div className="ha-row">
                   <a href="/wallet" className="ha-btn ha-btn--primary ha-btn--sm"><Icon name="collections" size={18} />Ver na coleção</a>
-                  <a href={`/api/deals/${deal.id}/receipt`} download className="ha-btn ha-btn--outline ha-btn--sm"><Icon name="download" size={18} />Baixar comprovante</a>
+                  {deal.exception ? null : <a href={`/api/deals/${deal.id}/receipt`} download className="ha-btn ha-btn--outline ha-btn--sm"><Icon name="download" size={18} />Baixar comprovante</a>}
                 </div>
               </div>
             </div>

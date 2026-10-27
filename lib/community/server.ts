@@ -14,7 +14,6 @@ import { checkComment, checkPost, dayMonthOf, pollResult, profileHrefOf, reactio
 export interface FeedAuthor { name: string; initials: string; sub: string; memberId: number | null; memberSlug: string | null; following: boolean
   /** the public page of the author (artist or active gallery), or null */
   profileHref?: string | null
-  /** the profile photo (public derivative), when the author has one */
   /** the profile photo — never for a blocked account (the feed is public) */
   avatarUrl?: string | null }
 export interface FeedItem {

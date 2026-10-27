@@ -12,7 +12,7 @@ export interface ConversationView {
   other: { id: number; name: string; initials: string; sub: string; verified?: boolean }; preview: string; when: string; unread: number
   myRole?: MessageRole; artworkPrice?: string | null; canOffer?: boolean
 }
-export interface MessageView { id: number; mine: boolean; kind: MessageKind; body: string; at: string; offerId: number | null }
+export interface MessageView { id: number; mine: boolean; kind: MessageKind; body: string; at: string; offerId: number | null; imageUrl?: string | null }
 
 /** The quick replies of the prototype, by the side of the counter. */
 export const QUICK_REPLIES: Record<MessageRole, readonly string[]> = {

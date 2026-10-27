@@ -1335,8 +1335,9 @@ model Message {
   conversationId Int
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderUserId   Int? // null = system line
-  kind           String       @default("TEXT") // TEXT | SYSTEM | OFFER | COUNTER
+  kind           String       @default("TEXT") // TEXT | SYSTEM | OFFER | COUNTER | IMAGE
   body           String
+  imageRef       String? // kind IMAGE: the re-encoded photo in the PRIVATE vault, served only to the two participants
   offerId        Int?
   createdAt      DateTime     @default(now())
 

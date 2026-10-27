@@ -82,3 +82,15 @@ export function sampleGray(video: HTMLVideoElement, scratch: HTMLCanvasElement, 
   ctx.drawImage(video, 0, 0, side, side)
   return { data: ctx.getImageData(0, 0, side, side).data, w: side, h: side }
 }
+
+/** A photo picked from the device, reduced in the browser (≤ maxSide, JPEG) before upload: keeps the body under the function limit. */
+export async function shrinkToJpeg(file: Blob, maxSide = 2048, quality = 0.86): Promise<Blob> {
+  const { img, url } = await loadImage(file)
+  try {
+    const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * k)); canvas.height = Math.max(1, Math.round(img.naturalHeight * k))
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+    return await canvasToJpeg(canvas, quality)
+  } finally { URL.revokeObjectURL(url) }
+}

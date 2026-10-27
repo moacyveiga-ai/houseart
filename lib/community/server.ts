@@ -85,7 +85,7 @@ export async function feed(viewer: number | null, opts: { take?: number; tab?: '
   ])
   const authors = await authorsOf(posts.map((p) => p.authorUserId), viewer)
   const artIds = posts.map((p) => p.artworkId).filter((v): v is number => v != null)
-  const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds } }, select: { id: true, publicId: true, title: true, status: true, saleMode: true, listPriceCents: true, listingPausedAt: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
+  const arts = artIds.length ? await prisma.artwork.findMany({ where: { id: { in: artIds }, member: { tenant: { status: 'ACTIVE' } } }, select: { id: true, publicId: true, title: true, status: true, saleMode: true, listPriceCents: true, listingPausedAt: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } }) : []
   const byArt = new Map(arts.map((a) => [a.id, a]))
   const mine = await myReactions(viewer, [...posts.map((p) => ({ kind: 'POST' as const, id: p.id })), ...news.map((n) => ({ kind: 'NEWS' as const, id: n.id })), ...agenda.map((e) => ({ kind: 'EVENT' as const, id: e.id }))])
   const [newsCounts, eventCounts, newsComments] = await Promise.all([countsOf('NEWS', news.map((n) => n.id)), countsOf('EVENT', agenda.map((e) => e.id)), commentCounts('NEWS', news.map((n) => n.id))])
@@ -284,7 +284,7 @@ export async function favoritesOf(userId: number, take = 100): Promise<FavoriteA
   const rows = await prisma.reaction.findMany({ where: { userId, targetKind: 'ARTWORK', kind: { in: ['LIKE', 'SAVE'] } }, orderBy: { createdAt: 'desc' }, take: take * 2 })
   const ids = [...new Set(rows.map((r) => r.targetId))].slice(0, take)
   if (!ids.length) return []
-  const arts = await prisma.artwork.findMany({ where: { id: { in: ids }, publicId: { not: null } }, select: { id: true, publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, status: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } })
+  const arts = await prisma.artwork.findMany({ where: { id: { in: ids }, publicId: { not: null }, member: { tenant: { status: 'ACTIVE' } } }, select: { id: true, publicId: true, title: true, year: true, listPriceCents: true, saleMode: true, status: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } })
   const byId = new Map(arts.map((a) => [a.id, a]))
   return ids.flatMap((id) => {
     const a = byId.get(id); if (!a) return []
@@ -323,7 +323,7 @@ export async function artworkCounts(artworkIds: number[]): Promise<Map<number, {
 /** A commentable artwork: public page with the green seal; who to tell is the user of the member that holds it. */
 async function publicArtworkOwner(artworkId: number): Promise<{ title: string; publicId: string; ownerUserId: number | null } | null> {
   // the same rule as the public page (lib/marketplace/public-server.ts): green seal and a status that shows it; an archived work is gone
-  const a = await prisma.artwork.findFirst({ where: { id: artworkId, publicId: { not: null }, seal: 'GREEN', status: { in: ['LISTED', 'IN_DEAL', 'SOLD', 'AUTHENTICATED'] } }, select: { title: true, publicId: true, member: { select: { userId: true } } } })
+  const a = await prisma.artwork.findFirst({ where: { id: artworkId, publicId: { not: null }, seal: 'GREEN', status: { in: ['LISTED', 'IN_DEAL', 'SOLD', 'AUTHENTICATED'] }, member: { tenant: { status: 'ACTIVE' } } }, select: { title: true, publicId: true, member: { select: { userId: true } } } })
   return a ? { title: a.title, publicId: a.publicId!, ownerUserId: a.member.userId } : null
 }
 

@@ -9,6 +9,7 @@
 // required slot.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import { useDialogFocus } from '@/components/ds/useDialogFocus'
 import { MEDIA_SLOTS, type MediaSlot } from '@/lib/artworks/domain'
 import { checkChip, counterOf, frameChecks, nextRequiredKind, progressBars, toGray, type FrameChecks, type SlotMedia } from './capture-core'
 import { loadImage, sampleGray, snapshotVideo } from './capture-render'
@@ -43,6 +44,7 @@ export function GuidedCapture({ startKind, media, dims, busy, onUpload, onClose,
   const scratch = useRef<HTMLCanvasElement | null>(null)
   const stream = useRef<MediaStream | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const root = useRef<HTMLDivElement>(null)
   const slot: MediaSlot = MEDIA_SLOTS.find((s) => s.kind === kind) ?? MEDIA_SLOTS[0]
 
   const stopCamera = useCallback(() => {
@@ -123,6 +125,8 @@ export function GuidedCapture({ startKind, media, dims, busy, onUpload, onClose,
 
   const retake = () => { setShot(null); setCam(initialCam()); setChecks(null) }
   const close = () => { stopCamera(); onClose() }
+  // Esc (audit design-system §5): back from the editor to the camera, from the camera out; never mid-upload
+  useDialogFocus(root, true, () => { if (busy) return; if (shot) retake(); else close() })
 
   const chip = checkChip(cam === 'live' ? checks : null)
   const bars = progressBars(media, kind)
@@ -130,7 +134,7 @@ export function GuidedCapture({ startKind, media, dims, busy, onUpload, onClose,
     .map((s) => ({ kind: s.kind, name: s.name, url: s.kind === kind && shot ? shot.url : media.find((m) => m.kind === s.kind)?.publicUrl ?? null }))
 
   return (
-    <div className="ha-cap" role="dialog" aria-modal="true" aria-label={shot ? 'Ajuste a foto' : 'Câmera guiada'}>
+    <div ref={root} tabIndex={-1} className="ha-cap" role="dialog" aria-modal="true" aria-label={shot ? 'Ajuste a foto' : 'Câmera guiada'}>
       <div className="ha-cap__top">
         <button type="button" className="ha-cap__iconbtn" aria-label="Fechar" onClick={close}><Icon name="close" size={26} /></button>
         <span className="ha-cap__counter">{counterOf(kind)}</span>

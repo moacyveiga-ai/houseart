@@ -38,14 +38,17 @@ export const ESCROW_HOURS = 24
  * Coleção › "Chegando" (handoff "HouseArt Web Colecionador"): what a purchase still on its way says
  * in the buyer's collection, by the LAST phase done. Null when it is not arriving (completed).
  */
-export function arrivingLabel(phase: DealPhase): string | null {
+export function arrivingLabel(phase: DealPhase, exception: string | null = null): string | null {
+  if (phase === 'COMPLETED' || exception === 'CANCELLED') return null
+  if (exception) return 'Em análise pela HouseArt'
   switch (phase) {
     case 'OFFER_ACCEPTED': return 'Reservada · aguardando pagamento'
     case 'ESCROW': return 'Chegando · termo a assinar'
     case 'DOCUMENTS': return 'Chegando · aguardando envio'
     case 'SHIPPING': return 'Chegando · em trânsito'
+    // DELIVERY only stays when the deed issue failed after the tap (nothing retries it): neutral, as the purchase card
     case 'DELIVERY':
-    case 'TRANSFER': return 'Chegando · escritura em emissão'
+    case 'TRANSFER': return 'Entregue · escritura pendente'
     default: return null
   }
 }

@@ -169,11 +169,11 @@ export async function arrivingPurchases(userId: number): Promise<ArrivingPurchas
   const rows = await prisma.deal.findMany({
     where: { buyerUserId: userId, phase: { not: 'COMPLETED' }, OR: [{ exceptionStatus: null }, { exceptionStatus: { not: 'CANCELLED' } }] },
     orderBy: { createdAt: 'desc' }, take: 20,
-    select: { id: true, phase: true, artwork: { select: { title: true, year: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } } },
+    select: { id: true, phase: true, exceptionStatus: true, artwork: { select: { title: true, year: true, artist: { select: { name: true } }, media: { where: { kind: 'FRONT_COLOR_CARD' }, select: { publicUrl: true }, take: 1 } } } },
   })
   const out: ArrivingPurchase[] = []
   for (const r of rows) {
-    const label = arrivingLabel(r.phase as DealPhase)
+    const label = arrivingLabel(r.phase as DealPhase, r.exceptionStatus ?? null)
     if (!label) continue
     out.push({ dealId: r.id, title: `${r.artwork.title}${r.artwork.year ? `, ${r.artwork.year}` : ''}`, artist: r.artwork.artist.name, cover: r.artwork.media[0]?.publicUrl ?? null, label })
   }

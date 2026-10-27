@@ -15,7 +15,9 @@ describe('arrivingLabel', () => {
   it('says where the purchase is, in transit included', () => {
     expect(arrivingLabel('OFFER_ACCEPTED')).toBe('Reservada · aguardando pagamento')
     expect(arrivingLabel('SHIPPING')).toBe('Chegando · em trânsito')
-    expect(arrivingLabel('DELIVERY')).toBe('Chegando · escritura em emissão')
+    expect(arrivingLabel('DELIVERY')).toBe('Entregue · escritura pendente')
+    expect(arrivingLabel('SHIPPING', 'DISPUTE')).toBe('Em análise pela HouseArt')
+    expect(arrivingLabel('SHIPPING', 'CANCELLED')).toBeNull()
     expect(arrivingLabel('COMPLETED')).toBeNull()
   })
 })

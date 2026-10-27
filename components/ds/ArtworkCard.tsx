@@ -34,7 +34,7 @@ export function ArtworkCard({ artwork: a }: { artwork: ArtworkCardData }) {
         <span className="ha-artwork-card__artist">{a.artist}</span>
         <span className="ha-artwork-card__title">{titleWithYear(a)}</span>
         {meta(a) ? <span className="ha-artwork-card__meta">{meta(a)}</span> : null}
-        {a.seller ? <span className="ha-artwork-card__seller"><Icon name={a.seller.kind === 'GALLERY' ? 'storefront' : 'person'} size={14} /><span>{a.seller.name} · {a.seller.kind === 'GALLERY' ? 'Galeria' : 'Particular'}</span></span> : null}
+        {a.seller ? <span className="ha-artwork-card__seller"><Icon name={a.seller.kind === 'GALLERY' ? 'storefront' : 'person'} size={14} /><span>{a.seller.kind === 'GALLERY' ? `${a.seller.name} · Galeria` : a.seller.name}</span></span> : null}
         <span className="ha-artwork-card__foot">
           <span className="ha-artwork-card__price">{a.price}</span>
           {a.verified ? <StatusBadge status="verified" inline /> : null}

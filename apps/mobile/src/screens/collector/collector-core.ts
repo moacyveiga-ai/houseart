@@ -183,3 +183,12 @@ export function markerLine(c: { verdict: Verdict; issuedAt: string | null }, rea
   return `Íntegra · vinculada em ${dataBR(c.issuedAt)}`
 }
 export { dataBR }
+
+/** "DD/MM/AAAA" (what the person types) → "AAAA-MM-DD" (what the server reads); empty stays empty, anything else goes as typed and the server says "Data inválida". */
+export function restorationDay(input: string): string {
+  const v = input.trim()
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v)
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : v
+}
+/** Typing mask of the date: digits only, slashes after the day and the month. */
+export const maskDay = (v: string): string => v.replace(/\D/g, '').slice(0, 8).replace(/^(\d{2})(\d)/, '$1/$2').replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')

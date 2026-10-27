@@ -1,5 +1,13 @@
 /* HouseArt Design System — tokens --ha-* (single source; screens never use loose values).
    Values copied literally from ./houseart-design/handoff/designs/houseart/ha-tokens.css (handoff 2026-10-21; same values as the first export). */
+/* Breakpoints (CSS custom properties do not work inside @media, so the scale lives here as a map;
+   lib/architecture/breakpoints.test.ts refuses any other width):
+     480   phone          — max-width: 480px   (single column inside cards, 2-up grids)
+     720   app ↔ desktop  — max-width: 720px / 719px below, min-width: 720px / 721px above
+                            (the panel and the public site switch to the app layout under 720)
+     900   tablet         — max-width: 900px   (two-column splits stack); min-width: 900px
+     1024  desktop shell  — max-width: 1023px  (sidebar becomes the drawer); min-width: 1024px
+     1200  wide           — min-width: 1200px  (3-up grids, two side-by-side lists) */
 :root{
   --ha-paper-50:#FBFAF7;--ha-paper-100:#F6F3EE;--ha-paper-200:#ECE7DF;
   --ha-ink-900:#111111;--ha-ink-700:#2B2B2B;--ha-ink-500:#6B6760;--ha-ink-300:#B5B0A6;

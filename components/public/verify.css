@@ -66,7 +66,7 @@
 .hp-verify-help__item b { font-weight: 600; color: var(--ha-ink-900); }
 .hp-verify-help__item span { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); text-wrap: pretty; }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .hp-verify-hero__inner { padding: var(--ha-space-10) var(--ha-space-4) var(--ha-space-8); }
   .hp-verify-head h1 { font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); }
   .hp-verify-mode { font-size: var(--ha-text-caption); padding: var(--ha-space-3); }

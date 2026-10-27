@@ -27,7 +27,7 @@ export function MarketplaceSearch({ sel, q, sort }: { sel: Selection; q: string;
   return (
     <form method="get" action="/e/marketplace" className="hp-market-search" role="search" onSubmit={(e) => { e.preventDefault(); go(value.trim()) }}>
       <Icon name="search" size={22} />
-      <input name="q" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Obra, artista, galeria ou técnica" aria-label="Buscar" className="hp-market-search__input" />
+      <input name="q" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Obra, artista, galeria ou técnica" aria-label="Buscar" maxLength={120} className="hp-market-search__input" />
       {(Object.keys(sel) as GroupKey[]).filter((g) => sel[g].length).map((g) => <input key={g} type="hidden" name={g} value={sel[g].join(',')} />)}
       {sort !== 'rel' ? <input type="hidden" name="sort" value={sort} /> : null}
     </form>

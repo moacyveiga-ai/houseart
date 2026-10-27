@@ -9,7 +9,7 @@ export type MessageRole = 'buyer' | 'seller'
 
 export interface ConversationView {
   id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null
-  other: { id: number; name: string; initials: string; sub: string; verified?: boolean }; preview: string; when: string; unread: number
+  other: { id: number; name: string; initials: string; sub: string; verified?: boolean; avatarUrl?: string | null }; preview: string; when: string; unread: number
   myRole?: MessageRole; artworkPrice?: string | null; canOffer?: boolean
 }
 export interface MessageView { id: number; mine: boolean; kind: MessageKind; body: string; at: string; offerId: number | null; imageUrl?: string | null }

@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
+import { AvatarFace } from '@/components/ds/AvatarFace'
 import { Modal } from '@/components/ds/Modal'
 import { shrinkToJpeg } from '@/components/artworks/capture-render'
 import { CONTACT_GUARD, hasContactLeak, MESSAGE_MAX, REPORT_NOTE_MAX, REPORT_REASONS, type ReportReason } from '@/lib/messaging/core'
@@ -117,7 +118,7 @@ export function ConversationPane({ conversationId, role, fallback, onBack, onCha
           <button type="button" className="ha-msg-iconbtn ha-msg-conv__back" onClick={onBack} aria-label="Voltar"><Icon name="arrow_back" size={24} /></button>
           {h ? (
             <>
-              <span className="ha-msg-avatar ha-msg-avatar--sm" aria-hidden="true">{h.other.initials}</span>
+              <span className="ha-msg-avatar ha-msg-avatar--sm" aria-hidden="true"><AvatarFace initials={h.other.initials} url={h.other.avatarUrl} /></span>
               <span className="ha-msg-conv__who"><span className="ha-msg-conv__name">{h.other.name}</span><span className="ha-msg-conv__sub">{h.other.verified ? <Icon name="verified" size={14} filled /> : null}{headerSubOf(h.other)}</span></span>
               {data ? <button type="button" className="ha-msg-iconbtn ha-msg-conv__flag" onClick={() => setReporting(true)} aria-label={reported ? 'Denúncia enviada' : `Denunciar ${h.other.name}`} disabled={reported}><Icon name="flag" size={22} filled={reported} /></button> : null}
             </>

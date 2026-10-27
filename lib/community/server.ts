@@ -13,7 +13,9 @@ import { checkComment, checkPost, dayMonthOf, pollResult, profileHrefOf, reactio
 
 export interface FeedAuthor { name: string; initials: string; sub: string; memberId: number | null; memberSlug: string | null; following: boolean
   /** the public page of the author (artist or active gallery), or null */
-  profileHref?: string | null }
+  profileHref?: string | null
+  /** the profile photo — never for a blocked account (the feed is public) */
+  avatarUrl?: string | null }
 export interface FeedItem {
   key: string
   kind: 'PHOTO' | 'TEXT' | 'POLL' | 'EVENT' | 'NEWS' | 'AGENDA'
@@ -38,14 +40,14 @@ const HOUSE: FeedAuthor = { name: 'HouseArt Notícias', initials: 'HA', sub: 'Ed
 async function authorsOf(userIds: number[], viewer: number | null): Promise<Map<number, FeedAuthor>> {
   const ids = [...new Set(userIds)]
   if (!ids.length) return new Map()
-  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, member: { select: { id: true, slug: true, kind: true, displayName: true, city: true, artist: { select: { slug: true } }, tenant: { select: { status: true, publicProfile: { select: { slug: true } } } } } } } })
+  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, avatarUrl: true, active: true, member: { select: { id: true, slug: true, kind: true, displayName: true, city: true, artist: { select: { slug: true } }, tenant: { select: { status: true, publicProfile: { select: { slug: true } } } } } } } })
   const memberIds = users.map((u) => u.member?.id).filter((v): v is number => v != null)
   const follows = viewer && memberIds.length ? await prisma.reaction.findMany({ where: { userId: viewer, targetKind: 'MEMBER', kind: 'FOLLOW', targetId: { in: memberIds } }, select: { targetId: true } }) : []
   const fset = new Set(follows.map((f) => f.targetId))
   return new Map(users.map((u) => {
     const name = u.member?.displayName ?? u.name
     const sub = u.member ? (u.member.kind === 'GALLERY_STAFF' ? 'Galeria' : u.member.kind === 'ARTIST' ? 'Artista' : u.member.kind === 'COLLECTOR' ? 'Colecionador' : 'Consultor') + (u.member.city ? ` · ${u.member.city}` : '') : 'Colecionador'
-    return [u.id, { name, initials: initials(name), sub, memberId: u.member?.id ?? null, memberSlug: u.member?.slug ?? null, following: u.member ? fset.has(u.member.id) : false,
+    return [u.id, { name, initials: initials(name), sub, memberId: u.member?.id ?? null, memberSlug: u.member?.slug ?? null, following: u.member ? fset.has(u.member.id) : false, avatarUrl: u.active ? u.avatarUrl : null,
       profileHref: profileHrefOf(u.member ? { kind: u.member.kind, artistSlug: u.member.artist?.slug ?? null, gallerySlug: u.member.tenant.publicProfile?.slug ?? null, tenantActive: u.member.tenant.status === 'ACTIVE' } : null) }]
   }))
 }

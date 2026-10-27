@@ -61,7 +61,7 @@ async function AppraisalVerify({ code }: { code: string }) {
   const current = a.status === 'ISSUED'
   // the same card as the certificate's verification (audit público: the laudo was in the old look)
   return (
-    <div className="hp-verification">
+    <div className="hp-verification hp-verification--embedded">
       <article className="hp-verification__card">
         <header className="hp-verification__top"><span>Verificação pública · laudo de opinião de valor</span></header>
         <div className={`hp-verification-banner${current ? ' hp-verification-banner--authenticated' : ''}`}>

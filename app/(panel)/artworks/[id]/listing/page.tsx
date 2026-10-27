@@ -10,6 +10,8 @@ import { galleryRoleOf } from '@/lib/offers/seller-role-server'
 import { ROLE_REASONS, sellerPermissions } from '@/lib/offers/seller-role-core'
 import { holdsArtwork } from '@/lib/ownership/server'
 import { flagOn } from '@/lib/flags'
+import { unlistedState } from '@/components/gallery/unlisted-core'
+import { UnlistedCard } from '@/components/gallery/UnlistedCard'
 
 export const metadata = { title: 'Gestão do anúncio — HouseArt' }
 
@@ -38,7 +40,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         <ListingManager canManage={canManage} canTransfer={canTransfer} blockedReason={ROLE_REASONS.listing} artworkId={a.id} title={a.title} artistName={a.artist.name} publicId={a.publicId} year={a.year} cover={a.media.find((m) => m.kind === 'FRONT_COLOR_CARD')?.publicUrl ?? null} rules={rules}
           initial={{ listPriceCents: listing.listPriceCents.toString(), acceptsOffers: listing.acceptsOffers, paused: listing.paused, stats: { views7d: listing.stats.views7d, openOffers: listing.stats.openOffers, saves: listing.stats.saves, likes: listing.stats.likes } }} />
       ) : (
-        <div className="ha-callout ha-callout--warn"><Icon name="info" size={20} /><span>A obra não está à venda. <Link href={`/artworks/${a.id}/edit`} className="ha-link">Abra o cadastro</Link> para listar no marketplace.</span></div>
+        <UnlistedCard artworkId={a.id} title={a.title} listPriceCents={a.listPriceCents} state={unlistedState({ id: a.id, status: a.status, seal: a.seal, publicId: a.publicId }, { manage: canManage && scope.kind !== 'total', edit: true })} />
       )}
     </div>
   )

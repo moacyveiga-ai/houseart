@@ -22,7 +22,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
   const h = await headers()
   const pathname = h.get('x-pathname') ?? '/'
   // Counters of the shell (bell + the badges of the menu, lib/nav-badges) — best-effort, never block the page.
-  const [bell, badges, cards, ticker, who] = await Promise.all([unreadCount(s.user.id).catch(() => 0), navBadges(nav, s.user, scopeOfSession(s.user)).catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return {} }), profilesOf(s.user).catch(() => []), TICKER_PROFILES.has(nav) ? tickerItems().catch(() => []) : [], shellIdentity(s.user.id, nav).catch(() => ({ name: null, avatarUrl: null }))])
+  const [bell, badges, cards, ticker, who] = await Promise.all([unreadCount(s.user.id).catch(() => 0), navBadges(nav, s.user, scopeOfSession(s.user)).catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return {} }), profilesOf(s.user).catch(() => []), TICKER_PROFILES.has(nav) ? tickerItems().catch(() => []) : [], shellIdentity(s.user.id, nav).catch((e: unknown) => { if (e instanceof ScopeNotApplied) throw e; return { name: null, avatarUrl: null } })])
   const profiles = cards.map((c) => ({ kind: c.kind, name: c.name, icon: c.icon, active: navProfileOf(c.kind) === nav }))
   return (
     <AppShell user={{ initials: initialsOf(who.name ?? s.user.name), profile: nav, name: s.user.name, display: who.name ?? s.user.name, avatarUrl: who.avatarUrl }} profiles={profiles} activeKey={activeNavKey(nav, pathname)} bell={bell} ticker={ticker} badges={badges}>

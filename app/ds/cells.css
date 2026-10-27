@@ -226,7 +226,7 @@
 .ha-main__inner { max-width: var(--ha-max); margin: 0 auto; }
 .ha-menubtn { display: none; }
 /* below ~1024 px the side panel layout stacks (handoff §7): the sidebar becomes the drawer */
-@media (max-width: 1023px) { .ha-sidebar { display: none; } .ha-menubtn { display: inline-flex; } .ha-topbar__brand { width: auto; } .ha-topbar { gap: var(--ha-space-3); } .ha-main { padding: var(--ha-space-6) var(--ha-space-5) var(--ha-space-12); } }
+@media (max-width: 1023px) { .ha-sidebar { display: none; } .ha-menubtn { display: inline-flex; } .ha-topbar__brand { width: auto; min-width: 0; } .ha-topbar__system { display: none; } .ha-topbar { gap: var(--ha-space-3); } .ha-main { padding: var(--ha-space-6) var(--ha-space-5) var(--ha-space-12); } }
 @media (max-width: 900px) { .ha-main { padding: var(--ha-space-5) var(--ha-space-4) var(--ha-space-12); } .ha-topbar__search { display: none; } }
 .ha-drawer { position: fixed; inset: 0; z-index: 85; }
 .ha-drawer__scrim { position: absolute; inset: 0; border: 0; padding: 0; background: var(--ha-scrim); cursor: default; animation: ha-fade var(--ha-dur-panel) var(--ha-ease) both; }

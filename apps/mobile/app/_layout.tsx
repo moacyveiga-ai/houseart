@@ -97,6 +97,7 @@ export default function RootLayout() {
             <Stack.Screen name="wallet/register" />
             <Stack.Screen name="wallet/cards" />
             <Stack.Screen name="wallet/sell/[id]" />
+            <Stack.Screen name="wallet/restore/[id]" />
             <Stack.Screen name="verify" />
             <Stack.Screen name="settings" options={{ headerShown: true, title: 'Perfil', headerTintColor: theme.fg, headerStyle: { backgroundColor: theme.bg } }} />
           </Stack>

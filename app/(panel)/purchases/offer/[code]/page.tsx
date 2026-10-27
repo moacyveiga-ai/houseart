@@ -18,7 +18,7 @@ export default async function PanelOfferPage({ params }: { params: Promise<{ cod
   if (!d) notFound()
   return (
     <div className="ha-page">
-      <div className="ha-page__head"><Link href="/purchases" className="ha-btn ha-btn--ghost ha-btn--sm"><Icon name="arrow_back" size={18} />Compras</Link></div>
+      <div className="ha-page__head"><Link href="/purchases" className="ha-btn ha-btn--ghost ha-btn--sm"><Icon name="arrow_back" size={18} />Compras</Link>{d.artworkPublicId ? <Link href={`/e/artwork/${d.artworkPublicId}`} className="ha-btn ha-btn--ghost ha-btn--sm">Ver a obra</Link> : null}</div>
       <OfferSent code={d.code} offer={d.offer} artwork={d.artwork} token={null} deliveryCep={d.deliveryCep} talkArtworkId={d.artworkId} />
     </div>
   )

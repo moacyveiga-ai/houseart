@@ -3,6 +3,7 @@
 // list with the "autor" badge, "Responder" (prefills @name), like per comment,
 // and the composer with the contact guard of the prototype.
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { hasContactLeak } from '@/lib/messaging/core'
@@ -97,7 +98,7 @@ export function CommentsSheet({ item, me, onClose, onCount, onToast }: {
             <div key={c.id} className="ha-cm-comment">
               <span className="ha-avatar" aria-hidden="true">{c.mine ? me.initials : c.author.initials}</span>
               <div className="ha-cm-comment__body">
-                <span className="ha-cm-comment__name">{c.mine ? 'Você' : c.author.profileHref ? <a href={c.author.profileHref} className="ha-cm-post__namelink">{c.author.name}</a> : c.author.name}{isAuthor(c) ? <span className="ha-cm-comment__author">autor</span> : null}<span className="ha-cm-comment__when">{c.when}</span></span>
+                <span className="ha-cm-comment__name">{c.mine ? 'Você' : c.author.profileHref ? <Link href={c.author.profileHref} className="ha-cm-post__namelink" onClick={onClose}>{c.author.name}</Link> : c.author.name}{isAuthor(c) ? <span className="ha-cm-comment__author">autor</span> : null}<span className="ha-cm-comment__when">{c.when}</span></span>
                 <span className="ha-cm-comment__text">{c.body}</span>
                 <span className="ha-cm-comment__links">
                   <button type="button" className="ha-cm-comment__link" onClick={() => reply(c)}>Responder</button>

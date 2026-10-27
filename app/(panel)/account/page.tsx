@@ -23,11 +23,11 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
   const [identity, prefs, favorites, cards, payout, ig, addresses] = await Promise.all([
     identityOf(user.id),
     readPreferences(user.id),
-    favoritesOf(user.id).catch(() => []),
-    listPaymentMethods(user.id).catch(() => []),
-    user.memberId ? payoutAccountOf(user.memberId).catch(() => null) : null,
-    composerInstagram(user.id),
-    addressesOf(user.id).catch(() => []),
+    shape.work?.items.some((i) => i.href === '/favorites') ? favoritesOf(user.id).catch(() => []) : [],
+    shape.payments ? listPaymentMethods(user.id).catch(() => []) : [],
+    shape.payout && user.memberId ? payoutAccountOf(user.memberId).catch(() => null) : null,
+    shape.social ? composerInstagram(user.id) : null,
+    shape.addresses ? addressesOf(user.id).catch(() => []) : [],
   ])
   const defaultCard = cards.find((c) => c.isDefault) ?? cards[0]
   const me = { name: user.name, email: user.email, emailVerified: identity.emailVerified, phoneMask: identity.phoneMask, phoneVerified: identity.phoneVerified, cpfMask: identity.cpfMask, city: identity.city }
@@ -49,7 +49,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
     ...(shape.work ? [{ name: shape.work.name, items: shape.work.items.map((i) => ({ kind: 'link' as const, ...i, sub: i.href === '/favorites' ? favoritesSub : i.sub })) }] : []),
     ...(payments.items.length ? [payments] : []),
     ...(shape.social ? [{ name: 'Redes sociais', items: [
-      { kind: 'link' as const, icon: 'photo_camera', name: 'Instagram', sub: ig.mode === 'OFF' ? 'Em breve: postar também no seu Instagram' : ig.handle ? `${ig.handle} · conectado` : 'Conecte para postar também fora da HouseArt', href: '/instagram' },
+      { kind: 'link' as const, icon: 'photo_camera', name: 'Instagram', sub: !ig || ig.mode === 'OFF' ? 'Em breve: postar também no seu Instagram' : ig.handle ? `${ig.handle} · conectado` : 'Conecte para postar também fora da HouseArt', href: '/instagram' },
     ] }] : []),
     { name: 'Segurança e privacidade', items: [
       { kind: 'link', icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', href: '/recover-password' },

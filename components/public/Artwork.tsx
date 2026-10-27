@@ -66,7 +66,7 @@ function provenanceOf(a: PublicArtworkPage): ProvenanceEvent[] {
 }
 
 function cardOf(i: MarketItem): ArtworkCardData {
-  return { href: `/e/artwork/${i.publicId}`, src: i.cover, artist: i.artist, title: i.title, year: i.year, technique: i.technique, dimensions: i.dimensions, price: i.priceCents === null ? 'Sob consulta' : formatBRL(i.priceCents), verified: true }
+  return { href: `/e/artwork/${i.publicId}`, src: i.cover, artist: i.artist, title: i.title, year: i.year, technique: i.technique, dimensions: i.dimensions, price: i.priceCents === null ? 'Sob consulta' : formatBRL(i.priceCents), verified: true, seller: { name: i.seller, kind: i.sellerKind } }
 }
 
 export function Artwork({ artwork: a, related, signedIn = false, counts = null }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean; counts?: { likes: number; comments: number } | null }) {

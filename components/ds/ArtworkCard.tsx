@@ -1,6 +1,7 @@
 // artwork-card (molécula): grid (parede quadrada, artista, título itálico com
 // ano, técnica · dimensões, preço + Autenticada) e lista (72px, título, meta, preço).
 import Link from 'next/link'
+import { Icon } from './Icon'
 import { StatusBadge } from './StatusBadge'
 
 export interface ArtworkCardData {
@@ -13,6 +14,8 @@ export interface ArtworkCardData {
   dimensions?: string | null
   price: string
   verified?: boolean
+  /** The seller line of the design ("storefront Galeria Ladeira · Galeria"); absent where the card does not name who sells. */
+  seller?: { name: string; kind: 'GALLERY' | 'PRIVATE' } | null
 }
 
 const titleWithYear = (a: ArtworkCardData) => (
@@ -31,6 +34,7 @@ export function ArtworkCard({ artwork: a }: { artwork: ArtworkCardData }) {
         <span className="ha-artwork-card__artist">{a.artist}</span>
         <span className="ha-artwork-card__title">{titleWithYear(a)}</span>
         {meta(a) ? <span className="ha-artwork-card__meta">{meta(a)}</span> : null}
+        {a.seller ? <span className="ha-artwork-card__seller"><Icon name={a.seller.kind === 'GALLERY' ? 'storefront' : 'person'} size={14} /><span>{a.seller.kind === 'GALLERY' ? `${a.seller.name} · Galeria` : a.seller.name}</span></span> : null}
         <span className="ha-artwork-card__foot">
           <span className="ha-artwork-card__price">{a.price}</span>
           {a.verified ? <StatusBadge status="verified" inline /> : null}

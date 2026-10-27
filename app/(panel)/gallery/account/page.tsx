@@ -46,7 +46,7 @@ export default async function GalleryAccountPage({ searchParams }: { searchParam
   const invites = people.length - members
   const sections: AccountSection[] = [
     advisor ? { name: 'Conta', items: [
-      { icon: 'person', name: 'Dados pessoais', sub: 'Nome, foto, contato e cidade', href: '/account' },
+      { icon: 'person', name: 'Dados pessoais', sub: 'Nome, foto, contato e cidade', href: '/account?view=data' },
     ] } : { name: 'Galeria', items: [
       { icon: 'storefront', name: 'Dados da galeria', sub: account ? [account.cnpjMask ? `CNPJ ${account.cnpjMask}` : null, account.data.city || null].filter(Boolean).join(' · ') || 'Nome, CNPJ, contato e cidade' : 'Nome, CNPJ, contato e cidade', href: '/gallery/account/data' },
       { icon: 'groups', name: 'Equipe', sub: `${plural(members, 'pessoa', 'pessoas')}${invites ? ` · ${plural(invites, 'convite pendente', 'convites pendentes')}` : ''}`, href: '/gallery/account?panel=team', current: teamOpen },

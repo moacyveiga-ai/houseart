@@ -65,7 +65,7 @@ const COLLECTOR: NavItem[] = [
 
 // The autonomous art advisor uses the gallery desk, but has no gallery: the fifth entry is the
 // painel do dia under its own name (audit galeria §0).
-const ADVISOR: NavItem[] = GALLERY.map((i) => (i.key === 'home' ? { ...i, label: 'Início', icon: 'space_dashboard' } : i))
+const ADVISOR: NavItem[] = GALLERY.map((i) => (i.key === 'home' ? { ...i, label: 'Início', icon: 'space_dashboard', also: [...(i.also ?? []), '/account', '/notifications'] } : i))
 
 const APPRAISER: NavItem[] = [
   { key: 'appraisals', label: 'Fila de laudos', icon: 'assignment', href: '/appraisals' },

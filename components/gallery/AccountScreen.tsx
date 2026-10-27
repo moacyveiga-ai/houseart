@@ -44,11 +44,15 @@ export function AccountScreen({ initials, name, email, verification, sections, s
   const ver = verification ? verificationLine(verification) : null
   const [switches, setSwitches] = useState<Record<string, boolean>>(() => Object.fromEntries(sections.flatMap((g) => g.items.flatMap((i) => ('switchKey' in i ? [[i.switchKey, i.on]] : [])))))
   const [switchError, setSwitchError] = useState<string | null>(null)
+  const [savingSwitch, setSavingSwitch] = useState(false)
 
+  // one save at a time: a quick double click never leaves the screen and the server disagreeing
   async function flip(key: 'marketingOptIn', next: boolean) {
-    setSwitches((s) => ({ ...s, [key]: next })); setSwitchError(null)
+    if (savingSwitch) return
+    setSavingSwitch(true); setSwitches((s) => ({ ...s, [key]: next })); setSwitchError(null)
     const res = await fetch('/api/auth/preferences', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ [key]: next }) }).catch(() => null)
     if (!res?.ok) { setSwitches((s) => ({ ...s, [key]: !next })); setSwitchError('Não foi possível salvar agora.') }
+    setSavingSwitch(false)
   }
 
   async function logout() {
@@ -89,7 +93,10 @@ export function AccountScreen({ initials, name, email, verification, sections, s
               <div key={it.name} className="ha-account-item ha-account-item--switch">
                 <Icon name={it.icon} size={22} />
                 <span className="ha-stack ha-account-item__txt"><span className="ha-account-item__n">{it.name}</span><span className="ha-account-item__s">{it.sub}</span></span>
-                <Toggle on={switches[it.switchKey] ?? it.on} onChange={(n) => void flip(it.switchKey, n)} label={it.name} />
+                <span className="ha-stack" style={{ alignItems: 'flex-end', gap: 4 }}>
+                  <Toggle on={switches[it.switchKey] ?? it.on} disabled={savingSwitch} onChange={(n) => void flip(it.switchKey, n)} label={it.name} />
+                  {switchError ? <span className="ha-account-sheet__err" role="alert">{switchError}</span> : null}
+                </span>
               </div>
             ) : (
               <Link key={it.name} href={it.href} className="ha-account-item" scroll={it.current === undefined} aria-current={it.current ? 'true' : undefined}>
@@ -101,7 +108,6 @@ export function AccountScreen({ initials, name, email, verification, sections, s
           </div>
         </section>
       ))}
-      {switchError ? <p className="ha-account-sheet__err" role="alert">{switchError}</p> : null}
       <button type="button" className="ha-account-logout" disabled={leaving} onClick={() => setSheet('logout')}><Icon name="logout" size={20} />Sair da conta</button>
       <button type="button" className="ha-account-danger" onClick={() => void openDelete()}>Excluir minha conta</button>
       <span className="ha-account-foot">HouseArt 1.0 (2026.10) · <Link href="/terms">Termos de uso</Link> · <Link href="/privacy">Privacidade</Link></span>

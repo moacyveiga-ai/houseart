@@ -714,12 +714,16 @@ model Deal {
   insurerName          String?
   policyRef            String?
   shippedAt            DateTime?
+  /// "Embalagem e condition report" (audit galeria §4): the seller's note on the work's condition when packed, before shipping.
+  conditionReport      String?
+  packedAt             DateTime?
   deliveredAt          DateTime?
   deliveryMarkerReadId Int?
   completedAt          DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   phaseEvents          DealPhaseEvent[]
+  packagingPhotos      DealPackagingPhoto[]
   splits               DealSplit[]
   transfer             OwnershipTransfer?
   royalty              RoyaltyPayment?
@@ -742,6 +746,17 @@ model DealPhaseEvent {
   occurredAt  DateTime @default(now())
 
   @@index([dealId, occurredAt])
+}
+
+/// A photo of the packed work (condition report), in the private vault — seen only by the two sides of the deal.
+model DealPackagingPhoto {
+  id        Int      @id @default(autoincrement())
+  dealId    Int
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  fileRef   String
+  createdAt DateTime @default(now())
+
+  @@index([dealId])
 }
 
 /// Split of the deal amount ("Repartição dos valores"). Sum = amountCents.

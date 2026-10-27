@@ -28,6 +28,7 @@ import { hasReceipt, receiptOf } from './receipt-core'
 import { escrowChargedCents } from '@/lib/payment-methods/ledger-core'
 import { renderReceiptPdf } from './receipt-pdf'
 import { saleFinance } from './sale-progress-core'
+import { packagingPhotoUrl } from './packaging-core'
 
 /** Default gallery share of the seller's part until the Consignment agreement exists (HOUSEART_BUILD.md §J). */
 export const DEFAULT_GALLERY_BPS = 4614
@@ -110,6 +111,8 @@ export interface DealView {
   offerId: number; sellerKind: string; buyerCity: string | null; createdAt: string; exception: string | null; artworkId: number
   /** The buyer's Pix/boleto waiting to be paid — only in the BUYER's view (buyerDeals); null for the seller. */
   escrowPending: PaymentInstructions | null
+  /** "Embalagem e condition report": the seller's note and the photo URLs (both sides; the photos stay in the vault). */
+  packaging: { report: string | null; packedAt: string | null; photos: { id: number; url: string }[] }
 }
 
 function toView(d: Awaited<ReturnType<typeof loadDeal>>, forBuyer = false): DealView {
@@ -134,12 +137,13 @@ function toView(d: Awaited<ReturnType<typeof loadDeal>>, forBuyer = false): Deal
     shipping: d.carrierName ? { carrier: d.carrierName, tracking: d.trackingCode, insurer: d.insurerName } : null,
     sellerSigned: !!d.sellerSignedAt, buyerSigned: !!d.buyerSignedAt, escrowPaid: !!d.escrowPaidAt, completedAt: d.completedAt?.toISOString() ?? null,
     escrowPending: forBuyer && d.phase === 'OFFER_ACCEPTED' && !d.escrowPaidAt && d.escrowPendingRef ? parseInstructions(d.escrowInstructionsJson) : null,
+    packaging: { report: d.conditionReport ?? null, packedAt: d.packedAt?.toISOString() ?? null, photos: d.packagingPhotos.map((p) => ({ id: p.id, url: packagingPhotoUrl(d.id, p.id) })) },
     offerId: d.offerId, sellerKind: d.sellerKind, buyerCity: d.offer.buyerCity ?? null, createdAt: d.createdAt.toISOString(), exception: d.exceptionStatus ?? null, artworkId: d.artworkId,
   }
 }
 
 async function loadDeal(id: number) {
-  const d = await prisma.deal.findUniqueOrThrow({ where: { id }, include: { artwork: { include: { artist: true, member: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 } } }, offer: true, phaseEvents: { orderBy: { occurredAt: 'asc' } }, splits: { orderBy: { id: 'asc' } } } })
+  const d = await prisma.deal.findUniqueOrThrow({ where: { id }, include: { artwork: { include: { artist: true, member: true, media: { where: { kind: 'FRONT_COLOR_CARD' }, take: 1 } } }, offer: true, phaseEvents: { orderBy: { occurredAt: 'asc' } }, packagingPhotos: { select: { id: true }, orderBy: { id: 'asc' } }, splits: { orderBy: { id: 'asc' } } } })
   const members = [d.sellerMemberId, d.artwork.artist.memberId].filter((m): m is number => m !== null)
   const connectAccounts = stripeMode() === 'mock' ? [] : await prisma.stripeConnectAccount.findMany({ where: { memberId: { in: members }, mode: stripeMode() }, select: { memberId: true, status: true } })
   // who SOLD (the artwork's member changes to the buyer once the transfer completes)

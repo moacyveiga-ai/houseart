@@ -33,6 +33,11 @@
 .hc-address .ha-icon { align-self: center; color: var(--ha-ink-900); }
 .hc-address__field { display: flex; flex-direction: column; gap: var(--ha-space-1); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .hc-address__field .ha-input { padding: var(--ha-space-2) var(--ha-space-3); font-size: var(--ha-text-body-sm); max-width: 180px; }
+.hc-address--saved { grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; }
+.hc-address__saved { display: flex; flex-direction: column; gap: 2px; font-size: var(--ha-text-body-sm); color: var(--ha-ink-700); min-width: 0; }
+.hc-address__saved b { color: var(--ha-ink-900); }
+.hc-address__swap { font-size: var(--ha-text-body-sm); font-weight: 600; background: none; border: 0; cursor: pointer; padding: var(--ha-space-2); }
+.hc-address__note { display: block; margin-top: var(--ha-space-2); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .hc-address__state { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-900); padding-bottom: var(--ha-space-2); white-space: nowrap; }
 
 /* insurance */

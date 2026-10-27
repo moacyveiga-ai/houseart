@@ -100,3 +100,11 @@ export function previewCardNumber(masked: string, brand: string): string {
   for (const g of groups) { parts.push(padded.slice(j, j + g)); j += g }
   return parts.join(' ')
 }
+
+/** A saved delivery address offered at checkout (Perfil › Endereços de entrega). */
+export interface CheckoutAddress { id: number; label: string; line: string; cep: string; isDefault: boolean }
+
+/** The address the checkout opens on: the default one, else the first; none → the CEP field. */
+export function initialAddressId(addresses: readonly CheckoutAddress[]): number | null {
+  return (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null
+}

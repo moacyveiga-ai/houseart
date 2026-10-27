@@ -11,7 +11,7 @@ import { formatBRL } from '@/lib/artworks/domain'
 import { brandOf, checkCard, CARD_BRAND_LABELS, type PaymentMethodView } from '@/lib/payment-methods/domain'
 import { StripeCardForm } from '@/components/wallet/StripeCardForm'
 import { normalizeCep } from '@/lib/shipping/quote-core'
-import { blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, PAY_METHODS, previewCardNumber, summaryLines, type DeliveryMode, type PayMethod } from './checkout-core'
+import { initialAddressId, type CheckoutAddress, blockedReason, checkoutTotals, ctaLabel, insuranceText, maskCardNumber, maskCep, maskExpiry, PAY_METHODS, previewCardNumber, summaryLines, type DeliveryMode, type PayMethod } from './checkout-core'
 import { boletoBillingProblem, type PaymentInstructions } from '@/lib/payments/async-core'
 import { PaymentInstructionsCard } from '@/components/payments/PaymentInstructionsCard'
 
@@ -21,15 +21,24 @@ export interface CheckoutArtwork {
   seller: { name: string; kind: 'GALLERY' | 'PRIVATE'; city: string | null; uf: string | null }
 }
 
-interface Props { artwork: CheckoutArtwork; buyerName: string; /** the CEP of the buyer's default delivery address (Perfil › Endereços) */ defaultCep?: string | null }
+interface Props { artwork: CheckoutArtwork; buyerName: string; /** the buyer's saved delivery addresses (Perfil › Endereços de entrega) */ addresses?: CheckoutAddress[] }
 
 type Quote = { cep: string; shippingCents: number; insuranceCents: number }
 const brl = (c: number) => formatBRL(c)
 
-export function CheckoutScreen({ artwork, buyerName, defaultCep = null }: Props) {
+export function CheckoutScreen({ artwork, buyerName, addresses = [] }: Props) {
   const price = Number(artwork.priceCents)
   const [delivery, setDelivery] = useState<DeliveryMode>('CARRIER')
-  const [cep, setCep] = useState(defaultCep ? maskCep(defaultCep) : '')
+  // the saved address the delivery goes to (null = a CEP typed here); the quote reads its CEP
+  const [addressId, setAddressId] = useState<number | null>(() => initialAddressId(addresses))
+  const [picking, setPicking] = useState(false)
+  const chosen = addresses.find((x) => x.id === addressId) ?? null
+  const [cep, setCep] = useState(() => { const first = addresses.find((x) => x.id === initialAddressId(addresses)); return first ? maskCep(first.cep) : '' })
+  const pickAddress = (id: number | null) => {
+    setPicking(false); setAddressId(id); setQuote(null)
+    const a = addresses.find((x) => x.id === id)
+    setCep(a ? maskCep(a.cep) : '')
+  }
   const [quote, setQuote] = useState<Quote | null>(null)
   const [insurance, setInsurance] = useState(true)
   const [cards, setCards] = useState<PaymentMethodView[] | null>(null)
@@ -155,14 +164,41 @@ export function CheckoutScreen({ artwork, buyerName, defaultCep = null }: Props)
               </button>
             </div>
             {delivery === 'CARRIER' ? (
-              <div className="hc-address">
-                <Icon name="location_on" size={20} />
-                <label className="hc-address__field">
-                  <span>CEP de entrega</span>
-                  <input className="ha-input" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" value={cep} onChange={(e) => { setCep(maskCep(e.target.value)); setQuote(null) }} aria-invalid={cep.length > 0 && !cepNorm ? true : undefined} />
-                </label>
-                <span className="hc-address__state">{quoting ? 'Calculando…' : quote ? 'Frete e seguro calculados' : 'Informe o CEP'}</span>
-              </div>
+              <>
+                {chosen && !picking ? (
+                  <div className="hc-address hc-address--saved">
+                    <Icon name="location_on" size={20} />
+                    <span className="hc-address__saved"><b>{chosen.label}</b><span>{chosen.line}</span></span>
+                    <button type="button" className="ha-link hc-address__swap" onClick={() => setPicking(true)}>Trocar</button>
+                  </div>
+                ) : null}
+                {picking ? (
+                  <div role="radiogroup" aria-label="Endereço de entrega" className="hc-options">
+                    {addresses.map((x) => (
+                      <button key={x.id} type="button" role="radio" aria-checked={x.id === addressId} className="hc-option" onClick={() => pickAddress(x.id)}>
+                        <Icon name={x.id === addressId ? 'radio_button_checked' : 'radio_button_unchecked'} size={22} />
+                        <span className="hc-option__text"><span className="hc-option__name">{x.label}</span><span className="hc-option__sub">{x.line}</span></span>
+                      </button>
+                    ))}
+                    <button type="button" role="radio" aria-checked={addressId === null} className="hc-option" onClick={() => pickAddress(null)}>
+                      <Icon name={addressId === null ? 'radio_button_checked' : 'radio_button_unchecked'} size={22} />
+                      <span className="hc-option__text"><span className="hc-option__name">Outro endereço</span><span className="hc-option__sub">Informe o CEP de entrega</span></span>
+                    </button>
+                  </div>
+                ) : null}
+                {!chosen && !picking ? (
+                  <div className="hc-address">
+                    <Icon name="location_on" size={20} />
+                    <label className="hc-address__field">
+                      <span>CEP de entrega</span>
+                      <input className="ha-input" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" value={cep} onChange={(e) => { setCep(maskCep(e.target.value)); setQuote(null) }} aria-invalid={cep.length > 0 && !cepNorm ? true : undefined} />
+                    </label>
+                    <span className="hc-address__state">{quoting ? 'Calculando…' : quote ? 'Frete e seguro calculados' : 'Informe o CEP'}</span>
+                  </div>
+                ) : null}
+                {chosen && !picking ? <span className="hc-address__note">{quoting ? 'Calculando frete e seguro…' : quote ? 'Frete e seguro calculados para este endereço' : 'Não foi possível calcular o frete deste CEP'}</span> : null}
+                {addresses.length === 0 ? <a href="/account/addresses" className="ha-link ha-link--quiet hc-address__note">Salvar endereços de entrega no seu perfil</a> : null}
+              </>
             ) : null}
           </div>
 

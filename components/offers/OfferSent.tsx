@@ -10,11 +10,12 @@ import { Button, ButtonLink } from '@/components/ds/Button'
 import { Field } from '@/components/ds/Field'
 import { formatBRL } from '@/lib/artworks/domain'
 import { OfferAside, type OfferArtwork } from './OfferFrame'
+import { TalkToSellerButton } from '@/components/public/TalkToSellerButton'
 import { finalActions, responseOf, sellerPhrase, statusCard, timelineOf, type StatusOffer } from './offer-status-core'
 
-interface Props { code: string; offer: StatusOffer; artwork: OfferArtwork; token: string | null; deliveryCep: string | null }
+interface Props { code: string; offer: StatusOffer; artwork: OfferArtwork; token: string | null; deliveryCep: string | null; /** "Conversar antes": the artwork id when the buyer is signed in (never on the e-mail token link) */ talkArtworkId?: number | null }
 
-export function OfferSent({ code, offer, artwork, token, deliveryCep }: Props) {
+export function OfferSent({ code, offer, artwork, token, deliveryCep, talkArtworkId = null }: Props) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [countering, setCountering] = useState(false)
@@ -68,6 +69,7 @@ export function OfferSent({ code, offer, artwork, token, deliveryCep }: Props) {
                 <div className="hp-offer__counter-actions">
                   <Button variant="primary" size="md" loading={busy === 'accept'} onClick={() => void post('reply', { accept: true }, 'accept')}>Aceitar {formatBRL(offer.counterCents)}</Button>
                   <Button variant="outline" size="md" onClick={() => setCountering(true)}>Fazer nova oferta</Button>
+                  {talkArtworkId ? <TalkToSellerButton artworkId={talkArtworkId} publicId={artwork.publicId} signedIn label="Conversar antes" className="ha-btn ha-btn--outline ha-btn--md" /> : null}
                   {offer.canRetract ? <button type="button" className="hp-offer__edit" disabled={busy === 'refuse'} onClick={() => { if (window.confirm('Recusar a contraproposta retira a sua oferta. Continuar?')) void post('retract', {}, 'refuse') }}>Recusar</button> : null}
                 </div>
               )}

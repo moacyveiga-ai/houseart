@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { formatBRL } from '@/lib/artworks/domain'
+import { Stepper } from '@/components/ds/Stepper'
+import { Toggle } from '@/components/ds/Toggle'
 
 const STEPS = ['Comprador', 'Valor', 'Assinaturas', 'Toque do comprador']
 
@@ -60,7 +62,7 @@ export function TransferWizard({ artwork, existing }: { artwork: { id: number; t
     <div className="ha-stack">
       <p className="ha-muted">Vendeu fora da HouseArt? Registre a nova titularidade.</p>
       <h1 className="ha-h1">Transferir obra</h1>
-      <div className="ha-row">{STEPS.map((s, i) => <span key={s} className={`ha-chip${i === step ? ' ha-chip--on' : ''}`}>{s}</span>)}</div>
+      <Stepper steps={STEPS} current={step} />
       <div className="ha-card ha-card--pad"><b>{artwork.title}{artwork.year ? `, ${artwork.year}` : ''}</b><br /><span className="ha-muted ha-sm">{artwork.artist} · {artwork.publicId}</span></div>
       {step === 0 ? (
         <div className="ha-stack">
@@ -73,7 +75,7 @@ export function TransferWizard({ artwork, existing }: { artwork: { id: number; t
       {step === 1 ? (
         <div className="ha-stack">
           <label className="ha-label">Valor da venda (R$)<input className="ha-input ha-input--num" inputMode="numeric" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
-          <label className="ha-row"><input type="checkbox" checked={form.priceSealed} onChange={(e) => setForm({ ...form, priceSealed: e.target.checked })} /> Preço selado</label>
+          <div className="ha-row" style={{ justifyContent: 'space-between' }}><span>Preço selado</span><Toggle on={form.priceSealed} onChange={(n) => setForm({ ...form, priceSealed: n })} label="Preço selado" /></div>
           <p className="ha-muted ha-sm">O valor fica registrado e assinado, mas não aparece na página pública.</p>
           {livePreview && BigInt(livePreview.royaltyCents) > 0n ? <div className="ha-callout"><Icon name="autorenew" /><div>Direito de sequência: <b>{formatBRL(BigInt(livePreview.royaltyCents))}</b> (5% da valorização de {formatBRL(BigInt(livePreview.appreciationCents))}) será repassado a {livePreview.artistName}.</div></div> : null}
         </div>
@@ -92,7 +94,7 @@ export function TransferWizard({ artwork, existing }: { artwork: { id: number; t
         <div className="ha-stack" style={{ alignItems: 'center', textAlign: 'center' }}>
           <span className="ha-ring"><span className="ha-ring__pulse" /><span className="ha-ring__core"><Icon name="contactless" size={28} /></span></span>
           <b>{t.status === 'COMPLETED' ? 'Transferência concluída' : `Falta o toque de ${t.toName}`}</b>
-          <p className="ha-muted ha-sm">Com a obra em mãos, {t.toName.split(' ')[0]} encosta o celular na etiqueta do verso. A leitura prova a posse e a escritura passa para o nome dela.</p>
+          <p className="ha-muted ha-sm">Com a obra em mãos, {t.toName.split(' ')[0]} encosta o celular na etiqueta do verso. A leitura prova a posse e a escritura passa para o nome de quem comprou.</p>
         </div>
       ) : null}
       <div className="ha-row ha-row--end">

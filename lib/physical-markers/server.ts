@@ -10,20 +10,12 @@ import { audit } from '@/lib/audit'
 import { keyedHash } from '@/lib/crypto/cipher'
 import { ArtworkError } from '@/lib/artworks/server'
 import { isPublicId, MARKER_KIT_MAX, MARKER_KIT_MIN, publicIdOf, UID_RE, type ReadPurpose } from './domain'
-import { mockMasterKey, mockSunMessage, tamperDecision, verifySun } from './sun-core'
+import { mockSunMessage, tamperDecision, verifySun, type SunVerdict } from './sun-core'
+import { markerMasterKey } from './tap-server'
 import { recordEvent } from '@/lib/certificate-events/server'
 import { openReviewItem } from '@/lib/admin-review/server'
 
-function masterKey(): Buffer {
-  const vendor = process.env.MARKER_VENDOR ?? 'mock'
-  if (vendor === 'mock') return mockMasterKey()
-  // The 16-byte master key in base64 (HSM/KMS integration is a J item).
-  const raw = process.env.MARKER_MASTER_KEY?.trim()
-  if (!raw) throw new ArtworkError('MARKER_KEY', 'MARKER_MASTER_KEY não configurada.', 503)
-  const key = Buffer.from(raw, 'base64')
-  if (key.length !== 16) throw new ArtworkError('MARKER_KEY', 'Chave mestra inválida.', 503)
-  return key
-}
+const masterKey = markerMasterKey
 
 // ── staff: batches ────────────────────────────────────────────────────────
 export async function createBatch(opt: { code: string; quantity: number; destination: string; tenantId?: number | null; uids?: string[] }, actor: { userId: number; name: string }) {
@@ -195,17 +187,27 @@ export async function recordPublicRead(publicId: string, sun: { uid?: string; ct
     const marker = await prisma.physicalMarker.findUnique({ where: { uid: sun.uid.toLowerCase() } })
     const artwork = marker?.artworkId ? await prisma.artwork.findUnique({ where: { id: marker.artworkId }, select: { publicId: true, id: true, tenantId: true } }) : null
     if (!marker || !artwork || artwork.publicId !== publicId) return { authenticated: false, tamper: false, reason: 'MARKER_MISMATCH' }
-    const verdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter, tt: sun.tt })
-    // the claim is recorded either way (cmacValid tells the desk whether it was authenticated); only an
-    // authenticated one revokes the tag — a forged `&tt=` on a tap link changes nothing
-    const tamper = tamperDecision(sun.tt, verdict)
-    await prisma.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: verdict.ok, tamperFlag: tamper.recordFlag, ipHash, purpose } })
-    if (verdict.ok) await prisma.physicalMarker.update({ where: { id: marker.id }, data: { readCounter: sun.ctr ?? marker.readCounter, lastReadAt: new Date() } })
-    if (tamper.revoke && marker.status === 'LINKED') {
-      await prisma.physicalMarker.update({ where: { id: marker.id }, data: { status: 'REMOVED' } })
-      await openReviewItem({ kind: 'MARKER_REMOVED', artworkId: artwork.id, tenantId: artwork.tenantId, reason: 'Leitura indicou violação do chip' })
-    }
-    return { authenticated: verdict.ok, tamper: tamper.revoke, reason: verdict.ok ? undefined : verdict.reason }
+    const initial: SunVerdict = verifySun({ master: masterKey(), uid: marker.uid, counter: sun.ctr ?? -1, cmac: sun.cmac ?? '', lastCounter: marker.readCounter, tt: sun.tt })
+    // The counter is consumed by compare-and-swap, as in `verifyBuyerTap`: two requests
+    // carrying the same ctr (a double load, a link opened twice at once) never both pass —
+    // the one that loses the swap is a replay. Consuming, recording the read and taking the
+    // marker out of LINKED go in one transaction: a failure never spends the counter without
+    // the read (and its tamper signal) on record. The tamper claim is recorded either way
+    // (`cmacValid` tells the desk whether it was authenticated); only an authenticated one
+    // revokes the tag — a forged `&tt=` on a tap link changes nothing.
+    const { verdict, tamper, removed } = await prisma.$transaction(async (tx) => {
+      let v = initial
+      if (v.ok) {
+        const consumed = await tx.physicalMarker.updateMany({ where: { id: marker.id, readCounter: { lt: sun.ctr ?? -1 } }, data: { readCounter: sun.ctr, lastReadAt: new Date() } })
+        if (consumed.count !== 1) v = { ok: false, reason: 'REPLAY' }
+      }
+      const t = tamperDecision(sun.tt, v)
+      await tx.markerRead.create({ data: { markerId: marker.id, counter: sun.ctr ?? 0, cmacValid: v.ok, tamperFlag: t.recordFlag, ipHash, purpose } })
+      const r = t.revoke ? (await tx.physicalMarker.updateMany({ where: { id: marker.id, status: 'LINKED' }, data: { status: 'REMOVED' } })).count === 1 : false
+      return { verdict: v, tamper: t.revoke, removed: r }
+    })
+    if (removed) await openReviewItem({ kind: 'MARKER_REMOVED', artworkId: artwork.id, tenantId: artwork.tenantId, reason: 'Leitura indicou violação do chip' })
+    return { authenticated: verdict.ok, tamper, reason: verdict.ok ? undefined : verdict.reason }
   })
 }
 

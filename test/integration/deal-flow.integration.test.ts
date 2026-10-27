@@ -197,7 +197,10 @@ describe('deal flow', () => {
     expect(await buyerTap(token, mockSunMessage(uid, 3))).toMatchObject({ ok: false })
     await payTransferFee(buyer.id, t.id)
     expect(await buyerTap(token, { ...mockSunMessage(uid, 3), cmac: 'FFFFFFFFFFFFFFFF' })).toMatchObject({ ok: false })
+    // a read the delivery already consumed (ctr 2) cannot be replayed on the transfer tap
+    expect(await buyerTap(token, mockSunMessage(uid, 2))).toMatchObject({ ok: false })
     expect(await buyerTap(token, mockSunMessage(uid, 3))).toEqual({ ok: true })
+    expect((await prisma.physicalMarker.findUniqueOrThrow({ where: { uid } })).readCounter).toBe(3)
     const after = await prisma.ownershipTransfer.findUniqueOrThrow({ where: { id: t.id } })
     expect(after).toMatchObject({ status: 'COMPLETED', royaltyCents: 27_500n, priceSealed: true })
     const v3 = await prisma.certificateVersion.findFirstOrThrow({ where: { certificate: { artworkId: s.b.artworkId }, status: 'ACTIVE' } })

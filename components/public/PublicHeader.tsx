@@ -3,10 +3,11 @@
 // lockup (44px) on every page; on the Home it is fixed, 72px, transparent over
 // the hero and solid (rgba ink, blur) after 80 % of the viewport is scrolled.
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useSyncExternalStore } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useSyncExternalStore, type FormEvent } from 'react'
 import { HouseArtLogo } from '@/components/layout/HouseArtLogo'
 import { Icon } from '@/components/ds/Icon'
+import { headerSearchTarget } from './header-search-core'
 
 export const PUBLIC_NAV = [
   { href: '/e/marketplace', label: 'Marketplace' },
@@ -32,6 +33,12 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
   // Catalogue pages use the light top bar of the handoff (§4.5: full_horiz_color 30 px on paper-50); Site,
   // Verificar and the Home keep the dark one.
   const light = ['/e/marketplace', '/e/artwork', '/e/artist', '/e/artists', '/e/gallery', '/e/galleries'].some((p) => pathname === p || pathname.startsWith(p + '/'))
+  const router = useRouter()
+  function search(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const to = headerSearchTarget(String(new FormData(e.currentTarget).get('q') ?? ''))
+    if (to) router.push(to)
+  }
   const active = (href: string) => href !== '/e#agenda' && (pathname === href || pathname.startsWith(href + '/'))
   return (
     <header className={`hp-header${home ? ' hp-header--home' : ''}${solid ? ' hp-header--solid' : ''}${light ? ' hp-header--light' : ''}`}>
@@ -40,6 +47,12 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
         <nav className="hp-nav" aria-label="Navegação pública">
           {PUBLIC_NAV.map((n) => <Link key={n.href} href={n.href} className={`hp-nav__link${active(n.href) ? ' hp-nav__link--on' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>{n.label}</Link>)}
         </nav>
+        {light ? (
+          <form className="hp-header__search" role="search" action="/e/marketplace" onSubmit={search}>
+            <Icon name="search" size={20} />
+            <input name="q" type="search" placeholder="Obra, artista ou ID" aria-label="Buscar obra, artista ou ID" maxLength={120} />
+          </form>
+        ) : null}
         <div className="hp-header__right">
           {account ? (
             <><Link href="/verify" className="hp-header__verify"><Icon name="contactless" size={18} />Verificar</Link><Link href={account.href} className="hp-header__login hp-header__login--account" aria-label={`Minha área · ${account.label}`}><Icon name="person" size={18} /><span className="hp-header__label">{account.label}</span></Link></>

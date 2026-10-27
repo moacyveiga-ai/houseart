@@ -20,6 +20,7 @@ import { GET as certificatesGet } from '@/app/api/artist/certificates/route'
 import { createScenario, type Scenario } from './fixtures'
 import { asPanel, signIn, signOut } from './session'
 import { truncateTables } from './db'
+import { awaitDetached } from '@/lib/after'
 
 // ── the counting client (test only; lib/prisma.ts is untouched) ──────────
 type Global = { prisma?: unknown }
@@ -31,9 +32,14 @@ base.$on('query', () => { queries += 1 })
 g.prisma = base.$extends(scopeExtension)
 afterAll(async () => { g.prisma = previous; await base.$disconnect() })
 
+// Outside a request, `afterResponse` work runs detached (e.g. the session's `lastUsedAt` touch in
+// getSessionByToken): it landed inside or outside the window by timing, and the count wobbled by one
+// (certificates 13 × 12). The window settles the detached work on both ends, so it always counts.
 async function counted<T>(fn: () => Promise<T>): Promise<{ result: T; queries: number }> {
+  await awaitDetached()
   const before = queries
   const result = await fn()
+  await awaitDetached()
   return { result, queries: queries - before }
 }
 

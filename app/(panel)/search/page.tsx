@@ -9,6 +9,7 @@ import { CollectorArtworkPanel } from '@/components/collector/CollectorArtworkPa
 import { hasTotalScope } from '@/lib/auth'
 import { adminSearch } from '@/lib/admin-search/server'
 import { AdminSearchResults } from '@/components/search/AdminSearchResults'
+import { recentKeyOf } from '@/components/search/recent-core'
 
 export const metadata = { title: 'Busca — HouseArt' }
 
@@ -26,7 +27,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Busca</h1></div>
-      <SearchScreen result={result} featured={featured} workPrefix={`${base}${q ? '&' : '?'}work=`} before={admin && admin.total > 0 ? <AdminSearchResults r={admin} /> : null} />
+      <SearchScreen result={result} featured={featured} recentKey={staff ? null : recentKeyOf(user.id)} workPrefix={`${base}${q ? '&' : '?'}work=`} before={admin && admin.total > 0 ? <AdminSearchResults r={admin} /> : null} />
       {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} closeHref={base} /> : null}
     </div>
   )

@@ -11,6 +11,7 @@ import { categoryLabel, formatBRL, formatDimensions } from '@/lib/artworks/domai
 import { EVENT_LABELS, type EventKind } from '@/lib/certificates/core'
 import { flagOn } from '@/lib/flags'
 import { payoutReadiness } from '@/lib/payment-methods/payout-readiness-server'
+import { artistPriceRange } from './price-range-server'
 import { cpfMaskOf } from '@/lib/payment-methods/domain'
 import { restorationBlockReason } from './restore-core'
 import { isPublicId } from '@/lib/physical-markers/domain'
@@ -47,7 +48,7 @@ async function ownerPanel(viewer: { id: number; name: string; cpf: string | null
   const a = await prisma.artwork.findUnique({
     where: { id: artworkId },
     select: { id: true, publicId: true, title: true, year: true, technique: true, heightMm: true, widthMm: true, depthMm: true, status: true, seal: true, listPriceCents: true, category: true, memberId: true,
-      artist: { select: { name: true, slug: true } },
+      artist: { select: { id: true, name: true, slug: true } },
       media: { where: { kind: { in: ['FRONT_COLOR_CARD', 'DETAIL', 'BACK'] } }, orderBy: { sortOrder: 'asc' }, select: { kind: true, publicUrl: true } },
       certificate: { select: { issuedAt: true, status: true, events: { orderBy: { seq: 'asc' }, select: { kind: true, occurredAt: true } } } } },
   })
@@ -57,6 +58,8 @@ async function ownerPanel(viewer: { id: number; name: string; cpf: string | null
   // "Publicar sem Pix abre o cadastro de Pix": the work is in the viewer's own COLLECTOR member (holdsAsCollector)
   // the same name and mask the Pix screen shows (the key is checked against the SESSION's CPF, never the deed's)
   const payout = { ready: (await payoutReadiness(a.memberId)).ready, holderName: viewer.name, cpfMask: cpfMaskOf(viewer.cpf) }
+  // "Faixa sugerida" of the sell sheet: only for a work that can still go on sale
+  const priceRange = a.status === 'AUTHENTICATED' && a.seal === 'GREEN' ? await artistPriceRange(a.artist) : null
   return {
     mode: 'owner', id: a.id, publicId: a.publicId, title: a.title, artist: a.artist.name, artistSlug: a.artist.slug,
     ficha: fichaOf(a.year, a.technique ?? (categoryLabel(a.category) || null), formatDimensions(a)),
@@ -69,7 +72,7 @@ async function ownerPanel(viewer: { id: number; name: string; cpf: string | null
       { k: 'Titular atual · você', v: `Desde ${w.acquiredAt}` },
     ],
     seller: null, market: null,
-    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), restoreBlocked: restorationBlockReason(a.status, a.certificate?.status ?? null), payout, cover: w.cover },
+    owner: { status: a.status, sealGreen: a.seal === 'GREEN', registeredCents: a.listPriceCents?.toString() ?? null, insured: w.insured, insurer: w.insurer, holderName: w.holderName, holderMask: w.holderMask, acquiredAt: w.acquiredAt, version: w.version, transferOn: flagOn('FLAG_OWNERSHIP_TRANSFER'), restoreBlocked: restorationBlockReason(a.status, a.certificate?.status ?? null), payout, cover: w.cover, priceRange },
   }
 }
 

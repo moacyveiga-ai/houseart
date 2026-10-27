@@ -18,7 +18,7 @@ import { PixKeyForm } from '@/components/sales/PixKeyForm'
 import '@/components/sales/payout.css'
 import './collector-sheets.css'
 
-export interface SellArtwork { artworkId: number; title: string; artist: string; cover: string | null; status: string; sealGreen: boolean; registeredCents: string | null }
+export interface SellArtwork { artworkId: number; title: string; artist: string; cover: string | null; status: string; sealGreen: boolean; registeredCents: string | null; /** "Faixa sugerida…" line, computed on the server */ priceRange?: string | null }
 /** "Publicar sem Pix abre o cadastro de Pix e depois publica" (prototype): who receives, and whether a way to receive exists. */
 export interface SellPayout { ready: boolean; holderName: string; cpfMask: string | null }
 
@@ -126,6 +126,7 @@ export function SellSheet({ artwork: a, open, onClose, onCertify, payout }: { ar
           <h2 className="ha-cs__h">Preço e modalidade</h2>
           <div className="ha-cs__body">
             {work(a.artist + (registered ? ` · registrada por ${formatBRL(registered)}` : ''))}
+            {a.priceRange ? <div className="ha-cs__hint"><Icon name="insights" size={18} /><span>{a.priceRange}</span></div> : null}
             <div className="ha-cs__modes" role="radiogroup" aria-label="Modalidade">
               {([['offers', 'Aceitar ofertas', 'Você define um mínimo e negocia', 'swap_horiz'], ['fixed', 'Preço fixo', 'Compra direta, sem negociação', 'sell']] as const).map(([k, n, s, icon]) => (
                 <button type="button" key={k} role="radio" aria-checked={mode === k} className={`ha-cs__mode${mode === k ? ' ha-cs__mode--on' : ''}`} onClick={() => setMode(k)}>

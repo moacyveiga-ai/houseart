@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({})) as { token?: string; code?: string }
   const token = String(body.token ?? ''), code = String(body.code ?? '').replace(/\D/g, '')
   if (!token || !code) return NextResponse.json({ ok: false, error: 'Informe o código.' }, { status: 400 })
-  const r = await verifyEmailChange(user.id, token, code, requestContext(req))
+  const r = await verifyEmailChange(user.id, token, code, { ...requestContext(req), keepSessionId: user.sessionId })
   if (!r.ok) return NextResponse.json(r, { status: 401 })
   return NextResponse.json(r)
 }

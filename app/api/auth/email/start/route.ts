@@ -9,10 +9,10 @@ import { rawIpFromHeaders } from '@/lib/http/ip'
 export async function POST(req: Request) {
   let user
   try { user = await requireAuth() } catch (e) { if (e instanceof AuthError) return NextResponse.json({ ok: false, error: 'Entre para continuar.' }, { status: 401 }); throw e }
-  const body = await req.json().catch(() => ({})) as { email?: string }
+  const body = await req.json().catch(() => ({})) as { email?: string; password?: string }
   const brake = await checkCodeRateLimit({ ip: rawIpFromHeaders(req.headers), email: `email-change:${user.id}` })
   if (!brake.allowed) return rateLimitResponse(brake.decision, { ok: false, error: 'Muitas tentativas. Aguarde um pouco e tente de novo.' })
-  const r = await startEmailChange(user.id, String(body.email ?? ''))
+  const r = await startEmailChange(user.id, String(body.email ?? ''), String(body.password ?? ''))
   if (!r.ok) return NextResponse.json(r, { status: 400 })
   return NextResponse.json({ ok: true, token: r.token, ...(r.echo ? { echo: r.echo } : {}) })
 }

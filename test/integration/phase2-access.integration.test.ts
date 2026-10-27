@@ -47,21 +47,30 @@ describe('e-mail change by code', () => {
   it('the code goes to the new address; only the owner of the request confirms; a taken address is silent', async () => {
     const a = await prisma.user.create({ data: { email: 'a@t.test', name: 'A', passwordHash: await hashPassword('senha-forte-1'), profile: 'collector', active: true } })
     const b = await prisma.user.create({ data: { email: 'b@t.test', name: 'B', passwordHash: await hashPassword('senha-forte-1'), profile: 'collector', active: true } })
-    expect(await startEmailChange(a.id, 'nao-e-email')).toMatchObject({ ok: false })
-    expect(await startEmailChange(a.id, 'A@t.test')).toMatchObject({ ok: false })
-    const s = await startEmailChange(a.id, 'Nova@T.test')
+    expect(await startEmailChange(a.id, 'nao-e-email', 'senha-forte-1')).toMatchObject({ ok: false })
+    expect(await startEmailChange(a.id, 'A@t.test', 'senha-forte-1')).toMatchObject({ ok: false })
+    // a session alone is not enough: the current password is asked
+    expect(await startEmailChange(a.id, 'nova@t.test', 'errada')).toMatchObject({ ok: false, error: 'Senha atual incorreta.' })
+    const keep = await prisma.session.create({ data: { userId: a.id, token: 'h1:keep', expiresAt: new Date(Date.now() + 86_400_000) } })
+    await prisma.session.create({ data: { userId: a.id, token: 'h1:other', expiresAt: new Date(Date.now() + 86_400_000) } })
+    const reset = await startPasswordReset('a@t.test')
+    expect(reset.ok).toBe(true)
+    const s = await startEmailChange(a.id, 'Nova@T.test', 'senha-forte-1')
     expect(s.ok).toBe(true)
     if (!s.ok) return
     // the public code door never takes it
     expect(await verifyAccessCode(s.token, await codeOf(s.token), {})).toMatchObject({ ok: false })
     expect(await verifyEmailChange(b.id, s.token, await codeOf(s.token))).toMatchObject({ ok: false })
     expect(await verifyEmailChange(a.id, s.token, '000000')).toMatchObject({ ok: false })
-    expect(await verifyEmailChange(a.id, s.token, await codeOf(s.token))).toMatchObject({ ok: true, email: 'nova@t.test' })
+    expect(await verifyEmailChange(a.id, s.token, await codeOf(s.token), { keepSessionId: keep.id })).toMatchObject({ ok: true, email: 'nova@t.test' })
+    // the other sessions and the open reset link die; this session stays
+    expect((await prisma.session.findMany({ where: { userId: a.id } })).map((x) => x.id)).toEqual([keep.id])
+    expect(await prisma.accessCode.count({ where: { userId: a.id, purpose: 'RESET', consumedAt: null } })).toBe(0)
     const ua = await prisma.user.findUniqueOrThrow({ where: { id: a.id } })
     expect(ua.email).toBe('nova@t.test'); expect(ua.emailVerifiedAt).not.toBeNull()
     expect(await verifyEmailChange(a.id, s.token, await codeOf(s.token))).toMatchObject({ ok: false })
     // B asks for A's new address: blind ok, SILENT row, never verifies
-    const s2 = await startEmailChange(b.id, 'nova@t.test')
+    const s2 = await startEmailChange(b.id, 'nova@t.test', 'senha-forte-1')
     expect(s2.ok).toBe(true)
     if (!s2.ok) return
     expect((await prisma.accessCode.findUniqueOrThrow({ where: { tokenHash: sha256(s2.token) } })).purpose).toBe('SILENT')

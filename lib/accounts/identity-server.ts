@@ -5,15 +5,17 @@ import { maskPhone } from '@/lib/sms/core'
 
 export interface IdentityView { name: string; cpfMask: string | null; phoneMask: string | null; phoneVerified: boolean; emailVerified: boolean; city: string
   /** "Sobre você" and the profile photo (Perfil › Dados pessoais) */
-  about: string; avatarUrl: string | null }
+  about: string; avatarUrl: string | null
+  /** whether the account has a password (the e-mail change asks for it) — never the hash */
+  hasPassword?: boolean }
 
 const maskCpf = (d: string) => `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`
 
 export async function identityOf(userId: number): Promise<IdentityView> {
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, cpf: true, phone: true, phoneVerifiedAt: true, emailVerifiedAt: true, preferencesJson: true, avatarUrl: true } })
+  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, cpf: true, phone: true, phoneVerifiedAt: true, emailVerifiedAt: true, preferencesJson: true, avatarUrl: true, passwordHash: true } })
   let city = ''
   try { city = String((JSON.parse(u.preferencesJson) as { city?: unknown }).city ?? '') } catch { city = '' }
-  return { name: u.name, cpfMask: u.cpf ? maskCpf(u.cpf) : null, phoneMask: u.phone ? maskPhone(u.phone) : null, phoneVerified: !!u.phoneVerifiedAt, emailVerified: !!u.emailVerifiedAt, city, about: aboutOf(u.preferencesJson), avatarUrl: u.avatarUrl }
+  return { name: u.name, cpfMask: u.cpf ? maskCpf(u.cpf) : null, phoneMask: u.phone ? maskPhone(u.phone) : null, phoneVerified: !!u.phoneVerifiedAt, emailVerified: !!u.emailVerifiedAt, city, about: aboutOf(u.preferencesJson), avatarUrl: u.avatarUrl, hasPassword: !!u.passwordHash }
 }
 
 /** The "about" saved in the preferences JSON (string or nothing); written by lib/profile. */

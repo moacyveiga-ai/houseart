@@ -183,15 +183,23 @@ export async function completePasswordReset(token: string, newPassword: string):
 
 // ── Trocar o e-mail da conta: o código vai ao endereço NOVO; só depois de provado ele vira o e-mail de entrar ──
 import { audit } from '@/lib/audit'
+import { verifyPassword } from './index'
+
+function maskEmailAddress(e: string): string {
+  const [u, d] = e.split('@')
+  return `${u.slice(0, 1)}***@${d ?? ''}`
+}
 
 const EMAIL_CHANGE_TEXT = (code: string) => `Seu código para confirmar este e-mail na HouseArt é ${code}. Ele vale por 15 minutos. Se você não pediu a troca, ignore esta mensagem.`
 
 /** Start the change of the LOGGED user's e-mail. Blind on an address that already has an account. */
-export async function startEmailChange(userId: number, rawEmail: string): Promise<{ ok: true; token: string; echo?: string } | { ok: false; error: string }> {
+export async function startEmailChange(userId: number, rawEmail: string, password = ''): Promise<{ ok: true; token: string; echo?: string } | { ok: false; error: string }> {
   const email = normalizeEmail(rawEmail)
   if (!email) return { ok: false, error: 'Informe um e-mail válido.' }
-  const me = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } })
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, passwordHash: true } })
   if (!me) return { ok: false, error: 'Conta indisponível.' }
+  // a session alone does not move the account: who has a password confirms it (a stolen session cannot)
+  if (me.passwordHash && !(await verifyPassword(password, me.passwordHash))) return { ok: false, error: 'Senha atual incorreta.' }
   if (me.email === email) return { ok: false, error: 'Este já é o e-mail da sua conta.' }
   const taken = await prisma.user.findUnique({ where: { email }, select: { id: true } })
   const code = newCode()
@@ -201,7 +209,7 @@ export async function startEmailChange(userId: number, rawEmail: string): Promis
   return { ok: true, token, ...(codeEchoAllowed() && !taken ? { echo: code } : {}) }
 }
 
-export async function verifyEmailChange(userId: number, token: string, code: string, ctx: { ip?: string; userAgent?: string } = {}): Promise<{ ok: true; email: string } | { ok: false; error: string }> {
+export async function verifyEmailChange(userId: number, token: string, code: string, ctx: { ip?: string; userAgent?: string; keepSessionId?: number | null } = {}): Promise<{ ok: true; email: string } | { ok: false; error: string }> {
   const row = await prisma.accessCode.findUnique({ where: { tokenHash: sha256(token) } })
   if (!row || row.userId !== userId || row.channel !== 'EMAIL' || (row.purpose !== 'EMAIL_CHANGE' && row.purpose !== 'SILENT')) return { ok: false, error: 'Código inválido ou expirado. Peça um novo código.' }
   const bumped = await prisma.accessCode.update({ where: { id: row.id }, data: { attempts: { increment: 1 } } })
@@ -211,18 +219,26 @@ export async function verifyEmailChange(userId: number, token: string, code: str
     return { ok: false, error: verdictMessage(verdict) }
   }
   if (bumped.attempts > CODE_MAX_ATTEMPTS || row.purpose !== 'EMAIL_CHANGE') return { ok: false, error: 'Código inválido ou expirado. Peça um novo código.' }
-  const consumed = await prisma.accessCode.updateMany({ where: { id: row.id, consumedAt: null }, data: { consumedAt: new Date() } })
-  if (consumed.count === 0) return { ok: false, error: 'Código já utilizado.' }
   const before = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } })
   if (!before) return { ok: false, error: 'Conta indisponível.' }
   try {
-    await prisma.user.update({ where: { id: userId }, data: { email: row.email, emailVerifiedAt: new Date() } })
+    const done = await prisma.$transaction(async (tx) => {
+      const consumed = await tx.accessCode.updateMany({ where: { id: row.id, consumedAt: null }, data: { consumedAt: new Date() } })
+      if (consumed.count === 0) return false
+      await tx.user.update({ where: { id: userId }, data: { email: row.email, emailVerifiedAt: new Date() } })
+      // codes and reset links still open for this account die with the old address
+      await tx.accessCode.updateMany({ where: { consumedAt: null, OR: [{ userId, purpose: { in: ['RESET', 'EMAIL_CHANGE'] } }, { userId: null, email: before.email }] }, data: { consumedAt: new Date() } })
+      // every other session of the account ends; this one stays
+      await tx.session.deleteMany({ where: { userId, ...(ctx.keepSessionId ? { id: { not: ctx.keepSessionId } } : {}) } })
+      return true
+    })
+    if (!done) return { ok: false, error: 'Código já utilizado.' }
   } catch (e) {
     // someone took the address between the start and the code (unique e-mail)
     if ((e as { code?: string })?.code === 'P2002') return { ok: false, error: 'Este e-mail já tem uma conta na HouseArt.' }
     throw e
   }
-  audit.event({ entity: 'user', entityId: userId, action: 'email_changed', userId, before: { email: before.email }, after: { email: row.email }, ip: ctx.ip, userAgent: ctx.userAgent })
+  audit.event({ entity: 'user', entityId: userId, action: 'email_changed', userId, before: { email: maskEmailAddress(before.email) }, after: { email: maskEmailAddress(row.email) }, ip: ctx.ip, userAgent: ctx.userAgent })
   // the old address hears about it: a stolen session must not move the account in silence
   afterResponse('auth: e-mail changed notice', () => sendEmail({ to: before.email, subject: 'O e-mail da sua conta HouseArt mudou', text: 'O e-mail de acesso da sua conta HouseArt acabou de ser trocado. Se não foi você, responda a esta mensagem ou fale com a HouseArt agora.', redactedPreview: 'aviso EMAIL_CHANGED' }))
   return { ok: true, email: row.email }

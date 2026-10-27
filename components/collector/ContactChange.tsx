@@ -1,7 +1,8 @@
 'use client'
 // Dados pessoais › trocar o e-mail ou o celular: o código vai ao contato NOVO
 // e só depois de provado ele substitui o antigo (rotas /api/auth/{email,phone}).
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ds/Button'
 import { formatPhoneInput } from '@/lib/sms/core'
 
@@ -11,7 +12,11 @@ const COPY: Record<Kind, { label: string; placeholder: string; sent: string; don
   phone: { label: 'Novo celular', placeholder: '(71) 99999-0000', sent: 'Enviamos um código por SMS ao novo celular.', done: 'Celular confirmado.' },
 }
 
-export function ContactChange({ kind, k, value, note }: { kind: Kind; k: string; value: string; note?: string }) {
+export function ContactChange({ kind, k, value, note, needsPassword = false }: { kind: Kind; k: string; value: string; note?: string; needsPassword?: boolean }) {
+  const router = useRouter()
+  const opener = useRef<HTMLButtonElement>(null)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(false)
   const [shown, setShown] = useState(value)
   const [shownNote, setShownNote] = useState(note)
   const [step, setStep] = useState<'idle' | 'edit' | 'code'>('idle')
@@ -28,42 +33,46 @@ export function ContactChange({ kind, k, value, note }: { kind: Kind; k: string;
   }
   async function start() {
     setBusy(true); setMsg('')
-    const j = await post('start', kind === 'email' ? { email: input } : { phone: input })
+    const j = await post('start', kind === 'email' ? { email: input, password } : { phone: input })
     setBusy(false)
-    if (!j.ok || !j.token) { setMsg(j.error ?? 'Não foi possível enviar o código.'); return }
-    setToken(j.token); setCode(j.echo ?? ''); setStep('code'); setMsg(c.sent)
+    if (!j.ok || !j.token) { setError(true); setMsg(j.error ?? 'Não foi possível enviar o código.'); return }
+    setError(false); setPassword(''); setToken(j.token); setCode(j.echo ?? ''); setStep('code'); setMsg(c.sent)
   }
   async function verify() {
     setBusy(true); setMsg('')
     const j = await post('verify', { token, code })
     setBusy(false)
-    if (!j.ok) { setMsg(j.error ?? 'Código inválido.'); return }
+    if (!j.ok) { setError(true); setMsg(j.error ?? 'Código inválido.'); return }
+    setError(false)
     setShown(kind === 'email' ? j.email ?? input : j.phoneMask ?? input)
     setShownNote('Verificado')
     setStep('idle'); setInput(''); setCode(''); setToken(''); setMsg(c.done)
+    requestAnimationFrame(() => opener.current?.focus())
+    router.refresh()
   }
   async function resend() {
     setBusy(true)
     const j = await post('resend', { token })
     setBusy(false)
     if (j.echo) setCode(j.echo)
-    setMsg('Se o código não chegar em alguns minutos, confira o endereço e peça de novo.')
+    setError(false); setMsg('Se o código não chegar em alguns minutos, confira o endereço e peça de novo.')
   }
-  function cancel() { setStep('idle'); setInput(''); setCode(''); setToken(''); setMsg('') }
+  function cancel() { setStep('idle'); setInput(''); setCode(''); setToken(''); setPassword(''); setMsg(''); setError(false); requestAnimationFrame(() => opener.current?.focus()) }
 
   return (
     <div className="ha-cacct__field">
       <span className="ha-cacct__field-k">{k}<span className="ha-cacct__field-n">{shownNote}</span></span>
       <div className="ha-cacct__contact">
         <input className="ha-input ha-cacct__ro" value={shown} readOnly aria-label={k} />
-        {step === 'idle' ? <button type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => { setStep('edit'); setMsg('') }}>{value === '—' && shown === '—' ? 'Adicionar' : 'Alterar'}</button> : null}
+        {step === 'idle' ? <button ref={opener} type="button" className="ha-btn ha-btn--outline ha-btn--sm" onClick={() => { setStep('edit'); setMsg(''); setError(false) }}>{value === '—' && shown === '—' ? 'Adicionar' : 'Alterar'}</button> : null}
       </div>
       {step === 'edit' ? (
         <form className="ha-cacct__contact" onSubmit={(e) => { e.preventDefault(); void start() }}>
           <input className="ha-input" aria-label={c.label} placeholder={c.placeholder} autoFocus value={input}
             type={kind === 'email' ? 'email' : 'tel'} inputMode={kind === 'email' ? 'email' : 'tel'} autoComplete={kind === 'email' ? 'email' : 'tel'}
             onChange={(e) => setInput(kind === 'phone' ? formatPhoneInput(e.target.value) : e.target.value)} />
-          <Button type="submit" size="sm" loading={busy} disabled={!input.trim()}>Enviar código</Button>
+          {kind === 'email' && needsPassword ? <input className="ha-input" type="password" aria-label="Senha atual" placeholder="Senha atual" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /> : null}
+          <Button type="submit" size="sm" loading={busy} disabled={!input.trim() || (kind === 'email' && needsPassword && !password)}>Enviar código</Button>
           <button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" onClick={cancel}>Cancelar</button>
         </form>
       ) : null}
@@ -76,7 +85,7 @@ export function ContactChange({ kind, k, value, note }: { kind: Kind; k: string;
           <button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" onClick={cancel}>Cancelar</button>
         </form>
       ) : null}
-      {msg ? <span className="ha-cacct__note" role="status">{msg}</span> : null}
+      {msg ? <span className="ha-cacct__note" role={error ? 'alert' : 'status'}>{msg}</span> : null}
     </div>
   )
 }

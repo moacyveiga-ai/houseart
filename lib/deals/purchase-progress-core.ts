@@ -37,13 +37,15 @@ export interface PurchaseStep { title: string; icon: string; description: string
  * The five vertical steps of the buyer's timeline from the deal's phase and its dated phase events
  * (the server's six steps). The shipment line names the carrier and the tracking when registered.
  */
-export function purchaseSteps(d: { phase: DealPhase; steps: { phase: DealPhase; date: string | null }[]; shipping: { carrier: string | null; tracking: string | null } | null }): PurchaseStep[] {
+export function purchaseSteps(d: { phase: DealPhase; exception?: string | null; steps: { phase: DealPhase; date: string | null }[]; shipping: { carrier: string | null; tracking: string | null } | null }): PurchaseStep[] {
+  // a cancelled purchase highlights no step (the card below says why)
+  const cancelled = d.exception === 'CANCELLED'
   const done = purchaseDone(d.phase)
   const dateOf = (phases: DealPhase[]) => phases.map((p) => d.steps.find((s) => s.phase === p)?.date ?? null).find((x) => x) ?? null
   return PURCHASE_STAGES.map((s, i) => {
-    const state: PurchaseStep['state'] = i < done ? 'done' : i === done ? 'on' : 'todo'
+    const state: PurchaseStep['state'] = i < done ? 'done' : i === done && !cancelled ? 'on' : 'todo'
     let description = state === 'done' ? s.done : s.todo
-    if (i === 2 && d.shipping?.carrier && state !== 'todo') description = `${d.shipping.carrier}${d.shipping.tracking ? ` · rastreio ${d.shipping.tracking}` : ''}`
+    if (i === 2 && d.shipping?.carrier && state === 'on') description = `${d.shipping.carrier}${d.shipping.tracking ? ` · rastreio ${d.shipping.tracking}` : ''}`
     return { title: s.title, icon: s.icon, description, date: state === 'done' ? dateOf(DATED_BY[i]!) : null, state }
   })
 }

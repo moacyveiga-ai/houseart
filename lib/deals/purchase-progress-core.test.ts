@@ -32,4 +32,8 @@ describe('purchase progress', () => {
     expect(s.every((x) => x.state === 'done')).toBe(true)
     expect(s[4]!.date).toBe('05/10')
   })
+  it('cancelled: no step highlighted', () => {
+    const s = purchaseSteps({ phase: 'OFFER_ACCEPTED', exception: 'CANCELLED', steps, shipping: null })
+    expect(s.every((x) => x.state === 'todo')).toBe(true)
+  })
 })

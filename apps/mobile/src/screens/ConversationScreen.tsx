@@ -2,16 +2,20 @@
 // back · avatar · name · "<tipo> · verificado pela HouseArt", the artwork strip,
 // the bubbles (system lines centred; theirs on paper, mine on ink), the quick
 // replies, the guard band with the server's refusal, and the composer.
-// GET /api/messages/[id]?after= every 5 s while open; POST sends { body }.
+// GET /api/messages/[id]?after= every 5 s while open; POST sends { body }. The camera button sends a
+// photo (POST …/photos, multipart; the server re-encodes it and keeps it in the private vault).
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import * as ImagePicker from 'expo-image-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { api, ApiError } from '@/api/client'
+import { api, apiUpload, ApiError } from '@/api/client'
 import type { ConversationRow, MessageRow } from '@/api/types'
 import { colors, theme } from '@/theme'
 import { Avatar, Chip, Display, ErrorState, Icon, IconButton, Loading, TopBar, Wall } from '@/ui/kit'
 import { avatarTint, bubbleTime } from '@/ui/format'
+import { VaultImage } from '@/ui/vault-image'
+import { photoPart } from './artist/artist-core'
 
 /** The quick replies of the prototype for the buyer's side (the collector). */
 const QUICK_REPLIES = ['Ainda disponível?', 'Posso ver ao vivo?', 'Como fica o frete?', 'Tem o condition report?']
@@ -68,6 +72,21 @@ export function ConversationScreen({ id }: { id: number }) {
     } finally { setSending(false) }
   }
 
+  async function sendPhoto() {
+    if (sending) return
+    let result: ImagePicker.ImagePickerResult
+    try { result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85, exif: false }) } catch { setGuard('Não foi possível abrir a galeria.'); return }
+    if (result.canceled || !result.assets[0]) return
+    setSending(true)
+    try {
+      const r = await apiUpload<{ ok: boolean; message: MessageRow }>(`/api/messages/${id}/photos`, {}, photoPart(result.assets[0], 'foto'))
+      setMessages((cur) => merge(cur, [r.message]))
+      setGuard(null)
+    } catch (e) {
+      setGuard(e instanceof ApiError ? e.message : 'Não foi possível enviar a foto.')
+    } finally { setSending(false) }
+  }
+
   if (!loaded) return <View style={[styles.fill, { paddingTop: insets.top }]}><TopBar /><Loading /></View>
   if (!header) return <View style={[styles.fill, { paddingTop: insets.top }]}><TopBar /><ErrorState message={error ?? 'Conversa não encontrada.'} onRetry={() => void load(0)} /></View>
   const tint = avatarTint(header.other.name)
@@ -92,7 +111,12 @@ export function ConversationScreen({ id }: { id: number }) {
         ) : null}
       </View>
       <ScrollView ref={scroll} style={styles.thread} contentContainerStyle={styles.threadBody} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}>
-        {messages.map((m) => m.kind !== 'TEXT' ? (
+        {messages.map((m) => m.kind === 'IMAGE' && m.imageUrl ? (
+          <View key={m.id} style={m.mine ? styles.photoMine : styles.photoTheirs}>
+            <VaultImage url={m.imageUrl} style={styles.photo} label={m.mine ? 'Foto que você enviou' : 'Foto recebida'} />
+            <Text style={styles.theirsTime}>{bubbleTime(m.at)}</Text>
+          </View>
+        ) : m.kind !== 'TEXT' ? (
           <Text key={m.id} style={styles.sys}>{m.body}</Text>
         ) : m.mine ? (
           <View key={m.id} style={styles.mine}><Text style={styles.mineText}>{m.body}</Text><Text style={styles.mineTime}>{bubbleTime(m.at)}</Text></View>
@@ -105,6 +129,7 @@ export function ConversationScreen({ id }: { id: number }) {
       </ScrollView>
       {guard ? <View style={styles.guard}><Icon name="shield" size={17} color={theme.error} /><Text style={styles.guardText}>{guard}</Text></View> : null}
       <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 8) + 8 }]}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Enviar foto" onPress={() => void sendPhoto()} disabled={sending} style={[styles.cam, sending && { opacity: 0.5 }]}><Icon name="photo-camera" size={20} /></Pressable>
         <TextInput value={input} onChangeText={(t) => { setInput(t); setGuard(null) }} placeholder="Mensagem" placeholderTextColor={theme.fgMuted} style={styles.input} multiline={false} returnKeyType="send" onSubmitEditing={() => void send(input)} blurOnSubmit={false} />
         <Pressable accessibilityRole="button" accessibilityLabel="Enviar" onPress={() => void send(input)} disabled={sending} style={[styles.send, sending && { opacity: 0.5 }]}><Icon name="send" size={20} color={colors.paper50} /></Pressable>
       </View>
@@ -135,5 +160,9 @@ const styles = StyleSheet.create({
   guardText: { flex: 1, fontSize: 12, lineHeight: 17, fontWeight: '600', color: theme.fg },
   composer: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 8, paddingHorizontal: 12, backgroundColor: theme.bg, borderTopWidth: 1, borderTopColor: theme.border },
   input: { flex: 1, height: 44, borderRadius: theme.radiusFull, borderWidth: 1, borderColor: theme.fgDisabled, paddingHorizontal: 14, fontSize: 14, color: theme.fg, backgroundColor: theme.bg },
+  cam: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  photoMine: { alignSelf: 'flex-end', maxWidth: '75%', gap: 2, alignItems: 'flex-end' },
+  photoTheirs: { alignSelf: 'flex-start', maxWidth: '75%', gap: 2 },
+  photo: { width: 220, height: 220, borderRadius: 14, backgroundColor: theme.border },
   send: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.fg, alignItems: 'center', justifyContent: 'center' },
 })

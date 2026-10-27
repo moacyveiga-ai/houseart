@@ -10,19 +10,24 @@ import { restorationBlockReason, type RestorationInput } from './restore-core'
 
 export interface WalletItem { artworkId: number; publicId: string | null; title: string; artist: string; acquiredAt: string; priceLabel: string; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; cover: string | null; version: number }
 
-export async function walletOf(userId: number): Promise<{ items: WalletItem[]; totalCents: bigint }> {
+/** Per held artwork: the registered value the KPI sums (null when sealed or absent) — the valuation reads it. */
+export interface WalletValue { artworkId: number; artistId: number; registeredCents: bigint | null }
+
+export async function walletOf(userId: number): Promise<{ items: WalletItem[]; totalCents: bigint; values: WalletValue[] }> {
   const rows = await heldArtworks(userId)
   const items: WalletItem[] = []
+  const values: WalletValue[] = []
   let total = 0n
   for (const v of rows) {
     const a = v.certificate.artwork
     const transfer = await prisma.ownershipTransfer.findFirst({ where: { artworkId: a.id, status: 'COMPLETED', toUserId: userId }, orderBy: { completedAt: 'desc' } })
     const price = transfer?.priceSealed ? null : transfer?.priceCents ?? a.listPriceCents
     if (price) total += price
+    values.push({ artworkId: a.id, artistId: a.artistId, registeredCents: price ?? null })
     const policy = a.insurancePolicies[0]
     items.push({ artworkId: a.id, publicId: a.publicId, title: `${a.title}${a.year ? `, ${a.year}` : ''}`, artist: a.artist.name, acquiredAt: v.issuedAt.toLocaleDateString('pt-BR'), priceLabel: transfer?.priceSealed ? 'Preço selado' : price ? Number(price / 100n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) : '—', insured: !!policy, insurer: policy ? `${policy.insurer} · nº ${policy.policyNumber} · vigente` : null, holderName: v.holderName, holderMask: v.holderDocumentMask, cover: a.media[0]?.publicUrl ?? null, version: v.version })
   }
-  return { items, totalCents: total }
+  return { items, totalCents: total, values }
 }
 
 /** "Segurar": a mock quotation becomes an ACTIVE collection policy (insurer provider is a J item). */

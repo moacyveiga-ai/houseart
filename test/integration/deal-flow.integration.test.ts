@@ -187,6 +187,13 @@ describe('deal flow', () => {
     const wallet = await walletOf(buyer.id)
     expect(wallet.items.map((i) => [i.publicId, i.version, i.insured])).toEqual([[publicId, 2, false]])
     expect(wallet.totalCents).toBe(4_400_000n)
+    // "valorização" of the collection header: one sale of the artist is no reference; six registered sales are
+    const { collectionSummary } = await import('@/lib/collector-wallet/collection-server')
+    expect((await collectionSummary({ id: buyer.id, memberId: null })).valuation).toBeNull()
+    const artistId = (await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).artistId
+    await prisma.appraisalComparable.createMany({ data: Array.from({ length: 6 }, (_, i) => ({ artistId, label: `Comparável ${i}`, priceCents: 5_500_000n, soldOn: new Date(), source: 'AUCTION' })) })
+    expect((await collectionSummary({ id: buyer.id, memberId: null })).valuation).toMatchObject({ registeredCents: 4_400_000n, estimatedCents: 5_500_000n, changeBps: 2500, works: 1 })
+    await prisma.appraisalComparable.deleteMany({ where: { artistId } })
     await insureArtwork(buyer.id, s.b.artworkId)
     expect((await walletOf(buyer.id)).items[0]).toMatchObject({ insured: true, insurer: expect.stringMatching(/^Chubb/) })
     expect((await walletOf(s.b.userId)).items).toEqual([])

@@ -99,7 +99,7 @@ export interface PublicGalleryPage extends PublicGalleryCard {
   /** the gallery's first active team member, target of "Seguir galeria" (follows are per member) */
   followMemberId: number | null
   about: string[]; street: string | null; district: string | null; lat: number | null; lng: number | null; coverUrl: string | null; websiteUrl: string | null; instagram: string | null; email: string | null; phone: string | null; hours: string | null
-  milestones: { year: string; title: string }[]; team: { name: string; role: string | null; photoUrl: string | null }[]; photos: { title: string; url: string | null }[]; videos: { title: string; url: string | null }[]; rooms: { title: string; url: string | null }[]
+  milestones: { year: string; title: string }[]; team: { name: string; role: string | null; photoUrl: string | null; bio: string | null; email: string | null; phone: string | null }[]; photos: { title: string; url: string | null }[]; videos: { title: string; url: string | null }[]; rooms: { title: string; url: string | null }[]
   publications: { kind: string; title: string; meta: string | null; priceCents: bigint | null; action: string; url: string | null; coverUrl: string | null }[]
   artworks: PublicWork[]; artistList: { slug: string; name: string; meta: string; photoUrl: string | null }[]
 }
@@ -122,7 +122,7 @@ export async function publicGallery(slug: string): Promise<PublicGalleryPage | n
       followMemberId: desk?.id ?? null,
       slug: g.slug, name: g.name, city: [g.city, g.uf].filter(Boolean).join('/'), uf: g.uf, foundedYear: g.foundedYear, summary: g.summary, tags, works: works.length, artists: artistIds.length, covers: works.map((w) => w.media[0]?.publicUrl).filter((u): u is string => !!u).slice(0, 3),
       about: paragraphsOf(g.about), street: g.street, district: g.district, lat: g.lat, lng: g.lng, coverUrl: g.coverUrl, websiteUrl: g.websiteUrl, instagram: g.instagram, email: g.email, phone: g.phone, hours: g.hours,
-      milestones: by('MILESTONE').map((i) => ({ year: i.subtitle ?? '', title: i.title })), team: by('TEAM').map((i) => ({ name: i.title, role: i.subtitle, photoUrl: i.url })),
+      milestones: by('MILESTONE').map((i) => ({ year: i.subtitle ?? '', title: i.title })), team: by('TEAM').map((i) => ({ name: i.title, role: i.subtitle, photoUrl: i.url, bio: i.body, email: i.email, phone: i.phone })),
       photos: by('PHOTO').map((i) => ({ title: i.title, url: i.url })), videos: by('VIDEO').map((i) => ({ title: i.title, url: i.url })), rooms: by('ROOM').map((i) => ({ title: i.title, url: i.url })),
       publications: pubs.map((b) => ({ kind: b.kind, title: b.title, meta: b.meta, priceCents: b.priceCents, action: b.action, url: b.url, coverUrl: b.coverUrl })),
       artworks: works.map(workOf),

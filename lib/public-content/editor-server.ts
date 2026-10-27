@@ -232,7 +232,7 @@ export async function representedArtistId(tenantId: number, artistId: number): P
 export interface GalleryProfileView {
   slug: string | null; name: string; city: string | null; uf: string | null; foundedYear: number | null; summary: string | null; about: string | null; tags: string[]
   street: string | null; district: string | null; lat: number | null; lng: number | null; coverUrl: string | null; websiteUrl: string | null; instagram: string | null; email: string | null; phone: string | null; hours: string | null
-  items: { kind: string; title: string; subtitle: string | null; url: string | null }[]
+  items: { kind: string; title: string; subtitle: string | null; url: string | null; body: string | null; email: string | null; phone: string | null }[]
   publications: PublicationRow[]
   artists: { id: number; name: string; slug: string }[]
 }
@@ -249,7 +249,7 @@ export async function galleryProfileView(tenantId: number): Promise<GalleryProfi
   return {
     slug: g?.slug ?? null, name: g?.name ?? tenant.name, city: g?.city ?? null, uf: g?.uf ?? null, foundedYear: g?.foundedYear ?? null, summary: g?.summary ?? null, about: g?.about ?? null, tags: jsonList(g?.tagsJson),
     street: g?.street ?? null, district: g?.district ?? null, lat: g?.lat ?? null, lng: g?.lng ?? null, coverUrl: g?.coverUrl ?? null, websiteUrl: g?.websiteUrl ?? null, instagram: g?.instagram ?? null, email: g?.email ?? null, phone: g?.phone ?? null, hours: g?.hours ?? null,
-    items: items.map((i) => ({ kind: i.kind, title: i.title, subtitle: i.subtitle, url: i.url })),
+    items: items.map((i) => ({ kind: i.kind, title: i.title, subtitle: i.subtitle, url: i.url, body: i.body, email: i.email, phone: i.phone })),
     publications: pubs.map(publicationRow),
     artists,
   }

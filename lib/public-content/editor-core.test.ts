@@ -122,4 +122,15 @@ describe('gallery profile', () => {
     expect(parseGalleryProfile({ name: 'Galeria', foundedYear: 2090 }, new Set(), 2027)).toMatchObject({ ok: false })
     expect(parseGalleryProfile({ name: 'Galeria', items: [{ kind: 'TEAM', title: 'Ana', url: 'https://x.example/a.jpg' }] })).toMatchObject({ ok: false })
   })
+  it('keeps bio, e-mail and phone only for a team member', () => {
+    const r = parseGalleryProfile({ name: 'Galeria', items: [
+      { kind: 'TEAM', title: 'Ana', body: 'Curadora.', email: 'Ana@Galeria.com', phone: '(71) 3333-4444' },
+      { kind: 'MILESTONE', title: 'Fundação', subtitle: '1998', body: 'x', email: 'a@b.com' },
+    ] })
+    expect(r).toMatchObject({ ok: true, value: { items: [
+      { kind: 'TEAM', body: 'Curadora.', email: 'ana@galeria.com', phone: '(71) 3333-4444' },
+      { kind: 'MILESTONE', body: null, email: null, phone: null },
+    ] } })
+    expect(parseGalleryProfile({ name: 'Galeria', items: [{ kind: 'TEAM', title: 'Ana', email: 'nao-e-email' }] })).toMatchObject({ ok: false })
+  })
 })

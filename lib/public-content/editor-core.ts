@@ -287,7 +287,9 @@ export function parseArtistProfile(raw: unknown, keep: ReadonlySet<string> = new
 }
 
 // ── gallery ─────────────────────────────────────────────────────────────────
-export interface GalleryItemInput { kind: GalleryItemKind; title: string; subtitle: string | null; url: string | null; sortOrder: number }
+export interface GalleryItemInput { kind: GalleryItemKind; title: string; subtitle: string | null; url: string | null; sortOrder: number
+  /** TEAM only: bio, e-mail and phone of the person (null for the other kinds) */
+  body: string | null; email: string | null; phone: string | null }
 export interface GalleryProfileInput {
   profile: { name: string; city: string | null; uf: string | null; foundedYear: number | null; summary: string | null; about: string | null; tagsJson: string; street: string | null; district: string | null; lat: number | null; lng: number | null; coverUrl: string | null; websiteUrl: string | null; instagram: string | null; email: string | null; phone: string | null; hours: string | null }
   items: GalleryItemInput[]
@@ -311,7 +313,13 @@ export function parseGalleryProfile(raw: unknown, keep: ReadonlySet<string> = ne
       const n = counters.get(kind) ?? 0
       counters.set(kind, n + 1)
       const url = GALLERY_ITEM_IMAGE_KINDS.includes(kind) ? imageUrl(it.url, `${label} · imagem`, keep) : kind === 'VIDEO' ? httpUrl(it.url, `${label} · link do vídeo`) : null
-      return { kind, title: str(it.title, `${label} · título`, 160, { required: true })!, subtitle: str(it.subtitle, `${label} · subtítulo`, 120), url, sortOrder: n }
+      const team = kind === 'TEAM'
+      return {
+        kind, title: str(it.title, `${label} · título`, 160, { required: true })!, subtitle: str(it.subtitle, `${label} · subtítulo`, 120), url, sortOrder: n,
+        body: team ? str(it.body, `${label} · bio`, 400) : null,
+        email: team ? email(it.email, `${label} · e-mail`) : null,
+        phone: team ? phone(it.phone, `${label} · telefone`) : null,
+      }
     })
     return {
       profile: {

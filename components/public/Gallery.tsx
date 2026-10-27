@@ -183,6 +183,13 @@ export function Gallery({ g, artistFilter, viewer = { signedIn: false, following
                 <div className="hp-gallery-person__body">
                   <span className="hp-gallery-person__name">{p.name}</span>
                   {p.role ? <span className="hp-gallery-person__role">{p.role}</span> : null}
+                  {p.bio ? <p className="hp-gallery-person__bio">{p.bio}</p> : null}
+                  {p.email || p.phone ? (
+                    <span className="hp-gallery-person__contacts">
+                      {p.email ? <a href={`mailto:${encodeURIComponent(p.email)}`}><Icon name="mail" size={16} />{p.email}</a> : null}
+                      {p.phone ? <a href={`tel:${p.phone.replace(/[^\d+]/g, '')}`}><Icon name="call" size={16} />{p.phone}</a> : null}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             ))}

@@ -19,6 +19,8 @@ export interface PurchaseDeal {
 export interface Purchases { deals: PurchaseDeal[]; simulateAllowed: boolean }
 export const purchases = (): Promise<Purchases> => api<Purchases>('/api/collector/purchases')
 export const payEscrow = (dealId: number) => api<{ ok: boolean }>(`/api/deals/${dealId}/escrow`, { body: {} })
+/** The buyer opens (or reopens) the conversation with who sold the artwork — the web's "Falar com o vendedor". */
+export const openDealConversation = (dealId: number) => api<{ ok: boolean; id: number }>(`/api/deals/${dealId}/conversation`, { body: {} })
 export const signAsBuyer = (dealId: number) => api<{ ok: boolean }>(`/api/deals/${dealId}/sign`, { body: {} })
 /** The tap of the delivery: the SUN message of the tag, or (the server decides: mock vendor) the simulated tap with no read. */
 export const confirmDelivery = (dealId: number, sun: { uid: string; ctr: number; cmac: string } | null) => api<{ ok: boolean }>(`/api/deals/${dealId}/confirm-delivery`, { body: sun ?? {} })

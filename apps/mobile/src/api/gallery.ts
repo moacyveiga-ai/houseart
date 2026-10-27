@@ -17,7 +17,7 @@ export interface InventoryItem {
   listPriceCents: string | null; saleMode: string | null; publicId: string | null; coverUrl: string | null
   listing: { views7d: number; openOffers: number; paused: boolean; saves?: number } | null
   /** the newest deal of a reserved/sold work (buyer and phase) */
-  deal?: { buyerName: string; phase: string } | null
+  deal?: { buyerName: string; phase: string; sellerSigned?: boolean; exception?: string | null } | null
 }
 export interface Inventory { items: InventoryItem[]; counts: Record<string, number>; summary: string }
 

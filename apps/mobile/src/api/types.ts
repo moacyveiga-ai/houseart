@@ -37,7 +37,7 @@ export interface FavoriteItem {
 }
 
 /** GET /api/messages → { items } */
-export interface ConversationRow { id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null; other: { id: number; name: string; initials: string; sub: string }; preview: string; when: string; unread: number }
+export interface ConversationRow { id: number; artworkId: number | null; artworkTitle: string | null; artworkPublicId: string | null; artworkCoverUrl: string | null; other: { id: number; name: string; initials: string; sub: string; avatarUrl?: string | null }; preview: string; when: string; unread: number }
 /** GET /api/messages/[id] → { header, messages } */
 export interface MessageRow { id: number; mine: boolean; kind: 'TEXT' | 'SYSTEM' | 'OFFER' | 'COUNTER' | 'IMAGE'; body: string; at: string; offerId: number | null; imageUrl?: string | null }
 

@@ -57,7 +57,7 @@ export function rowStats(a: Pick<InventoryItem, 'status' | 'listing' | 'deal'>):
       return `${l.views7d.toLocaleString('pt-BR')} views · 7 dias${saves}${offers}`
     }
     // same reading as the web Acervo: before the escrow is paid the work is only reserved
-    case 'IN_DEAL': return a.deal ? (a.deal.phase === 'OFFER_ACCEPTED' ? `Reservada para ${a.deal.buyerName} · aguardando pagamento` : `Vendida para ${a.deal.buyerName} · venda em andamento`) : 'Negócio em andamento'
+    case 'IN_DEAL': return a.deal ? (a.deal.phase === 'OFFER_ACCEPTED' ? `Reservada para ${a.deal.buyerName} · aguardando pagamento` : `Vendida para ${a.deal.buyerName} · ${inventoryDealStep(a.deal)}`) : 'Negócio em andamento'
     case 'IN_CERTIFICATION': return 'Aguardando assinatura da artista'
     case 'AUTHENTICATED': return 'Liste no marketplace para vender'
     case 'DRAFT': return 'Peça a certificação para anunciar'
@@ -176,6 +176,13 @@ export function dealSegments(d: Pick<DealView, 'phase'>): string[] {
   const i = phaseIndex(d.phase)
   const done = d.phase === 'COMPLETED'
   return Array.from({ length: 6 }, (_, k) => (k <= i ? (done ? theme.success : theme.fg) : theme.border))
+}
+
+/** The step of a sale in the Acervo line ("Vendida para X · registrar envio"), as the web's saleAction. */
+export function inventoryDealStep(d: { phase: string; sellerSigned?: boolean; exception?: string | null }): string {
+  if (d.exception === 'CANCELLED') return 'cancelada'
+  if (d.exception === 'DISPUTE') return 'em disputa'
+  return dealAction({ phase: d.phase as DealView['phase'], sellerSigned: !!d.sellerSigned, buyerSigned: false }).label.toLowerCase()
 }
 
 /** What the card says the seller does now (prototype `acao`), and whether it is on the seller. */

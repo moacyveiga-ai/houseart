@@ -60,7 +60,7 @@ export function CommentsSheet({ item, onClose, onCount }: { item: FeedItem | nul
         const isAuthor = !!item?.author.memberId && c.author.memberId === item.author.memberId
         return (
           <View key={c.id} style={styles.row}>
-            <Avatar initials={c.author.initials} bg={tint.bg} fg={tint.fg} size={32} />
+            <Avatar initials={c.author.initials} bg={tint.bg} fg={tint.fg} size={32} uri={c.author.avatarUrl} />
             <View style={{ flex: 1, gap: 2 }}>
               <View style={styles.nameRow}><Text style={styles.name}>{c.mine ? 'Você' : c.author.name}</Text>{isAuthor ? <Text style={styles.autor}>autor</Text> : null}<Text style={styles.when}>{c.when}</Text></View>
               <Text style={styles.body}>{c.body}</Text>

@@ -11,7 +11,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useApi, useReloadOnFocus } from '@/api/hooks'
-import { payEscrow, signAsBuyer, type Purchases } from '@/api/collector'
+import { openDealConversation, payEscrow, signAsBuyer, type Purchases } from '@/api/collector'
 import { colors, theme } from '@/theme'
 import { KeyValue } from '@/ui/forms'
 import { Display, ErrorState, Icon, Loading, Toast, TopBar, Wall, type IconName } from '@/ui/kit'
@@ -33,6 +33,15 @@ export function PurchaseScreen() {
   const [toast, setToast] = useState('')
   const clearToast = useCallback(() => setToast(''), [])
 
+  // opens the conversation with who sold (POST /api/deals/[id]/conversation), as the web does
+  async function talk() {
+    if (busy || !d) return
+    setBusy(true); setActError(null)
+    try {
+      const r = await openDealConversation(d.id)
+      router.push({ pathname: '/messages/[id]', params: { id: String(r.id) } })
+    } catch (e) { setActError((e as Error).message || 'Não foi possível abrir a conversa.') } finally { setBusy(false) }
+  }
   async function run(fn: () => Promise<unknown>, done: string) {
     if (busy) return
     setBusy(true); setActError(null)
@@ -108,7 +117,7 @@ export function PurchaseScreen() {
           </Pressable>
         ) : null}
         {done ? <Button title="Ver na coleção" onPress={() => router.navigate('/(tabs)/wallet' as never)} /> : null}
-        {!done ? <Button title="Falar com o vendedor" variant="ghost" onPress={() => router.navigate('/(tabs)/messages' as never)} /> : null}
+        {!done ? <Button title="Falar com o vendedor" variant="ghost" onPress={() => void talk()} /> : null}
       </View>
       <Toast message={toast} onDone={clearToast} />
     </View>

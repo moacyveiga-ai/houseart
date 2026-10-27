@@ -44,7 +44,7 @@ export function MessagesScreen() {
               <Pressable accessibilityRole="button" onPress={() => router.push(`/messages/${c.id}`)} style={({ pressed }) => [styles.row, bold && { backgroundColor: theme.surface }, pressed && { opacity: 0.7 }]}>
                 <View style={styles.pic}>
                   <Wall uri={c.artworkCoverUrl} padding={6} style={styles.picWall} />
-                  <View style={styles.picAv}><Avatar initials={c.other.initials} bg={tint.bg} fg={tint.fg} size={22} /></View>
+                  <View style={styles.picAv}><Avatar initials={c.other.initials} bg={tint.bg} fg={tint.fg} size={22} uri={c.other.avatarUrl} /></View>
                 </View>
                 <View style={{ flex: 1, gap: 1 }}>
                   <View style={styles.line}><Text style={[styles.name, bold && { fontWeight: '600' }]} numberOfLines={1}>{c.other.name}</Text><Text style={styles.when}>{c.when}</Text></View>

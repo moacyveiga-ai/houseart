@@ -77,7 +77,7 @@ export function ConversationScreen({ id }: { id: number }) {
       <View style={styles.head}>
         <View style={styles.headRow}>
           <IconButton name="arrow-back" label="Voltar" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/messages'))} />
-          <Avatar initials={header.other.initials} bg={tint.bg} fg={tint.fg} size={32} />
+          <Avatar initials={header.other.initials} bg={tint.bg} fg={tint.fg} size={32} uri={header.other.avatarUrl} />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{header.other.name}</Text>
             <Text style={styles.type}>{header.other.sub} · verificado pela HouseArt</Text>

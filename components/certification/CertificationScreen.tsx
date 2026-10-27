@@ -19,6 +19,8 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
   const [signStep, setSignStep] = useState(0)
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState(false)
+  // the request just sent: the button says so until the quantity changes (a second kit is a new decision)
+  const [ordered, setOrdered] = useState(false)
 
   async function post(url: string, body?: unknown) {
     const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
@@ -31,6 +33,7 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
     setBusy(false)
     if (!res.ok) { setToast(data.error ?? 'Não foi possível pedir.'); return }
     setOrders([{ id: 0, quantity: qty, status: 'REQUESTED' }, ...orders])
+    setOrdered(true)
     setItems(items.map((i) => (i.stage === 0 ? { ...i, stage: 1 } : i)))
     setToast('Pedido registrado · as etiquetas chegam pelo correio em até 5 dias úteis')
   }
@@ -80,11 +83,15 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
             <div className="ha-muted ha-sm">Chegam pelo correio em até 5 dias úteis, em envelope lacrado. Você vincula cada uma pelo app.</div>
           </div>
           <div className="ha-row">
-            <button type="button" className="ha-iconbtn" aria-label="Menos" onClick={() => setQty(Math.max(1, qty - 1))}><Icon name="remove" /></button>
+            <button type="button" className="ha-iconbtn" aria-label="Menos" onClick={() => { setQty(Math.max(1, qty - 1)); setOrdered(false) }}><Icon name="remove" /></button>
             <span className="ha-num" style={{ minWidth: 32, textAlign: 'center' }}>{qty}</span>
-            <button type="button" className="ha-iconbtn" aria-label="Mais" onClick={() => setQty(Math.min(200, qty + 1))}><Icon name="add" /></button>
+            <button type="button" className="ha-iconbtn" aria-label="Mais" onClick={() => { setQty(Math.min(200, qty + 1)); setOrdered(false) }}><Icon name="add" /></button>
           </div>
-          <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={order}>Pedir etiquetas · {formatBRL(BigInt(kitUnitCents) * BigInt(qty))}</button>
+          {ordered ? (
+            <button type="button" className="ha-btn ha-btn--outline ha-btn--md" disabled><Icon name="check" size={18} />Pedido enviado</button>
+          ) : (
+            <Button variant="primary" size="md" loading={busy} disabled={busy} onClick={order}>Pedir etiquetas · {formatBRL(BigInt(kitUnitCents) * BigInt(qty))}</Button>
+          )}
         </section>
       ) : null}
       {pending.length ? (
@@ -104,7 +111,7 @@ export function CertificationScreen({ items: initialItems, orders: initialOrders
           {items.map((i) => (
             <div key={i.id} className="ha-table__row">
               <div className="ha-row"><span className="ha-wall ha-wall--40">{/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
-                {i.cover ? <img src={i.cover} alt="" /> : null}</span><span><b>{i.title}</b><br /><span className="ha-muted ha-sm">{i.publicId ?? 'sem etiqueta'}</span></span></div>
+                {i.cover ? <img src={i.cover} alt="" /> : null}</span><span><b>{i.title}</b><br /><span className="ha-muted ha-sm">{i.publicId ?? 'ID gerado ao vincular'}</span></span></div>
               <div className="ha-dots" aria-label={`Etapa ${i.stage} de 5`}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span key={n} className="ha-row">

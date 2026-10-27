@@ -12,7 +12,8 @@ import { Modal } from '@/components/ds/Modal'
 import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
 import { Button } from '@/components/ds/Button'
 
-export interface AccountItem { icon: string; name: string; sub: string; href: string }
+/** `current`: the item open in the side panel over the account (it opens without scrolling the page). */
+export interface AccountItem { icon: string; name: string; sub: string; href: string; current?: boolean }
 export interface AccountSection { name: string; items: AccountItem[] }
 export interface AccountVerification { cnpj: boolean; email: boolean; phone: boolean }
 
@@ -73,7 +74,7 @@ export function AccountScreen({ initials, name, email, verification, sections, s
           <span className="ha-account-sec__k">{g.name}</span>
           <div className="ha-account-sec__box">
             {g.items.map((it) => (
-              <Link key={it.name} href={it.href} className="ha-account-item">
+              <Link key={it.name} href={it.href} className="ha-account-item" scroll={it.current === undefined} aria-current={it.current ? 'true' : undefined}>
                 <Icon name={it.icon} size={22} />
                 <span className="ha-stack ha-account-item__txt"><span className="ha-account-item__n">{it.name}</span><span className="ha-account-item__s">{it.sub}</span></span>
                 <Icon name="chevron_right" size={20} className="ha-account-item__arrow" />

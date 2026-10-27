@@ -9,6 +9,7 @@ import { EscrowPay } from '@/components/payments/EscrowPay'
 import { TalkToSellerButton } from '@/components/public/TalkToSellerButton'
 import { PackagingForm, PackagingView } from './Packaging'
 import { canRecordPackaging } from '@/lib/deals/packaging-core'
+import { purchasePct, purchaseSteps } from '@/lib/deals/purchase-progress-core'
 
 type Side = 'seller' | 'buyer'
 
@@ -31,6 +32,9 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
   const insurance = BigInt(deal.insuranceCents)
   const extras = shipping + insurance
   const done = deal.phase === 'COMPLETED'
+  // the buyer reads the deal in the five steps of "Acompanhar compra"; the seller keeps the six phases
+  const steps = side === 'buyer' ? purchaseSteps(deal) : deal.steps
+  const pct = side === 'buyer' ? purchasePct(deal.phase) : deal.progressPct
   return (
     <section className="ha-card ha-card--pad ha-stack">
       <div className="ha-row">
@@ -40,12 +44,12 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
           <div className="ha-title">{deal.artworkTitle}</div>
           <div className="ha-muted ha-sm">{side === 'buyer' ? `${deal.artist} · ${deal.sellerName}` : `${deal.market === 'PRIMARY' ? 'Venda' : 'Revenda'} · ${formatBRL(amount)} · comprador ${deal.buyerName}`}</div>
         </div>
-        <div className="ha-num">{deal.progressPct}%</div>
+        <div className="ha-num">{pct}%</div>
       </div>
-      <div className="ha-progress"><span style={{ width: `${deal.progressPct}%` }} /></div>
+      <div className="ha-progress"><span style={{ width: `${pct}%` }} /></div>
       <ol className="ha-timeline">
-        {deal.steps.map((s, i) => (
-          <li key={s.phase} className={`ha-timeline__item ha-timeline__item--${s.state}${i === deal.steps.length - 1 ? ' ha-timeline__item--last' : ''}`}>
+        {steps.map((s, i) => (
+          <li key={s.title} className={`ha-timeline__item ha-timeline__item--${s.state}${i === steps.length - 1 ? ' ha-timeline__item--last' : ''}`}>
             <span className="ha-timeline__rail"><span className="ha-timeline__dot"><Icon name={s.icon} size={18} /></span><span className="ha-timeline__line" /></span>
             <div className="ha-timeline__body"><div className="ha-timeline__name">{s.title}</div><div className="ha-timeline__desc">{s.description}</div></div>
             <div className="ha-timeline__date">{s.date ?? '—'}</div>

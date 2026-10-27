@@ -4,6 +4,7 @@
 // role sheet (Admin · Vendas · Acervo + remove); an invite opens "Revogar convite".
 // Only the tenant ADMIN writes — the others read the notice (403 from the API too).
 import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
 import { Toast } from '@/components/ds/Toast'
@@ -17,6 +18,7 @@ const NO_PERMISSION = 'Só o administrador da galeria gere a equipe.'
 type Reply = { ok?: boolean; people?: TeamPerson[]; error?: string }
 
 export function TeamScreen({ people: initial, canManage }: { people: TeamPerson[]; canManage: boolean }) {
+  const router = useRouter()
   const [people, setPeople] = useState(initial)
   const [open, setOpen] = useState<TeamPerson | null>(null)
   const [confirm, setConfirm] = useState<'remove' | 'revoke' | null>(null)
@@ -38,6 +40,8 @@ export function TeamScreen({ people: initial, canManage }: { people: TeamPerson[
     if (!res.ok) { setToast(data.error ?? 'Não foi possível concluir.'); return false }
     if (data.people) setPeople(data.people)
     setToast(done)
+    // the account behind the side panel counts people and invites: refresh it (the list here is already the reply)
+    router.refresh()
     return true
   }
 

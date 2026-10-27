@@ -9,6 +9,7 @@ import { headers } from 'next/headers'
 import '@/app/ds/public.css'
 import { PublicHeader } from '@/components/public/PublicHeader'
 import { PublicFooter } from '@/components/public/PublicFooter'
+import { publicAccount } from '@/app/e/_shared/public-account'
 import { Verification } from '@/components/public/Verification'
 import { Badge } from '@/components/ds/Badge'
 import { isPublicId } from '@/lib/physical-markers/domain'
@@ -36,7 +37,7 @@ export default async function VerifyPage({ params, searchParams }: Params) {
   if (!isAppraisalCode(publicId)) return <main className="hp"><CertificateVerify publicId={publicId} sp={await searchParams} /></main>
   return (
     <div className="hp">
-      <PublicHeader />
+      <PublicHeader account={await publicAccount()} />
       <main><AppraisalVerify code={publicId} /></main>
       <PublicFooter />
     </div>

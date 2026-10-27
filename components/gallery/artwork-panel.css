@@ -17,6 +17,7 @@
 .ha-ap__prov li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); font-size: 14px; }
 
 /* "Gestão do anúncio" page: the work on the left, the listing on the right (stacks under 900 px) */
-.ha-lp { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.ha-split.ha-lp { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
 .ha-lp__work { gap: 16px; }
-@media (max-width: 900px) { .ha-lp { grid-template-columns: 1fr; } }
+/* on the phone the listing (what the page is for) comes first, the work below it */
+@media (max-width: 900px) { .ha-split.ha-lp { grid-template-columns: 1fr; } .ha-lp__work { order: 2; } }

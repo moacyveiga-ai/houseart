@@ -11,11 +11,16 @@ import { LISTING_ROLES, requireSellerRole } from '@/lib/offers/seller-role-serve
 
 const LISTING_FORBIDDEN = 'Seu papel na galeria não muda o anúncio.'
 import { diaNoFuso } from '@/lib/timezone'
+import { notify } from '@/lib/notifications/server'
+import { afterResponseOrNow } from '@/lib/after'
+import { priceDropNotice, priceDropRecipients } from './price-drop-core'
 
 export interface ListingView {
   artworkId: number; title: string; status: string; paused: boolean; listPriceCents: bigint; acceptsOffers: boolean; fixedPrice: boolean
   stats: { views7d: number; views30d: number; openOffers: number; saves: number; likes: number }
   rules: { autoNegotiatorOn: boolean; autoAcceptMinBps: number }
+  /** only on a price reduction: how many people who saved the work were told */
+  priceDropNotified?: number
 }
 
 const ARTWORK_SELECT = { id: true, memberId: true, tenantId: true, title: true, status: true, listingPausedAt: true, saleMode: true } as const
@@ -105,7 +110,25 @@ export async function changeListPrice(scope: Scope, artworkId: number, listPrice
     await tx.artwork.update({ where: { id: artworkId }, data: { listPriceCents } })
   })
   void audit.event({ entity: 'artwork', entityId: artworkId, action: 'list_price', userId: actor.userId, after: { listPriceCents: listPriceCents.toString(), from: m.listPriceCents.toString(), title: a.title } })
-  return (await listingOf(scope, artworkId))!
+  const view = (await listingOf(scope, artworkId))!
+  const notified = listPriceCents < m.listPriceCents && !a.listingPausedAt ? await tellSavers(artworkId, m.listPriceCents, listPriceCents, actor.userId) : 0
+  return notified ? { ...view, priceDropNotified: notified } : view
+}
+
+/** "Preço reduzido": the people who saved the work (public reaction SAVE) hear about it, after the response. */
+async function tellSavers(artworkId: number, fromCents: bigint, toCents: bigint, actorUserId: number): Promise<number> {
+  const art = await prisma.artwork.findUnique({ where: { id: artworkId }, select: { title: true, publicId: true } })
+  if (!art?.publicId) return 0
+  const savers = await prisma.reaction.findMany({ where: { targetKind: 'ARTWORK', targetId: artworkId, kind: 'SAVE' }, select: { userId: true }, orderBy: { createdAt: 'desc' } })
+  // only active accounts (blocked or deleted never hear from us)
+  const active = new Set((await prisma.user.findMany({ where: { id: { in: [...new Set(savers.map((r) => r.userId))] }, active: true }, select: { id: true } })).map((u) => u.id))
+  const to = priceDropRecipients(savers.map((r) => r.userId).filter((id) => active.has(id)), actorUserId)
+  if (!to.length) return 0
+  const n = priceDropNotice({ title: art.title, publicId: art.publicId }, fromCents, toCents)
+  await afterResponseOrNow('listing:price_drop', async () => {
+    for (let i = 0; i < to.length; i += 20) await Promise.all(to.slice(i, i + 20).map((userId) => notify({ userId, kind: 'artwork.price_drop', ...n })))
+  })
+  return to.length
 }
 
 export async function setAcceptsOffers(scope: Scope, artworkId: number, acceptsOffers: boolean, actor: { userId: number }): Promise<ListingView> {

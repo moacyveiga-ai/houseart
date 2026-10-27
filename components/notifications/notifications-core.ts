@@ -19,6 +19,7 @@ export function iconOf(kind: string): string {
     case 'appraisal': return 'assignment'
     case 'billing': return 'receipt_long'
     case 'review': return 'fact_check'
+    case 'artwork': return 'sell'
     default: return 'notifications'
   }
 }

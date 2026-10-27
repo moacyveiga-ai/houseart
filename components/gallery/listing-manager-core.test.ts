@@ -20,6 +20,9 @@ describe('listing-manager-core', () => {
   })
   it('tells a reduction from an update', () => {
     expect(priceSavedMessage(3700000n, 3800000n)).toBe('Preço reduzido')
+    expect(priceSavedMessage(3700000n, 3800000n, 1)).toBe('Preço reduzido · 1 pessoa que salvou foi avisada')
+    expect(priceSavedMessage(3700000n, 3800000n, 46)).toBe('Preço reduzido · 46 pessoas que salvaram foram avisadas')
+    expect(priceSavedMessage(3900000n, 3800000n, 46)).toBe('Preço atualizado')
     expect(priceSavedMessage(3900000n, 3800000n)).toBe('Preço atualizado')
   })
   it('writes the toggle texts from the rules', () => {

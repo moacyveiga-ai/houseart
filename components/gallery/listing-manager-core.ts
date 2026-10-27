@@ -25,8 +25,10 @@ export function priceChanged(masked: string, currentCents: bigint | string): boo
 }
 
 /** The toast after saving: the prototype distinguishes a reduction (people who saved are told) from an update. */
-export function priceSavedMessage(nextCents: bigint, previousCents: bigint): string {
-  return nextCents < previousCents ? 'Preço reduzido' : 'Preço atualizado'
+export function priceSavedMessage(nextCents: bigint, previousCents: bigint, notified = 0): string {
+  if (nextCents >= previousCents) return 'Preço atualizado'
+  if (notified <= 0) return 'Preço reduzido'
+  return `Preço reduzido · ${notified === 1 ? '1 pessoa que salvou foi avisada' : `${notified} pessoas que salvaram foram avisadas`}`
 }
 
 export interface ToggleRules { refuseBelowBps: number; responseHours: number }

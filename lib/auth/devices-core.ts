@@ -10,7 +10,7 @@ export interface DeviceView { id: number; label: string; icon: DeviceIcon; where
 
 function browserOf(ua: string): string | null {
   if (/HouseArt|Expo|okhttp|CFNetwork|Dalvik/i.test(ua)) return 'App HouseArt'
-  if (/Edg\//.test(ua)) return 'Edge'
+  if (/Edg(e|A|iOS)?\//.test(ua)) return 'Edge'
   if (/OPR\/|Opera/.test(ua)) return 'Opera'
   if (/SamsungBrowser/.test(ua)) return 'Samsung Internet'
   if (/Firefox\/|FxiOS/.test(ua)) return 'Firefox'
@@ -44,6 +44,7 @@ export function deviceLabel(userAgent: string | null): { label: string; icon: De
 /** Only the first half of the address: enough to recognise a network, never the full IP on screen. */
 export function partialIp(ip: string | null): string | null {
   if (!ip) return null
+  ip = ip.trim().replace(/^::ffff:/i, '') // IPv4-mapped IPv6 is an IPv4: never show it whole
   const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/)
   if (v4) return `${v4[1]}.${v4[2]}.x.x`
   const v6 = ip.split(':').filter(Boolean)

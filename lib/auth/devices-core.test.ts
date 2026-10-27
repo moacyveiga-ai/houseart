@@ -12,10 +12,12 @@ describe('aparelhos conectados', () => {
     expect(deviceLabel(SAFARI_MAC)).toEqual({ label: 'Safari no Mac', icon: 'computer' })
     expect(deviceLabel('okhttp/4.12.0')).toEqual({ label: 'App HouseArt no Android', icon: 'smartphone' })
     expect(deviceLabel(null)).toEqual({ label: 'Aparelho desconhecido', icon: 'computer' })
+    expect(deviceLabel('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/130.0 Mobile/15E148 Safari/605.1.15').label).toBe('Edge no iPhone')
   })
   it('mostra só metade do IP', () => {
     expect(partialIp('189.12.33.4')).toBe('189.12.x.x')
     expect(partialIp('2804:14c:1a2b::1')).toBe('2804:14c:…')
+    expect(partialIp('::ffff:189.12.33.4')).toBe('189.12.x.x')
     expect(partialIp(null)).toBeNull()
   })
   it('último uso relativo', () => {

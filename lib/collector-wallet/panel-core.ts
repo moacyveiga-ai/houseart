@@ -9,5 +9,5 @@ export interface CollectorPanelData {
   provenance: { k: string; v: string }[]
   seller: { name: string; initials: string; sub: string } | null
   market: { acceptsOffers: boolean; buyable: boolean; reserved: boolean } | null
-  owner: { status: string; sealGreen: boolean; registeredCents: string | null; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; acquiredAt: string; version: number; transferOn: boolean; restoreBlocked: string | null; payout: { ready: boolean; holderName: string; cpfMask: string | null }; cover: string | null; /** "Faixa sugerida" line of the sell sheet (three sales or more of the artist in 12 months) */ priceRange?: string | null } | null
+  owner: { status: string; sealGreen: boolean; registeredCents: string | null; insured: boolean; insurer: string | null; holderName: string; holderMask: string | null; acquiredAt: string; version: number; transferOn: boolean; restoreBlocked: string | null; payout: { ready: boolean; holderName: string; cpfMask: string | null }; cover: string | null; /** "Faixa sugerida" line of the sell sheet (five sales or more of the artist in 12 months) */ priceRange?: string | null } | null
 }

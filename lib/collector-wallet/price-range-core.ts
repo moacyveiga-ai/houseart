@@ -1,8 +1,8 @@
 // "Faixa sugerida" of the sell sheet (handoff Web Colecionador › Vender uma obra) — PURE.
 // The middle half of the artist's completed sales in the last 12 months, shown only with at
-// least three sales so no single price can be read back from it.
+// least five sales: with three, p25 and p75 are the cheapest and the dearest sale themselves.
 
-export const MIN_SALES_FOR_RANGE = 3
+export const MIN_SALES_FOR_RANGE = 5
 const STEP = 50_000n // R$ 500
 
 /** The nearest-rank percentile of sorted values (0 < p ≤ 1). */
@@ -11,7 +11,7 @@ function percentile(sorted: bigint[], p: number): bigint {
   return sorted[i]!
 }
 
-/** p25..p75 of the sale amounts, the low end rounded down and the high end up to R$ 500; null under three sales. */
+/** p25..p75 of the sale amounts, the low end rounded down and the high end up to R$ 500; null under five sales. */
 export function suggestedRange(amounts: readonly bigint[]): { lowCents: bigint; highCents: bigint; count: number } | null {
   const valid = amounts.filter((a) => a > 0n)
   if (valid.length < MIN_SALES_FOR_RANGE) return null

@@ -80,7 +80,7 @@ export default async function ArtworksPage({ searchParams }: { searchParams: Pro
         {LIST_FILTERS.map((f) => <Chip key={f.key} on={f.key === filter} href={`/artworks?filter=${f.key}`}>{f.name} <span className="ha-chip__n">{counts[f.key] ?? 0}</span></Chip>)}
       </div>
       {items.length === 0 ? (
-        filter === 'all' && scope.kind !== 'total' ? (
+        filter === 'all' && nav === 'artist' ? (
           <div className="ha-card ha-card--pad ha-stack ha-stack--3">
             <h2 className="ha-h3">Nenhuma obra cadastrada ainda</h2>
             <p className="ha-muted">Comece pela primeira: fotos guiadas, a ficha e, depois, a etiqueta e o certificado.</p>

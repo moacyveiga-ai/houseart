@@ -1,14 +1,15 @@
-// "Acervo" (handoff "HouseArt Web Galeria" › Acervo): summary, search (GET ?q=),
+// "Acervo" (handoff "HouseArt Web Galeria" › Acervo): summary, search (?q=, live),
 // chips by status and the rows (68 px wall, italic title, artist · year, price +
 // status pill, views · offers). Server Component; the page loads and filters.
 import Link from 'next/link'
 import { Icon } from '@/components/ds/Icon'
 import { Chip } from '@/components/ds/Chip'
-import { INVENTORY_CHIPS, emptyText, rowPrice, rowStats, rowStatus, summaryLine, type InventoryItem } from './inventory-core'
+import { INVENTORY_CHIPS, emptyText, inventoryHref, rowPrice, rowStats, rowStatus, summaryLine, type InventoryItem } from './inventory-core'
+import { InventorySearch } from './InventorySearch'
 import './inventory-list.css'
 
 export function InventoryList({ title, all, items, chip, q, counts, openId = null }: { title: string; all: InventoryItem[]; items: InventoryItem[]; chip: string; q: string; counts: Record<string, number>; openId?: number | null }) {
-  const href = (key: string) => `/artworks?filter=${key}${q ? `&q=${encodeURIComponent(q)}` : ''}`
+  const href = (key: string) => inventoryHref(key, q)
   // the row opens the work in the side panel (?open=), keeping the chip and the search
   const openHref = (id: number) => `${href(chip)}&open=${id}`
   return (
@@ -17,11 +18,7 @@ export function InventoryList({ title, all, items, chip, q, counts, openId = nul
         <span className="ha-inv__who"><h1 className="ha-inv__title">{title}</h1><span className="ha-inv__summary">{summaryLine(all)}</span></span>
         <Link href="/artworks/new" className="ha-inv__add" aria-label="Adicionar nova obra"><Icon name="add" size={26} /></Link>
       </div>
-      <form className="ha-inv__search" role="search" action="/artworks" method="get">
-        <input type="hidden" name="filter" value={chip} />
-        <Icon name="search" size={20} />
-        <input name="q" className="ha-inv__input" defaultValue={q} placeholder="Título, artista ou certificado" aria-label="Buscar no acervo" />
-      </form>
+      <InventorySearch key={chip} chip={chip} q={q} />
       <div className="ha-inv__chips" role="group" aria-label="Filtros">
         {INVENTORY_CHIPS.map((c) => <Chip key={c.key} on={c.key === chip} href={href(c.key)}>{c.name} · {counts[c.key] ?? 0}</Chip>)}
       </div>

@@ -6,6 +6,7 @@ import { REVIEW_FILTER_LABELS, REVIEW_FILTERS, REVIEW_KIND_LABELS, REVIEW_KINDS,
 import { Kpis } from '@/components/ds/Kpi'
 import { Chip } from '@/components/ds/Chip'
 import { ReviewQueue } from '@/components/admin/ReviewQueue'
+import { Tabs } from '@/components/ds/Tabs'
 
 export const metadata = { title: 'Obras e certificados — HouseArt' }
 
@@ -19,6 +20,7 @@ export default async function AdminReviewPage({ searchParams }: { searchParams: 
   return (
     <div className="ha-page">
       <div className="ha-page__head"><h1 className="ha-h1">Obras e certificados</h1></div>
+      <Tabs active="queue" items={[{ key: 'queue', label: 'Fila de revisão', href: '/admin/review', count: q.kpis.open }, { key: 'artworks', label: 'Todas as obras', href: '/admin/review/artworks' }]} />
       <Kpis items={[
         { label: 'Obras certificadas', value: q.kpis.certified.toLocaleString('pt-BR'), note: q.kpis.certifiedNote },
         { label: 'Na fila de revisão', value: String(q.kpis.open), note: q.kpis.openNote },

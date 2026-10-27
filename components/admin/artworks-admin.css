@@ -1,0 +1,19 @@
+/* Admin › Obras e certificados › Todas as obras (app/(panel)/admin/review/artworks). Prefix ha-aart. */
+.ha-aart { display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-aart__search { display: flex; flex-direction: column; gap: 6px; }
+.ha-aart__searchrow { display: flex; gap: var(--ha-space-2); }
+.ha-aart__searchrow .ha-input { flex: 1 1 auto; }
+.ha-aart__filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.ha-aart__filters .ha-chip { text-decoration: none; }
+.ha-aart__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-aart__row { display: grid; grid-template-columns: 56px minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
+.ha-aart__wall { width: 56px; height: 56px; display: grid; place-items: center; border-radius: var(--ha-radius-sm); background: var(--ha-bg); overflow: hidden; color: var(--ha-fg-muted); }
+.ha-aart__wall img { width: 100%; height: 100%; object-fit: cover; }
+.ha-aart__main, .ha-aart__state { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: var(--ha-text-body-sm); }
+.ha-aart__main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-aart__sub { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
+.ha-aart__alert { font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-alert-500); }
+.ha-aart__id { font-size: var(--ha-text-caption); color: var(--ha-fg); width: fit-content; }
+.ha-aart__empty { margin: 0; padding: var(--ha-space-5); text-align: center; color: var(--ha-fg-muted); border: var(--ha-border-w) dashed var(--ha-border); border-radius: var(--ha-radius-md); }
+.ha-aart__pages { display: flex; justify-content: space-between; }
+@media (max-width: 900px) { .ha-aart__row { grid-template-columns: 56px minmax(0, 1fr); } .ha-aart__state { grid-column: 2; } }

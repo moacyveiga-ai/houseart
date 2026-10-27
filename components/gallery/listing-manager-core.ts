@@ -47,15 +47,6 @@ export function pauseToggledMessage(nowPaused: boolean): string {
   return nowPaused ? 'Anúncio pausado' : 'Anúncio de volta ao marketplace'
 }
 
-/** "Enviar a um cliente": the prototype's message plus the public link. */
-export function shareMessage(a: { title: string; artistName: string }, publicUrl: string): string {
-  return `Separei esta obra para você: ${a.title}, de ${a.artistName}. Qualquer dúvida, é só responder. ${publicUrl}`
-}
-
-export function publicArtworkPath(publicId: string): string {
-  return `/e/artwork/${encodeURIComponent(publicId)}`
-}
-
 export function listingStats(s: { views7d: number; openOffers: number; saves: number; likes: number }): { value: string; label: string }[] {
   return [
     { value: s.views7d.toLocaleString('pt-BR'), label: 'views · 7 dias' },

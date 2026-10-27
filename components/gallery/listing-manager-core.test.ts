@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { acceptsOffersSub, listingStats, pausedSub, priceCents, priceChanged, priceMask, priceReais, priceSavedMessage, publicArtworkPath, shareMessage } from './listing-manager-core'
+import { acceptsOffersSub, listingStats, pausedSub, priceCents, priceChanged, priceMask, priceReais, priceSavedMessage } from './listing-manager-core'
 
 describe('listing-manager-core', () => {
   it('masks the price like the prototype (digits only, pt-BR thousands)', () => {
@@ -28,10 +28,6 @@ describe('listing-manager-core', () => {
     expect(acceptsOffersSub(false, { refuseBelowBps: 7000, responseHours: 48 })).toBe('Só compra direta')
     expect(pausedSub(true)).toMatch(/Fora do marketplace/)
     expect(pausedSub(false)).toMatch(/Some do marketplace/)
-  })
-  it('builds the share message with the public link', () => {
-    expect(publicArtworkPath('HA-2026-7K3F-9Q2M')).toBe('/e/artwork/HA-2026-7K3F-9Q2M')
-    expect(shareMessage({ title: 'Construção nº 7', artistName: 'Joana Teixeira' }, 'https://x/e/artwork/HA-1')).toBe('Separei esta obra para você: Construção nº 7, de Joana Teixeira. Qualquer dúvida, é só responder. https://x/e/artwork/HA-1')
   })
   it('lists the four stats with the real saves and likes', () => {
     expect(listingStats({ views7d: 1234, openOffers: 1, saves: 46, likes: 214 }).map((s) => `${s.value} ${s.label}`)).toEqual(['1.234 views · 7 dias', '46 salvos', '214 curtidas', '1 oferta'])

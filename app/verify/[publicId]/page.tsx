@@ -51,7 +51,7 @@ async function CertificateVerify({ publicId, sp }: { publicId: string; sp: Recor
   const c = await publicCertificate(publicId)
   if (!c) notFound()
   const h = await headers()
-  const read = sp.uid ? await recordPublicRead(publicId, { uid: sp.uid, ctr: Number(sp.ctr ?? sp.c ?? -1), cmac: sp.cmac ?? sp.m ?? '', tt: sp.tt === '1' }, ipHashOf(rawIpFromHeaders(h))) : null
+  const read = sp.uid ? await recordPublicRead(publicId, { uid: sp.uid, ctr: Number(sp.ctr ?? sp.c ?? -1), cmac: sp.cmac ?? sp.m ?? '', tt: sp.tt?.slice(0, 8) }, ipHashOf(rawIpFromHeaders(h))) : null
   return <Verification c={c} read={read ? { authenticated: read.authenticated, tamper: read.tamper } : null} />
 }
 

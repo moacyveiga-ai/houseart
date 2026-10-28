@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aesCmac, mockMasterKey, mockSunMessage, tamperOf, verifySun } from './sun-core'
+import { aesCmac, mockMasterKey, mockSunMessage, reportsTamper, tamperDecision, tamperOf, verifySun } from './sun-core'
 import { actionOf, isPublicId, publicIdOf, stageOf } from './domain'
 
 describe('AES-CMAC (RFC 4493 vectors)', () => {
@@ -47,5 +47,38 @@ describe('tamper flag', () => {
     expect(tamperOf(true, { ok: false, reason: 'BAD_CMAC' })).toBe(false)
     expect(tamperOf(true, { ok: false, reason: 'REPLAY' })).toBe(false)
     expect(tamperOf(false, { ok: true })).toBe(false)
+  })
+
+  it('reads the claim from the mirrored TT status', () => {
+    expect(reportsTamper(undefined)).toBe(false)
+    expect(reportsTamper('')).toBe(false)
+    expect(reportsTamper('CC')).toBe(false)
+    expect(reportsTamper('II')).toBe(false)
+    for (const v of ['OO', 'OC', 'CO', 'oo', '1']) expect(reportsTamper(v)).toBe(true)
+  })
+
+  it('records every claim but revokes only on an authenticated read', () => {
+    expect(tamperDecision('OO', { ok: true })).toEqual({ recordFlag: true, revoke: true })
+    expect(tamperDecision('1', { ok: false, reason: 'BAD_TT' })).toEqual({ recordFlag: true, revoke: false })
+    expect(tamperDecision('OO', { ok: false, reason: 'BAD_CMAC' })).toEqual({ recordFlag: true, revoke: false })
+    expect(tamperDecision('OO', { ok: false, reason: 'REPLAY' })).toEqual({ recordFlag: true, revoke: false })
+    expect(tamperDecision('CC', { ok: true })).toEqual({ recordFlag: false, revoke: false })
+    expect(tamperDecision(undefined, { ok: true })).toEqual({ recordFlag: false, revoke: false })
+  })
+
+  it('the TT status is inside the CMAC: appending or changing it breaks the read', () => {
+    const uid = '04a1b2c3d4e5f6'
+    const master = mockMasterKey()
+    const plain = mockSunMessage(uid, 7)
+    expect(verifySun({ master, uid, counter: 7, cmac: plain.cmac, lastCounter: 0 })).toEqual({ ok: true })
+    // a genuine link without TT mirroring + `&tt=OO` appended by hand
+    expect(verifySun({ master, uid, counter: 7, cmac: plain.cmac, lastCounter: 0, tt: 'OO' })).toEqual({ ok: false, reason: 'BAD_CMAC' })
+    const opened = mockSunMessage(uid, 8, 'OO')
+    expect(opened.tt).toBe('OO')
+    expect(verifySun({ master, uid, counter: 8, cmac: opened.cmac, lastCounter: 0, tt: 'OO' })).toEqual({ ok: true })
+    // an intact tag's link (`tt=CC`) rewritten to `tt=OO`
+    const intact = mockSunMessage(uid, 9, 'CC')
+    expect(verifySun({ master, uid, counter: 9, cmac: intact.cmac, lastCounter: 0, tt: 'OO' })).toEqual({ ok: false, reason: 'BAD_CMAC' })
+    expect(verifySun({ master, uid, counter: 9, cmac: intact.cmac, lastCounter: 0, tt: '1' })).toEqual({ ok: false, reason: 'BAD_TT' })
   })
 })

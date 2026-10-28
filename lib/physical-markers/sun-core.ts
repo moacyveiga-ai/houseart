@@ -2,6 +2,10 @@
 //   · AES-128 CMAC (RFC 4493) over the session vector SV2 = 3CC3 0001 0080 || UID || CTR(LE)
 //     with the tag's diversified key; the message MAC is CMAC(Ks, '') truncated to the 8 even bytes.
 //   · Diversified key = CMAC(master, 0x01 || UID || 'HouseArt') (NXP AN10922 style).
+//   · Tamper (NTAG 424 DNA TT): the tag mirrors its TT status as two ASCII chars into the URL
+//     (`tt=CC` closed/closed, `OC`/`OO`/`CO` loop opened, `II` not initialised) and, with
+//     SDMMACInputOffset placed before it, those bytes are the MAC input — the CMAC covers them.
+//     Without TT mirroring the MAC input is empty, as before.
 //   · Replay: the counter must exceed the last stored counter.
 // `MARKER_VENDOR=mock` keeps the SAME maths with a development master key, so
 // the app/tests can produce valid messages with `mockSunMessage`.
@@ -71,31 +75,53 @@ export function diversifiedKey(master: Buffer, uidHex: string): Buffer {
   return aesCmac(master, Buffer.concat([Buffer.from([0x01]), uidBytes(uidHex), Buffer.from('HouseArt', 'utf8')]))
 }
 
-export function sunMac(tagKey: Buffer, uidHex: string, counter: number): string {
+/** The TT status the tag mirrors: permanent + current, each C (closed), O (open) or I (invalid). */
+export const TT_STATUS_RE = /^[COI]{2}$/
+
+/** The `tt` the link reports a tamper: any value but the intact `CC` / not-initialised `II` (a bare
+ *  `tt=1` counts as a claim too, so a forged one is still recorded — and then refused by the CMAC). */
+export function reportsTamper(tt: string | null | undefined): boolean {
+  if (tt === undefined || tt === null || tt === '') return false
+  const v = tt.toUpperCase()
+  return v !== 'CC' && v !== 'II'
+}
+
+export function sunMac(tagKey: Buffer, uidHex: string, counter: number, macInput = ''): string {
   const ctr = Buffer.alloc(3)
   ctr[0] = counter & 0xff; ctr[1] = (counter >> 8) & 0xff; ctr[2] = (counter >> 16) & 0xff
   const sv2 = Buffer.concat([Buffer.from([0x3c, 0xc3, 0x00, 0x01, 0x00, 0x80]), uidBytes(uidHex), ctr])
   const ks = aesCmac(tagKey, sv2)
-  const full = aesCmac(ks, Buffer.alloc(0))
+  const full = aesCmac(ks, Buffer.from(macInput, 'ascii'))
   const truncated = Buffer.from([full[1], full[3], full[5], full[7], full[9], full[11], full[13], full[15]])
   return truncated.toString('hex').toUpperCase()
 }
 
-export type SunVerdict = { ok: true } | { ok: false; reason: 'BAD_UID' | 'BAD_COUNTER' | 'REPLAY' | 'BAD_CMAC' }
+export type SunVerdict = { ok: true } | { ok: false; reason: 'BAD_UID' | 'BAD_COUNTER' | 'BAD_TT' | 'REPLAY' | 'BAD_CMAC' }
 
-export function verifySun(opt: { master: Buffer; uid: string; counter: number; cmac: string; lastCounter: number }): SunVerdict {
+/** `tt` is the mirrored TT status as it came in the URL: when present it is part of the MAC input,
+ *  so a `tt` appended to (or changed in) a genuine link fails the CMAC. */
+export function verifySun(opt: { master: Buffer; uid: string; counter: number; cmac: string; lastCounter: number; tt?: string | null }): SunVerdict {
   if (!/^[0-9a-f]{14}$/i.test(opt.uid)) return { ok: false, reason: 'BAD_UID' }
+  const tt = opt.tt ?? ''
+  if (tt !== '' && !TT_STATUS_RE.test(tt)) return { ok: false, reason: 'BAD_TT' }
   if (!Number.isInteger(opt.counter) || opt.counter < 0 || opt.counter > 0xffffff) return { ok: false, reason: 'BAD_COUNTER' }
   if (opt.counter <= opt.lastCounter) return { ok: false, reason: 'REPLAY' }
-  const expected = sunMac(diversifiedKey(opt.master, opt.uid.toLowerCase()), opt.uid.toLowerCase(), opt.counter)
+  const expected = sunMac(diversifiedKey(opt.master, opt.uid.toLowerCase()), opt.uid.toLowerCase(), opt.counter, tt)
   if (expected !== opt.cmac.toUpperCase() || !/^[0-9A-F]{16}$/.test(opt.cmac)) return { ok: false, reason: 'BAD_CMAC' }
   return { ok: true }
 }
 
-/** The tamper flag only counts on an authenticated read: the `tt` bit travels in the URL and is not
- *  covered by the CMAC here, so a forged link with `tt=1` must not revoke a linked tag. */
+/** The tamper flag only counts on an authenticated read (the TT status is inside the CMAC, so a real
+ *  tamper always verifies): a forged link with `tt` must not revoke a linked tag. */
 export function tamperOf(reported: boolean, verdict: SunVerdict): boolean {
   return reported && verdict.ok
+}
+
+/** What a public read does with a tamper claim: it is always RECORDED (the desk sees the forged ones as
+ *  "leitura não autenticada"), but only an authenticated one revokes the tag and opens the review. */
+export function tamperDecision(tt: string | null | undefined, verdict: SunVerdict): { recordFlag: boolean; revoke: boolean } {
+  const reported = reportsTamper(tt)
+  return { recordFlag: reported, revoke: tamperOf(reported, verdict) }
 }
 
 /** Development master key (MARKER_VENDOR=mock): derived, never a real tag key. */
@@ -103,7 +129,12 @@ export function mockMasterKey(): Buffer {
   return scryptSync('houseart-marker-master-dev', 'houseart-marker-salt', 16)
 }
 
-/** A valid SUN message for the mock vendor (what the test/app hands to /api/markers/link). */
-export function mockSunMessage(uid: string, counter: number): { uid: string; ctr: number; cmac: string } {
-  return { uid: uid.toLowerCase(), ctr: counter, cmac: sunMac(diversifiedKey(mockMasterKey(), uid.toLowerCase()), uid.toLowerCase(), counter) }
+/** A valid SUN message for the mock vendor (what the test/app hands to /api/markers/link). With `tt`
+ *  (a TT status, e.g. `OO`) the message is the one a TT tag writes: the status goes into the CMAC. */
+export function mockSunMessage(uid: string, counter: number): { uid: string; ctr: number; cmac: string }
+export function mockSunMessage(uid: string, counter: number, tt: string): { uid: string; ctr: number; cmac: string; tt: string }
+export function mockSunMessage(uid: string, counter: number, tt?: string): { uid: string; ctr: number; cmac: string; tt?: string } {
+  const u = uid.toLowerCase()
+  const cmac = sunMac(diversifiedKey(mockMasterKey(), u), u, counter, tt ?? '')
+  return tt === undefined ? { uid: u, ctr: counter, cmac } : { uid: u, ctr: counter, cmac, tt }
 }

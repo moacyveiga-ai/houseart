@@ -83,7 +83,7 @@ export function FavoritesScreen({ rows: initial, tab, bare = false }: { rows: Fa
                 </div>
               ))}
             </div>
-          ) : <div className="ha-fav__empty">Curta obras no Explorar para vê-las aqui. <Link href="/explore?view=discover" className="ha-link">Descobrir</Link></div>}
+          ) : <div className="ha-fav__empty">Curta obras no Explorar para vê-las aqui. <Link href="/explore" className="ha-link">Explorar</Link></div>}
         </div>
       )}
       <Toast message={toast} onDone={clearToast} />

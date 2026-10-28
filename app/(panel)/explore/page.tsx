@@ -32,7 +32,8 @@ async function exploreItems(viewer: number): Promise<ExploreItem[]> {
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ view?: string; cat?: string; work?: string }> }) {
   const { user } = await requirePanelPage('/explore')
   const p = await searchParams
-  const view = viewOf(p.view), chip = chipOf(p.cat)
+  // only the feed on the web (Descobrir left on 2026-10-28); an old ?view=discover link lands on the feed
+  const view = viewOf(undefined), chip = chipOf(p.cat)
   const items = (await exploreItems(user.id)).filter((i) => passesChip(i, chip))
   // the artwork opens in the side panel over the feed (Web Colecionador › obra)
   const panel = p.work ? await collectorPanel(user, { work: p.work }) : null

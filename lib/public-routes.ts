@@ -22,6 +22,8 @@ const PUBLIC_EXACT = new Set<string>([
   '/manifest.webmanifest',
   '/install',                    // "Instalar o app" (PWA): the link the team sends
   '/design-system',              // the DS gallery (handoff Fase 1): no data, compared with the prototype
+  '/simulator',                  // the native app in a phone frame (the app logs in by itself)
+  '/app',                        // the native app exported for the web (public/app)
 ])
 
 const PUBLIC_PREFIXES = [
@@ -45,6 +47,7 @@ const PUBLIC_PREFIXES = [
   '/transfer/',                 // buyer side of an off-platform transfer (invite by token)
   '/api/transfer/',
   '/_next/',
+  '/app/',                      // the app simulator's bundle and routes (it logs in by bearer, never by cookie)
   '/favicon',
   '/.well-known/',
 ]

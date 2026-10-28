@@ -11,6 +11,7 @@ export default function InstallPage() {
   return (
     <AuthShell variant="claim" brandHeight={56} wall={randomWall()} title="Instalar o app" lead="O HouseArt vai para a tela inicial do celular, como um app, sem passar pela loja.">
       <InstallApp />
+      <p className="ha-install__sim">Quer ver as telas do app de celular? <a href="/simulator">Abrir o simulador do app</a></p>
     </AuthShell>
   )
 }

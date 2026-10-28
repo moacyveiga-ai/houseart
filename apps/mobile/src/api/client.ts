@@ -27,6 +27,9 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
     method: opts.method ?? (opts.body !== undefined ? 'POST' : 'GET'),
     headers,
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    // On the web build the API is same-origin: never send the browser's own panel cookie,
+    // which the server reads BEFORE the bearer (it would act as another account).
+    credentials: 'omit',
   })
   const text = await res.text()
   let data: unknown = null
@@ -53,7 +56,7 @@ export async function apiUpload<T = unknown>(path: string, fields: Record<string
   const headers: Record<string, string> = { accept: 'application/json', ...CLIENT_HEADER }
   const token = await readToken()
   if (token) headers.authorization = `Bearer ${token}`
-  const res = await fetch(`${API_URL}${path}`, { method: 'POST', headers, body: form })
+  const res = await fetch(`${API_URL}${path}`, { method: 'POST', headers, body: form, credentials: 'omit' })
   const text = await res.text()
   let data: unknown = null
   try { data = text ? JSON.parse(text) : null } catch { data = null }

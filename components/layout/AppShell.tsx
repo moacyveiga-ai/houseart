@@ -11,16 +11,14 @@ export interface ShellUser { initials: string; profile: ProfileKind; name?: stri
   /** what the profile chip says: the gallery's name for the gallery profile, else the person's */
   display?: string; avatarUrl?: string | null }
 export type { SwitcherProfile }
-import { IndexTicker, type TickerItem } from '@/components/ds/IndexTicker'
-export type { TickerItem }
 
 /**
- * The shell of the design: ticker (indices) → topbar 64px (logo 192px, search,
+ * The shell of the design: topbar 64px (logo 192px, search,
  * bell, profile switcher: initials + label + swap_horiz, a menu of the account's profiles) → sidebar 240px with
  * NAV[profile] and footer (links + Sair) → main with max-width var(--ha-max).
  * Badges per item come from the server (`badges`), never from the NAV.
  */
-export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0, ticker = [], children }: {
+export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0, children }: {
   user: ShellUser
   /** The account's profiles for the switcher (the active one marked). */
   profiles?: SwitcherProfile[]
@@ -28,7 +26,6 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
   badges?: Record<string, number>
   /** Unread notifications (the dot on the bell); from the server. */
   bell?: number
-  ticker?: TickerItem[]
   children: ReactNode
 }) {
   const nav = NAV[user.profile]
@@ -36,7 +33,6 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
   const drawerItems = nav.map((item) => ({ key: item.key, href: item.href, label: item.label, icon: item.icon, badge: badges[item.key] || undefined, on: item.key === activeKey }))
   return (
     <div className="ha-shell">
-      <IndexTicker items={ticker} />
       <header className="ha-topbar">
         <ShellDrawer profile={user.profile} items={drawerItems} />
         <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="simples_horiz" tone="auto-mono" height={24} /><span className="ha-topbar__system">{PROFILE_LABELS[user.profile]}</span></Link>

@@ -17,7 +17,7 @@ export interface AuthShellProps {
   title?: string
   lead?: ReactNode
   children: ReactNode
-  /** replaces the claim/caption block of the `frame` panel */
+  /** replaces the claim/caption block of the `frame` panel, or the headline + tagline of the `claim` panel */
   foot?: ReactNode
   className?: string
   brandHeight?: number
@@ -42,10 +42,15 @@ export function AuthShell({ title, lead, children, foot, className, brandHeight,
       <section className={wall ? 'ha-login__art ha-login__art--wall' : 'ha-login__art'} style={wall ? ({ '--ha-login-wall': `url("${wall.src}")` } as CSSProperties) : undefined}>
         <a href="/e" className="ha-login__brand" aria-label="HouseArt — site"><HouseArtLogo version="full_horiz" tone="negativo" height={brandHeight ?? (isClaim ? 30 : 48)} /></a>
         {isClaim ? (
-          <div className="ha-login__hero" aria-hidden="true">
-            <h2 className="ha-login__headline">{claim ?? <>Sua coleção, <i>com escritura.</i></>}</h2>
-            {tagline === null ? null : <p className="ha-login__tagline">{tagline ?? 'Acompanhe ofertas, entregas e certificados das suas obras em um só lugar.'}</p>}
-            {wall ? <p className="ha-login__credit">{wall.credit}</p> : null}
+          // `foot` (the plan summary of the signup) takes the place of the headline and stays interactive
+          <div className="ha-login__hero" aria-hidden={foot ? undefined : true}>
+            {foot ?? (
+              <>
+                <h2 className="ha-login__headline">{claim ?? <>Sua coleção, <i>com escritura.</i></>}</h2>
+                {tagline === null ? null : <p className="ha-login__tagline">{tagline ?? 'Acompanhe ofertas, entregas e certificados das suas obras em um só lugar.'}</p>}
+              </>
+            )}
+            {wall ? <p className="ha-login__credit" aria-hidden="true">{wall.credit}</p> : null}
           </div>
         ) : (
           <>

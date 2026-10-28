@@ -7,7 +7,9 @@ import { SignupForm } from '@/components/auth/SignupForm'
 import { SignupPlanAside } from '@/components/auth/SignupPlanAside'
 import { SignupPlanProvider } from '@/components/auth/SignupPlanContext'
 import { pickSignupPlan, toSignupPlan } from '@/components/auth/signup-plans'
+import { randomWall } from '@/lib/public-content/paintings'
 import '@/components/auth/signup.css'
+import '@/components/auth/login.css'
 
 export const metadata = { title: 'Criar conta — HouseArt' }
 
@@ -21,7 +23,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const plan = pickSignupPlan(plans, sp.plan)
   return (
     <SignupPlanProvider plans={plans} initialCode={plan?.code ?? null}>
-      <AuthShell title="Criar sua conta" lead="" hideHeading className="ha-login--signup" brandHeight={48} art={{ src: '/img/signup-art.png', alt: 'Hilma af Klint, Svanen (O Cisne), nº 17, 1915' }} foot={<SignupPlanAside />}>
+      <AuthShell variant="claim" hideHeading className="ha-login--signup" brandHeight={56} wall={randomWall()} foot={plan ? <SignupPlanAside /> : undefined}>
         <SignupForm providers={configuredProviders(process.env)} social={sp.social ?? null} socialProvider={sp.provider ?? null} />
       </AuthShell>
     </SignupPlanProvider>

@@ -85,7 +85,7 @@ export function LinkMarkerScreen() {
     } finally { setBusy(false) }
   }
 
-  const back = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)/certification' as never))
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/certification' as never))
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.dark, { paddingTop: insets.top }]}>
@@ -143,7 +143,7 @@ export function LinkMarkerScreen() {
           ) : null}
 
           {st.phase === 'signed' ? (
-            <Pressable accessibilityRole="button" onPress={() => router.navigate('/(tabs)/certification' as never)} style={styles.cta}><Text style={styles.ctaText}>Voltar à certificação</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => router.navigate('/certification' as never)} style={styles.cta}><Text style={styles.ctaText}>Voltar à certificação</Text></Pressable>
           ) : null}
         </ScrollView>
       )}

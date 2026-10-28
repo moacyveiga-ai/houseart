@@ -87,3 +87,9 @@ export function iconFor(kind: ProfileKind | null, key: TabKey): TabIcon {
 
 /** The collector set is also the default (no profile chosen yet). */
 export const isCollector = (kind: ProfileKind | null): boolean => kind === 'COLLECTOR' || kind === null
+
+/** The first tab of the profile as a URL. Never `/(tabs)`: on the web build (the simulator)
+ *  a bare group path is not a screen and shows "Tela não encontrada". */
+export function homeHref(kind: ProfileKind | null): `/${TabKey}` {
+  return `/${tabsFor(kind)[0] ?? 'explore'}`
+}

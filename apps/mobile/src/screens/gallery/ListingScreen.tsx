@@ -57,7 +57,7 @@ export function ListingScreen() {
   const web = (path: string, title: string) => router.push({ pathname: '/web', params: { path, title } })
 
   const buttons: { t: string; icon: IconName; go: () => void }[] = [
-    { t: 'Ofertas desta obra', icon: 'request-quote', go: () => router.navigate({ pathname: '/(tabs)/sales', params: { tab: 'offers' } } as never) },
+    { t: 'Ofertas desta obra', icon: 'request-quote', go: () => router.navigate({ pathname: '/sales', params: { tab: 'offers' } } as never) },
     { t: 'Enviar a um cliente', icon: 'share', go: () => void share() },
     { t: 'Editar cadastro', icon: 'edit', go: () => web(`/artworks/${artworkId}/edit`, 'Editar cadastro') },
   ]

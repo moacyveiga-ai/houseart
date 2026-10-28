@@ -41,7 +41,7 @@ export function NewArtworkScreen() {
   const collector = params.owner === 'collector'
   const toCollection = useCallback((message?: string) => {
     if (message) Alert.alert('Obra cadastrada', message)
-    router.navigate('/(tabs)/wallet' as never)
+    router.navigate('/wallet' as never)
   }, [router])
 
   const [phase, setPhase] = useState<Phase>(initialId ? 'loading' : 'capture')

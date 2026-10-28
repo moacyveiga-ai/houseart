@@ -5,6 +5,7 @@ import { useSession } from '@/auth/session'
 import type { ProfileKind } from '@/auth/types'
 import { Button, ErrorText, Muted } from '@/ui/primitives'
 import { theme } from '@/theme'
+import { homeHref } from '@/nav/tabs'
 
 /** "Escolha de perfil": the account has several profiles; the tabs follow the chosen one. */
 export default function Profiles() {
@@ -16,7 +17,7 @@ export default function Profiles() {
   async function pick(kind: ProfileKind) {
     if (busy) return
     setError(null); setBusy(kind)
-    try { await switchProfile(kind); router.replace('/(tabs)') } catch (e) { setError((e as Error).message) } finally { setBusy(null) }
+    try { await switchProfile(kind); router.replace(homeHref(kind) as never) } catch (e) { setError((e as Error).message) } finally { setBusy(null) }
   }
 
   return (

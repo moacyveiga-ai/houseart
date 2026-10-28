@@ -54,7 +54,7 @@ export function SearchScreen() {
   return (
     <View style={[styles.fill, { paddingTop: insets.top }]}>
       <View style={styles.head}>
-        <IconButton name="arrow-back" label="Voltar" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} />
+        <IconButton name="arrow-back" label="Voltar" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         <View style={styles.field}>
           <Icon name="search" size={20} color={theme.fgMuted} />
           <TextInput ref={ref} value={q} onChangeText={setQ} placeholder="Artista, obra, galeria ou certificado" placeholderTextColor={theme.fgMuted} style={styles.input} autoCapitalize="none" autoCorrect={false} returnKeyType="search" onSubmitEditing={() => { if (q.trim()) use(q.trim()) }} />

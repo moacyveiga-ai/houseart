@@ -24,7 +24,7 @@ export function DayPanelScreen() {
   const go = (t: PanelTarget) => {
     if (t.kind === 'listing') { router.push({ pathname: '/artworks/[id]/listing', params: { id: String(t.id) } }); return }
     if (t.kind === 'web') { router.push({ pathname: '/web', params: { path: t.path, title: t.title } }); return }
-    router.navigate({ pathname: `/(tabs)/${t.tab}`, params: t.params } as never)
+    router.navigate({ pathname: `/${t.tab}`, params: t.params } as never)
   }
   const web = (path: string, title: string) => router.push({ pathname: '/web', params: { path, title } })
 

@@ -90,6 +90,7 @@ export function ProfileSwitcher({ initials, label, display, avatarUrl = null, na
           <div className="ha-switcher__sep" />
           <Link role="menuitem" href={accountHref} className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="person" size={20} /><span>Minha conta</span></Link>
           {helpHref ? <Link role="menuitem" href={helpHref} className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="help" size={20} /><span>Ajuda</span></Link> : null}
+          <Link role="menuitem" href="/install" className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="install_mobile" size={20} /><span>Instalar o app</span></Link>
           <form action="/api/auth/logout" method="post">
             <button type="submit" role="menuitem" className="ha-switcher__item"><Icon name="logout" size={20} /><span>Sair</span></button>
           </form>

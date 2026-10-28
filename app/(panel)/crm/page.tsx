@@ -9,7 +9,6 @@ export default async function CrmPage() {
   const { columns } = await kanban(scope)
   return (
     <div className="ha-page">
-      <div className="ha-page__head"><h1 className="ha-h1">Colecionadores</h1></div>
       <Kanban columns={columns} />
     </div>
   )

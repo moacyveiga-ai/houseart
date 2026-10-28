@@ -106,8 +106,13 @@ export function Kanban({ columns: initial }: { columns: { stage: Stage; label: s
   }
   return (
     <div className="ha-stack">
-      <div className="ha-row ha-row--end"><button type="button" className="ha-btn ha-btn--primary ha-btn--sm" onClick={() => setAdding(true)}>+ Interessado</button></div>
-      <p id="crm-drag-help" className="ha-muted ha-sm">Arraste os cartões entre as colunas. No teclado, selecione o cartão e use as setas ← e →.</p>
+      <div className="ha-page__head">
+        <div className="ha-stack ha-stack--2">
+          <h1 className="ha-h1">Colecionadores</h1>
+          <p id="crm-drag-help" className="ha-muted ha-sm">Arraste os cartões entre as colunas. No teclado, selecione o cartão e use as setas ← e →.</p>
+        </div>
+        <button type="button" className="ha-btn ha-btn--primary ha-btn--sm" onClick={() => setAdding(true)}>+ Interessado</button>
+      </div>
       <div className="ha-kanban" ref={board}>
         {columns.map((col) => (
           <div key={col.stage} data-stage={col.stage} className={`ha-kanban__col${over === col.stage && dragging !== null ? ' ha-kanban__col--over' : ''}`}

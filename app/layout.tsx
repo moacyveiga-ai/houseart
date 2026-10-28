@@ -3,6 +3,7 @@ import { Fraunces, Inter } from 'next/font/google'
 import './globals.css'
 import './ds/tokens.css'
 import './ds/cells.css'
+import { ThemeSync } from '@/components/theme/ThemeSync'
 import { antiFlashScript } from '@/lib/theme-routes'
 import { publicBaseUrl } from '@/lib/public-url'
 import { INSTALL_PROMPT_SCRIPT } from '@/components/pwa/install-core'
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* eslint-disable-next-line @next/next/no-page-custom-font, @next/next/google-font-display -- root layout of the App Router (the rule is about pages/); display=block because an icon font with swap shows the icon NAME as text until it loads (DS audit 2026-10-25, handoff: display=block) */}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" />
       </head>
-      <body>{children}</body>
+      <body><ThemeSync />{children}</body>
     </html>
   )
 }

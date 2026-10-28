@@ -14,12 +14,10 @@ import { isAlwaysLightRoute } from './theme-routes'
 // ════════════════════════════════════════════════════════════════════════════
 import { useEffect, useCallback, useSyncExternalStore } from 'react'
 
-export type Theme = 'light' | 'dark' | 'system'
 
 export const THEME_KEY = 'ha-theme'
-import { DEFAULT_THEME } from './theme-routes'
-
-const isTheme = (v: unknown): v is Theme => v === 'light' || v === 'dark' || v === 'system'
+import { DEFAULT_THEME, isTheme, themeAttr, type Theme } from './theme-routes'
+export type { Theme }
 
 /** Lê a preferência salva; default 'light' (auditoria DS 2026-10-25: o escuro do painel não foi desenhado e não há seletor na tela — só uma preferência gravada o liga). Seguro no server (retorna default). */
 export function getTheme(): Theme {
@@ -32,14 +30,7 @@ export function getTheme(): Theme {
   }
 }
 
-/** Resolve 'system' pela media query do SO → 'light' | 'dark'. */
-export function resolveTheme(t: Theme): 'light' | 'dark' {
-  if (t === 'system') {
-    if (typeof window === 'undefined') return 'light'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }
-  return t
-}
+const prefersDark = () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
 
 /**
  * Rotas que ignoram o tema do usuário e ficam no claro: o portal público /e e
@@ -54,11 +45,11 @@ export function rotaSempreClara(pathname: string): boolean {
   return isAlwaysLightRoute(pathname)
 }
 
-/** Aplica no <html>: 'dark' → data-ha-theme="dark"; caso contrário limpa (claro). */
+/** Aplica no <html>: data-ha-theme="dark" | "pastel"; vazio = claro (e sempre vazio nas rotas claras). */
 export function applyTheme(t: Theme): void {
   if (typeof document === 'undefined') return
-  const resolvido = rotaSempreClara(window.location.pathname) ? 'light' : resolveTheme(t)
-  document.documentElement.setAttribute('data-ha-theme', resolvido === 'dark' ? 'dark' : '')
+  const attr = rotaSempreClara(window.location.pathname) ? '' : themeAttr(t, prefersDark())
+  document.documentElement.setAttribute('data-ha-theme', attr)
 }
 
 // Assinantes do tema para useSyncExternalStore. O evento nativo 'storage' só

@@ -15,6 +15,7 @@ import { ABOUT_MAX } from '@/lib/profile/core'
 import { shrinkToJpeg } from '@/components/artworks/capture-render'
 import './collector-account.css'
 import { Button } from '@/components/ds/Button'
+import { ThemePicker } from '@/components/theme/ThemePicker'
 
 export interface AccountLinkItem { kind: 'link'; icon: string; name: string; sub: string; href: string }
 export interface AccountSwitchItem { kind: 'switch'; icon: string; name: string; sub: string; key: 'marketingOptIn'; on: boolean }
@@ -151,6 +152,7 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
           </div>
         </section>
       ))}
+      <ThemePicker />
       {note ? <span className="ha-cacct__note" role="status">{note}</span> : null}
       <button type="button" className="ha-account-logout" disabled={leaving} onClick={() => setSheet('logout')}><Icon name="logout" size={20} />Sair da conta</button>
       <button type="button" className="ha-cacct__danger" onClick={() => void openDelete()}>Excluir minha conta</button>

@@ -13,8 +13,19 @@
  * (lib/theme.ts), o script anti-flash do root layout e o teste de
  * `components/layout/AppShell.tsx` leem. Três cópias à mão divergiam (9.7).
  */
-/** The theme nobody chose: light. The dark panel was never designed (DS audit 2026-10-25) and there is no selector on screen — only a saved preference turns it on. */
+/** The theme nobody chose: light. Dark and pastel are chosen in Perfil › Aparência (2026-10-28). */
 export const DEFAULT_THEME = 'light' as const
+
+/** The themes a person can save; 'system' follows the OS between light and dark. */
+export const THEMES = ['light', 'pastel', 'dark', 'system'] as const
+export type Theme = (typeof THEMES)[number]
+export const isTheme = (v: unknown): v is Theme => typeof v === 'string' && (THEMES as readonly string[]).includes(v)
+
+/** The value written to `data-ha-theme` ('' = light). */
+export function themeAttr(t: Theme, prefersDark: boolean): '' | 'dark' | 'pastel' {
+  if (t === 'dark' || (t === 'system' && prefersDark)) return 'dark'
+  return t === 'pastel' ? 'pastel' : ''
+}
 
 export const ALWAYS_LIGHT_ROUTES = ['/e', '/login', '/signup', '/recover-password', '/reset-password', '/verify', '/privacy'] as const
 
@@ -29,5 +40,6 @@ export function isAlwaysLightRoute(pathname: string): boolean {
  */
 export function antiFlashScript(): string {
   const rotas = JSON.stringify(ALWAYS_LIGHT_ROUTES)
-  return `(function(){try{var t=localStorage.getItem('ha-theme');if(t!=='light'&&t!=='dark'&&t!=='system')t='${DEFAULT_THEME}';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var p=location.pathname;var c=${rotas};for(var i=0;i<c.length;i++){if(p===c[i]||p.indexOf(c[i]+'/')===0)d=false;}document.documentElement.setAttribute('data-ha-theme',d?'dark':'');}catch(e){}})();`
+  const temas = JSON.stringify(THEMES)
+  return `(function(){try{var t=localStorage.getItem('ha-theme');if(${temas}.indexOf(t)<0)t='${DEFAULT_THEME}';var a=(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches))?'dark':(t==='pastel'?'pastel':'');var p=location.pathname;var c=${rotas};for(var i=0;i<c.length;i++){if(p===c[i]||p.indexOf(c[i]+'/')===0)a='';}document.documentElement.setAttribute('data-ha-theme',a);}catch(e){}})();`
 }

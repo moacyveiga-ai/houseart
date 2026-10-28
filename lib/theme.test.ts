@@ -42,3 +42,22 @@ describe('rotas sempre claras', () => {
   })
 
 })
+
+describe('temas escolhidos no Perfil', () => {
+  it('cada tema vira o atributo do <html>', async () => {
+    const { themeAttr, isTheme } = await import('./theme-routes')
+    expect(themeAttr('light', true)).toBe('')
+    expect(themeAttr('pastel', true)).toBe('pastel')
+    expect(themeAttr('dark', false)).toBe('dark')
+    expect(themeAttr('system', true)).toBe('dark')
+    expect(themeAttr('system', false)).toBe('')
+    expect(isTheme('pastel')).toBe(true)
+    expect(isTheme('neon')).toBe(false)
+  })
+
+  it('os tokens têm os dois temas', () => {
+    const css = readFileSync('app/ds/tokens.css', 'utf8')
+    expect(css).toContain('[data-ha-theme="dark"]')
+    expect(css).toContain('[data-ha-theme="pastel"]')
+  })
+})

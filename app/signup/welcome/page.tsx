@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth'
 import { listPublicPlans } from '@/lib/plans/server'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { SignupForm } from '@/components/auth/SignupForm'
+import { SignupPlanAside } from '@/components/auth/SignupPlanAside'
 import { SignupPlanProvider } from '@/components/auth/SignupPlanContext'
 import { pickSignupPlan, toSignupPlan } from '@/components/auth/signup-plans'
 import { randomWall } from '@/lib/public-content/paintings'
@@ -22,7 +23,7 @@ export default async function SignupWelcomePage({ searchParams }: { searchParams
   const plan = sp.plan ? pickSignupPlan(plans, sp.plan) : null
   return (
     <SignupPlanProvider plans={plans} initialCode={plan?.code ?? null} locked>
-      <AuthShell variant="claim" hideHeading className="ha-login--entrar ha-login--signup" brandHeight={56} wall={randomWall()}>
+      <AuthShell variant="claim" hideHeading className="ha-login--signup" brandHeight={56} wall={randomWall()} foot={plan ? <SignupPlanAside /> : undefined}>
         <SignupForm providers={[]} startAt={3} account={{ name: user.name, email: user.email }} />
       </AuthShell>
     </SignupPlanProvider>

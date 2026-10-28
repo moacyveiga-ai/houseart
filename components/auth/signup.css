@@ -145,6 +145,8 @@
 
 @media (max-width: 720px) {
   .ha-login--signup .ha-login__art { padding: var(--ha-space-6); gap: var(--ha-space-6); min-height: 0; max-height: none; position: static; }
+  /* the painting and its veil are absolute: the panel stays their containing block (static let them cover the form) */
+  .ha-login--signup .ha-login__art--wall { position: relative; }
   .ha-login--signup .ha-login__form { min-height: 0; }
   .ha-login--signup .ha-login__stage { display: none; }
   .ha-login--signup .ha-login__form { padding: var(--ha-space-8) var(--ha-space-4); }

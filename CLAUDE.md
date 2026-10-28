@@ -316,7 +316,7 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
    `BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN` para `BLOB_PRIVATE_READ_WRITE_TOKEN` (ou
    reconectar o store com o prefixo `BLOB_PRIVATE`) e ligar o `houseart-public` ao projeto para
    nascer `BLOB_READ_WRITE_TOKEN`; sem ele as derivadas passam pelo app em vez do CDN do Blob.
-2. Trocar a senha do papel `houseart_app` e do admin (as duas foram geradas nesta sessão); domínio
+2. Senhas do papel `houseart_app` e do admin trocadas em 2026-10-28 (`docs/PRODUCAO-PENDENCIAS.md` §4); domínio
    próprio + `APP_URL` (hoje os links de e-mail saem com a URL da Vercel); mover o repo para
    `Housemap/houseart` quando a org liberar.
 3. Login por "Entrar com e-mail" (código) exige SMTP (`SMTP_*`) — sem ele só e-mail/senha funciona

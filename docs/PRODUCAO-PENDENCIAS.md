@@ -35,13 +35,16 @@ SMTP da Housebroker (tirado do `ConfigCanal` dela), só para teste — o Gmail r
 para o endereço autenticado e limita a ~500 envios/dia. Trocar por um SMTP próprio
 (Resend/SES/Google Workspace com domínio do HouseArt) e revogar a senha de app quando trocar.
 
-### 4. Senhas geradas nesta sessão (trocar)
-- Admin `moacyveiga@gmail.com`: senha redefinida em 2026-10-22 a pedido do Moacy (enviada no chat); trocar em Perfil.
-- Papel `houseart_app` no Supabase: SQL Editor → `ALTER ROLE houseart_app PASSWORD '<nova>';`
-  → editar `DATABASE_URL` e `DIRECT_URL` na Vercel com a senha nova → Redeploy. (2026-10-22: o agente
-  não fez — as envs são sensíveis e ilegíveis pelo conector, e o pooler não é alcançável daqui para
-  testar a senha nova antes de trocar; fazer pelo painel com os dois valores à mão evita derrubar a
-  produção por um erro de URL.)
+### 4. Senhas geradas nesta sessão (trocadas em 2026-10-28)
+- Admin `moacyveiga@gmail.com`: senha nova gerada em 2026-10-28 (hash bcrypt gravado direto no banco,
+  sessões abertas encerradas); está na página privada de acessos do Moacy. Pode trocar em Perfil.
+- Papel `houseart_app` no Supabase: senha nova em 2026-10-28. Ordem usada para não derrubar a produção
+  por mais que um build: `DATABASE_URL` (pooler 6543) e `DIRECT_URL` (pooler 5432) editadas na Vercel
+  com a senha nova → `ALTER ROLE houseart_app PASSWORD '…'` → redeploy imediato (≈ 1,5 min sem conexões
+  novas ao banco). A senha só existe nas duas variáveis da Vercel. Para trocar de novo, repetir a mesma
+  ordem; as URLs são `postgresql://houseart_app.zqxkwaivqqlkocbmdvch:<senha>@aws-0-us-east-2.pooler.supabase.com:<porta>/postgres`
+  (sem parâmetros; o host `aws-1` não serve).
+- Falta: SMTP (senha de app do Gmail do Moacy, item 3).
 
 ### 5. Domínio próprio
 Vercel → Settings → Domains → adicionar (ex.: `app.houseart.com.br`) → DNS no registrador →

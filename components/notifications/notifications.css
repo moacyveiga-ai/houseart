@@ -14,7 +14,7 @@
 .ha-ntf-row--read .ha-ntf-row__title { font-weight: 500; }
 .ha-ntf-row__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-500); overflow-wrap: anywhere; }
 .ha-ntf-row__when { font-size: var(--ha-text-caption); color: var(--ha-ink-500); white-space: nowrap; padding-top: 2px; }
-.ha-ntf__empty { padding: var(--ha-space-8) 0; font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
+.ha-ntf__empty { padding: var(--ha-space-6) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
 
 /* "Avisos no celular" */
 .ha-ntf-push { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); background: var(--ha-paper-50); }

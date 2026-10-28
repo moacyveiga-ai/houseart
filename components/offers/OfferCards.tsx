@@ -82,7 +82,7 @@ export function OfferCards({ offers: initial, negotiatorLine, canAnswer = true, 
         <div className="ha-offer-insight"><span className="ha-icon" aria-hidden="true">insights</span><span>{open.length} {open.length === 1 ? 'oferta aberta' : 'ofertas abertas'}{best !== null ? ` · a melhor chega a ${best}% do preço` : ''}</span></div>
       ) : null}
       <div className="ha-offer-grid">
-        {offers.length === 0 ? <p className="ha-muted">Nenhuma oferta aberta agora.</p> : null}
+        {offers.length === 0 ? <p className="ha-empty">Nenhuma oferta aberta agora.</p> : null}
         {offers.map((o) => {
           const pending = o.open && canAnswer
           const others = othersOn(o)

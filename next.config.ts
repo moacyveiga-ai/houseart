@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
   // fails the deploy through the `&&` of the script.
   typescript: { ignoreBuildErrors: true },
   serverExternalPackages: ["pdf-lib", "sharp"],
+  // The app simulator (apps/mobile exported for the web into public/app, `npm run app:web`):
+  // a single-page app — every route that is not a file falls back to its index.html.
+  async rewrites() {
+    return [
+      { source: "/app", destination: "/app/index.html" },
+      { source: "/app/:path*", destination: "/app/index.html" },
+    ];
+  },
   async headers() {
     return [
       {

@@ -1,10 +1,13 @@
 // The only reader of the API base URL. `EXPO_PUBLIC_API_URL` is inlined by
 // Metro at build time; without it, `extra.apiUrl` of app.json (production).
 import Constants from 'expo-constants'
+import { Platform } from 'react-native'
 
 const DEFAULT_API_URL = 'https://houseart-housemapp.vercel.app'
 
 function readApiUrl(): string {
+  // The web build (the simulator at /app) is served by the API itself: same origin.
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.origin?.startsWith('http')) return window.location.origin
   const fromEnv = process.env.EXPO_PUBLIC_API_URL?.trim()
   const fromExtra = (Constants.expoConfig?.extra as { apiUrl?: unknown } | undefined)?.apiUrl
   const raw = fromEnv || (typeof fromExtra === 'string' ? fromExtra : '') || DEFAULT_API_URL

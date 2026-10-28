@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev -p ${PORT:-3008}",
     "dev:3019": "PORT=3019 npm run dev",
+    "app:web": "cd apps/mobile && npx expo export -p web --output-dir ../../public/app",
     "build": "npm run migrate:deploy:ci && npm run build:next",
     "build:next": "tsc --noEmit && next build",
     "start": "next start",

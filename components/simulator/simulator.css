@@ -1,0 +1,14 @@
+.ha-sim { min-height: 100vh; display: flex; gap: var(--ha-space-12); align-items: center; justify-content: center; padding: var(--ha-space-8) var(--ha-space-6); background: var(--ha-surface); color: var(--ha-fg); }
+.ha-sim__side { max-width: 360px; display: flex; flex-direction: column; gap: var(--ha-space-4); }
+.ha-sim__title { font-family: var(--ha-font-display); font-size: var(--ha-text-h2); line-height: var(--ha-lh-h2); font-weight: 400; margin: 0; }
+.ha-sim__lead { margin: 0; color: var(--ha-fg-body); }
+.ha-sim__devices, .ha-sim__actions { display: flex; flex-wrap: wrap; gap: var(--ha-space-2); }
+.ha-sim__notes { margin: 0; padding-left: var(--ha-space-5); color: var(--ha-fg-muted); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); display: flex; flex-direction: column; gap: var(--ha-space-2); }
+.ha-sim__stage { display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-3); }
+.ha-sim__phone { position: relative; padding: 12px; border-radius: 48px; background: var(--ha-ink-900); box-shadow: var(--ha-shadow-lg); box-sizing: border-box; }
+.ha-sim__screen { display: block; border: 0; border-radius: 36px; background: var(--ha-paper-50); }
+.ha-sim__size { color: var(--ha-fg-muted); font-size: var(--ha-text-caption); font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) {
+  .ha-sim { flex-direction: column; gap: var(--ha-space-6); }
+  .ha-sim__stage { max-width: 100%; overflow-x: auto; }
+}

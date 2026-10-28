@@ -17,7 +17,6 @@
 .hp-nav__link:hover { color: var(--ha-paper-50); }
 .hp-nav__link--on { color: var(--ha-paper-50); box-shadow: inset 0 -2px 0 var(--ha-sand-500); }
 .hp-header__right { margin-left: auto; flex: none; display: flex; align-items: center; gap: var(--ha-space-4); }
-.hp-header__verify { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-paper-50); text-decoration: none; display: flex; align-items: center; gap: var(--ha-space-1); }
 .hp-header__login { font-size: var(--ha-text-body-sm); font-weight: 600; padding: var(--ha-space-2) var(--ha-space-4); border-radius: var(--ha-radius-md); border: var(--ha-border-w) solid var(--ha-paper-50); color: var(--ha-paper-50); text-decoration: none; }
 .hp-header__login:hover { background: var(--ha-ink-700); color: var(--ha-paper-50); }
 .hp-header__login--account { display: inline-flex; align-items: center; gap: var(--ha-space-1); }
@@ -31,7 +30,6 @@
   .hp-header__brand { min-height: 48px; }
   .hp-nav { order: 3; flex: 1 0 100%; height: 44px; gap: var(--ha-space-5); margin: 0 calc(var(--ha-space-4) * -1); padding: 0 var(--ha-space-4); mask-image: linear-gradient(90deg, var(--ha-ink-900) 85%, transparent); }
   .hp-header__right { gap: var(--ha-space-3); }
-  .hp-header__verify { display: none; }
 }
 
 /* footer */
@@ -67,7 +65,7 @@
 .hp-header--light .hp-nav__link { color: var(--ha-ink-500); }
 .hp-header--light .hp-nav__link:hover { color: var(--ha-ink-900); }
 .hp-header--light .hp-nav__link--on { color: var(--ha-ink-900); box-shadow: inset 0 -2px 0 var(--ha-ink-900); }
-.hp-header--light .hp-header__verify, .hp-header--light .hp-header__enter { color: var(--ha-ink-900); }
+.hp-header--light .hp-header__enter { color: var(--ha-ink-900); }
 /* the search box of the light header (catalogue pages): "Obra, artista ou ID" */
 .hp-header__search { flex: 0 1 240px; min-width: 0; display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-sm); color: var(--ha-ink-500); background: var(--ha-paper-50); }
 .hp-header__search:focus-within { border-color: var(--ha-ink-900); }
@@ -78,8 +76,5 @@
 @media (max-width: 900px) { .hp-header__search { order: 1; flex: 1 1 160px; } .hp-header--light .hp-header__right { order: 2; } }
 .hp-header--light .hp-header__login { border-color: var(--ha-ink-900); color: var(--ha-ink-900); }
 .hp-header--light .hp-header__login:hover { background: var(--ha-paper-100); color: var(--ha-ink-900); }
-/* light catalogue bar: the larger wordmark steps down on small phones so search and account still fit */
-@media (max-width: 480px) { .hp-header--light .hp-header__brand img { height: 26px; width: auto; } }
 /* with the larger wordmark the search box gives way first, so the catalogue nav stays whole on desktop */
 @media (min-width: 1200px) { .hp-header--light .hp-nav { flex-shrink: 0; } .hp-header--light .hp-header__search { flex: 1 1 200px; } }
-@media (min-width: 901px) and (max-width: 1199px) { .hp-header--light .hp-header__brand img { height: 28px; width: auto; } }

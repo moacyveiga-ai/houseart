@@ -31,7 +31,7 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
   const scrolled = useSyncExternalStore(subscribeScroll, () => window.scrollY > window.innerHeight * 0.8, () => false)
   const solid = !home || scrolled
   // Catalogue pages use the light top bar of the handoff; there the brand is the wordmark alone (simples_horiz,
-  // larger — decision of Moacy, 2026-10-28, instead of §4.5's full_horiz 30 px). Site, Verificar and the Home
+  // 24 px — decision of Moacy, 2026-10-28, instead of §4.5's full_horiz 30 px). Site, Verificar and the Home
   // keep the dark one with the full lockup.
   const light = ['/e/marketplace', '/e/artwork', '/e/artist', '/e/artists', '/e/gallery', '/e/galleries'].some((p) => pathname === p || pathname.startsWith(p + '/'))
   const router = useRouter()
@@ -44,7 +44,7 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
   return (
     <header className={`hp-header${home ? ' hp-header--home' : ''}${solid ? ' hp-header--solid' : ''}${light ? ' hp-header--light' : ''}`}>
       <div className="hp-header__inner">
-        <Link href="/e" className="hp-header__brand" aria-label="HouseArt">{light ? <HouseArtLogo version="simples_horiz" tone="color" height={34} /> : <HouseArtLogo version="full_horiz" tone="negativo" height={home ? 48 : pathname.startsWith('/verify') ? 30 : 44} />}</Link>
+        <Link href="/e" className="hp-header__brand" aria-label="HouseArt">{light ? <HouseArtLogo version="simples_horiz" tone="color" height={24} /> : <HouseArtLogo version="full_horiz" tone="negativo" height={home ? 48 : pathname.startsWith('/verify') ? 30 : 44} />}</Link>
         <nav className="hp-nav" aria-label="Navegação pública">
           {PUBLIC_NAV.map((n) => <Link key={n.href} href={n.href} className={`hp-nav__link${active(n.href) ? ' hp-nav__link--on' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>{n.label}</Link>)}
         </nav>
@@ -56,11 +56,11 @@ export function PublicHeader({ account = null }: { account?: { href: string; lab
         ) : null}
         <div className="hp-header__right">
           {account ? (
-            <><Link href="/verify" className="hp-header__verify"><Icon name="contactless" size={18} />Verificar</Link><Link href={account.href} className="hp-header__login hp-header__login--account" aria-label={`Minha área · ${account.label}`}><Icon name="person" size={18} /><span className="hp-header__label">{account.label}</span></Link></>
+            <Link href={account.href} className="hp-header__login hp-header__login--account" aria-label={`Minha área · ${account.label}`}><Icon name="person" size={18} /><span className="hp-header__label">{account.label}</span></Link>
           ) : home ? (
             <><Link href="/login" className="hp-header__enter">Entrar</Link><Link href="/signup" className="hp-header__cta">Criar conta</Link></>
           ) : (
-            <><Link href="/verify" className="hp-header__verify"><Icon name="contactless" size={18} />Verificar</Link><Link href="/login" className="hp-header__login">Entrar</Link></>
+            <Link href="/login" className="hp-header__login">Entrar</Link>
           )}
         </div>
       </div>

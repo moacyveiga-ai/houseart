@@ -5,7 +5,7 @@
 .ha-artists-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; width: 100%; min-height: 64px; padding: var(--ha-space-2) 0; border: 0; border-bottom: var(--ha-border-w) solid var(--ha-border); background: none; cursor: pointer; text-align: left; font: inherit; color: inherit; border-radius: var(--ha-radius-sm); }
 .ha-artists-row:hover { background: var(--ha-surface); }
 .ha-artists-row:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
-.ha-artists-row__txt { min-width: 0; }
+.ha-artists-row__txt { min-width: 0; gap: 2px; }
 .ha-artists-row__n { display: flex; align-items: center; gap: 6px; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); min-width: 0; }
 .ha-artists-row__s { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-fg-muted); }
 .ha-artists-av { width: 44px; height: 44px; border-radius: 50%; background: var(--ha-paper-200); color: var(--ha-ink-900); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: none; }

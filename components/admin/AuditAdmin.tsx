@@ -34,7 +34,7 @@ export function AuditAdmin({ query, page }: { query: AuditQuery; page: AuditPage
       </form>
       {page.cut ? <p className="ha-muted ha-sm">O período foi limitado a 92 dias a partir da data inicial.</p> : null}
       <div className="ha-audit__list">
-        {page.rows.length === 0 ? <p className="ha-muted ha-sm">Nenhum registro neste filtro.</p> : null}
+        {page.rows.length === 0 ? <p className="ha-empty">Nenhum registro neste filtro.</p> : null}
         {page.rows.map((r: AuditRow) => {
           const ab = open === r.id
           return (

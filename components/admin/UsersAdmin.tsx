@@ -65,7 +65,7 @@ export function UsersAdmin({ rows: initial, filter, filters, query, viewerId }: 
         {filters.map((f) => <Link key={f.key} href={href(f.key)} className={`ha-chip${f.key === filter ? ' ha-chip--on' : ''}`} aria-current={f.key === filter ? 'page' : undefined}>{f.label} · {f.count}</Link>)}
       </nav>
       <div className="ha-ausers__list">
-        {rows.length === 0 ? <p className="ha-muted ha-sm">Nenhuma conta neste filtro.</p> : null}
+        {rows.length === 0 ? <p className="ha-empty">Nenhuma conta neste filtro.</p> : null}
         {rows.map((r) => {
           const ab = open === r.id
           const me = r.id === viewerId

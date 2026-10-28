@@ -12,6 +12,7 @@ import { Modal } from '@/components/ds/Modal'
 import { DELETE_CONSEQUENCES, DELETE_WORD } from '@/lib/accounts/deletion-core'
 import { Button } from '@/components/ds/Button'
 import { Toggle } from '@/components/ds/Toggle'
+import { ThemePicker } from '@/components/theme/ThemePicker'
 
 /** `current`: the item open in the side panel over the account (it opens without scrolling the page). */
 export interface AccountLinkItem { icon: string; name: string; sub: string; href: string; current?: boolean }
@@ -108,6 +109,7 @@ export function AccountScreen({ initials, name, email, verification, sections, s
           </div>
         </section>
       ))}
+      <ThemePicker />
       <button type="button" className="ha-account-logout" disabled={leaving} onClick={() => setSheet('logout')}><Icon name="logout" size={20} />Sair da conta</button>
       <button type="button" className="ha-account-danger" onClick={() => void openDelete()}>Excluir minha conta</button>
       <span className="ha-account-foot">HouseArt 1.0 (2026.10) · <Link href="/terms">Termos de uso</Link> · <Link href="/privacy">Privacidade</Link></span>

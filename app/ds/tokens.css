@@ -50,10 +50,26 @@
   --ha-dur-fast:160ms;--ha-dur-panel:240ms;--ha-dur-tap:600ms;--ha-ease:cubic-bezier(.2,.7,.2,1);
   --ha-max:1280px;--ha-gutter:24px;
 }
+/* Themes chosen by the person (Perfil › Aparência, lib/theme.ts). Most screens paint with the
+   PALETTE tokens (paper/ink), not only the semantic ones, so a theme redefines the palette itself:
+   the dark one inverts paper ↔ ink (a primary ink button turns into a light one), the pastel one
+   tints paper and ink lilac. Status and brand marks keep their colours; the light tints (-100)
+   follow the background so badges stay readable. Public routes are always light (theme-routes.ts). */
 [data-ha-theme="dark"]{
-  --ha-bg:var(--ha-ink-900);--ha-surface:var(--ha-ink-700);--ha-border:var(--ha-ink-700);
-  --ha-fg:var(--ha-paper-50);--ha-fg-body:var(--ha-paper-200);--ha-fg-muted:var(--ha-ink-300);--ha-fg-disabled:var(--ha-ink-500);
+  --ha-paper-50:#141414;--ha-paper-100:#1E1D1B;--ha-paper-200:#34312D;
+  --ha-ink-900:#F4F1EC;--ha-ink-700:#DDD8CF;--ha-ink-500:#A8A298;--ha-ink-300:#6F6A62;
+  --ha-sand-100:#3A3020;--ha-verified-100:#1D3328;--ha-pending-100:#3A2C17;--ha-alert-100:#3D211D;
   --ha-wall:#1A1A1A;
+  --ha-scrim:rgba(0,0,0,.7);
+  --ha-shadow-sm:0 2px 8px rgba(0,0,0,.4);
+  --ha-shadow-lg:0 16px 40px rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+[data-ha-theme="pastel"]{
+  --ha-paper-50:#F8F4FC;--ha-paper-100:#EFE8F8;--ha-paper-200:#E1D6F0;
+  --ha-ink-900:#2B2340;--ha-ink-700:#433A5A;--ha-ink-500:#6A6084;--ha-ink-300:#B2A8C8;
+  --ha-sand-500:#B48CDB;--ha-sand-600:#845FB4;--ha-sand-100:#EEE2F9;
+  --ha-wall:#EDE6F5;
 }
 @keyframes ha-pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.5);opacity:0}}
 @keyframes ha-close{0%{stroke-dashoffset:302}100%{stroke-dashoffset:0}}

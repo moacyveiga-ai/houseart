@@ -9,6 +9,7 @@ import { LanguageMark, type Language } from '@/components/layout/HouseArtLogo'
 import { HomeAgenda, type HomeAgendaEvent } from './HomeAgenda'
 import { HomeMotion } from './HomeMotion'
 import type { MonthTab } from '@/lib/public-content/home-core'
+import { HOME_PAINTINGS, paintingCredit, type Painting } from '@/lib/public-content/paintings'
 import './home.css'
 
 /** A listed work, already serialisable (price formatted on the server). */
@@ -16,7 +17,7 @@ export interface HomeWork { publicId: string; title: string; artist: string; sel
 export interface HomeNews { slug: string; category: string; title: string; summary: string | null; imageUrl: string | null; date: string }
 
 export interface HomeData {
-  /** exhibition room behind the hero (never a work); null = gradient alone */
+  /** painting behind the hero (public domain, decision of 2026-10-28); null = gradient alone */
   hero?: { url: string; caption: string } | null
   works: HomeWork[]
   news: { featured: HomeNews | null; others: HomeNews[] }
@@ -42,8 +43,12 @@ function Cover({ work, className = '' }: { work: HomeWork | undefined; className
   return <img src={work.cover} alt="" className={className} />
 }
 
-/** The n-th work, cycling when there are fewer than needed (and nothing when there are none). */
-const pick = (works: HomeWork[], i: number): HomeWork | undefined => (works.length ? works[i % works.length] : undefined)
+/** A public-domain painting in a decorative frame; the credit is the alt text and the tooltip. */
+function Frame({ painting }: { painting: Painting }) {
+  const credit = paintingCredit(painting)
+  // eslint-disable-next-line @next/next/no-img-element -- mídia pública da casa
+  return <img src={painting.src} alt={credit} title={credit} loading="lazy" />
+}
 
 export function Home({ works, news, agenda, hero = null }: HomeData) {
   const featured = works.slice(0, 4)
@@ -71,8 +76,8 @@ export function Home({ works, news, agenda, hero = null }: HomeData) {
       </section>
 
       <section id="manifesto" className="hp-home-manifesto" aria-label="Manifesto">
-        {pick(works, 1)?.cover ? <div className="hp-home-float hp-home-manifesto__float-a" data-speed="0.3"><Cover work={pick(works, 1)} /></div> : null}
-        {pick(works, 2)?.cover ? <div className="hp-home-float hp-home-manifesto__float-b" data-speed="-0.35"><Cover work={pick(works, 2)} /></div> : null}
+        <div className="hp-home-float hp-home-manifesto__float-a" data-speed="0.3"><Frame painting={HOME_PAINTINGS.manifesto[0]} /></div>
+        <div className="hp-home-float hp-home-manifesto__float-b" data-speed="-0.35"><Frame painting={HOME_PAINTINGS.manifesto[1]} /></div>
         <div className="hp-home-manifesto__inner">
           <p className="hp-home-manifesto__line" data-fade="1">O artista certifica.</p>
           <p className="hp-home-manifesto__line" data-fade="1">A galeria apresenta.</p>
@@ -93,9 +98,9 @@ export function Home({ works, news, agenda, hero = null }: HomeData) {
             </div>
           </div>
           <div className="hp-home-market__stage">
-            {pick(works, 0)?.cover ? <Link href={`/e/artwork/${pick(works, 0)!.publicId}`} className="hp-home-float hp-home-market__float-a" data-speed="-0.15" aria-label={pick(works, 0)!.title}><Cover work={pick(works, 0)} /></Link> : null}
-            {pick(works, 2)?.cover ? <Link href={`/e/artwork/${pick(works, 2)!.publicId}`} className="hp-home-float hp-home-market__float-b" data-speed="-0.45" aria-label={pick(works, 2)!.title}><Cover work={pick(works, 2)} /></Link> : null}
-            {pick(works, 3)?.cover ? <Link href={`/e/artwork/${pick(works, 3)!.publicId}`} className="hp-home-float hp-home-market__float-c" data-speed="-0.7" aria-label={pick(works, 3)!.title}><Cover work={pick(works, 3)} /></Link> : null}
+            <div className="hp-home-float hp-home-market__float-a" data-speed="-0.15"><Frame painting={HOME_PAINTINGS.market[0]} /></div>
+            <div className="hp-home-float hp-home-market__float-b" data-speed="-0.45"><Frame painting={HOME_PAINTINGS.market[1]} /></div>
+            <div className="hp-home-float hp-home-market__float-c" data-speed="-0.7"><Frame painting={HOME_PAINTINGS.market[2]} /></div>
           </div>
         </div>
         {featured.length ? (
@@ -128,7 +133,7 @@ export function Home({ works, news, agenda, hero = null }: HomeData) {
 
       <section className="hp-home-pillars" aria-label="Pilares">
         {PILLARS.map((p, i) => {
-          const work = pick(works, 4 + i)
+          const painting = HOME_PAINTINGS.pillars[i]
           return (
             <div key={p.n} className="hp-home-pillar">
               <div className="hp-container hp-home-pillar__inner">
@@ -139,7 +144,7 @@ export function Home({ works, news, agenda, hero = null }: HomeData) {
                   <Link href={p.href} className="hp-home-pillar__cta">{p.cta}<Icon name="arrow_forward" size={20} /></Link>
                 </div>
                 <div className="hp-home-pillar__wall">
-                  <div className="hp-home-pillar__art" data-speed="0.18"><Cover work={work} /></div>
+                  <div className="hp-home-pillar__art" data-speed="0.18"><Frame painting={painting} /></div>
                 </div>
               </div>
             </div>
@@ -180,8 +185,8 @@ export function Home({ works, news, agenda, hero = null }: HomeData) {
       <HomeAgenda tabs={agenda.tabs} events={agenda.events} savedIds={agenda.savedIds ?? []} signedIn={agenda.signedIn ?? false} />
 
       <section className="hp-home-final" aria-label="Chamada final">
-        {pick(works, 5)?.cover ? <div className="hp-home-float hp-home-final__float-a" data-speed="-0.3"><Cover work={pick(works, 5)} /></div> : null}
-        {pick(works, 6)?.cover ? <div className="hp-home-float hp-home-final__float-b" data-speed="-0.6"><Cover work={pick(works, 6)} /></div> : null}
+        <div className="hp-home-float hp-home-final__float-a" data-speed="-0.3"><Frame painting={HOME_PAINTINGS.final[0]} /></div>
+        <div className="hp-home-float hp-home-final__float-b" data-speed="-0.6"><Frame painting={HOME_PAINTINGS.final[1]} /></div>
         <div className="hp-home-final__inner">
           <h2 className="hp-home-final__title">Dê nome, data e dono <i>à sua obra.</i></h2>
           <div className="hp-home-final__actions">

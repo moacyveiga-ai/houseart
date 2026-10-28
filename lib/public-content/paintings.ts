@@ -34,3 +34,18 @@ export const HOME_PAINTINGS = {
     P('1793215418156-kpuh2zpjcd.jpg', 'Almeida Júnior', 'Saudade', '1899'),
   ],
 } satisfies Record<string, Painting[]>
+
+/** Paintings sharp enough to fill the claim panel of the auth screens (Saudade, 394 px wide, stays out). */
+export const WALL_PAINTINGS: Painting[] = [
+  STARRY_NIGHT,
+  ...HOME_PAINTINGS.manifesto,
+  ...HOME_PAINTINGS.market,
+  ...HOME_PAINTINGS.pillars,
+  HOME_PAINTINGS.final[0],
+]
+
+/** One wall painting picked at random (`rand` injectable for tests). */
+export function randomWall(rand: () => number = Math.random): { src: string; credit: string } {
+  const p = WALL_PAINTINGS[Math.floor(rand() * WALL_PAINTINGS.length) % WALL_PAINTINGS.length]
+  return { src: p.src, credit: paintingCredit(p) }
+}

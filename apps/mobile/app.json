@@ -9,9 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/brand/marca_houseart_full_45_vert_color.png",
+      "image": "./assets/brand/marca_houseart_full_45_vert_negativo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FBFAF7"
+      "backgroundColor": "#111111"
     },
     "ios": {
       "supportsTablet": false,
@@ -54,10 +54,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/brand/marca_houseart_full_45_vert_color.png",
+          "image": "./assets/brand/marca_houseart_full_45_vert_negativo.png",
           "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#FBFAF7"
+          "backgroundColor": "#111111"
         }
       ]
     ],

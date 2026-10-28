@@ -78,3 +78,8 @@
 @media (max-width: 900px) { .hp-header__search { order: 1; flex: 1 1 160px; } .hp-header--light .hp-header__right { order: 2; } }
 .hp-header--light .hp-header__login { border-color: var(--ha-ink-900); color: var(--ha-ink-900); }
 .hp-header--light .hp-header__login:hover { background: var(--ha-paper-100); color: var(--ha-ink-900); }
+/* light catalogue bar: the larger wordmark steps down on small phones so search and account still fit */
+@media (max-width: 480px) { .hp-header--light .hp-header__brand img { height: 26px; width: auto; } }
+/* with the larger wordmark the search box gives way first, so the catalogue nav stays whole on desktop */
+@media (min-width: 1200px) { .hp-header--light .hp-nav { flex-shrink: 0; } .hp-header--light .hp-header__search { flex: 1 1 200px; } }
+@media (min-width: 901px) and (max-width: 1199px) { .hp-header--light .hp-header__brand img { height: 28px; width: auto; } }

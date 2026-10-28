@@ -41,7 +41,7 @@ export function ProfileSwapPill({ profiles }: { profiles: SwitcherProfile[] }) {
  * session's profile in place (POST /api/profiles) — there is no separate
  * "choose a profile" screen. With one profile it only shows who is in.
  */
-export function ProfileSwitcher({ initials, label, display, avatarUrl = null, name, profiles, accountHref = '/account' }: { initials: string; label: string; display?: string; avatarUrl?: string | null; name?: string; profiles: SwitcherProfile[]; accountHref?: string }) {
+export function ProfileSwitcher({ initials, label, display, avatarUrl = null, name, profiles, accountHref = '/account', helpHref }: { initials: string; label: string; display?: string; avatarUrl?: string | null; name?: string; profiles: SwitcherProfile[]; accountHref?: string; helpHref?: string }) {
   const who = display || name || label
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
@@ -89,6 +89,7 @@ export function ProfileSwitcher({ initials, label, display, avatarUrl = null, na
           {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
           <div className="ha-switcher__sep" />
           <Link role="menuitem" href={accountHref} className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="person" size={20} /><span>Minha conta</span></Link>
+          {helpHref ? <Link role="menuitem" href={helpHref} className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="help" size={20} /><span>Ajuda</span></Link> : null}
           <form action="/api/auth/logout" method="post">
             <button type="submit" role="menuitem" className="ha-switcher__item"><Icon name="logout" size={20} /><span>Sair</span></button>
           </form>

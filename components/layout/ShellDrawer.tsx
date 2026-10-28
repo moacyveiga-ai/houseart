@@ -13,7 +13,7 @@ export interface DrawerItem { key: string; href: string; label: string; icon: st
  * the search and the profile's NAV. Esc, the scrim and any navigation close it;
  * focus goes into the drawer and back to the button (240 ms, the panel speed).
  */
-export function ShellDrawer({ profile, items, accountHref, helpHref }: { profile: ProfileKind; items: DrawerItem[]; accountHref: string; helpHref: string }) {
+export function ShellDrawer({ profile, items }: { profile: ProfileKind; items: DrawerItem[] }) {
   const [open, setOpen] = useState(false)
   const button = useRef<HTMLButtonElement>(null)
   const panel = useRef<HTMLDivElement>(null)
@@ -67,11 +67,6 @@ export function ShellDrawer({ profile, items, accountHref, helpHref }: { profile
                 </Link>
               ))}
             </nav>
-            <div className="ha-sidebar__foot">
-              <Link href={accountHref}>Configurações</Link>
-              <Link href={helpHref}>Ajuda</Link>
-              <form action="/api/auth/logout" method="post"><button type="submit" className="ha-sidebar__exit">Sair</button></form>
-            </div>
           </div>
         </div>
       ) : null}

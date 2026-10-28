@@ -21,8 +21,8 @@ function openHref(router: ReturnType<typeof useRouter>, href: string) {
   if (m) { router.push({ pathname: '/certification/link/[artworkId]', params: { artworkId: m[1]! } }); return }
   const c = /^\/messages\/(\d+)/.exec(href)
   if (c) { router.push({ pathname: '/messages/[id]', params: { id: c[1]! } }); return }
-  if (href === '/messages') { router.navigate('/(tabs)/messages' as never); return }
-  if (href.startsWith('/certification')) { router.navigate('/(tabs)/certification' as never); return }
+  if (href === '/messages') { router.navigate('/messages' as never); return }
+  if (href.startsWith('/certification')) { router.navigate('/certification' as never); return }
   if (/^\/[^/]/.test(href)) router.push({ pathname: '/web', params: { path: href, title: 'HouseArt' } })
 }
 

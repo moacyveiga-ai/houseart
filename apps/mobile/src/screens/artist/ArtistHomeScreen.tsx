@@ -22,7 +22,7 @@ export function ArtistHomeScreen() {
   const goAction = (href: string) => {
     const t = actionTarget(href)
     if (t.kind === 'web') { router.push({ pathname: '/web', params: { path: t.path, title: t.title } }); return }
-    router.navigate({ pathname: `/(tabs)/${t.tab}`, params: t.filter ? { filter: t.filter } : {} } as never)
+    router.navigate({ pathname: `/${t.tab}`, params: t.filter ? { filter: t.filter } : {} } as never)
   }
   const openWork = (w: ArtistHome['recent'][number]) => {
     if (w.status === 'DRAFT') { router.push({ pathname: '/artworks/new', params: { id: String(w.id) } }); return }

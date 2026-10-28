@@ -10,6 +10,7 @@ import { FONT_FILES, colors, theme } from '@/theme'
 import { setDisplayFontLoaded } from '@/ui/kit'
 import { SplashOverlay } from '@/screens/onboarding/SplashOverlay'
 import { onboardingSeen } from '@/screens/onboarding/seen'
+import { homeHref } from '@/nav/tabs'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
@@ -43,7 +44,7 @@ function Gate() {
       if (segments[0] !== 'profiles') router.replace('/profiles')
       return
     }
-    if (inAuth || segments[0] === 'profiles' || !segments[0]) router.replace('/(tabs)')
+    if (inAuth || segments[0] === 'profiles' || !segments[0]) router.replace(homeHref(me?.activeProfileKind ?? null) as never)
   }, [status, seen, me?.activeProfileKind, profiles.length, segments, router])
 
   return null

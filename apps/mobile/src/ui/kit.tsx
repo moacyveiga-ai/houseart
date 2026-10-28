@@ -67,7 +67,7 @@ export function TopBar({ title, right, onBack }: { title?: string; right?: React
   const router = useRouter()
   return (
     <View style={styles.topBar}>
-      <IconButton name="arrow-back" label="Voltar" onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/(tabs)')))} />
+      <IconButton name="arrow-back" label="Voltar" onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')))} />
       {title ? <Text style={styles.topTitle} numberOfLines={1}>{title}</Text> : <View style={{ flex: 1 }} />}
       {right}
     </View>

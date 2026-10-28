@@ -83,7 +83,7 @@ export function OfferStatusScreen({ code }: { code: string }) {
 
   return (
     <View style={[styles.fill, { paddingTop: insets.top }]}>
-      <TopBar title={closed ? 'Acompanhar compra' : 'Sua oferta'} onBack={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} />
+      <TopBar title={closed ? 'Acompanhar compra' : 'Sua oferta'} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <Pressable accessibilityRole="button" onPress={() => publicId && router.push(`/artwork/${publicId}`)} style={styles.strip}>
           <Wall uri={artwork?.cover ?? offer.artworkCover} padding={6} style={styles.stripWall} square={false} />

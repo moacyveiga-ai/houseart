@@ -95,7 +95,7 @@ export function ConversationScreen({ id }: { id: number }) {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.fill, { paddingTop: insets.top }]}>
       <View style={styles.head}>
         <View style={styles.headRow}>
-          <IconButton name="arrow-back" label="Voltar" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/messages'))} />
+          <IconButton name="arrow-back" label="Voltar" onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages'))} />
           <Avatar initials={header.other.initials} bg={tint.bg} fg={tint.fg} size={32} uri={header.other.avatarUrl} />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{header.other.name}</Text>

@@ -105,7 +105,7 @@ export function ReceiveScreen() {
               ) : null}
             </View>
           ) : (
-            <Pressable accessibilityRole="button" onPress={() => router.navigate('/(tabs)/wallet' as never)} style={styles.cta}><Text style={styles.ctaText}>Ver na coleção</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => router.navigate('/wallet' as never)} style={styles.cta}><Text style={styles.ctaText}>Ver na coleção</Text></Pressable>
           )}
         </ScrollView>
       )}

@@ -129,7 +129,7 @@ export function PurchaseScreen() {
             <Icon name="contactless" size={20} /><Text style={styles.ctaText}>Confirmar com o toque na etiqueta</Text>
           </Pressable>
         ) : null}
-        {done ? <Button title="Ver na coleção" onPress={() => router.navigate('/(tabs)/wallet' as never)} /> : null}
+        {done ? <Button title="Ver na coleção" onPress={() => router.navigate('/wallet' as never)} /> : null}
         {!done && d.exception !== 'CANCELLED' ? <Button title="Falar com o vendedor" variant="ghost" onPress={() => void talk()} /> : null}
       </View>
       <Toast message={toast} onDone={clearToast} />

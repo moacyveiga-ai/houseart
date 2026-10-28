@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
+import { activeNavKey, type ProfileKind } from '@/lib/profiles/nav'
 
 export interface DrawerItem { key: string; href: string; label: string; icon: string; badge?: number; on: boolean }
 
@@ -12,13 +13,15 @@ export interface DrawerItem { key: string; href: string; label: string; icon: st
  * the search and the profile's NAV. Esc, the scrim and any navigation close it;
  * focus goes into the drawer and back to the button (240 ms, the panel speed).
  */
-export function ShellDrawer({ items, accountHref, helpHref }: { items: DrawerItem[]; accountHref: string; helpHref: string }) {
+export function ShellDrawer({ profile, items, accountHref, helpHref }: { profile: ProfileKind; items: DrawerItem[]; accountHref: string; helpHref: string }) {
   const [open, setOpen] = useState(false)
   const button = useRef<HTMLButtonElement>(null)
   const panel = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const [lastPath, setLastPath] = useState(pathname)
   if (pathname !== lastPath) { setLastPath(pathname); setOpen(false) }
+  // The active item follows the URL here too: the layout that passes `items` is not re-rendered on navigation.
+  const activeKey = pathname ? activeNavKey(profile, pathname) : items.find((i) => i.on)?.key ?? null
 
   useEffect(() => {
     if (!open) return
@@ -57,7 +60,7 @@ export function ShellDrawer({ items, accountHref, helpHref }: { items: DrawerIte
             </form>
             <nav aria-label="Principal" className="ha-drawer__nav">
               {items.map((item) => (
-                <Link key={item.key} href={item.href} className={`ha-nav-item${item.on ? ' ha-nav-item--on' : ''}`} aria-current={item.on ? 'page' : undefined}>
+                <Link key={item.key} href={item.href} className={`ha-nav-item${item.key === activeKey ? ' ha-nav-item--on' : ''}`} aria-current={item.key === activeKey ? 'page' : undefined}>
                   <Icon name={item.icon} size={20} />
                   <span>{item.label}</span>
                   {item.badge ? <span className="ha-nav-badge">{item.badge}</span> : null}

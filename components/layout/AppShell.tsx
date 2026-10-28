@@ -4,6 +4,7 @@ import { Icon } from '@/components/ds/Icon'
 import { HouseArtLogo } from './HouseArtLogo'
 import { accountHrefOf, HELP_HREF, NAV, PROFILE_LABELS, type ProfileKind } from '@/lib/profiles/nav'
 import { ShellDrawer } from './ShellDrawer'
+import { SidebarNav } from './SidebarNav'
 import { ProfileSwapPill, ProfileSwitcher, type SwitcherProfile } from './ProfileSwitcher'
 
 export interface ShellUser { initials: string; profile: ProfileKind; name?: string
@@ -37,7 +38,7 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
     <div className="ha-shell">
       <IndexTicker items={ticker} />
       <header className="ha-topbar">
-        <ShellDrawer items={drawerItems} accountHref={accountHref} helpHref={HELP_HREF} />
+        <ShellDrawer profile={user.profile} items={drawerItems} accountHref={accountHref} helpHref={HELP_HREF} />
         <Link href={nav[0].href} className="ha-topbar__brand"><HouseArtLogo version="simples_horiz" tone="auto-mono" height={24} /><span className="ha-topbar__system">{PROFILE_LABELS[user.profile]}</span></Link>
         <form className="ha-topbar__search" role="search" action="/search">
           <Icon name="search" size={20} />
@@ -51,19 +52,7 @@ export function AppShell({ user, profiles = [], activeKey, badges = {}, bell = 0
       </header>
       <div className="ha-body">
         <aside className="ha-sidebar">
-          <nav aria-label="Principal">
-            {nav.map((item) => {
-              const on = item.key === activeKey
-              const badge = badges[item.key]
-              return (
-                <Link key={item.key} href={item.href} className={`ha-nav-item${on ? ' ha-nav-item--on' : ''}`} aria-current={on ? 'page' : undefined}>
-                  <Icon name={item.icon} size={20} />
-                  <span>{item.label}</span>
-                  {badge ? <span className="ha-nav-badge">{badge}</span> : null}
-                </Link>
-              )
-            })}
-          </nav>
+          <SidebarNav profile={user.profile} badges={badges} initialKey={activeKey} />
           <div className="ha-sidebar__foot">
             <Link href={accountHref}>Configurações</Link>
             <Link href={HELP_HREF}>Ajuda</Link>

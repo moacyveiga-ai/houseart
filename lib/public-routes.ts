@@ -20,6 +20,7 @@ const PUBLIC_EXACT = new Set<string>([
   '/sitemap.xml',
   '/verify',                     // public certificate verification: the code field (prefix '/verify/' covers the result)
   '/manifest.webmanifest',
+  '/install',                    // "Instalar o app" (PWA): the link the team sends
   '/design-system',              // the DS gallery (handoff Fase 1): no data, compared with the prototype
 ])
 

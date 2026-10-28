@@ -1,0 +1,2 @@
+/* Instalar o app (/install): the device steps as a numbered list. */
+.ha-install__steps { list-style: decimal; margin: 0; padding-left: var(--ha-space-5); display: flex; flex-direction: column; gap: var(--ha-space-2); color: var(--ha-fg-body); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); }

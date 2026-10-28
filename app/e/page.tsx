@@ -3,8 +3,9 @@
 import type { Metadata } from 'next'
 import { Home, type HomeWork } from '@/components/public/Home'
 import { marketItems } from '@/lib/marketplace/public-server'
-import { homeHeroPhoto, listAgenda, listNews } from '@/lib/public-content/server'
-import { heroCaption, monthKeyOf, monthTabs, newsDateLabel } from '@/lib/public-content/home-core'
+import { listAgenda, listNews } from '@/lib/public-content/server'
+import { STARRY_NIGHT, paintingCredit } from '@/lib/public-content/paintings'
+import { monthKeyOf, monthTabs, newsDateLabel } from '@/lib/public-content/home-core'
 import { formatBRL } from '@/lib/artworks/domain'
 import { getSession } from '@/lib/auth'
 import { reactedIds } from '@/lib/community/server'
@@ -18,14 +19,14 @@ export const metadata: Metadata = {
 
 export default async function PublicHomePage() {
   const fromMonth = monthKeyOf(new Date())
-  const [items, news, agenda, user, heroPhoto] = await Promise.all([marketItems(12), listNews(5), listAgenda(fromMonth, 4), getSession(), homeHeroPhoto()])
+  const [items, news, agenda, user] = await Promise.all([marketItems(12), listNews(5), listAgenda(fromMonth, 4), getSession()])
   const saved = await reactedIds(user?.id ?? null, 'EVENT', 'SAVE', agenda.map((e) => e.id))
   const works: HomeWork[] = items.filter((i) => i.cover).map((i) => ({ publicId: i.publicId, title: i.title, artist: i.artist, seller: i.seller, price: i.priceCents === null ? 'Sob consulta' : formatBRL(i.priceCents), cover: i.cover }))
   const card = (n: NonNullable<typeof news.featured>) => ({ slug: n.slug, category: n.category, title: n.title, summary: n.summary, imageUrl: n.imageUrl, date: newsDateLabel(n.publishedAt) })
   return (
     <Home
       works={works}
-      hero={heroPhoto ? { url: heroPhoto.url, caption: heroCaption(heroPhoto)! } : null}
+      hero={{ url: STARRY_NIGHT.src, caption: paintingCredit(STARRY_NIGHT) }}
       news={{ featured: news.featured ? card(news.featured) : null, others: news.others.map(card) }}
       agenda={{ tabs: monthTabs(fromMonth, 4), events: agenda.map((e) => ({ id: e.id, kind: e.kind, title: e.title, venue: e.venue, city: e.city, startsOn: e.startsOn, period: e.period })), savedIds: [...saved], signedIn: !!user }}
     />

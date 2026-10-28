@@ -31,8 +31,8 @@
 .ha-btn--danger:hover { filter: brightness(0.92); }
 .ha-btn--ink { background: var(--ha-ink-900); color: var(--ha-paper-50); }
 .ha-btn--ink:hover { background: var(--ha-ink-700); }
-.ha-btn--outline { background: transparent; color: var(--ha-fg); border-color: var(--ha-ink-900); }
-.ha-btn--outline:hover { background: var(--ha-surface); }
+.ha-btn--outline, .ha-btn--secondary { background: transparent; color: var(--ha-fg); border-color: var(--ha-ink-900); }
+.ha-btn--outline:hover, .ha-btn--secondary:hover { background: var(--ha-surface); }
 .ha-btn--outline-paper { background: transparent; color: var(--ha-paper-50); border-color: var(--ha-paper-50); }
 .ha-btn--paper { background: var(--ha-paper-50); color: var(--ha-ink-900); }
 .ha-btn--ghost { background: transparent; color: var(--ha-fg); padding-left: var(--ha-space-3); padding-right: var(--ha-space-3); }
@@ -50,7 +50,7 @@
 .ha-btn--ghost:active:not([disabled]) { color: var(--ha-ink-500); }
 .ha-btn[disabled], .ha-btn--disabled { cursor: default; pointer-events: none; }
 .ha-btn--primary[disabled], .ha-btn--ink[disabled], .ha-btn--primary.ha-btn--disabled, .ha-btn--ink.ha-btn--disabled { background: var(--ha-paper-200); color: var(--ha-ink-300); }
-.ha-btn--outline[disabled], .ha-btn--outline.ha-btn--disabled { border-color: var(--ha-ink-300); color: var(--ha-ink-300); background: transparent; }
+.ha-btn--outline[disabled], .ha-btn--outline.ha-btn--disabled, .ha-btn--secondary[disabled] { border-color: var(--ha-ink-300); color: var(--ha-ink-300); background: transparent; }
 .ha-btn--ghost[disabled], .ha-btn--ghost.ha-btn--disabled, .ha-btn--paper[disabled], .ha-btn--outline-paper[disabled] { color: var(--ha-ink-300); }
 .ha-btn--loading { pointer-events: none; cursor: progress; }
 .ha-btn--primary.ha-btn--loading[disabled] { background: var(--ha-sand-500); color: var(--ha-ink-900); }
@@ -62,6 +62,8 @@
 .ha-iconbtn { border: 0; background: transparent; cursor: pointer; padding: 0; color: var(--ha-fg); display: inline-flex; }
 
 /* ── fields ─────────────────────────────────────────────────────────────── */
+.ha-field__label { font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
+.ha-check { display: inline-flex; align-items: center; gap: var(--ha-space-2); font-size: var(--ha-text-body-sm); color: var(--ha-fg); cursor: pointer; }
 .ha-label { display: flex; flex-direction: column; gap: var(--ha-space-1); font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
 .ha-input, .ha-select, .ha-textarea { font-weight: 400; font-size: var(--ha-text-body); padding: var(--ha-space-3); border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-paper-50); color: var(--ha-fg); outline: none; width: 100%; }
 .ha-input, .ha-select, .ha-textarea { transition: border-color var(--ha-dur-fast); }
@@ -117,9 +119,18 @@
 .ha-wall--40 img { box-shadow: none; }
 .ha-grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--ha-space-8); }
 .ha-stack { display: flex; flex-direction: column; }
+/* Espaçamento padrão por :where (especificidade zero): qualquer regra de componente
+   ou estilo inline vence. Sem ele, ~100 pilhas e linhas encostavam os blocos. */
+:where(.ha-stack) { gap: var(--ha-space-4); }
+:where(.ha-page) > :where(.ha-stack:not([class*='ha-stack--'])) { gap: var(--ha-space-6); }
+/* span.ha-stack é título + linha de apoio: fica junto. */
+:where(span.ha-stack) { gap: 2px; }
+.ha-stack--2 { gap: var(--ha-space-2); }
 .ha-stack--3 { gap: var(--ha-space-3); }
 .ha-login__card .ha-stack--3 { gap: var(--ha-space-3); }
 .ha-row { display: flex; align-items: center; }
+:where(.ha-row) { gap: var(--ha-space-3); flex-wrap: wrap; }
+.ha-row--between { justify-content: space-between; }
 .ha-page { display: flex; flex-direction: column; gap: var(--ha-space-6); }
 .ha-page--loose { gap: var(--ha-space-8); }
 .ha-page__head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--ha-space-4); flex-wrap: wrap; }
@@ -134,6 +145,11 @@
 .ha-list { border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
 .ha-list__row { display: grid; gap: var(--ha-space-4); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
 .ha-list__row:last-child { border-bottom: 0; }
+/* Estado vazio de uma lista ou tabela: a mesma moldura da lista, para a tela não ficar com um texto solto. */
+.ha-empty { margin: 0; padding: var(--ha-space-6) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); color: var(--ha-fg-muted); font-size: var(--ha-text-body-sm); }
+/* Linha solta dentro da lista (estado vazio, aviso de corte): o mesmo respiro da linha. */
+.ha-list > li:not([class*='ha-list__']) { padding: var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
+.ha-list > li:not([class*='ha-list__']):last-child { border-bottom: 0; }
 .ha-list__btn { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--ha-space-3); align-items: center; width: 100%; text-align: left; padding: var(--ha-space-3) var(--ha-space-4); border: 0; border-bottom: var(--ha-border-w) solid var(--ha-border); background: transparent; cursor: pointer; }
 .ha-list__btn:hover { background: var(--ha-surface); }
 .ha-list__btn:last-child { border-bottom: 0; }

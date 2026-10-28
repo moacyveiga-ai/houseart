@@ -62,7 +62,7 @@ export function TenantsAdmin({ rows: initial, plans, filter, filters, query, man
       </nav>
       {!manages ? <p className="ha-muted ha-sm">Só admin e gestor concedem plano ou suspendem; aqui você acompanha as contas.</p> : null}
       <div className="ha-atenants__list">
-        {rows.length === 0 ? <p className="ha-muted ha-sm">Nenhuma conta neste filtro.</p> : null}
+        {rows.length === 0 ? <p className="ha-empty">Nenhuma conta neste filtro.</p> : null}
         {rows.map((r) => {
           const isOpen = open === r.id
           const options = plans.filter((p) => p.audience === r.audience)

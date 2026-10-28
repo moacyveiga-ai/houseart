@@ -134,7 +134,7 @@
 .ha-cards-move + .ha-cards-move { border-top: var(--ha-border-w) solid var(--ha-border); }
 .ha-cards-move__ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--ha-radius-full); background: var(--ha-paper-100); color: var(--ha-fg-body); }
 .ha-cards-move__ic--in { background: var(--ha-verified-100); color: var(--ha-verified-500); }
-.ha-cards-move__txt { min-width: 0; }
+.ha-cards-move__txt { min-width: 0; gap: 2px; }
 .ha-cards-move__t { font-size: var(--ha-text-body-sm); color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ha-cards-move__s { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
 .ha-cards-move__v { font-size: var(--ha-text-body-sm); color: var(--ha-fg); font-variant-numeric: tabular-nums; white-space: nowrap; }

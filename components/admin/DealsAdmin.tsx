@@ -56,7 +56,7 @@ export function DealsAdmin({ rows: initial, filter, filters, openId = null }: { 
         {filters.map((f) => <Link key={f.key} href={`/admin/deals?f=${f.key}`} className={`ha-chip${f.key === filter ? ' ha-chip--on' : ''}`} aria-current={f.key === filter ? 'page' : undefined}>{f.label} · {f.count}</Link>)}
       </nav>
       <div className="ha-adeals__list">
-        {rows.length === 0 ? <p className="ha-muted ha-sm">Nenhum negócio neste filtro.</p> : null}
+        {rows.length === 0 ? <p className="ha-empty">Nenhum negócio neste filtro.</p> : null}
         {rows.map((d) => {
           const ab = open === d.id
           const failed = d.splits.some((s) => s.payoutState === 'FAILED')

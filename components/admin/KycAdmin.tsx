@@ -53,7 +53,7 @@ export function KycAdmin({ rows: initial, filter, filters, decides }: { rows: Ad
       </nav>
       {!decides ? <p className="ha-muted ha-sm">Só admin e gestor decidem a identidade; aqui você acompanha a fila.</p> : null}
       <div className="ha-akyc__list">
-        {rows.length === 0 ? <p className="ha-muted ha-sm">Nenhuma verificação neste filtro.</p> : null}
+        {rows.length === 0 ? <p className="ha-empty">Nenhuma verificação neste filtro.</p> : null}
         {rows.map((r) => (
           <article key={r.id} className={`ha-akyc__row${r.latest ? '' : ' ha-akyc__row--old'}`}>
             <div className="ha-akyc__who"><b>{r.name}</b><span className="ha-akyc__sub">{r.email} · <Link href={`/admin/users?q=%23${r.userId}`} className="ha-link">conta #{r.userId}</Link></span></div>

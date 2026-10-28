@@ -55,7 +55,7 @@ export function TransfersAdmin({ rows: initial, filter, filters, manages }: { ro
       </nav>
       {!manages ? <p className="ha-muted ha-sm">Só admin e gestor reenviam convite ou cancelam; aqui você acompanha.</p> : null}
       <div className="ha-atransfers__list">
-        {rows.length === 0 ? <p className="ha-muted ha-sm">Nenhuma transferência neste filtro.</p> : null}
+        {rows.length === 0 ? <p className="ha-empty">Nenhuma transferência neste filtro.</p> : null}
         {rows.map((r) => {
           const isOpen = open === r.id
           return (

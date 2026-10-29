@@ -92,3 +92,7 @@
 .hp-news__guide-n { font-family: var(--ha-font-display); font-size: 17px; line-height: 22px; }
 .hp-news__read { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 600; color: var(--ha-ink-900); margin-top: var(--ha-space-1); }
 @media (max-width: 719px) { .hp-read__title { font-size: 26px; line-height: 32px; } }
+
+/* Central de Ajuda (/e/help): the articles as the guide's ink row, stacked. */
+.hp-help__list { display: grid; gap: var(--ha-space-3); margin-block: var(--ha-space-5); }
+.hp-help__list .hp-news__guide { max-width: 640px; }

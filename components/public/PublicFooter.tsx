@@ -11,6 +11,7 @@ export function PublicFooter({ tall = false }: { tall?: boolean }) {
           <Link href="/e/how-it-works">Para artistas e galerias</Link>
           <Link href="/e/how-it-works#precos">Preços</Link>
           <Link href="/e/how-it-works#sobre">Sobre</Link>
+          <Link href="/e/help">Ajuda</Link>
           <Link href="/privacy">Privacidade</Link>
         </div>
       </div>

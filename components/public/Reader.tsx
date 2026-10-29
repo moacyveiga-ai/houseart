@@ -24,7 +24,8 @@ export interface ReaderProps {
   blocks: ReadBlock[]
   source: { name: string; url: string | null } | null
   trail: { name: string; step: number; total: number } | null
-  next: { title: string; href: string | null } | null
+  /** `kicker` names the box (default "Próximo da trilha", the guide's). */
+  next: { title: string; href: string | null; kicker?: string } | null
   related: { kicker: string; title: string; href: string }[]
   backHref: string
   sharePath: string
@@ -133,7 +134,7 @@ export function Reader(p: ReaderProps) {
 
       {p.next ? (
         p.next.href ? (
-          <Link href={p.next.href} className="hp-read__next"><span className="hp-read__next-t"><span className="hp-read__next-k">Próximo da trilha</span><span className="hp-read__next-n">{p.next.title}</span></span><Icon name="arrow_forward" size={22} /></Link>
+          <Link href={p.next.href} className="hp-read__next"><span className="hp-read__next-t"><span className="hp-read__next-k">{p.next.kicker ?? 'Próximo da trilha'}</span><span className="hp-read__next-n">{p.next.title}</span></span><Icon name="arrow_forward" size={22} /></Link>
         ) : (
           <button type="button" className="hp-read__next" onClick={() => setToast('Próximo guia da trilha chega na sua comunidade em breve')}><span className="hp-read__next-t"><span className="hp-read__next-k">Próximo da trilha</span><span className="hp-read__next-n">{p.next.title}</span></span><Icon name="arrow_forward" size={22} /></button>
         )

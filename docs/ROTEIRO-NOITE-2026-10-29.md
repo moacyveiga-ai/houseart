@@ -167,7 +167,7 @@ Tarefas:
   - Bullets dos blocos.
   - "Pendências" reescrita só com o que sobrou.
 - [x] **Atualizar `docs/PRODUCAO-PENDENCIAS.md`** com o que depende do Moacy (§10 abaixo).
-- [ ] **Teste final em produção:**
+- [x] **Teste final em produção:**
   - Login dos 9 perfis.
   - `/app` dos três perfis.
   - `/admin/ops` sem cron atrasado.
@@ -222,5 +222,5 @@ Tarefas:
 ## Resumo da noite (2026-10-29, 00:20–01:50 UTC)
 
 - **Feito (7 merges na `main`, gate verde em cada um, 915 testes no fim):** blocos 1–7 inteiros. A revisão adversarial achou 5 defeitos (1 alto: a retomada da escritura podia concluir venda de obra contestada/revogada) e a segunda rodada mais 2; todos corrigidos antes do fecho. Detalhe no bullet de 2026-10-29 do `CLAUDE.md`.
-- **Provado em produção:** cada deploy da `main` ficou READY (a migration `20261029100000` aplicada no build); o app na web (`/app`) dos três perfis pelo script `scripts/smoke-app-web.manual.mjs` — ver a seção abaixo, preenchida pela última rodada.
+- **Provado em produção (02:40 UTC, deploy `8daf43f`):** cada deploy da `main` ficou READY (a migration `20261029100000` aplicada no build); `scripts/smoke-app-web.manual.mjs` rodado num sandbox da Vercel contra a produção — Colecionador (marina.demo, 16 telas), Galeria (ana.demo, 10 telas) e Artista (joana.demo, 6 telas) entraram e abriram todas as telas sem "Tela não encontrada", tela em branco, erro de página ou API 4xx/5xx: `OK: todas as telas abriram`.
 - **Ficou de fora, com o motivo:** o item "Consultor" do bloco 1 (a demo não tem conta de consultor); a prova dos temas dentro do simulador (só visual, sem efeito no app embutido — ele não lê o tema do painel); o evento `TRANSFERRED` perdido não é retentado (registrado como pendência 4); a retomada não abre item de revisão quando pula um negócio (a equipe vê em Negócios).

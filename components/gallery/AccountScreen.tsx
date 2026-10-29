@@ -6,6 +6,7 @@
 // → /e) and "Excluir minha conta": a collector closes it here; a gallery's account is closed
 // by the HouseArt desk, and the sheet says so (GET /api/account/delete decides).
 import Link from 'next/link'
+import { forgetAccountTheme } from '@/lib/theme'
 import { useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { Modal } from '@/components/ds/Modal'
@@ -58,6 +59,7 @@ export function AccountScreen({ initials, name, email, verification, sections, s
 
   async function logout() {
     setLeaving(true)
+    forgetAccountTheme()
     await fetch('/api/auth/logout', { method: 'POST', headers: { accept: 'application/json' } }).catch(() => null)
     window.location.assign('/e')
   }

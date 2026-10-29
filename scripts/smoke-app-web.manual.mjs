@@ -81,7 +81,7 @@ async function round({ email, profile, paths }) {
     await sleep(5000)
   }
   console.log(`  depois do login: ${page.url().replace(BASE, '')}`)
-  if (page.url().includes('/login')) failures.push(`${email}: não entrou`)
+  if (page.url().includes('/login')) failures.push(`${email}: não entrou — ${(await bodyText(page)).slice(0, 200)}`)
 
   for (const path of paths) {
     where = path
@@ -91,7 +91,7 @@ async function round({ email, profile, paths }) {
     const url = page.url().replace(BASE, '')
     console.log(`  ${path} -> ${url} | ${text.slice(0, 140)}`)
     if (/Tela não encontrada|Unmatched Route/i.test(text)) failures.push(`${email} ${path}: Tela não encontrada`)
-    else if (text.length < 20) failures.push(`${email} ${path}: tela em branco`)
+    else if (text.length < 20) failures.push(`${email} ${path}: tela em branco [${text}]`)
     if (url.includes('/login')) failures.push(`${email} ${path}: caiu no login`)
   }
   await browser.close()

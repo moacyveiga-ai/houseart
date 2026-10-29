@@ -14,35 +14,42 @@ export async function readPreferences(userId: number): Promise<{ preferences: Pr
 }
 
 export async function savePreferences(userId: number, input: { uses?: string[]; interests?: string[]; city?: string; marketingOptIn?: boolean; termsAccepted?: true }) {
-  const current = await readPreferences(userId)
-  // keys this screen does not own (e.g. "Sobre você", lib/profile) are kept as they are
-  const row = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferencesJson: true } })
-  let others: Record<string, unknown> = {}
-  try { others = JSON.parse(row.preferencesJson) as Record<string, unknown> } catch { others = {} }
-  if (!others || typeof others !== 'object' || Array.isArray(others)) others = {}
-  const merged = sanitizePreferences({
-    uses: input.uses ?? current.preferences.uses,
-    interests: input.interests ?? current.preferences.interests,
-    city: input.city ?? current.preferences.city,
-  })
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      preferencesJson: JSON.stringify({ ...others, ...merged }),
-      ...(input.marketingOptIn === undefined ? {} : { marketingOptIn: input.marketingOptIn }),
-      ...(input.termsAccepted ? { termsAcceptedAt: current.termsAcceptedAt ? undefined : new Date() } : {}),
-    },
+  // read-modify-write of one JSON column: the row is locked so the theme, "Sobre você" and this screen never erase each other
+  await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ preferencesJson: string; termsAcceptedAt: Date | null }[]>`SELECT "preferencesJson", "termsAcceptedAt" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
+    const row = rows[0]
+    if (!row) throw new Error('user not found')
+    let others: Record<string, unknown> = {}
+    try { others = JSON.parse(row.preferencesJson) as Record<string, unknown> } catch { others = {} }
+    if (!others || typeof others !== 'object' || Array.isArray(others)) others = {}
+    // keys this screen does not own (e.g. "Sobre você", lib/profile, the theme) are kept as they are
+    const current = sanitizePreferences(others)
+    const merged = sanitizePreferences({
+      uses: input.uses ?? current.uses,
+      interests: input.interests ?? current.interests,
+      city: input.city ?? current.city,
+    })
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        preferencesJson: JSON.stringify({ ...others, ...merged }),
+        ...(input.marketingOptIn === undefined ? {} : { marketingOptIn: input.marketingOptIn }),
+        ...(input.termsAccepted ? { termsAcceptedAt: row.termsAcceptedAt ? undefined : new Date() } : {}),
+      },
+    })
   })
   return readPreferences(userId)
 }
 
 /** Perfil › Aparência: the theme follows the account to another device (kept next to the other keys). */
 export async function saveTheme(userId: number, theme: Theme): Promise<void> {
-  const row = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferencesJson: true } })
-  let all: Record<string, unknown> = {}
-  try { all = JSON.parse(row.preferencesJson) as Record<string, unknown> } catch { all = {} }
-  if (!all || typeof all !== 'object' || Array.isArray(all)) all = {}
-  await prisma.user.update({ where: { id: userId }, data: { preferencesJson: JSON.stringify({ ...all, theme }) } })
+  await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ preferencesJson: string }[]>`SELECT "preferencesJson" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
+    let all: Record<string, unknown> = {}
+    try { all = JSON.parse(rows[0]?.preferencesJson ?? '{}') as Record<string, unknown> } catch { all = {} }
+    if (!all || typeof all !== 'object' || Array.isArray(all)) all = {}
+    await tx.user.update({ where: { id: userId }, data: { preferencesJson: JSON.stringify({ ...all, theme }) } })
+  })
 }
 
 export { PREFERENCE_INTERESTS, PREFERENCE_USES }

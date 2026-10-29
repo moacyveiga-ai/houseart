@@ -55,6 +55,7 @@ function stuckDeal(opt: { artworkId: number; memberId: number; tapped?: boolean;
     const cert = await prisma.certificate.create({ data: { artworkId: opt.artworkId, publicId: `HA-2026-R-${seq}`, status: 'ACTIVE', stage: 5 } })
     const v = await prisma.certificateVersion.create({ data: { certificateId: cert.id, version: 1, holderName: 'Vendedor', contentJson: JSON.stringify({ holder: { name: 'Vendedor' }, version: 1 }), contentHash: `hr${seq}`, status: 'ACTIVE' } })
     await prisma.certificate.update({ where: { id: cert.id }, data: { currentVersionId: v.id } })
+    await prisma.artwork.update({ where: { id: opt.artworkId }, data: { status: 'IN_DEAL' } })
     return deal
   })
 }
@@ -98,5 +99,19 @@ describe('deal-complete-retry', () => {
     const fresh = await stuckDeal({ artworkId: s.b.artworkId, memberId: s.b.memberId, minutesAgo: 2 })
     expect(await resumeStuckDeliveries()).toEqual({ found: 0, completed: 0, failed: 0 })
     expect((await prisma.deal.findUniqueOrThrow({ where: { id: fresh.id } })).phase).toBe('DELIVERY')
+  })
+
+  it('never completes a sale whose artwork was disputed or whose certificate was revoked after the tap', async () => {
+    const deal = await stuckDeal({ artworkId: s.b.artworkId, memberId: s.b.memberId })
+    // a contestation approved in between: certificate REVOKED, artwork DISPUTED (lib/admin-review)
+    await prisma.certificate.updateMany({ where: { artworkId: s.b.artworkId }, data: { status: 'REVOKED' } })
+    await prisma.artwork.update({ where: { id: s.b.artworkId }, data: { status: 'DISPUTED' } })
+    expect(await resumeStuckDeliveries()).toEqual({ found: 0, completed: 0, failed: 0 })
+    const still = await prisma.deal.findUniqueOrThrow({ where: { id: deal.id }, include: { splits: true } })
+    expect(still.phase).toBe('DELIVERY')
+    expect(still.splits.some((l) => l.status === 'RELEASED')).toBe(false)
+    expect((await prisma.artwork.findUniqueOrThrow({ where: { id: s.b.artworkId } })).status).toBe('DISPUTED')
+    expect(await prisma.certificateVersion.count({ where: { certificate: { artworkId: s.b.artworkId } } })).toBe(1)
+    expect(await prisma.ownershipTransfer.count({ where: { dealId: deal.id } })).toBe(0)
   })
 })

@@ -5,6 +5,7 @@
 // prototype's `ctDados` (name and CPF come from the signup and are not edited here; the city
 // saves by PATCH /api/auth/identity). "Sair da conta" is POST /api/auth/logout → /e.
 import Link from 'next/link'
+import { forgetAccountTheme } from '@/lib/theme'
 import { ContactChange } from './ContactChange'
 import { useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
@@ -51,6 +52,7 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
 
   async function logout() {
     setLeaving(true)
+    forgetAccountTheme()
     await fetch('/api/auth/logout', { method: 'POST', headers: { accept: 'application/json' } }).catch(() => null)
     window.location.assign('/e')
   }

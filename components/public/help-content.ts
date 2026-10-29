@@ -2,7 +2,7 @@
 // each sentence was checked against the code it describes (lib/certificates, lib/offers,
 // lib/payments/async-core, lib/deals, lib/stripe/connect-server, lib/ownership,
 // lib/physical-markers). A number that lives in a constant is read from it, never copied.
-import { OFFER_VALIDITY_DAYS } from '@/lib/offers/domain'
+import { VALIDITY_HOURS } from '@/lib/payment-methods/domain'
 import { BOLETO_DAYS, PIX_TTL_SECONDS } from '@/lib/payments/async-core'
 import { RESALE_ROYALTY_BPS } from '@/lib/resale-royalty/core'
 import type { ReadBlock } from './reading-core'
@@ -37,7 +37,7 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     blocks: [
       { kind: 'p', text: 'Nas obras que aceitam propostas, o botão "Fazer oferta" abre cinco etapas: valor, condições, identidade, garantia e revisão. Nas de preço fixo, a compra é direta.' },
       { kind: 'li', text: 'Confirmação por código', sub: 'Mandamos um código ao seu e-mail para confirmar que a proposta é sua.' },
-      { kind: 'li', text: `Validade de ${OFFER_VALIDITY_DAYS} dias`, sub: 'Se o vendedor não responder nesse prazo, a proposta vence sozinha e a garantia é liberada.' },
+      { kind: 'li', text: 'Validade que você escolhe', sub: `${VALIDITY_HOURS.slice(0, -1).join(', ')} ou ${VALIDITY_HOURS[VALIDITY_HOURS.length - 1]} horas. Se o vendedor não responder nesse prazo, a proposta vence sozinha e a garantia é liberada.` },
       { kind: 'li', text: 'Contraproposta', sub: 'O vendedor pode aceitar, recusar ou responder com outro valor. Você acompanha tudo pelo link da proposta ou em Compras.' },
       { kind: 'li', text: 'Sigilo', sub: 'Ninguém vê quantas propostas a obra recebeu nem os valores dos outros. Não há leilão nem disputa pública.' },
       { kind: 'q', text: 'Proposta aceita vira negócio: daí em diante você acompanha cada etapa em Compras.' },
@@ -79,12 +79,12 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     lead: 'A escritura passa ao novo dono mesmo quando a venda foi feita por fora.',
     readMinutes: 2,
     blocks: [
-      { kind: 'p', text: 'Só quem tem a escritura em seu nome pode transferir. Na página da obra, use "Vendida fora".' },
+      { kind: 'p', text: 'Só quem tem a escritura em seu nome pode transferir. Na sua coleção, abra a obra e toque em "Transferir" (na galeria, o botão é "Vendida fora", na gestão do anúncio).' },
       { kind: 'li', text: 'Convite', sub: 'O comprador recebe um link por e-mail para aceitar a transferência.' },
       { kind: 'li', text: 'Identidade', sub: 'O comprador confirma quem é antes de assinar.' },
       { kind: 'li', text: 'Duas assinaturas', sub: 'Vendedor e comprador assinam o termo de cessão.' },
       { kind: 'li', text: 'Taxa e toque', sub: 'O vendedor paga a taxa de transferência mostrada na tela e o comprador encosta o celular na etiqueta da obra. Só então nasce a versão nova do certificado.' },
-      { kind: 'q', text: `Se a obra valorizou, o direito de sequência do artista (${ROYALTY_PCT} da valorização) entra na conta.` },
+      { kind: 'q', text: 'O direito de sequência do artista, quando a obra valorizou, é calculado pela plataforma e aparece na transferência.' },
     ],
   },
   {
@@ -96,9 +96,9 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     blocks: [
       { kind: 'p', text: 'A etiqueta é um chip que confirma, a cada leitura, que é ela mesma — não uma cópia. Se alguém a arrancar ou violar, a leitura seguinte indica isso.' },
       { kind: 'li', text: 'Na verificação', sub: 'A página mostra "Etiqueta não confirmada" quando a leitura indica violação ou remoção do chip.' },
-      { kind: 'li', text: 'Revisão da equipe', sub: 'A HouseArt abre uma revisão da obra e analisa o caso antes de qualquer nova venda.' },
+      { kind: 'li', text: 'Revisão da equipe', sub: 'A HouseArt abre uma revisão da obra e analisa o caso. Sem uma etiqueta válida, nenhuma venda chega ao fim: a entrega só se confirma com a leitura do chip.' },
       { kind: 'li', text: 'O que você faz', sub: 'Não tente colar ou trocar a etiqueta. Fale com a HouseArt e informe o ID da obra.' },
-      { kind: 'q', text: 'Furto ou perda? Fale com a HouseArt informando o ID da obra: depois da análise, a verificação pública passa a avisar quem consultar.' },
+      { kind: 'q', text: 'Furto ou perda? Fale com a HouseArt e informe o ID da obra.' },
     ],
   },
 ]

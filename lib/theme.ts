@@ -30,6 +30,11 @@ export function getTheme(): Theme {
   }
 }
 
+/** Logout: the theme saved here belonged to the account that leaves; the next account loads its own. */
+export function forgetAccountTheme(): void {
+  try { window.localStorage.removeItem(THEME_KEY); window.sessionStorage.removeItem('ha-theme-fetched') } catch { /* privacidade */ }
+}
+
 /** True when this browser already holds a choice (the account's theme is fetched only when it does not). */
 export function hasStoredTheme(): boolean {
   try { return isTheme(window.localStorage.getItem(THEME_KEY)) } catch { return true }

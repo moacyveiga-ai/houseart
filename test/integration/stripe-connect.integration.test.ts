@@ -73,6 +73,8 @@ async function buildDeal(opt: { artworkId: number; sellerMemberId: number; marke
   const cert = await prisma.certificate.create({ data: { artworkId: opt.artworkId, publicId: `HA-2026-T-${seq}`, status: 'ACTIVE', stage: 5 } })
   const v = await prisma.certificateVersion.create({ data: { certificateId: cert.id, version: 1, holderName: 'Vendedor', contentJson: JSON.stringify({ holder: { name: 'Vendedor' }, version: 1 }), contentHash: `h${seq}`, status: 'ACTIVE' } })
   await prisma.certificate.update({ where: { id: cert.id }, data: { currentVersionId: v.id } })
+  // the real flow puts the artwork IN_DEAL when the deal is born (createDealFromOffer); the deed requires it
+  await prisma.artwork.update({ where: { id: opt.artworkId }, data: { status: 'IN_DEAL' } })
   return deal
 }
 

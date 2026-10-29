@@ -13,8 +13,11 @@ export function ThemeSync() {
   const pathname = usePathname()
   useEffect(() => {
     applyTheme(getTheme())
+    // the entry screens are always light and come before a login: the next account is asked again
+    // (a session that ends without the logout button — expiry, suspension — still lands here before the next login)
+    if (isAlwaysLightRoute(pathname)) { try { window.sessionStorage.removeItem(FETCHED_KEY); if (pathname === '/login') window.localStorage.removeItem('ha-theme') } catch { /* privacidade */ } return }
     // A new device (nothing stored): the theme saved on the account, asked once per tab, only in the panel.
-    if (isAlwaysLightRoute(pathname) || hasStoredTheme()) return
+    if (hasStoredTheme()) return
     try { if (window.sessionStorage.getItem(FETCHED_KEY)) return; window.sessionStorage.setItem(FETCHED_KEY, '1') } catch { return }
     void fetch('/api/auth/preferences', { headers: { accept: 'application/json' } })
       .then((r) => (r.ok ? r.json() : null))

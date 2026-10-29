@@ -194,6 +194,11 @@ Para ligar na Stripe (modo de teste e depois live):
 Sem a ativação, escolher Pix/boleto responde "Pix ainda não está disponível" e a reserva é desfeita na hora.
 Parcelamento no cartão (1×/3×/6×/10× do protótipo) **não** foi ligado: pede o fluxo de planos de parcela da Stripe.
 
+## Noite de 2026-10-29 — o que ficou para o Moacy de manhã
+A lista completa, com as decisões de produto pendentes, está em `docs/ROTEIRO-NOITE-2026-10-29.md` §10.
+Nada de novo entrou nas envs; o cron novo `/api/cron/deal-complete-retry` usa o `CRON_SECRET` de sempre
+e já está no `vercel.json`. Para ver a rotina rodando: Admin › Saúde › "Escrituras pendentes".
+
 ## Depois do MVP (produto)
 Stripe live (`STRIPE_ENV=live` com `sk_live_`/`pk_live_`, webhooks live; tirar `STRIPE_TEST_ALLOWED`), Connect live (§9.1), KYC real,
 etiquetas NTAG 424 reais (`MARKER_VENDOR=ntag424` + master key), carimbo do tempo, âncora,

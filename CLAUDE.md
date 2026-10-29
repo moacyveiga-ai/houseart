@@ -108,6 +108,7 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   claro; não expor o piso.
 
 ## Estado atual (o mais recente manda)
+- **2026-10-29 — Noite do MVP: oito blocos do `docs/ROTEIRO-NOITE-2026-10-29.md`, sem o Moacy.** Cada bloco numa branch curta com gate verde (915 testes) e merge na `main`; revisão adversarial independente com 5 achados, todos corrigidos, mais 2 da segunda rodada. **Entrou:** `scripts/smoke-app-web.manual.mjs` (prova do app na web dos três perfis com as contas demo; roda num sandbox da Vercel, cabeçalho explica); `VaultImage` na web pede a foto do cofre com o bearer e mostra por `blob:`; **escritura idempotente e retomada** — `completeTransfer` reivindica a fase por CAS dentro da transação e só conclui com a obra `IN_DEAL` e o certificado `ACTIVE` (contestação aprovada ou etiqueta removida depois do toque param a escritura), evento e aviso que falham depois do commit vão ao log, e o cron `/api/cron/deal-complete-retry` (hora em hora, 6.º do `vercel.json`, "Escrituras pendentes" em Saúde) conclui quem tocou e ficou em DELIVERY (carência de 10 min, teste de corrida em `deal-complete-retry.integration.test.ts`); listar de novo obra com negócio vivo e transferir fora da plataforma no meio de um negócio são recusados (`hasLiveDeal`, `LIVE_DEAL`); "Compras" da coleção e o badge pela mesma régua `inCourseForBuyer` (cancelado fora); `pickSignupPlan` cai num plano de artista ativo, `/signup/welcome` aceita `?plano=`; `JobRun.triggeredById` (migration `20261029100000`) diz quem apertou "Rodar agora" e o webhook da Stripe com assinatura inválida deixa uma linha por minuto ("recusada", nunca o corpo); reenvio do código de troca de e-mail com freio; foto da conversa que não grava apaga o arquivo do cofre; `/verify/<ID>` sem certificado vai à busca; **tema na conta** (`preferences.theme` por `PATCH /api/auth/preferences`, lido uma vez num aparelho novo; sair ou a tela de entrar esquecem o tema do navegador; as três escritas de `preferencesJson` travam a linha com `FOR UPDATE`); logo do certificado e da oferta no tom automático; **Central de Ajuda** `/e/help` com seis artigos (`components/public/help-content.ts`, números lidos das constantes, teste que proíbe "lance"/"piso"), `HELP_HREF`, rodapé, sitemap e a conta da galeria no app apontam para lá; smoke das jornadas com três jornadas novas (local verde com as flags ligadas; a artista de teste é criada pelo cadastro com `AUTH_CODE_ECHO=1`). **Registrado:** o evento `TRANSFERRED` que falha depois da escritura não é retentado (só log); a retomada não abre item de revisão para o negócio que ela pula (a equipe vê em Negócios); `recordWebhookRejection` tem guarda racy mas limitada.
 - **2026-10-28 — Simulador do app nativo no navegador (`/simulator` e `/app`).** Pedido do Moacy: testar a experiência do APP, não o painel responsivo. O `apps/mobile` (Expo) é exportado para a web (`npm run app:web` → `public/app`, `output: single`, `experiments.baseUrl: /app`; **rodar de novo e commitar `public/app` a cada mudança no app**) e servido pela própria produção: `rewrites` em `next.config.ts` mandam `/app` e `/app/*` que não são arquivo ao `index.html`; `/app`, `/app/` e `/simulator` são públicos (o app entra sozinho por bearer). Variantes `.web` no app: `token-store.web.ts` e `seen.web.ts` (localStorage), `cookies.web.ts` (no-op), `usePushToggle.web.ts` (sem push), `WebScreen.web.tsx` (iframe da mesma origem com a casca escondida); `config.ts` usa a origem da página na web; o `api()` manda `credentials: 'omit'` — o servidor lê o cookie ANTES do bearer, e o cookie do painel neste navegador faria o app agir como outra conta. `/simulator` (`components/simulator/`) põe o app numa moldura (iPhone 15, Android, tela pequena), com Recomeçar e tela cheia; entradas no menu da conta e em `/install`. Não roda no navegador: NFC, push, câmera (vira escolher arquivo); fotos do cofre com bearer (`VaultImage`) não carregam na web; as telas em WebView usam a sessão do site deste navegador. `public/app/**` fora do ESLint e `linguist-generated`. **No mesmo dia:** no simulador, depois de escolher o perfil o app ia para `/app/(tabs)` e mostrava "Tela não encontrada" — na web um caminho de grupo do expo-router não é tela. O app navega pela primeira aba do perfil (`homeHref` em `apps/mobile/src/nav/tabs.ts`) e todos os `'/(tabs)/x'` viraram `'/x'` (iguais no celular). Provado com a joana.demo em produção por Playwright num sandbox da Vercel (a rede desta sessão não alcança o domínio).
 - **2026-10-28 — Aparência: Claro, Pastel e Escuro no Perfil.** Pedido do Moacy: seção "Aparência" nas contas (`/account` e `/gallery/account`, `components/theme/ThemePicker.tsx`) com três opções; a escolha fica no navegador (`localStorage['ha-theme']`, `lib/theme.ts`) e vale na hora. Os temas redefinem a PALETA em `app/ds/tokens.css` (`[data-ha-theme="dark"]` inverte paper ↔ ink e escurece os tons -100; `[data-ha-theme="pastel"]` tinge paper/ink de lilás e troca o sand por lilás) — as telas pintam com paper/ink, então trocar só os semânticos não bastava. `themeAttr`/`THEMES` em `lib/theme-routes.ts` (puro, usado pelo script anti-flash) e `ThemeSync` no root layout reaplica o tema a cada navegação. Site público, Entrar e Cadastro seguem sempre claros. Registrado: logos de tom fixo `color` ficam com baixo contraste no escuro (só aparecem no site público e no /design-system); a preferência não acompanha a conta em outro aparelho.
 - **2026-10-28 — Sem a barra de cotações no topo do painel.** Pedido do Moacy: o `IndexTicker` (Índice HouseArt, dólar, euro) saiu do `AppShell` e o layout do painel não lê mais `tickerItems()`. O componente segue no design system (`/design-system`) e o cron `market-indicators` continua gravando a tabela, sem tela que a mostre.
@@ -324,23 +325,23 @@ verde → revisão adversarial → `git pull --rebase origin main` → `git merg
   com baselines vazias, gate verde.
 
 ## Pendências (ordem de valor)
-1. Blob: o alias da env funciona, mas é gambiarra — na Vercel, renomear
-   `BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN` para `BLOB_PRIVATE_READ_WRITE_TOKEN` (ou
-   reconectar o store com o prefixo `BLOB_PRIVATE`) e ligar o `houseart-public` ao projeto para
-   nascer `BLOB_READ_WRITE_TOKEN`; sem ele as derivadas passam pelo app em vez do CDN do Blob.
-2. Senhas do papel `houseart_app` e do admin trocadas em 2026-10-28 (`docs/PRODUCAO-PENDENCIAS.md` §4); domínio
-   próprio + `APP_URL` (hoje os links de e-mail saem com a URL da Vercel); mover o repo para
+1. **Só o Moacy liga (ver `docs/ROTEIRO-NOITE-2026-10-29.md` §10):** Blob (renomear
+   `BLOB_PRIVATE_READ_WRITE_TOKEN_READ_WRITE_TOKEN` → `BLOB_PRIVATE_READ_WRITE_TOKEN`, ligar o
+   `houseart-public`); domínio próprio + `APP_URL`; SMTP próprio no lugar do Gmail emprestado; Stripe
+   (Connect Express + webhook de contas conectadas §9.1, Pix/Boleto §9.2, parcelamento numa conta BR e só
+   então `FLAG_CARD_INSTALLMENTS=1`, live, estorno, assinatura de plano, nota fiscal); Instagram
+   (`INSTAGRAM_APP_ID/SECRET` + redirect); `SUPPORT_EMAIL`, `ART_INDEX_BASE_START`; mover o repo para
    `Housemap/houseart` quando a org liberar.
-3. Login por "Entrar com e-mail" (código) exige SMTP (`SMTP_*`) — sem ele só e-mail/senha funciona
-   em produção.
-4. Stripe: modo de TESTE ligado em produção e provado ponta a ponta em 2026-10-23 (`docs/PRODUCAO-PENDENCIAS.md` §9); Connect (repasse aos vendedores) com o código pronto e provado com o
-   Stripe falso — falta ligar na Stripe (§9.1: Express, webhook de contas conectadas); faltam live, estorno, assinatura de plano via Stripe subscription; nota fiscal.
-5. Provedores reais: KYC (Didit), NTAG 424 (master key em HSM, `MARKER_VENDOR=ntag424`),
-   carimbo do tempo ICP-Brasil, âncora (OpenTimestamps), frete/seguro, Art Loss Register.
-6. Telas fora do pacote (§J.1): site público `/e`, página pública completa da obra, web da
-   galeria/colecionador, app do artista (NFC real), design system completo.
-7. Contrato de consignação (`DEFAULT_GALLERY_BPS` é placeholder), "Vender" pela carteira
-   (colecionador como vendedor no secundário), viewing rooms (barra "0 de N"), assinatura por OTP
-   do certificado, re-verificação/expiração do KYC, Supabase Auth (`AUTH_PROVIDER=supabase`).
-8. Nomes em pt-BR herdados nos exports de `lib/timezone.ts`, `lib/dates.ts`, `lib/format.ts` e
+2. Provedores reais: KYC (Didit), NTAG 424 (master key em HSM, espelho TT, `MARKER_VENDOR=ntag424`),
+   carimbo do tempo ICP-Brasil, âncora (OpenTimestamps), frete/seguro, Art Loss Register. Os apps nunca
+   foram abertos num aparelho (contas Apple/Google + EAS).
+3. Decisões de produto pendentes (treze, listadas no §10 do roteiro): taxa do parcelado e parcela mínima;
+   faixa/valorização com vendas de terceiros; foto na conversa sem filtro de contato; equipe lendo
+   mensagens denunciadas; Emissor novo segurar a emissão; etiqueta trocada em obra emitida; descrição
+   editável depois de certificada; laudo assinado pela equipe; avisar o comprador do KYC; contrato de
+   consignação (`DEFAULT_GALLERY_BPS`); Pix manual nunca sai de "A receber"; conta só social trocar
+   e-mail sem senha; revisão jurídica dos termos.
+4. Viewing rooms (barra "0 de N"), assinatura por OTP do certificado, re-verificação/expiração do KYC,
+   Supabase Auth (`AUTH_PROVIDER=supabase`), retentar o evento `TRANSFERRED` perdido.
+5. Nomes em pt-BR herdados nos exports de `lib/timezone.ts`, `lib/dates.ts`, `lib/format.ts` e
    `lib/after.ts` (portados; renomear junto com feature nenhuma).

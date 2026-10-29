@@ -1,6 +1,6 @@
 # Produção — o que falta e como fazer (2026-10-21)
 
-Produção: https://houseart-housemapp.vercel.app · projeto Vercel `houseart` (time `housemapp`) ·
+Produção: https://www.houseart.com.br (domínio próprio desde 2026-10-29; `houseart-housemapp.vercel.app` segue como alias) · projeto Vercel `houseart` (time `housemapp`) ·
 repositório `moacyveiga-ai/houseart` · Supabase `houseart` (ref `zqxkwaivqqlkocbmdvch`).
 
 ## Feito pelo agente
@@ -46,9 +46,14 @@ para o endereço autenticado e limita a ~500 envios/dia. Trocar por um SMTP pró
   (sem parâmetros; o host `aws-1` não serve).
 - Falta: SMTP (senha de app do Gmail do Moacy, item 3).
 
-### 5. Domínio próprio
-Vercel → Settings → Domains → adicionar (ex.: `app.houseart.com.br`) → DNS no registrador →
-trocar `APP_URL` para a URL final → Redeploy.
+### 5. Domínio próprio — FEITO (2026-10-29)
+`www.houseart.com.br` é o endereço canônico; `houseart.com.br` redireciona (308) para o www;
+`houseart-housemapp.vercel.app` segue como alias. DNS no registro.br (zona hospedada em
+`b.sec.dns.br`/`c.sec.dns.br`): CNAME `www` → `cname.vercel-dns.com` e A raiz → `76.76.21.21`.
+`APP_URL` e `WEB_PUSH_SUBJECT` apontam ao domínio; o app nativo (`apps/mobile`), o simulador e os
+scripts de prova usam o endereço novo. Ainda no endereço da Vercel, de propósito: o webhook da
+Stripe (item 9; continua funcionando pelo alias — trocar lá quando quiser) e os redirects OAuth
+(Google/Apple ainda sem chave).
 
 ### 6. Repositório na org Housemap (opcional)
 Criar `Housemap/houseart` vazio (2026-10-22: a conta do agente segue sem admin na org — 403) → `git remote set-url origin git@github.com:Housemap/houseart.git`
@@ -60,7 +65,7 @@ Criar `Housemap/houseart` vazio (2026-10-22: a conta do agente segue sem admin n
 - Texto jurídico de `/terms` e `/privacy` (hoje provisórios).
 
 ### 8. Avisos no celular (Fase 5 do handoff) — FEITO (2026-10-22)
-- Chaves VAPID geradas e gravadas na Vercel (`WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` sensível, `WEB_PUSH_SUBJECT` = URL da Vercel). Ao ter domínio próprio, trocar o `WEB_PUSH_SUBJECT` pelo `mailto:` ou URL do domínio (não exige gerar chaves novas).
+- Chaves VAPID geradas e gravadas na Vercel (`WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` sensível, `WEB_PUSH_SUBJECT` = `https://www.houseart.com.br` desde 2026-10-29; antes, a URL da Vercel).
 - O push só chega em HTTPS com permissão do navegador; o toggle fica em `/notifications`.
 
 ### 9. Stripe em modo de teste — LIGADO em produção (2026-10-23)

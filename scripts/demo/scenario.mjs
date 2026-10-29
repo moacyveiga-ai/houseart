@@ -6,7 +6,7 @@
 // on the secondary market and registers an own artwork; everyone talks and posts.
 //
 //   DEMO_BASE_URL=http://localhost:3019 node scripts/demo/scenario.mjs
-//   DEMO_BASE_URL=https://houseart-housemapp.vercel.app node scripts/demo/scenario.mjs
+//   DEMO_BASE_URL=https://www.houseart.com.br node scripts/demo/scenario.mjs
 //
 // Accounts come from scripts/demo/accounts.sql (apply it first). Idempotent
 // enough to re-run: it creates new artworks every time, so run it once per

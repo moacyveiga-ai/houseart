@@ -16,7 +16,7 @@
 const pw = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright')
 const chromium = pw.chromium ?? pw.default.chromium
 
-const BASE = (process.env.SMOKE_BASE_URL ?? 'https://houseart-housemapp.vercel.app').replace(/\/$/, '')
+const BASE = (process.env.SMOKE_BASE_URL ?? 'https://www.houseart.com.br').replace(/\/$/, '')
 const PASSWORD = process.env.SMOKE_PASSWORD ?? 'Demo-HouseArt-2026'
 const DEMO_ARTWORK = process.env.SMOKE_ARTWORK ?? 'HA-2026-DEMP-0001'
 

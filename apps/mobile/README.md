@@ -40,7 +40,7 @@ npm run typecheck         # tsc --noEmit
 ### Apontar para o dev local
 
 O app lê `EXPO_PUBLIC_API_URL` (inlinada pelo Metro no build); sem ela vale
-`extra.apiUrl` do `app.json` (produção, `https://houseart-housemapp.vercel.app`).
+`extra.apiUrl` do `app.json` (produção, `https://www.houseart.com.br`).
 
 ```bash
 # no root: PORT=3019 npm run dev   (ou npm run dev:3019)

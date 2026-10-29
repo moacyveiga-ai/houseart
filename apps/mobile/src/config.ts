@@ -3,7 +3,7 @@
 import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 
-const DEFAULT_API_URL = 'https://houseart-housemapp.vercel.app'
+const DEFAULT_API_URL = 'https://www.houseart.com.br'
 
 function readApiUrl(): string {
   // The web build (the simulator at /app) is served by the API itself: same origin.

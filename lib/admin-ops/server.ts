@@ -36,7 +36,9 @@ export async function adminOps(now = new Date()) {
     ])
     const runs = runsByCron.flat()
     const failedCount = new Map(failures7dByCron.map((g) => [g.name, g._count._all]))
-    const toRow = (r: (typeof runs)[number]): RunRow => ({ status: r.status, startedAt: r.startedAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null, ms: r.ms, httpStatus: r.httpStatus, error: r.error, summary: r.summary })
+    const runnerIds = [...new Set(runs.map((r) => r.triggeredById).filter((v): v is number => v != null))]
+    const runners = new Map(runnerIds.length ? (await prisma.user.findMany({ where: { id: { in: runnerIds } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]) : [])
+    const toRow = (r: (typeof runs)[number]): RunRow => ({ status: r.status, startedAt: r.startedAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null, ms: r.ms, httpStatus: r.httpStatus, error: r.error, summary: r.summary, by: r.triggeredById ? (runners.get(r.triggeredById) ?? `#${r.triggeredById}`) : null })
     const leaseOf = new Map(leases.map((l) => [l.name, { lockedUntil: l.lockedUntil.toISOString(), runId: l.runId }]))
     const crons: CronView[] = CRONS.map((spec) => {
       const mine = realRuns(runs.filter((r) => r.name === spec.name).map(toRow), now)

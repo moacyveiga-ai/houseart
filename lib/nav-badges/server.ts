@@ -24,7 +24,7 @@ async function offersWaiting(scope: Scope, now: Date): Promise<number> {
   return rows.filter((o) => offerWaitsOnSeller({ status: o.status, expiresAt: o.expiresAt, lastAuthor: o.rounds[0]?.author ?? null }, now)).length
 }
 
-/** The collector's "Compras" of the collection header: deals in course as the buyer (a dispute is still in course) plus the collector's own open offers. */
+/** The collector's "Compras" of the collection header: deals in course as the buyer (`inCourseForBuyer`: a dispute is still in course, a cancelled deal is not) plus the collector's own open offers. */
 async function purchasesInCourse(userId: number): Promise<number> {
   const [deals, offers] = await Promise.all([
     prisma.deal.count({ where: { buyerUserId: userId, phase: { not: 'COMPLETED' }, OR: [{ exceptionStatus: null }, { exceptionStatus: 'DISPUTE' }] } }),

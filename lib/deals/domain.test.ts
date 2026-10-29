@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrivingLabel, dealCode, nextPhase, progressPct } from './domain'
+import { arrivingLabel, dealCode, inCourseForBuyer, nextPhase, progressPct } from './domain'
 
 describe('deal phases', () => {
   it('advance in order and end at COMPLETED', () => {
@@ -19,5 +19,14 @@ describe('arrivingLabel', () => {
     expect(arrivingLabel('SHIPPING', 'DISPUTE')).toBe('Em análise pela HouseArt')
     expect(arrivingLabel('SHIPPING', 'CANCELLED')).toBeNull()
     expect(arrivingLabel('COMPLETED')).toBeNull()
+  })
+})
+
+describe('inCourseForBuyer', () => {
+  it('counts a deal in course and a dispute; never a completed or cancelled one', () => {
+    expect(inCourseForBuyer('SHIPPING', null)).toBe(true)
+    expect(inCourseForBuyer('ESCROW', 'DISPUTE')).toBe(true)
+    expect(inCourseForBuyer('ESCROW', 'CANCELLED')).toBe(false)
+    expect(inCourseForBuyer('COMPLETED', null)).toBe(false)
   })
 })

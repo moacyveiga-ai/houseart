@@ -30,6 +30,11 @@ export function getTheme(): Theme {
   }
 }
 
+/** True when this browser already holds a choice (the account's theme is fetched only when it does not). */
+export function hasStoredTheme(): boolean {
+  try { return isTheme(window.localStorage.getItem(THEME_KEY)) } catch { return true }
+}
+
 const prefersDark = () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
 
 /**

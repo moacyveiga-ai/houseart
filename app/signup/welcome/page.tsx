@@ -15,8 +15,10 @@ import '@/components/auth/login.css'
 
 export const metadata = { title: 'Concluir cadastro — HouseArt' }
 
-export default async function SignupWelcomePage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
-  const sp = await searchParams
+export default async function SignupWelcomePage({ searchParams }: { searchParams: Promise<{ plan?: string; plano?: string }> }) {
+  const raw = await searchParams
+  // the same two names as /signup (links in Portuguese say ?plano=)
+  const sp = { plan: raw.plan ?? raw.plano }
   const user = await getSession()
   if (!user) redirect(`/signup${sp.plan ? `?plan=${encodeURIComponent(sp.plan)}` : ''}`)
   const plans = (await listPublicPlans()).map(toSignupPlan)

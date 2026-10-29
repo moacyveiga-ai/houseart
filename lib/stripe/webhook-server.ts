@@ -10,7 +10,7 @@
 // secret: STRIPE_CONNECT_WEBHOOK_SECRET; the same URL serves both) and
 // `transfer.reversed` (a platform event, the normal endpoint) — connect-server.ts.
 import 'server-only'
-import { recordWebhookFailure } from '@/lib/job-runs/server'
+import { recordWebhookFailure, recordWebhookRejection } from '@/lib/job-runs/server'
 import { prisma } from '@/lib/prisma'
 import { totalScope } from '@/lib/scope/context'
 import { isHandledEvent, nextGuaranteeStatus, nextOrderStatus, stripeModeOf, verifyStripeSignature, type HandledEvent } from './mode-core'
@@ -42,7 +42,10 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].map((v) => (v ?? '').trim()).filter(Boolean)
   if (secrets.length === 0) return { status: 503, body: { ok: false, error: 'Webhook da Stripe não configurado.' } }
   const nowSec = Math.floor(nowMs / 1000)
-  if (!secrets.some((secret) => verifyStripeSignature(rawBody, signature, secret, nowSec))) return { status: 400, body: { ok: false, error: 'Assinatura inválida.' } }
+  if (!secrets.some((secret) => verifyStripeSignature(rawBody, signature, secret, nowSec))) {
+    await recordWebhookRejection('stripe:signature', 'bad_signature')
+    return { status: 400, body: { ok: false, error: 'Assinatura inválida.' } }
+  }
   let ev: EventShape
   try { ev = JSON.parse(rawBody) as EventShape } catch { return { status: 400, body: { ok: false, error: 'Corpo inválido.' } } }
   const id = typeof ev.id === 'string' ? ev.id : null

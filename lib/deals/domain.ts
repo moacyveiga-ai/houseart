@@ -38,6 +38,14 @@ export const ESCROW_HOURS = 24
  * Coleção › "Chegando" (handoff "HouseArt Web Colecionador"): what a purchase still on its way says
  * in the buyer's collection, by the LAST phase done. Null when it is not arriving (completed).
  */
+/**
+ * "Compras" of the collection header and the menu badge: a deal still in course for the buyer. A cancelled
+ * deal is over; a dispute is still in course (the HouseArt is looking at it). One rule for both counts.
+ */
+export function inCourseForBuyer(phase: string, exception: string | null): boolean {
+  return phase !== 'COMPLETED' && (exception === null || exception === 'DISPUTE')
+}
+
 export function arrivingLabel(phase: DealPhase, exception: string | null = null): string | null {
   if (phase === 'COMPLETED' || exception === 'CANCELLED') return null
   if (exception) return 'Em análise pela HouseArt'

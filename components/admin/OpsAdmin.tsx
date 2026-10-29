@@ -54,7 +54,7 @@ export function OpsAdmin({ view, canRun }: { view: View; canRun: boolean }) {
                   <div className="ha-aops__body">
                     {c.runs.length === 0 ? <p className="ha-muted ha-sm">Sem rodada registrada ainda (a trilha começou com esta tela).</p> : (
                       <ul className="ha-aops__runs">
-                        {c.runs.map((r: RunRow, i) => <li key={i}><Badge tone={RUN_TONE[r.status] ?? 'neutral'}>{RUN_LABEL[r.status] ?? r.status}</Badge><span>{when(r.startedAt)}</span><span className="ha-aops__sub">{r.ms !== null ? `${r.ms} ms` : ''}{r.httpStatus ? ` · ${r.httpStatus}` : ''}{r.error ? ` · ${r.error}` : ''}</span><span className="ha-aops__summary">{r.summary ?? ''}</span></li>)}
+                        {c.runs.map((r: RunRow, i) => <li key={i}><Badge tone={RUN_TONE[r.status] ?? 'neutral'}>{RUN_LABEL[r.status] ?? r.status}</Badge><span>{when(r.startedAt)}</span><span className="ha-aops__sub">{r.ms !== null ? `${r.ms} ms` : ''}{r.httpStatus ? ` · ${r.httpStatus}` : ''}{r.error ? ` · ${r.error}` : ''}{r.by ? ` · à mão por ${r.by}` : ''}</span><span className="ha-aops__summary">{r.summary ?? ''}</span></li>)}
                       </ul>
                     )}
                     {canRun ? <div className="ha-aops__actions"><button type="button" className="ha-btn ha-btn--secondary ha-btn--sm" disabled={busy === c.name} onClick={() => run(c)}>{busy === c.name ? 'Rodando…' : 'Rodar agora'}</button>{results[c.name] ? <code className="ha-aops__result">{results[c.name]}</code> : null}</div> : <p className="ha-muted ha-sm">Só admin e gestor disparam uma rodada à mão.</p>}
@@ -77,7 +77,7 @@ export function OpsAdmin({ view, canRun }: { view: View; canRun: boolean }) {
           <>
             <h3 className="ha-h3">Entregas que falharam (a Stripe reenvia)</h3>
             <ul className="ha-aops__runs">
-              {view.webhookFailures.map((f, i) => <li key={i}><Badge tone="alert">falhou</Badge><code>{f.name}</code><span className="ha-aops__sub">{when(f.at)}{f.error ? ` · ${f.error}` : ''}</span><span /></li>)}
+              {view.webhookFailures.map((f, i) => <li key={i}><Badge tone="alert">{f.error === 'bad_signature' ? 'recusada' : 'falhou'}</Badge><code>{f.name}</code><span className="ha-aops__sub">{when(f.at)}{f.error === 'bad_signature' ? ' · assinatura não confere (confira o segredo do webhook na Stripe)' : f.error ? ` · ${f.error}` : ''}</span><span /></li>)}
             </ul>
           </>
         ) : null}

@@ -22,7 +22,7 @@ export function ThemePicker() {
         {OPTIONS.map((o) => {
           const on = current === o.value
           return (
-            <button key={o.value} type="button" role="radio" aria-checked={on} className={`ha-theme-pick__opt${on ? ' is-on' : ''}`} onClick={() => setTheme(o.value)}>
+            <button key={o.value} type="button" role="radio" aria-checked={on} className={`ha-theme-pick__opt${on ? ' is-on' : ''}`} onClick={() => { setTheme(o.value); void fetch('/api/auth/preferences', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ theme: o.value }) }).catch(() => {}) }}>
               <span className="ha-theme-pick__sw" aria-hidden="true" style={{ background: o.swatch[0], borderColor: o.swatch[1] }}>
                 <span style={{ background: o.swatch[1] }} />
                 <span style={{ background: o.swatch[2] }} />
@@ -33,7 +33,7 @@ export function ThemePicker() {
           )
         })}
       </div>
-      <span className="ha-theme-pick__note">Vale neste aparelho. O site público continua claro.</span>
+      <span className="ha-theme-pick__note">Fica guardado na sua conta e vale nos outros aparelhos. O site público continua claro.</span>
     </section>
   )
 }

@@ -13,23 +13,28 @@ import { acessoLiberado as accessAllowed, bearerValido as validBearer } from './
 export type ManualJobRule = 'staff' | 'admin'
 export interface JobOptions { manual?: ManualJobRule; leaseMs?: number }
 
-async function manualAuthorized(rule: ManualJobRule): Promise<boolean> {
+/** The user id of a manual run allowed by the rule; null when the session is missing or not allowed. */
+async function manualRunner(rule: ManualJobRule): Promise<number | null> {
   try {
     const u = await requireAuth()
-    return rule === 'admin' ? u.profile === 'admin' : u.profile === 'admin' || u.profile === 'manager'
-  } catch { return false }
+    const ok = rule === 'admin' ? u.profile === 'admin' : u.profile === 'admin' || u.profile === 'manager'
+    return ok ? u.id : null
+  } catch { return null }
+}
+
+/** Who runs the job: allowed or not, and the person when it is a manual run ("Rodar agora"). */
+async function jobRunner(req: NextRequest, manual: ManualJobRule): Promise<{ ok: boolean; userId: number | null }> {
+  const secret = process.env.CRON_SECRET
+  const authorization = req.headers.get('authorization')
+  if (validBearer(secret, authorization)) return { ok: true, userId: null }
+  const method = req.method.toUpperCase()
+  const userId = method !== 'GET' && method !== 'HEAD' ? await manualRunner(manual) : null
+  const ok = accessAllowed({ secret, authorization, metodo: method, staff: userId !== null, producao: process.env.NODE_ENV === 'production' })
+  return { ok, userId: ok ? userId : null }
 }
 
 export async function authorizeJob(req: NextRequest, manual: ManualJobRule = 'staff'): Promise<boolean> {
-  const secret = process.env.CRON_SECRET
-  const authorization = req.headers.get('authorization')
-  if (validBearer(secret, authorization)) return true
-  const method = req.method.toUpperCase()
-  return accessAllowed({
-    secret, authorization, metodo: method,
-    staff: method !== 'GET' && method !== 'HEAD' ? await manualAuthorized(manual) : false,
-    producao: process.env.NODE_ENV === 'production',
-  })
+  return (await jobRunner(req, manual)).ok
 }
 
 export function unauthorizedJob(): NextResponse {
@@ -38,7 +43,8 @@ export function unauthorizedJob(): NextResponse {
 }
 
 export async function withJob(req: NextRequest, name: string, handler: () => Promise<Response>, opts?: JobOptions): Promise<Response> {
-  if (!(await authorizeJob(req, opts?.manual))) return unauthorizedJob()
+  const runner = await jobRunner(req, opts?.manual ?? 'staff')
+  if (!runner.ok) return unauthorizedJob()
   const t0 = Date.now()
   let status = 500
   let skipped = false
@@ -48,7 +54,7 @@ export async function withJob(req: NextRequest, name: string, handler: () => Pro
   let errorName: string | null = null
   try {
     runId = await acquireJobLease(name, leaseMs(opts?.leaseMs))
-    trail = await startJobRun('CRON', name, runId)
+    trail = await startJobRun('CRON', name, runId, runner.userId)
     if (!runId) { skipped = true; status = 200; return NextResponse.json(skippedBody(name)) }
     const res = await totalScope(`job:${name}`, handler)
     status = res.status

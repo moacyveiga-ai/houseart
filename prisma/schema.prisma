@@ -1556,6 +1556,8 @@ model JobRun {
   httpStatus Int?
   error      String?
   summary    String?
+  /** Who pressed "Rodar agora" (admin/manager); null for the scheduled run and for webhooks. */
+  triggeredById Int?
 
   @@index([kind, name, startedAt])
   @@index([status, startedAt])

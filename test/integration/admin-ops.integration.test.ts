@@ -47,6 +47,12 @@ describe('admin ops', () => {
     await signIn(s.staff.userId)
     expect((await withJob(req('POST'), 'offers-expire', async () => Response.json({ ok: true }))).status).toBe(200)
     expect(await prisma.jobRun.count({ where: { name: 'offers-expire' } })).toBe(3)
+    // the manual run says who pressed "Rodar agora"; the scheduled ones carry nobody
+    const manual = await prisma.jobRun.findFirstOrThrow({ where: { name: 'offers-expire' }, orderBy: { id: 'desc' } })
+    expect(manual.triggeredById).toBe(s.staff.userId)
+    expect(runs.every((x) => x.triggeredById === null)).toBe(true)
+    const staffName = (await prisma.user.findUniqueOrThrow({ where: { id: s.staff.userId } })).name
+    expect((await adminOps()).crons.find((c) => c.name === 'offers-expire')?.runs[0]).toMatchObject({ by: staffName })
     // a run the platform killed stays RUNNING: the next run of the same job closes it as a timeout, and the health reads it as a failure
     await prisma.jobRun.create({ data: { kind: 'CRON', name: 'market-indicators', status: 'RUNNING', startedAt: new Date(Date.now() - 20 * 60_000) } })
     expect((await adminOps()).crons.find((c) => c.name === 'market-indicators')).toMatchObject({ health: 'FAILING', failures7d: 1 })
@@ -96,5 +102,19 @@ describe('admin ops', () => {
     const smtp = v.config.find((c) => c.key === 'SMTP_URL')!
     expect(smtp.ok).toBe(false)
     expect(JSON.stringify(v.config)).not.toContain('cron-secret')
+  })
+
+  it('a forged or mis-signed webhook leaves ONE row a minute ("recusada"), never the body', async () => {
+    process.env.STRIPE_ENV = 'test'; process.env.STRIPE_SECRET_KEY = 'sk_test_x'; process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test'
+    const body = JSON.stringify({ id: 'evt_forged', type: 'payment_intent.succeeded', data: { object: { id: 'pi_x', metadata: { secret: 'never-stored' } } } })
+    const bad = signStripePayload(body, 'whsec_other', Math.floor(Date.now() / 1000))
+    expect((await handleStripeWebhook(body, bad)).status).toBe(400)
+    expect((await handleStripeWebhook(body, null)).status).toBe(400)
+    process.env.STRIPE_ENV = 'mock'; delete process.env.STRIPE_SECRET_KEY; delete process.env.STRIPE_WEBHOOK_SECRET
+    const rows = await prisma.jobRun.findMany({ where: { kind: 'WEBHOOK' } })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ name: 'stripe:signature', status: 'FAILED', httpStatus: 400, error: 'bad_signature' })
+    expect(JSON.stringify(rows)).not.toContain('never-stored')
+    expect((await adminOps()).webhookFailures).toEqual([expect.objectContaining({ name: 'stripe:signature', error: 'bad_signature' })])
   })
 })

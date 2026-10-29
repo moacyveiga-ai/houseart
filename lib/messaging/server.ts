@@ -10,7 +10,7 @@ import { formatBRL } from '@/lib/artworks/domain'
 import { openReviewItem } from '@/lib/admin-review/server'
 import sharp from 'sharp'
 import { contentTypeOf } from '@/lib/storage/content-type'
-import { savePrivateFile } from '@/lib/storage/private-vault'
+import { deleteVaultFile, savePrivateFile } from '@/lib/storage/private-vault'
 import { CONTENT_IMAGE_MAX_SIDE, contentImageVerdict } from '@/lib/public-content/editor-core'
 import { PHOTO_BODY, checkMessage, isReportReason, otherOf, pairOf, previewOf, redactContacts, REPORT_NOTE_MAX, reportReasonLabel, sideOfConversation, verifiedByHouse, whenLabel, type MessageKind } from './core'
 
@@ -208,7 +208,14 @@ export async function sendPhoto(me: number, conversationId: number, bytes: Buffe
       .flatten({ background: '#ffffff' }).jpeg({ quality: 85 }).toBuffer()
   } catch { throw new ArtworkError('INVALID_FILE', 'Imagem ilegível.', 415) }
   const ref = await savePrivateFile({ buffer: out, contentType: 'image/jpeg', prefix: `messages/${conversationId}` })
-  const m = await append(conversationId, me, 'IMAGE', PHOTO_BODY, null, ref)
+  let m: Awaited<ReturnType<typeof append>>
+  try {
+    m = await append(conversationId, me, 'IMAGE', PHOTO_BODY, null, ref)
+  } catch (e) {
+    // the line was not written: the file would be an orphan in the vault (best-effort; the error that matters is the write's)
+    await deleteVaultFile(ref).catch((err: unknown) => console.warn('[messaging] foto órfã não apagada', (err as Error)?.name))
+    throw e
+  }
   return { ...m, mine: true }
 }
 

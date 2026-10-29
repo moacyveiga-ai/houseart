@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
 import { walletOf } from './server'
 import { favoritesOf } from '@/lib/community/server'
 import { buyerDeals } from '@/lib/deals/server'
+import { inCourseForBuyer } from '@/lib/deals/domain'
+import { OPEN_FOR_SELLER } from '@/lib/offers/domain'
 import { flagOn } from '@/lib/flags'
 import { totalScope } from '@/lib/scope/context'
 import { ScopeNotApplied } from '@/lib/scope/extension-core'
@@ -30,14 +32,14 @@ export async function collectionSummary(user: { id: number; memberId: number | n
     })] as const),
     favoritesOf(user.id).catch(() => []),
     flagOn('FLAG_DEALS') ? buyerDeals(user.id).catch(() => []) : Promise.resolve([]),
-    prisma.offer.count({ where: { buyerUserId: user.id, status: { in: ['RECEIVED', 'BELOW_RESERVE', 'NEGOTIATING'] } } }),
+    prisma.offer.count({ where: { buyerUserId: user.id, status: { in: [...OPEN_FOR_SELLER] } } }),
     user.memberId ? prisma.offer.count({ where: { memberId: user.memberId, status: { in: ['RECEIVED', 'BELOW_RESERVE', 'NEGOTIATING'] } } }) : Promise.resolve(0),
   ])
   return {
     valuation,
     works: wallet.items.length, registeredCents: wallet.totalCents, artists: new Set(wallet.items.map((i) => i.artist)).size,
     saved: favs.filter((f) => f.saved).length, liked: favs.filter((f) => f.liked).length,
-    purchases: deals.filter((d) => d.phase !== 'COMPLETED').length + offers, newSales,
+    purchases: deals.filter((d) => inCourseForBuyer(d.phase, d.exception)).length + offers, newSales,
   }
 }
 

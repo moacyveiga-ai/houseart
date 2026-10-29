@@ -4,7 +4,7 @@
 // page (handoff "HouseArt Verificacao": header of its own, no site nav or footer — it is
 // the screen the tap opens); the value opinion keeps the public shell.
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import '@/app/ds/public.css'
 import { PublicHeader } from '@/components/public/PublicHeader'
@@ -49,7 +49,9 @@ export default async function VerifyPage({ params, searchParams }: Params) {
 async function CertificateVerify({ publicId, sp }: { publicId: string; sp: Record<string, string | undefined> }) {
   if (!isPublicId(publicId)) notFound()
   const c = await publicCertificate(publicId)
-  if (!c) notFound()
+  // a well-formed id with no certificate (typed in the header search, or a tag whose deed is not issued yet):
+  // the search page answers "Nenhuma obra certificada encontrada" instead of a bare 404
+  if (!c) redirect(`/verify?id=${encodeURIComponent(publicId)}`)
   const h = await headers()
   const read = sp.uid ? await recordPublicRead(publicId, { uid: sp.uid, ctr: Number(sp.ctr ?? sp.c ?? -1), cmac: sp.cmac ?? sp.m ?? '', tt: sp.tt?.slice(0, 8) }, ipHashOf(rawIpFromHeaders(h))) : null
   return <Verification c={c} read={read ? { authenticated: read.authenticated, tamper: read.tamper } : null} />

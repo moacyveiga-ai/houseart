@@ -18,7 +18,7 @@ export function CertificateSheet({ c }: { c: CertificateData }) {
   return (
     <article className="ha-cert">
       <div className="ha-cert__head">
-        <HouseArtLogo version="full_horiz" tone="color" height={26} />
+        <HouseArtLogo version="full_horiz" tone="auto" height={26} />
         <div className="ha-cert__num"><div className="ha-cert__num-label">Certificado nº</div><div className="ha-id">{c.number}</div></div>
       </div>
       <div className="ha-cert__title">Certificado de autenticidade e titularidade</div>

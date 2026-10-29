@@ -19,11 +19,11 @@ export const STALE_RUNNING_MINUTES = 15
 export const RETENTION_DAYS = 90
 
 /** Opens the row of a run; `null` when the trail is unavailable (never fails the job). A stale RUNNING row of the same job is closed first. */
-export async function startJobRun(kind: 'CRON' | 'WEBHOOK', name: string, runId: string | null): Promise<number | null> {
+export async function startJobRun(kind: 'CRON' | 'WEBHOOK', name: string, runId: string | null, triggeredById: number | null = null): Promise<number | null> {
   if (!db) return null
   try {
     await db.$executeRaw`UPDATE "JobRun" SET "status" = 'FAILED', "error" = 'timeout', "finishedAt" = (now() AT TIME ZONE 'UTC') WHERE "name" = ${name} AND "status" = 'RUNNING' AND "startedAt" < (now() AT TIME ZONE 'UTC') - (${STALE_RUNNING_MINUTES} * interval '1 minute')`
-    const rows = await db.$queryRaw<{ id: number }[]>`INSERT INTO "JobRun" ("kind", "name", "runId", "status", "startedAt") VALUES (${kind}, ${name}, ${runId}, 'RUNNING', (now() AT TIME ZONE 'UTC')) RETURNING "id"`
+    const rows = await db.$queryRaw<{ id: number }[]>`INSERT INTO "JobRun" ("kind", "name", "runId", "status", "startedAt", "triggeredById") VALUES (${kind}, ${name}, ${runId}, 'RUNNING', (now() AT TIME ZONE 'UTC'), ${triggeredById}) RETURNING "id"`
     return rows[0]?.id ?? null
   } catch (e) { console.warn(JSON.stringify({ level: 'warn', evt: 'job_run_trail_failed', job: name, error: e instanceof Error ? e.name : 'unknown' })); return null }
 }
@@ -40,6 +40,20 @@ export async function recordWebhookFailure(name: string, error: string): Promise
   if (!db) return
   try {
     await db.$executeRaw`INSERT INTO "JobRun" ("kind", "name", "status", "startedAt", "finishedAt", "httpStatus", "error") VALUES ('WEBHOOK', ${name}, 'FAILED', (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'), 500, ${error.slice(0, 120)})`
+  } catch (e) { console.warn(JSON.stringify({ level: 'warn', evt: 'job_run_trail_failed', job: name, error: e instanceof Error ? e.name : 'unknown' })) }
+}
+
+/**
+ * A webhook refused before it was read (bad signature): the team sees it in Saúde — usually a wrong or rotated
+ * secret. The endpoint is public, so at most one row per name per minute: a flood of forged posts cannot grow
+ * the table. Never the body nor the header.
+ */
+export async function recordWebhookRejection(name: string, reason: string): Promise<void> {
+  if (!db) return
+  try {
+    await db.$executeRaw`INSERT INTO "JobRun" ("kind", "name", "status", "startedAt", "finishedAt", "httpStatus", "error")
+      SELECT 'WEBHOOK', ${name}, 'FAILED', (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'), 400, ${reason.slice(0, 120)}
+      WHERE NOT EXISTS (SELECT 1 FROM "JobRun" WHERE "kind" = 'WEBHOOK' AND "name" = ${name} AND "startedAt" > (now() AT TIME ZONE 'UTC') - interval '1 minute')`
   } catch (e) { console.warn(JSON.stringify({ level: 'warn', evt: 'job_run_trail_failed', job: name, error: e instanceof Error ? e.name : 'unknown' })) }
 }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, AuthError } from '@/lib/auth'
-import { readPreferences, savePreferences } from '@/lib/accounts/preferences-server'
+import { readPreferences, savePreferences, saveTheme } from '@/lib/accounts/preferences-server'
 
 const schema = z.object({
   uses: z.array(z.string().max(40)).max(10).optional(),
@@ -9,6 +9,7 @@ const schema = z.object({
   city: z.string().trim().max(80).optional(),
   marketingOptIn: z.boolean().optional(),
   termsAccepted: z.literal(true).optional(),
+  theme: z.enum(['light', 'pastel', 'dark', 'system']).optional(),
 })
 
 export async function GET() {
@@ -16,11 +17,13 @@ export async function GET() {
   catch (e) { if (e instanceof AuthError) return NextResponse.json({ ok: false }, { status: 401 }); throw e }
 }
 
-/** Onboarding step of the signup (interests, uses, city, newsletter) and the terms acceptance. */
+/** Onboarding step of the signup (interests, uses, city, newsletter), the terms acceptance and the theme of Perfil › Aparência. */
 export async function PATCH(req: Request) {
   let user
   try { user = await requireAuth() } catch (e) { if (e instanceof AuthError) return NextResponse.json({ ok: false, error: 'Entre para continuar.' }, { status: 401 }); throw e }
   const parsed = schema.safeParse(await req.json().catch(() => ({})))
   if (!parsed.success) return NextResponse.json({ ok: false, error: 'Dados inválidos.' }, { status: 400 })
-  return NextResponse.json({ ok: true, ...(await savePreferences(user.id, parsed.data)) })
+  const { theme, ...rest } = parsed.data
+  if (theme) await saveTheme(user.id, theme)
+  return NextResponse.json({ ok: true, ...(await savePreferences(user.id, rest)) })
 }

@@ -121,3 +121,19 @@ describe('sobre você e foto', () => {
     expect(await identityOf(buyerId)).toMatchObject({ about: '', city: 'Salvador', avatarUrl: null })
   }, 60_000)
 })
+
+describe('theme (Perfil › Aparência)', () => {
+  it('follows the account: saved next to the other keys and read back; the onboarding keeps it', async () => {
+    const { readPreferences, saveTheme, savePreferences } = await import('@/lib/accounts/preferences-server')
+    await prisma.user.update({ where: { id: buyerId }, data: { preferencesJson: JSON.stringify({ city: 'Salvador', about: 'Coleciono gravura' }) } })
+    expect((await readPreferences(buyerId)).theme).toBeNull()
+    await saveTheme(buyerId, 'pastel')
+    expect((await readPreferences(buyerId)).theme).toBe('pastel')
+    await savePreferences(buyerId, { city: 'Cachoeira' })
+    const raw = JSON.parse((await prisma.user.findUniqueOrThrow({ where: { id: buyerId } })).preferencesJson) as Record<string, unknown>
+    expect(raw).toMatchObject({ theme: 'pastel', about: 'Coleciono gravura', city: 'Cachoeira' })
+    // a value outside the list reads as none
+    await prisma.user.update({ where: { id: buyerId }, data: { preferencesJson: JSON.stringify({ theme: 'neon' }) } })
+    expect((await readPreferences(buyerId)).theme).toBeNull()
+  })
+})

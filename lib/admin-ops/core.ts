@@ -26,7 +26,7 @@ export function intervalOfSchedule(schedule: string): number {
 export type CronHealth = 'OK' | 'FAILING' | 'LATE' | 'RUNNING' | 'NEVER'
 export const CRON_HEALTH_LABELS: Record<CronHealth, string> = { OK: 'Em dia', FAILING: 'Falhando', LATE: 'Atrasado', RUNNING: 'Rodando', NEVER: 'Sem registro' }
 
-export interface RunRow { status: string; startedAt: string; finishedAt: string | null; ms: number | null; httpStatus: number | null; error: string | null; summary: string | null }
+export interface RunRow { status: string; startedAt: string; finishedAt: string | null; ms: number | null; httpStatus: number | null; error: string | null; summary: string | null; /** Name of who pressed "Rodar agora"; absent for the scheduled run. */ by?: string | null }
 
 /** A RUNNING row older than this never finished: the function was killed (Vercel's maxDuration) before `finally` ran. */
 export const STALE_RUNNING_MS = 15 * 60_000

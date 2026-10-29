@@ -20,7 +20,7 @@ export function OfferBar({ backHref, backLabel = 'Voltar à obra' }: { backHref:
     <header className="hp-offer__bar">
       <div className="hp-offer__bar-inner">
         <Link href={backHref} className="hp-offer__back"><Icon name="arrow_back" size={20} /><span>{backLabel}</span></Link>
-        <Link href="/e" className="hp-offer__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone="color" height={30} /></Link>
+        <Link href="/e" className="hp-offer__brand" aria-label="HouseArt"><HouseArtLogo version="full_horiz" tone="auto" height={30} /></Link>
         <span className="hp-offer__secure"><Icon name="lock" size={16} /><span>Ambiente seguro</span></span>
       </div>
     </header>

@@ -41,7 +41,15 @@ export function toSignupPlan(p: { code: string; name: string; audience: string; 
   }
 }
 
+/**
+ * The plan of the aside: the one asked for, else the default (Ateliê), else — when the team switched the
+ * default off in the catalog — the first artist plan still on, and only then whatever plan is on. Never a
+ * gallery plan by accident of order when an artist plan exists.
+ */
 export function pickSignupPlan(plans: SignupPlan[], code: string | undefined): SignupPlan | null {
   if (plans.length === 0) return null
-  return plans.find((p) => p.code === code) ?? plans.find((p) => p.code === DEFAULT_SIGNUP_PLAN) ?? plans[0]
+  return plans.find((p) => p.code === code)
+    ?? plans.find((p) => p.code === DEFAULT_SIGNUP_PLAN)
+    ?? plans.find((p) => p.profileKind === 'ARTIST')
+    ?? plans[0]
 }

@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import { AvatarFace } from '@/components/ds/AvatarFace'
 import { swapTarget, type ProfileKindKey } from '@/lib/profiles/core'
+import { forgetAccountTheme } from '@/lib/theme'
 
 export interface SwitcherProfile { kind: ProfileKindKey; name: string; icon: string; active: boolean }
 
@@ -92,7 +93,7 @@ export function ProfileSwitcher({ initials, label, display, avatarUrl = null, na
           {helpHref ? <Link role="menuitem" href={helpHref} className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="help" size={20} /><span>Ajuda</span></Link> : null}
           <Link role="menuitem" href="/install" className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="install_mobile" size={20} /><span>Instalar o app</span></Link>
           <a role="menuitem" href="/simulator" target="_blank" rel="noopener" className="ha-switcher__item" onClick={() => setOpen(false)}><Icon name="smartphone" size={20} /><span>Simulador do app</span></a>
-          <form action="/api/auth/logout" method="post">
+          <form action="/api/auth/logout" method="post" onSubmit={forgetAccountTheme}>
             <button type="submit" role="menuitem" className="ha-switcher__item"><Icon name="logout" size={20} /><span>Sair</span></button>
           </form>
         </div>

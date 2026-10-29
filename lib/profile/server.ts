@@ -12,10 +12,15 @@ import { AVATAR_SIDE, cleanAbout } from './core'
 export async function setAbout(userId: number, raw: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const a = cleanAbout(raw)
   if (!a.ok) return a
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferencesJson: true } })
-  let prefs: Record<string, unknown> = {}
-  try { prefs = JSON.parse(u.preferencesJson) as Record<string, unknown> } catch { prefs = {} }
-  await prisma.user.update({ where: { id: userId }, data: { preferencesJson: JSON.stringify({ ...prefs, about: a.value }) } })
+  // the row is locked: the theme and the onboarding keys live in the same JSON column (lib/accounts/preferences-server)
+  await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ preferencesJson: string }[]>`SELECT "preferencesJson" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
+    if (!rows[0]) throw new Error('user not found')
+    let prefs: Record<string, unknown> = {}
+    try { prefs = JSON.parse(rows[0].preferencesJson) as Record<string, unknown> } catch { prefs = {} }
+    if (!prefs || typeof prefs !== 'object' || Array.isArray(prefs)) prefs = {}
+    await tx.user.update({ where: { id: userId }, data: { preferencesJson: JSON.stringify({ ...prefs, about: a.value }) } })
+  })
   return { ok: true }
 }
 

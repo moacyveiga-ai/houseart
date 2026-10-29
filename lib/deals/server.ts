@@ -5,6 +5,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { canView, memberFilter, type Scope } from '@/lib/scope/core'
 import { totalScope } from '@/lib/scope/context'
+import { ScopeNotApplied } from '@/lib/scope/extension-core'
 import { audit } from '@/lib/audit'
 import { flagOn } from '@/lib/flags'
 import { ArtworkError } from '@/lib/artworks/server'
@@ -533,6 +534,13 @@ async function completeTransfer(dealId: number): Promise<boolean> {
       const now = new Date()
       const claim = await tx.deal.updateMany({ where: { id: d.id, phase: 'DELIVERY', exceptionStatus: null }, data: { phase: 'COMPLETED', completedAt: now } })
       if (claim.count === 0) return false
+      // the artwork must still be the one being sold: a contestation approved, a removed tag or a revoked
+      // certificate since the tap stops the deed (the transaction rolls back; the team sees the deal stuck)
+      const [art, live] = await Promise.all([
+        tx.artwork.findUnique({ where: { id: d.artworkId }, select: { status: true } }),
+        tx.certificate.findUnique({ where: { id: cert.id }, select: { status: true } }),
+      ])
+      if (art?.status !== 'IN_DEAL' || live?.status !== 'ACTIVE') throw new ArtworkError('ARTWORK_CHANGED', 'A obra ou o certificado mudou depois da entrega: a HouseArt vai analisar este negócio.', 409)
       const superseded = await tx.certificateVersion.updateMany({ where: { id: prev.id, status: 'ACTIVE' }, data: { status: 'SUPERSEDED' } })
       if (superseded.count === 0) throw new ArtworkError('CHANGED', 'O certificado acabou de mudar.', 409)
       const v = await tx.certificateVersion.create({ data: { certificateId: cert.id, version: prev.version + 1, holderName: d.offer.buyerName, holderDocumentHash: d.offer.buyerDocumentHash, holderDocumentMask: d.offer.buyerDocumentMask, holderUserId: buyer.id, contentJson: JSON.stringify(content), contentHash, prevHash: prev.contentHash, status: 'ACTIVE' } })
@@ -547,8 +555,14 @@ async function completeTransfer(dealId: number): Promise<boolean> {
       return true
     })
     if (!claimed) return false
-    await recordEvent(d.artworkId, 'TRANSFERRED', { dealCode: d.code, version: prev.version + 1 }, buyer.id)
-    await notify({ userId: buyer.id, email: buyer.email, kind: 'certificate.transferred', title: 'Escritura emitida em seu nome', body: 'A obra entrou na sua carteira.', href: '/wallet', emailSubject: 'Escritura emitida em seu nome' })
+    // the deed is committed: a failure from here on is logged, never a 500 to the buyer whose deed was issued
+    try {
+      await recordEvent(d.artworkId, 'TRANSFERRED', { dealCode: d.code, version: prev.version + 1 }, buyer.id)
+      await notify({ userId: buyer.id, email: buyer.email, kind: 'certificate.transferred', title: 'Escritura emitida em seu nome', body: 'A obra entrou na sua carteira.', href: '/wallet', emailSubject: 'Escritura emitida em seu nome' })
+    } catch (e) {
+      if (e instanceof ScopeNotApplied) throw e
+      console.error(`[deals] escritura do negócio ${d.id} emitida; evento ou aviso falhou: ${(e as Error)?.name ?? 'Error'}`)
+    }
     // The seller's money: Transfers from the platform balance to the ENABLED Connect accounts, after the commit and
     // after the response. A line without an account stays RELEASED (manual Pix); a Stripe refusal is written on the
     // line and the hourly cron tries again — the completion itself never fails because of the payout.
@@ -565,7 +579,8 @@ async function completeTransfer(dealId: number): Promise<boolean> {
  */
 export async function resumeStuckDeliveries(now = new Date(), limit = 50, graceMs = 10 * 60_000): Promise<{ found: number; completed: number; failed: number }> {
   const stuck = await totalScope('deals:resume', () => prisma.deal.findMany({
-    where: { phase: 'DELIVERY', exceptionStatus: null, deliveryMarkerReadId: { not: null }, deliveredAt: { lte: new Date(now.getTime() - graceMs) } },
+    // only the deals whose artwork is still in the sale with an ACTIVE certificate: the others wait for the team
+    where: { phase: 'DELIVERY', exceptionStatus: null, deliveryMarkerReadId: { not: null }, deliveredAt: { lte: new Date(now.getTime() - graceMs) }, artwork: { status: 'IN_DEAL', certificate: { status: 'ACTIVE' } } },
     select: { id: true }, orderBy: { deliveredAt: 'asc' }, take: limit,
   }))
   let completed = 0, failed = 0

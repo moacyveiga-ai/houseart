@@ -108,8 +108,8 @@ export function accountHrefOf(profile: ProfileKind): string {
   return profile === 'gallery' || profile === 'advisor' ? '/gallery/account' : '/account'
 }
 
-/** "Ajuda" of the sidebar footer: the public "Como funciona" until a help center exists. */
-export const HELP_HREF = '/e/how-it-works'
+/** "Ajuda" of the account menu: the Central de Ajuda (/e/help, components/public/help-content.ts). */
+export const HELP_HREF = '/e/help'
 
 /** First screen of each profile (where the profile switcher lands): the gallery desk opens on its painel do dia. */
 export function homeOf(profile: ProfileKind): string {

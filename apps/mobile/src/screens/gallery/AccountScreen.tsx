@@ -42,7 +42,7 @@ export function AccountScreen() {
       { icon: 'account-balance-wallet', name: 'Carteira e cartões', sub: 'Cartão para plano e serviços', go: () => router.push('/wallet/cards' as never) },
     ] },
     { name: 'Segurança', items: [{ icon: 'password', name: 'Alterar senha', sub: 'Enviamos um link para o seu e-mail', go: web('/recover-password', 'Alterar senha') }] },
-    { name: 'Ajuda', items: [{ icon: 'help', name: 'Central de ajuda', sub: 'Consignação, certificação, frete e repasses', go: web('/e/how-it-works', 'Como funciona') }] },
+    { name: 'Ajuda', items: [{ icon: 'help', name: 'Central de ajuda', sub: 'Certificado, propostas, garantia e repasses', go: web('/e/help', 'Ajuda') }] },
   ]
 
   return (

@@ -514,9 +514,13 @@ export async function confirmDelivery(userId: number, dealId: number, sun: { uid
   await completeTransfer(dealId)
 }
 
-/** TRANSFER → COMPLETED: new certificate version to the buyer, OwnershipTransfer, split released, artwork SOLD. */
-async function completeTransfer(dealId: number) {
-  await totalScope('deals:complete', async () => {
+/**
+ * DELIVERY → COMPLETED: new certificate version to the buyer, OwnershipTransfer, split released, artwork to the
+ * buyer. Idempotent: the deal is claimed by compare-and-swap on the phase inside the transaction, so a second run
+ * (the buyer's tap racing the hourly retry) writes nothing and returns false.
+ */
+async function completeTransfer(dealId: number): Promise<boolean> {
+  return totalScope('deals:complete', async () => {
     const d = await prisma.deal.findUniqueOrThrow({ where: { id: dealId }, include: { offer: true, artwork: { include: { certificate: { include: { versions: { where: { status: 'ACTIVE' }, take: 1 } } } } }, royalty: true } })
     const cert = d.artwork.certificate
     if (!cert || !cert.versions[0]) throw new ArtworkError('NO_CERTIFICATE', 'A obra não tem certificado ativo.', 409)
@@ -525,26 +529,55 @@ async function completeTransfer(dealId: number) {
     const content = { ...JSON.parse(prev.contentJson), holder: { name: d.offer.buyerName, documentMask: d.offer.buyerDocumentMask }, version: prev.version + 1, transfer: { dealCode: d.code, at: new Date().toISOString() } }
     const { contentHashOf } = await import('@/lib/certificates/core')
     const contentHash = contentHashOf(content)
-    await prisma.$transaction(async (tx) => {
-      await tx.certificateVersion.update({ where: { id: prev.id }, data: { status: 'SUPERSEDED' } })
+    const claimed = await prisma.$transaction(async (tx) => {
+      const now = new Date()
+      const claim = await tx.deal.updateMany({ where: { id: d.id, phase: 'DELIVERY', exceptionStatus: null }, data: { phase: 'COMPLETED', completedAt: now } })
+      if (claim.count === 0) return false
+      const superseded = await tx.certificateVersion.updateMany({ where: { id: prev.id, status: 'ACTIVE' }, data: { status: 'SUPERSEDED' } })
+      if (superseded.count === 0) throw new ArtworkError('CHANGED', 'O certificado acabou de mudar.', 409)
       const v = await tx.certificateVersion.create({ data: { certificateId: cert.id, version: prev.version + 1, holderName: d.offer.buyerName, holderDocumentHash: d.offer.buyerDocumentHash, holderDocumentMask: d.offer.buyerDocumentMask, holderUserId: buyer.id, contentJson: JSON.stringify(content), contentHash, prevHash: prev.contentHash, status: 'ACTIVE' } })
       await tx.certificate.update({ where: { id: cert.id }, data: { currentVersionId: v.id } })
       await tx.ownershipTransfer.create({ data: { certificateId: cert.id, artworkId: d.artworkId, dealId: d.id, fromUserId: prev.holderUserId ?? 0, toUserId: buyer.id, toName: d.offer.buyerName, toEmail: d.offer.buyerEmail, toDocumentHash: d.offer.buyerDocumentHash, toDocumentMask: d.offer.buyerDocumentMask, priceCents: d.amountCents, royaltyCents: d.royalty?.royaltyCents ?? 0n, status: 'COMPLETED', completedAt: new Date(), newVersionId: v.id } })
       await tx.dealSplit.updateMany({ where: { dealId: d.id }, data: { status: 'RELEASED' } })
       await tx.invoice.updateMany({ where: { dealId: d.id, status: 'HELD_IN_SPLIT' }, data: { status: 'PAID' } })
-      await tx.deal.update({ where: { id: d.id }, data: { phase: 'COMPLETED', completedAt: new Date() } })
       await tx.dealPhaseEvent.create({ data: { dealId: d.id, phase: 'COMPLETED', title: 'Escritura emitida', description: 'Novo titular registrado e valores liberados', actorKind: 'SYSTEM' } })
       await tx.offer.updateMany({ where: { id: d.offerId }, data: { status: 'CONVERTED' } })
       // The artwork now belongs to the buyer (collector member born here when needed): held, not for sale, secondary from now on.
       await moveArtworkToHolder(tx, d.artworkId, buyer.id)
+      return true
     })
+    if (!claimed) return false
     await recordEvent(d.artworkId, 'TRANSFERRED', { dealCode: d.code, version: prev.version + 1 }, buyer.id)
     await notify({ userId: buyer.id, email: buyer.email, kind: 'certificate.transferred', title: 'Escritura emitida em seu nome', body: 'A obra entrou na sua carteira.', href: '/wallet', emailSubject: 'Escritura emitida em seu nome' })
     // The seller's money: Transfers from the platform balance to the ENABLED Connect accounts, after the commit and
     // after the response. A line without an account stays RELEASED (manual Pix); a Stripe refusal is written on the
     // line and the hourly cron tries again — the completion itself never fails because of the payout.
     await afterResponseOrNow('connect:payout', () => payDealSplits(d.id))
+    return true
   })
+}
+
+/**
+ * Hourly retry of the deed: a deal whose buyer's tap was valid (deliveredAt + the read) but whose completion
+ * failed afterwards stays in DELIVERY — nothing else would ever move it. Waits `graceMs` after the tap so it
+ * never races the completion still running in the buyer's request. One failure never stops the batch; the
+ * log carries only the deal id and the error name.
+ */
+export async function resumeStuckDeliveries(now = new Date(), limit = 50, graceMs = 10 * 60_000): Promise<{ found: number; completed: number; failed: number }> {
+  const stuck = await totalScope('deals:resume', () => prisma.deal.findMany({
+    where: { phase: 'DELIVERY', exceptionStatus: null, deliveryMarkerReadId: { not: null }, deliveredAt: { lte: new Date(now.getTime() - graceMs) } },
+    select: { id: true }, orderBy: { deliveredAt: 'asc' }, take: limit,
+  }))
+  let completed = 0, failed = 0
+  for (const { id } of stuck) {
+    try {
+      if (await completeTransfer(id)) completed++
+    } catch (e) {
+      failed++
+      console.error(`[deals] retomar entrega do negócio ${id} falhou: ${(e as Error)?.name ?? 'Error'}`)
+    }
+  }
+  return { found: stuck.length, completed, failed }
 }
 
 /** "Tentar de novo" (team or the seller): pays the RELEASED lines of a completed deal now. */

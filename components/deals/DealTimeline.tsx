@@ -108,7 +108,7 @@ export function DealTimeline({ deal, side }: { deal: Serializable; side: Side })
               <button type="button" className="ha-btn ha-btn--primary ha-btn--md" disabled={busy} onClick={() => { void post('confirm-delivery') }}><Icon name="contactless" size={18} />Confirmar recebimento</button>
             </TagReader>
           ) : deal.phase === 'DELIVERY' || deal.phase === 'TRANSFER' ? (
-            <div className="ha-callout"><Icon name="contract" /><p className="ha-sm" style={{ margin: 0 }}>Leitura registrada. Se a escritura não aparecer em seu nome em instantes, fale com a HouseArt.</p></div>
+            <div className="ha-callout"><Icon name="contract" /><p className="ha-sm" style={{ margin: 0 }}>Leitura registrada. Estamos concluindo a escritura: em até 1 h ela aparece na sua coleção.</p></div>
           ) : null}
         </div>
       )}

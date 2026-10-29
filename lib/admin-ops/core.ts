@@ -10,6 +10,7 @@ export const CRONS: readonly CronSpec[] = [
   { name: 'connect-payouts', path: '/api/cron/connect-payouts', schedule: '40 * * * *', label: 'Repasses pela Stripe', what: 'paga as linhas liberadas de quem conectou depois' },
   { name: 'market-indicators', path: '/api/cron/market-indicators', schedule: '5 * * * *', label: 'Indicadores do cabeçalho', what: 'dólar, euro e o índice da casa' },
   { name: 'instagram', path: '/api/cron/instagram', schedule: '50 */6 * * *', label: 'Instagram', what: 'posts agendados e tokens' },
+  { name: 'deal-complete-retry', path: '/api/cron/deal-complete-retry', schedule: '25 * * * *', label: 'Escrituras pendentes', what: 'conclui a escritura de entrega confirmada que falhou' },
 ]
 
 const H = 3_600_000, D = 24 * H

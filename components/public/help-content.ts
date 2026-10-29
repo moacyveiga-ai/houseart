@@ -84,7 +84,7 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
       { kind: 'li', text: 'Identidade', sub: 'O comprador confirma quem é antes de assinar.' },
       { kind: 'li', text: 'Duas assinaturas', sub: 'Vendedor e comprador assinam o termo de cessão.' },
       { kind: 'li', text: 'Taxa e toque', sub: 'O vendedor paga a taxa de transferência mostrada na tela e o comprador encosta o celular na etiqueta da obra. Só então nasce a versão nova do certificado.' },
-      { kind: 'q', text: `Se a obra valorizou, a transferência mostra o direito de sequência do artista (${ROYALTY_PCT} da valorização) antes das assinaturas.` },
+      { kind: 'q', text: 'O direito de sequência do artista, quando a obra valorizou, é calculado pela plataforma e aparece na transferência.' },
     ],
   },
   {

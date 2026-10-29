@@ -69,6 +69,9 @@ export async function createTransfer(userId: number, i: { artworkId: number; toD
   if (i.priceCents <= 0n) throw new ArtworkError('BAD_PRICE', 'Informe o valor da venda.', 400)
   const open = await prisma.ownershipTransfer.count({ where: { artworkId: i.artworkId, status: { notIn: ['COMPLETED', 'CANCELLED'] } } })
   if (open) throw new ArtworkError('OPEN_TRANSFER', 'Já existe uma transferência em curso para esta obra.', 409)
+  // a sale in course on the platform owns the artwork until its deed: no off-platform transfer in the meantime
+  const inDeal = await prisma.deal.count({ where: { artworkId: i.artworkId, phase: { not: 'COMPLETED' }, exceptionStatus: null } })
+  if (inDeal) throw new ArtworkError('LIVE_DEAL', 'Esta obra está em um negócio na HouseArt; a transferência sai depois dele.', 409)
   const doc = protectDocument(i.toDocument)
   const royalty = flagOn('FLAG_RESALE_ROYALTY') ? royaltyFor(i.priceCents, await lastPrice(i.artworkId)).royaltyCents : 0n
   const token = randomBytes(24).toString('base64url')

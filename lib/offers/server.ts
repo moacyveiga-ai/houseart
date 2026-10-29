@@ -48,7 +48,9 @@ export async function listArtworkForSale(scope: Scope, artworkId: number, m: { l
   const market = a.market === 'SECONDARY' || a.member.kind === 'COLLECTOR' || isSecondaryOrigin(a.acquisitionKind) ? 'SECONDARY' : 'PRIMARY'
   const problems = mandateProblems(m)
   if (problems.length) throw new ArtworkError('BAD_MANDATE', problems.join(' '), 400)
-  const verdict = artworkCanTransition(a.status as never, 'LISTED', { seal: a.seal })
+  // a deal in course keeps the artwork IN_DEAL: listing it again would strand the buyer's deed (the tap is refused)
+  const hasLiveDeal = a.status === 'IN_DEAL' && (await prisma.deal.count({ where: { artworkId, phase: { not: 'COMPLETED' }, exceptionStatus: null } })) > 0
+  const verdict = artworkCanTransition(a.status as never, 'LISTED', { seal: a.seal, hasLiveDeal })
   if (!verdict.ok) throw new ArtworkError(verdict.reason, verdict.reason === 'SEAL_REQUIRED' ? 'Só obras com o selo verde vão ao marketplace.' : 'A obra não pode ser listada neste estado.', 409)
   await prisma.$transaction(async (tx) => {
     await tx.mandate.updateMany({ where: { artworkId, status: 'ACTIVE' }, data: { status: 'SUPERSEDED' } })

@@ -11,7 +11,7 @@
 .hp-home-hero { position: relative; height: 120vh; min-height: 720px; overflow: hidden; background: var(--ha-ink-900); color: var(--ha-paper-50); }
 .hp-home-hero__bg { position: absolute; inset: -12% 0; z-index: 0; }
 .hp-home-hero__photo { position: absolute; inset: 0; background: var(--ha-ink-900); overflow: hidden; scale: 1.05; }
-.hp-home-hero__img { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; object-position: center 40%; }
+.hp-home-hero__img { position: absolute; inset: -6%; width: 112%; height: 112%; max-width: none; max-height: none; object-fit: cover; object-position: center 40%; } /* max-width: none — o preflight do Tailwind põe img { max-width: 100% } e a foto parava em 94 % (faixa escura à direita, 2026-10-29) */
 /* the painting stays readable (as on the login panel): light veil on top, darker under the text and at the fold */
 .hp-home-hero__scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, color-mix(in srgb, var(--ha-ink-900) 45%, transparent) 0%, color-mix(in srgb, var(--ha-ink-900) 20%, transparent) 35%, color-mix(in srgb, var(--ha-ink-900) 88%, transparent) 100%), radial-gradient(ellipse at center, color-mix(in srgb, var(--ha-ink-900) 30%, transparent) 0%, transparent 70%); }
 .hp-home-hero__content { position: absolute; inset: 72px 0 calc(20vh + 64px); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 var(--ha-space-6); gap: var(--ha-space-6); pointer-events: none; }

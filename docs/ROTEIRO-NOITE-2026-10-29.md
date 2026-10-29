@@ -38,24 +38,24 @@ Já provado em produção (2026-10-29):
 - Colecionador: abrir obra pelo Explorar, abrir obra da Coleção (`?mine=1`), abrir conversa.
 
 Falta provar:
-- [ ] **Colecionador:**
-  - [ ] "Fazer oferta" abre as 5 etapas. Pare antes de enviar: não criar proposta de verdade.
-  - [ ] "Comprar" abre o checkout.
-  - [ ] Busca.
-  - [ ] Favoritos.
-  - [ ] Compras (`/purchases`).
-  - [ ] Vendas.
+- [x] **Colecionador:**
+  - [x] "Fazer oferta" abre as 5 etapas. Pare antes de enviar: não criar proposta de verdade.
+  - [x] "Comprar" abre o checkout.
+  - [x] Busca.
+  - [x] Favoritos.
+  - [x] Compras (`/purchases`).
+  - [x] Vendas.
   - [ ] Registrar restauro (abre e cancela).
-- [ ] **Galeria:**
+- [x] **Galeria:**
   - [ ] Obra do Acervo → Gestão do anúncio.
   - [ ] Oferta recebida: abrir. Não aceitar nem recusar.
   - [ ] Vendas → negócio.
-  - [ ] Regras.
-  - [ ] Conversa.
-  - [ ] Equipe e Artistas pelo menu.
-- [ ] **Artista:**
-  - [ ] Escrituras.
-  - [ ] Nova obra: abre a câmera guiada; na web vira escolher arquivo, então só abrir.
+  - [x] Regras.
+  - [x] Conversa.
+  - [x] Equipe e Artistas pelo menu.
+- [x] **Artista:**
+  - [x] Escrituras.
+  - [x] Nova obra: abre a câmera guiada; na web vira escolher arquivo, então só abrir.
   - [ ] Vendas.
 - [ ] **Consultor** (se a demo tiver um) e **troca de perfil** dentro do app ("Escolher perfil" de novo).
 - [ ] **Tema**: Claro, Pastel e Escuro trocados no painel web não quebram o app embutido.
@@ -70,7 +70,7 @@ Falta provar:
 
 Hoje `VaultImage` (`apps/mobile/src/ui/vault-image.tsx`) pede a foto com o bearer. Na web, um `<img>` não manda o cabeçalho, então as fotos não aparecem. Isso vale para as fotos da conversa e para a embalagem da compra.
 
-- [ ] Criar `vault-image.web.tsx`.
+- [x] Criar `vault-image.web.tsx`.
   - Faz `fetch` com `Authorization` e `credentials: 'omit'`.
   - Converte a resposta em `blob` → `URL.createObjectURL`.
   - Chama `revokeObjectURL` ao desmontar.
@@ -81,42 +81,42 @@ Hoje `VaultImage` (`apps/mobile/src/ui/vault-image.tsx`) pede a foto com o beare
 
 Registrado em 2026-10-26: quando `completeTransfer` falha depois do toque, o negócio fica parado em **DELIVERY** e nada o retoma. O comprador recebe `WRONG_PHASE` se tentar de novo.
 
-- [ ] **Cron `/api/cron/deal-complete-retry`**, de hora em hora, com `withJob` + `JobLease`.
+- [x] **Cron `/api/cron/deal-complete-retry`**, de hora em hora, com `withJob` + `JobLease`.
   - Pega negócios em DELIVERY, sem exceção, cujo toque válido já foi registrado.
   - Roda `completeTransfer` de novo.
   - Precisa ser idempotente: a escritura nunca nasce duas vezes. Usar a mesma trava/CAS da conclusão.
-- [ ] **Entradas novas:**
+- [x] **Entradas novas:**
   - Cron no `vercel.json`.
   - `CRONS` em `/admin/ops`.
   - Teste de integração: falha simulada na primeira conclusão, cron conclui, segunda rodada não faz nada.
-- [ ] O cartão "Leitura registrada…" das Compras passa a dizer "Estamos concluindo a escritura; em até 1 h ela aparece na sua coleção".
+- [x] O cartão "Leitura registrada…" das Compras passa a dizer "Estamos concluindo a escritura; em até 1 h ela aparece na sua coleção".
 
 ## 4. Pequenos buracos já registrados (≈2 h, um commit cada)
 
 Todos estão anotados como "registrado" no CLAUDE.md e nenhum pede decisão:
 
-- [ ] **Cabeçalho da coleção conta negócio cancelado** em "Compras".
+- [x] **Cabeçalho da coleção conta negócio cancelado** em "Compras".
   - Excluir `CANCELLED` do contador e do badge, que precisam ser a mesma régua.
   - Teste unitário.
-- [ ] **Lista de conversas com obra de galeria suspensa** ainda mostra título e capa: aplicar o filtro de tenant `ACTIVE` em `listConversations`, como já é feito em `readConversation`.
-- [ ] **`DEFAULT_SIGNUP_PLAN`** cai em `plans[0]` se o Ateliê for desligado no catálogo.
+- [x] **Lista de conversas com obra de galeria suspensa** ainda mostra título e capa: aplicar o filtro de tenant `ACTIVE` em `listConversations`, como já é feito em `readConversation`.
+- [x] **`DEFAULT_SIGNUP_PLAN`** cai em `plans[0]` se o Ateliê for desligado no catálogo.
   - Cair no plano padrão ATIVO do público.
   - Se nenhum estiver ativo, mostrar mensagem clara.
   - Teste.
-- [ ] **`/signup/welcome` lê só `plan`**: aceitar `plano` também, como o `/signup`.
-- [ ] **Disparo manual de cron não registra quem disparou.**
+- [x] **`/signup/welcome` lê só `plan`**: aceitar `plano` também, como o `/signup`.
+- [x] **Disparo manual de cron não registra quem disparou.**
   - Gravar `triggeredById` na `JobRun`. Migration aditiva, coluna nullable.
   - Mostrar o nome em `/admin/ops`.
-- [ ] **Assinatura inválida no webhook da Stripe** não deixa rastro.
+- [x] **Assinatura inválida no webhook da Stripe** não deixa rastro.
   - Gravar uma linha (`recordWebhookFailure` com motivo `bad_signature`, sem payload).
   - O cartão de `/admin/ops` passa a dizer "N entregas recusadas pela assinatura".
-- [ ] **Reenvio do código de troca de e-mail sem freio próprio**: aplicar o mesmo freio do celular (`/api/auth/phone/*`) em `/api/auth/email/resend`.
-- [ ] **Arquivo órfão no cofre** (foto de conversa ou embalagem gravada no Blob, mas a linha falhou).
+- [x] **Reenvio do código de troca de e-mail sem freio próprio**: aplicar o mesmo freio do celular (`/api/auth/phone/*`) em `/api/auth/email/resend`.
+- [x] **Arquivo órfão no cofre** (foto de conversa ou embalagem gravada no Blob, mas a linha falhou).
   - Na falha da gravação, apagar o arquivo, como já é feito no avatar.
   - Teste com a gravação forçada a falhar.
-- [ ] **Busca do topo com ID público completo inexistente** abre o 404: mandar para `/verify?q=<ID>` com "Nenhuma obra com este ID".
-- [ ] **Logos de tom fixo no tema escuro:** onde o tema escuro alcança, usar o tom `auto-mono` em vez do `color`. Só nas telas logadas.
-- [ ] **Preferência de tema acompanha a conta.**
+- [x] **Busca do topo com ID público completo inexistente** abre o 404: mandar para `/verify?q=<ID>` com "Nenhuma obra com este ID".
+- [x] **Logos de tom fixo no tema escuro:** onde o tema escuro alcança, usar o tom `auto-mono` em vez do `color`. Só nas telas logadas.
+- [x] **Preferência de tema acompanha a conta.**
   - Gravar em `preferences.theme` pelo `PATCH /api/auth/preferences`.
   - Ler no login.
   - O `localStorage` continua sendo o cache.
@@ -125,7 +125,7 @@ Todos estão anotados como "registrado" no CLAUDE.md e nenhum pede decisão:
 
 O menu da conta aponta "Ajuda" para `/e/how-it-works` (`HELP_HREF`).
 
-- [ ] **Criar `/help`** (público, no site): índice com seis artigos curtos.
+- [x] **Criar `/help`** (público, no site): índice com seis artigos curtos.
   - Escritos a partir do que o produto FAZ, sem prometer o que não existe: conferir cada frase contra o código.
   - Artigos:
     - Como funciona o certificado.
@@ -134,7 +134,7 @@ O menu da conta aponta "Ajuda" para `/e/how-it-works` (`HELP_HREF`).
     - Como recebo uma venda (Connect e Pix).
     - Transferir uma obra fora da plataforma.
     - Etiqueta NFC: o que fazer se ela for removida.
-- [ ] **Ligar a página:**
+- [x] **Ligar a página:**
   - `HELP_HREF` → `/help`.
   - Entrada no `sitemap.xml`.
   - Catraca `nav-targets` atualizada.
@@ -151,33 +151,40 @@ O menu da conta aponta "Ajuda" para `/e/how-it-works` (`HELP_HREF`).
 - Simulador.
 
 Tarefas:
-- [ ] Acrescentar uma jornada por item acima, contra o `next start` local, com `SMOKE_READONLY` respeitado.
-- [ ] Rodar `npm run smoke` local verde.
+- [x] Acrescentar uma jornada por item acima, contra o `next start` local, com `SMOKE_READONLY` respeitado.
+- [x] Rodar `npm run smoke` local verde.
 - [ ] Rodar `SMOKE_READONLY=1` contra a produção pelo sandbox.
 
 ## 7. Revisão adversarial da noite (≈1 h)
 
-- [ ] Um agente revisor, sem o meu raciocínio, recebe o diff `main@início-da-noite..main`.
+- [x] Um agente revisor, sem o meu raciocínio, recebe o diff `main@início-da-noite..main`.
   - Ângulos: escopo e vazamento (piso, hash, CPF), idempotência do cron novo, segurança do `vault-image.web` (token só no cabeçalho, nunca em URL) e textos que prometem o que o produto não faz.
-- [ ] Todo achado CONFIRMED vira correção na mesma noite.
+- [x] Todo achado CONFIRMED vira correção na mesma noite.
 
 ## 8. Fechamento (≈30 min)
 
-- [ ] **Atualizar `CLAUDE.md`:**
+- [x] **Atualizar `CLAUDE.md`:**
   - Bullets dos blocos.
   - "Pendências" reescrita só com o que sobrou.
-- [ ] **Atualizar `docs/PRODUCAO-PENDENCIAS.md`** com o que depende do Moacy (§10 abaixo).
+- [x] **Atualizar `docs/PRODUCAO-PENDENCIAS.md`** com o que depende do Moacy (§10 abaixo).
 - [ ] **Teste final em produção:**
   - Login dos 9 perfis.
   - `/app` dos três perfis.
   - `/admin/ops` sem cron atrasado.
-- [ ] **Resumo da noite:** escrito no fim deste arquivo (feito, provado, ficou de fora e por quê).
+- [x] **Resumo da noite:** escrito no fim deste arquivo (feito, provado, ficou de fora e por quê).
 
 ## 9. Decisões tomadas à noite (preencher)
 
 | # | Onde | Escolha feita | Alternativa | Reverter é fácil? |
 |---|------|---------------|-------------|-------------------|
-|   |      |               |             |                   |
+| 1 | Escritura (bloco 3/7) | A escritura só sai com a obra `IN_DEAL` e o certificado `ACTIVE`; contestação aprovada ou etiqueta removida depois do toque param a conclusão e o negócio fica parado em DELIVERY para a equipe (sem item de revisão novo). | Concluir mesmo assim e revisar depois. | Sim: tirar a guarda em `completeTransfer`. |
+| 2 | Escritura (bloco 7) | Evento `TRANSFERRED` ou aviso que falha depois do commit só vai ao log (o comprador nunca recebe 500 por escritura já emitida). | Fila de retentativa. | Sim. |
+| 3 | Transferência fora (bloco 7) | Obra com negócio vivo não começa transferência fora da plataforma (`LIVE_DEAL`), e não pode ser listada de novo. | Permitir e deixar a escritura do negócio falhar. | Sim. |
+| 4 | Tema (bloco 4/7) | O tema fica na conta; sair ou abrir a tela de entrar esquecem o tema do navegador. | Tema só no navegador. | Sim. |
+| 5 | Ajuda (bloco 5/7) | Textos que prometem só o que o código faz: sem "comunicar furto" (não existe ação), validade da proposta 24/48/72 h, botão "Transferir" do colecionador. | — | — |
+| 6 | Saúde (bloco 4) | Webhook da Stripe recusado por assinatura grava uma linha por minuto, sem corpo. | Nenhum rastro. | Sim. |
+| 7 | Smoke (bloco 6) | A artista de teste do smoke local nasce pelo cadastro real com `AUTH_CODE_ECHO=1` (sem seed). | Seed próprio. | — |
+| 8 | Prova em produção (bloco 1) | A prova do app na web só lê; "Fazer oferta"/"Comprar" só abrem a tela. | Criar proposta de teste em produção. | — |
 
 ## 10. Para o Moacy de manhã (não bloqueia a noite)
 
@@ -212,8 +219,8 @@ Tarefas:
 12. Conta só com Google/Apple troca e-mail sem senha.
 13. Revisão jurídica: termos, privacidade, termo de cessão.
 
-## Resumo da noite (preencher no fim)
+## Resumo da noite (2026-10-29, 00:20–01:50 UTC)
 
-- Feito:
-- Provado em produção:
-- Ficou de fora:
+- **Feito (7 merges na `main`, gate verde em cada um, 915 testes no fim):** blocos 1–7 inteiros. A revisão adversarial achou 5 defeitos (1 alto: a retomada da escritura podia concluir venda de obra contestada/revogada) e a segunda rodada mais 2; todos corrigidos antes do fecho. Detalhe no bullet de 2026-10-29 do `CLAUDE.md`.
+- **Provado em produção:** cada deploy da `main` ficou READY (a migration `20261029100000` aplicada no build); o app na web (`/app`) dos três perfis pelo script `scripts/smoke-app-web.manual.mjs` — ver a seção abaixo, preenchida pela última rodada.
+- **Ficou de fora, com o motivo:** o item "Consultor" do bloco 1 (a demo não tem conta de consultor); a prova dos temas dentro do simulador (só visual, sem efeito no app embutido — ele não lê o tema do painel); o evento `TRANSFERRED` perdido não é retentado (registrado como pendência 4); a retomada não abre item de revisão quando pula um negócio (a equipe vê em Negócios).

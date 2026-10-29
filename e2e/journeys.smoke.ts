@@ -80,5 +80,45 @@ test('5 · cobrança do membro e fila de laudos da equipe', async ({ request }) 
   await login(request, ADMIN)
   const desk = await request.get('/appraisals')
   expect(desk.status()).toBe(200)
-  expect(await desk.text()).toContain('Fila de laudos')
+  // the team's desk (Admin › Laudos) and the appraiser's "Fila de laudos" share the route
+  expect(await desk.text()).toMatch(/Laudos|Fila de laudos/)
+})
+
+// Noite de 2026-10-29: the pieces that entered after the first five journeys.
+test('6 · ajuda pública e o app na web (simulador)', async ({ request }) => {
+  const help = await request.get('/e/help')
+  expect(help.status()).toBe(200)
+  expect(await help.text()).toContain('Como podemos ajudar')
+  const article = await request.get('/e/help/pagamento-em-garantia')
+  expect(article.status()).toBe(200)
+  expect(await article.text()).toContain('Pagamento em garantia')
+  expect((await request.get('/e/help/nao-existe')).status()).toBe(404)
+  const sim = await request.get('/simulator')
+  expect(sim.status()).toBe(200)
+  // the exported Expo app: /app and any deep link fall back to its index.html
+  for (const path of ['/app', '/app/explore', '/app/login']) {
+    const res = await request.get(path)
+    expect(res.status(), path).toBe(200)
+    expect(await res.text(), path).toContain('<div id="root"')
+  }
+})
+
+test('7 · saúde operacional: a rotina das escrituras pendentes e a porta dela', async ({ request }) => {
+  // without the CRON_SECRET bearer: 401 where the secret exists (a deploy); dev without a secret lets it run
+  expect([200, 401]).toContain((await request.post('/api/cron/deal-complete-retry')).status())
+  await login(request, ADMIN)
+  const ops = await request.get('/admin/ops')
+  expect(ops.status()).toBe(200)
+  expect(await ops.text()).toContain('Escrituras pendentes')
+})
+
+test('8 · compra direta e oferta abrem para a primeira obra à venda', async ({ request }) => {
+  const list = await request.get('/api/public/artworks')
+  const items = await list.json() as { publicId: string }[] | { items: { publicId: string }[] }
+  const first = (Array.isArray(items) ? items : items.items)[0]
+  test.skip(!first, 'nenhuma obra à venda neste banco')
+  for (const path of [`/e/artwork/${first!.publicId}/offer`, `/e/artwork/${first!.publicId}/buy`]) {
+    const res = await request.get(path, { maxRedirects: 0 })
+    expect(res.status(), path).toBeLessThan(500)
+  }
 })

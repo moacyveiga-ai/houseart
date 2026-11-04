@@ -1,8 +1,8 @@
 'use client'
 // The signup island: the "Criar sua conta" card of HouseArt Cadastro.dc.html
 // (step 1) followed by the stepped flow of the "Cadastro" shortcut of
-// HouseArt App Colecionador.dc.html — e-mail code → phone code by SMS →
-// how you will use it / interests / city / newsletter → "Conta criada".
+// HouseArt App Colecionador.dc.html — e-mail code → phone (collected, no SMS code;
+// decision of 2026-11-04) → how you will use it / interests / city / newsletter → "Conta criada".
 // `startAt` = 3 is the continuation of a social signup (/signup/welcome).
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
@@ -40,7 +40,7 @@ const USE_ICONS: Record<(typeof PREFERENCE_USES)[number], string> = { COLLECT: '
 const STEP_TITLES: Record<SignupStep, [string, string]> = {
   1: ['Criar sua conta', ''],
   2: ['Confirme seu e-mail', 'Enviamos um código de 6 dígitos. É assim que protegemos a sua conta.'],
-  3: ['Confirme seu celular', 'Usamos o celular para confirmar a conta e avisar sobre propostas e entregas.'],
+  3: ['Seu celular', 'Usamos o celular para avisar sobre propostas e entregas. Sem ligações nem propaganda.'],
   4: ['Como você vai usar a HouseArt?', 'Pode escolher mais de um. Isso ajusta o que aparece no seu feed.'],
   5: ['', 'Sua coleção, suas propostas e a comunidade já estão prontas.'],
 }
@@ -80,10 +80,7 @@ export function SignupForm({ providers, startAt = 1, social, socialProvider, acc
   const [emailCode, setEmailCode] = useState('')
   // step 3
   const [phone, setPhone] = useState('')
-  const [phoneToken, setPhoneToken] = useState<string | null>(null)
   const [phoneMask, setPhoneMask] = useState<string | null>(null)
-  const [phoneEcho, setPhoneEcho] = useState<string | null>(null)
-  const [phoneCode, setPhoneCode] = useState('')
   // step 4
   const [uses, setUses] = useState<string[]>([])
   const [interests, setInterests] = useState<string[]>([])
@@ -139,33 +136,16 @@ export function SignupForm({ providers, startAt = 1, social, socialProvider, acc
     if (data.echo) setEmailEcho(data.echo)
   }
 
-  async function startPhone(e: FormEvent) {
+  /** Step 3 stores the number as given — no SMS code (decision of 2026-11-04). */
+  async function savePhone(e: FormEvent) {
     e.preventDefault(); setError(null)
     if (!normalizeBrMobile(phone)) { setError('Informe um celular brasileiro com DDD, começando com 9.'); return }
     setBusy(true)
-    const { res, data } = await post('/api/auth/phone/start', { phone })
+    const { res, data } = await post('/api/auth/phone/save', { phone })
     setBusy(false)
-    if (!res.ok || !data.token) { setError(data.error ?? 'Não foi possível enviar o SMS.'); return }
-    setPhoneToken(data.token); setPhoneMask(data.phoneMask ?? phone); setPhoneEcho(data.echo ?? null); setPhoneCode('')
-  }
-
-  async function verifyPhone(e: FormEvent) {
-    e.preventDefault(); setError(null)
-    if (phoneCode.length !== 6) { setError('Digite os 6 dígitos do código.'); return }
-    setBusy(true)
-    const { res, data } = await post('/api/auth/phone/verify', { token: phoneToken, code: phoneCode })
-    setBusy(false)
-    if (!res.ok) { setError(data.error ?? 'Código inválido ou vencido.'); return }
-    if (data.phoneMask) setPhoneMask(data.phoneMask)
+    if (!res.ok) { setError(data.error ?? 'Não foi possível guardar o celular.'); return }
+    setPhoneMask(data.phoneMask ?? phone)
     setStep(4)
-  }
-
-  async function resendPhone() {
-    if (!phoneToken) return
-    setError(null); setBusy(true)
-    const { data } = await post('/api/auth/phone/resend', { token: phoneToken })
-    setBusy(false)
-    if (data.echo) setPhoneEcho(data.echo)
   }
 
   async function savePreferences(e: FormEvent) {
@@ -279,25 +259,14 @@ export function SignupForm({ providers, startAt = 1, social, socialProvider, acc
         </form>
       ) : null}
 
-      {step === 3 && !phoneToken ? (
-        <form className="ha-signup__form" onSubmit={startPhone}>
+      {step === 3 ? (
+        <form className="ha-signup__form" onSubmit={savePhone}>
           <label className="ha-label">Celular
             <input className="ha-input" type="tel" name="phone" autoComplete="tel-national" inputMode="tel" placeholder="(71) 99999-9999" value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} required />
           </label>
-          <p className="ha-signup__meta">Enviamos um código por SMS. Não ligamos nem mandamos propaganda.</p>
+          <p className="ha-signup__meta"><Icon name="smartphone" size={18} />Só com DDD. Você pode trocar depois em Minha conta.</p>
           {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
-          <Button type="submit" variant="primary" size="md" loading={busy} className="ha-signup__cta">Enviar código por SMS</Button>
-        </form>
-      ) : null}
-
-      {step === 3 && phoneToken ? (
-        <form className="ha-signup__form" onSubmit={verifyPhone}>
-          <CodeField value={phoneCode} onChange={setPhoneCode} label="Código do SMS" />
-          <p className="ha-signup__meta ha-signup__meta--split"><span>SMS para {phoneMask}</span><Resend onResend={resendPhone} disabled={busy} /></p>
-          <EchoHint code={phoneEcho} />
-          {error ? <p className="ha-field-error" role="alert">{error}</p> : null}
-          <Button type="submit" variant="primary" size="md" loading={busy} className="ha-signup__cta" disabled={phoneCode.length !== 6}>Confirmar código</Button>
-          <button type="button" className="ha-link ha-link--quiet ha-signup__alt" onClick={() => { setPhoneToken(null); setPhoneCode(''); setError(null) }}>Trocar número</button>
+          <Button type="submit" variant="primary" size="md" loading={busy} className="ha-signup__cta">Continuar</Button>
         </form>
       ) : null}
 
@@ -349,7 +318,7 @@ export function SignupForm({ providers, startAt = 1, social, socialProvider, acc
           <dl className="ha-signup__summary">
             <Row k="Nome" v={name || account?.name || '—'} />
             <Row k="E-mail" v={`${email || account?.email || '—'} · verificado`} />
-            <Row k="Celular" v={`${phoneMask ?? '—'} · verificado`} />
+            <Row k="Celular" v={phoneMask ?? '—'} />
             <Row k="Interesses" v={interests.map((i) => INTEREST_LABELS[i as keyof typeof INTEREST_LABELS]).join(', ') || '—'} />
           </dl>
           <Link className="ha-btn ha-btn--primary ha-btn--md ha-signup__cta" href="/">Começar a explorar</Link>

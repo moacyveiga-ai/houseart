@@ -1,5 +1,5 @@
 // Continuation of a social signup (the OAuth callback lands here, signed in):
-// the same island from step 3 — phone by SMS, interests, "Conta criada". The panel is the one of the
+// the same island from step 3 — phone (collected, no code), interests, "Conta criada". The panel is the one of the
 // login (claim + wall), with a public-domain painting picked at random on each visit (Moacy, 2026-10-28).
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'

@@ -118,6 +118,19 @@ import { RESET_TTL_MS, codeEchoAllowed } from './access-code-core'
 import { publicBaseUrl } from '@/lib/public-url'
 import { destroyAllSessions } from './index'
 
+/** The signup collects the phone WITHOUT a code (decision of 2026-11-04: SMS confirmation left the
+ * signup; the e-mail code is the only check). The number is stored in E.164 and stays unverified —
+ * `phoneVerifiedAt` is kept only when the same number was already confirmed by SMS (the offer flow
+ * still confirms by code). Blind on a phone verified by another account: stored anyway, never verified. */
+export async function savePhoneUnverified(userId: number, rawPhone: string): Promise<{ ok: true; phoneMask: string } | { ok: false; error: string }> {
+  const phone = normalizeBrMobile(rawPhone)
+  if (!phone) return { ok: false, error: 'Informe um celular válido com DDD.' }
+  const current = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { phone: true, phoneVerifiedAt: true } })
+  const keepVerified = current.phone === phone && !!current.phoneVerifiedAt
+  await prisma.user.update({ where: { id: userId }, data: { phone, phoneVerifiedAt: keepVerified ? current.phoneVerifiedAt : null } })
+  return { ok: true, phoneMask: maskPhone(phone) }
+}
+
 /** Start the SMS code for the LOGGED user's phone (purpose PHONE). Blind on a phone already taken by another account. */
 export async function startPhoneCode(userId: number, rawPhone: string): Promise<{ ok: true; token: string; phoneMask: string; echo?: string } | { ok: false; error: string }> {
   const phone = normalizeBrMobile(rawPhone)

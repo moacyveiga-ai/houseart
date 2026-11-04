@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, verifyPassword, createLocalSession, getSessionByToken } from '@/lib/auth'
-import { completePasswordReset, resendEmailChange, resendPhoneCode, startEmailChange, startPasswordReset, startPhoneCode, verifyAccessCode, verifyEmailChange, verifyPhoneCode } from '@/lib/auth/access-code-server'
+import { completePasswordReset, resendEmailChange, resendPhoneCode, savePhoneUnverified, startEmailChange, startPasswordReset, startPhoneCode, verifyAccessCode, verifyEmailChange, verifyPhoneCode } from '@/lib/auth/access-code-server'
 import { sha256 } from '@/lib/auth/access-code-core'
 import { completeOAuth } from '@/lib/auth/oauth/server'
 import { savePreferences } from '@/lib/accounts/preferences-server'
@@ -18,6 +18,25 @@ async function codeOf(token: string): Promise<string> {
 const state = (over: Partial<Parameters<typeof completeOAuth>[1]> = {}) => ({ nonce: 'n', provider: 'MOCK' as const, purpose: 'signup' as const, profileKind: 'COLLECTOR', plan: null, next: null, verifier: 'v', issuedAt: Date.now(), ...over })
 
 beforeEach(async () => { await truncateTables(['Tenant', 'User', 'Artist', 'AccessCode', 'UserIdentity', 'Session', 'rate_limit_bucket']) })
+
+describe('phone collected by the signup (no SMS code)', () => {
+  it('stores the number unverified; keeps the verification only for the same number already confirmed', async () => {
+    const a = await prisma.user.create({ data: { email: 'a@t.test', name: 'A', passwordHash: await hashPassword('senha-forte-1'), profile: 'collector', active: true } })
+    expect(await savePhoneUnverified(a.id, '71 9999')).toMatchObject({ ok: false })
+    expect(await savePhoneUnverified(a.id, '(71) 99999-0002')).toMatchObject({ ok: true, phoneMask: '(71) 99999-0002' })
+    let ua = await prisma.user.findUniqueOrThrow({ where: { id: a.id } })
+    expect(ua.phone).toBe('+5571999990002'); expect(ua.phoneVerifiedAt).toBeNull()
+    // confirmed by SMS afterwards (the offer flow): saving the SAME number again keeps the verification
+    await prisma.user.update({ where: { id: a.id }, data: { phoneVerifiedAt: new Date() } })
+    expect(await savePhoneUnverified(a.id, '71999990002')).toMatchObject({ ok: true })
+    ua = await prisma.user.findUniqueOrThrow({ where: { id: a.id } })
+    expect(ua.phoneVerifiedAt).not.toBeNull()
+    // a different number drops it
+    expect(await savePhoneUnverified(a.id, '71999990003')).toMatchObject({ ok: true })
+    ua = await prisma.user.findUniqueOrThrow({ where: { id: a.id } })
+    expect(ua.phone).toBe('+5571999990003'); expect(ua.phoneVerifiedAt).toBeNull()
+  })
+})
 
 describe('phone by SMS', () => {
   it('verifies the phone of the logged user; a phone verified elsewhere is silent', async () => {

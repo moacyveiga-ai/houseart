@@ -17,7 +17,7 @@ import { shareArtwork } from '@/ui/share'
 import { DiscoverDeck } from './DiscoverDeck'
 import { EXPLORE_CHIPS, acceptsOffers, passesChip, type ExploreChip } from './explore-core'
 
-const BRAND = require('../../assets/brand/marca_houseart_simples_horiz_mono.png') as number
+const BRAND = require('../../assets/brand/marca_houseart_mono_positivo.png') as number
 
 type View_ = 'feed' | 'discover'
 
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: theme.bg },
   head: { gap: 12, paddingTop: 6, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border },
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brand: { height: 24, width: 120, marginRight: 'auto' },
+  brand: { height: 28, width: 145, marginRight: 'auto' }, // the mark is 773 × 149
   seg: { flexDirection: 'row', padding: 3, backgroundColor: theme.border, borderRadius: theme.radiusMd },
   segBtn: { flex: 1, height: 34, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   segOn: { backgroundColor: theme.bg },

@@ -30,7 +30,7 @@ function CardFace({ brand, number, holder, exp, tag, small }: { brand: CardBrand
       {small ? (
         <div className="ha-cards-face__top"><span className="ha-cards-face__chip" /><span className="ha-cards-face__mark">{brandMark(brand)}</span></div>
       ) : (
-        <div className="ha-cards-face__top"><HouseArtLogo version="simples_horiz" tone="negativo" height={20} />{tag ? <span className="ha-cards-face__tag">{tag}</span> : null}</div>
+        <div className="ha-cards-face__top"><HouseArtLogo version="simples_horiz" tone="mono-negativo" height={20} />{tag ? <span className="ha-cards-face__tag">{tag}</span> : null}</div>
       )}
       {small ? null : <span className="ha-cards-face__chip" />}
       <span className="ha-cards-face__num">{number}</span>

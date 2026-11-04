@@ -17,7 +17,7 @@ import { randomWall } from './paintings'
 /** The login's veil (45 % → 15 % at a third → 82 % at the bottom), sampled in 24 bands. */
 const VEIL = veilBands(24)
 
-const MARK = require('../../../assets/brand/marca_houseart_full_horiz_negativo.png')
+const MARK = require('../../../assets/brand/marca_houseart_color_negativo.png')
 
 export function SplashOverlay({ ready }: { ready: boolean }) {
   const insets = useSafeAreaInsets()
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   wrap: { backgroundColor: colors.ink900, zIndex: 70 },
   veil: { flexDirection: 'column' },
   tap: { flex: 1, paddingHorizontal: 24, justifyContent: 'space-between' },
-  mark: { width: 159, height: 50 }, // the mark is 539 × 170
+  mark: { width: 182, height: 35 }, // the mark is 773 × 149
   hero: { gap: 12 },
   tagline: { fontSize: 16, lineHeight: 24, color: '#E8E4DC' },
   credit: { fontSize: 12, lineHeight: 16, color: '#E8E4DC', opacity: 0.85 },

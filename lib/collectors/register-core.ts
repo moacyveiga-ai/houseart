@@ -24,6 +24,7 @@ export const TECHNIQUE_CHIPS: { label: string; category: ArtworkCategory }[] = [
   { label: 'Gravura', category: 'PRINT' },
   { label: 'Fotografia', category: 'PHOTOGRAPHY' },
   { label: 'Escultura', category: 'SCULPTURE' },
+  { label: 'Design', category: 'DESIGN' },
   { label: 'Literatura', category: 'LITERATURE' },
   { label: 'Técnica mista', category: 'MIXED_MEDIA' },
 ]

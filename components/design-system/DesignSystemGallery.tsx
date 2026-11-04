@@ -1,7 +1,7 @@
 // Gallery of the DS, section by section as the prototype (Princípios · Marca ·
 // Cores · Tipografia · Espaço e forma · Herdados · Componentes HouseArt).
 // Sample data = the prototype's examples; images = designs/img (placeholders).
-import { HouseArtLogo, LanguageMark, type BrandVersion, type Language } from '@/components/layout/HouseArtLogo'
+import { HouseArtLogo, LanguageMark, type BrandTone, type Language } from '@/components/layout/HouseArtLogo'
 import { ArtworkFrame, FrameWall } from '@/components/ds/ArtworkFrame'
 import { ArtworkGrid, ArtworkList, type ArtworkCardData } from '@/components/ds/ArtworkCard'
 import { ArtworkId } from '@/components/ds/ArtworkId'
@@ -22,12 +22,11 @@ import './gallery.css'
 
 const IMG = { mSup: '/design-system/ha-mSup.png', k8: '/design-system/ha-k8.png', mAir: '/design-system/ha-mAir.png', mAbs: '/design-system/ha-mAbs.png', hAlt: '/design-system/ha-hAlt.png', hSvan: '/design-system/ha-hSvan.png' }
 
-const BRANDS: [BrandVersion, string, string][] = [
-  ['full_horiz', 'Completa horizontal', 'Principal · top bar, site'], ['full_vert', 'Completa vertical', 'Capa, splash, redes'],
-  ['full_45_horiz', 'Completa 45° horizontal', 'Peças editoriais'], ['full_45_vert', 'Completa 45° vertical', 'Cartazes, convites'],
-  ['simples_horiz', 'Logotipo horizontal', 'Espaços estreitos, rodapé'], ['simples_vert', 'Logotipo vertical', 'Assinatura, documentos'],
+const BRANDS: [BrandTone, string, string, 'paper' | 'ink'][] = [
+  ['color', 'Colorida · positivo', 'Principal · top bar, site, documentos', 'paper'], ['negativo', 'Colorida · negativo', 'Sobre ink-900 e fotos escuras', 'ink'],
+  ['mono', 'Mono · positivo', 'Uma cor só, sobre claro', 'paper'], ['mono-negativo', 'Mono · negativo', 'Uma cor só, sobre escuro', 'ink'],
 ]
-const LANGUAGES: [Language, string, string][] = [['pintura', 'Pintura', '#F0A050'], ['escultura', 'Escultura', '#F07860'], ['fotografia', 'Fotografia', '#D84870'], ['literatura', 'Literatura', '#B04898']]
+const LANGUAGES: [Language, string, string][] = [['pintura', 'Pintura', '#F5A653'], ['escultura', 'Escultura', '#F47963'], ['fotografia', 'Fotografia', '#DA4A72'], ['design', 'Design', '#B0499B']]
 const COLORS: [string, string, string][] = [
   ['--ha-paper-50', '#FBFAF7', 'Fundo principal claro'], ['--ha-paper-100', '#F6F3EE', 'Seções e cards'], ['--ha-paper-200', '#ECE7DF', 'Divisores, bordas'],
   ['--ha-ink-900', '#111111', 'Fundo escuro, títulos'], ['--ha-ink-700', '#2B2B2B', 'Texto corrido'], ['--ha-ink-500', '#6B6760', 'Secundário, legendas'], ['--ha-ink-300', '#B5B0A6', 'Placeholder, desabilitado'],
@@ -64,7 +63,7 @@ export function DesignSystemGallery() {
     <div className="dsg">
       <header className="dsg-header">
         <div className="dsg-header__inner">
-          <div className="dsg-header__brand"><HouseArtLogo version="full_horiz" tone="color" height={28} /><span className="ha-eyebrow">Design System · v0.1</span></div>
+          <div className="dsg-header__brand"><HouseArtLogo version="full_horiz" tone="color" height={42} /><span className="ha-eyebrow">Design System · v0.1</span></div>
           <nav className="dsg-nav">
             <a href="#principios">Princípios</a><a href="#marca">Marca</a><a href="#cores">Cores</a><a href="#tipo">Tipografia</a><a href="#base">Espaço e forma</a><a href="#herdados">Herdados</a><a href="#novos">Componentes HouseArt</a>
           </nav>
@@ -97,7 +96,7 @@ export function DesignSystemGallery() {
             <div className="dsg-rules">
               <div className="ha-strong">Regras</div>
               <div>Grafia no texto corrido: HouseArt. Na marca: houseArt, com “Art” em destaque.</div>
-              <div>Símbolo: losango de quatro módulos, um por linguagem (pintura, escultura, fotografia, literatura).</div>
+              <div>Símbolo: quadrado de quatro módulos em pé, um por linguagem (fotografia, design, escultura, pintura).</div>
               <div>Colorida sobre claro, negativo sobre ink-900, mono quando só houver uma cor. Nunca sobre foto de obra.</div>
               <div>Área de proteção: a altura de um módulo do símbolo em volta da marca. Largura mínima da horizontal: 120 px.</div>
               <div>Top bar: horizontal simples ou completa, 28–32 px de altura, mesma posição das plataformas House.</div>
@@ -105,23 +104,21 @@ export function DesignSystemGallery() {
           </div>
           <h3 className="ha-h2 dsg-mb-4">Aplicação por tela</h3>
           <div className="dsg-apply dsg-mb-12">
-            {[['Top bar pública, apps, sistemas web', 'Completa horiz. colorida · 30 / 26 px'], ['Home sobre foto, Entrar, Cadastro, Verificar', 'Completa horiz. negativo'], ['Rodapés', 'Completa vertical negativo · 64 px'], ['Splash dos apps', 'Completa 45° vertical colorida · fundo paper'], ['Cartão da carteira', 'Logotipo horiz. negativo · 14 px'], ['Certificado', 'Completa horiz. colorida · 28 px'], ['Ícone e favicon', 'Símbolo colorido'], ['Linguagens', 'Filtros, capas da Home, selo da obra, posts']].map(([a, b]) => (
+            {[['Top bar pública, apps, sistemas web', 'Colorida positivo'], ['Home sobre foto, Entrar, Cadastro, Verificar', 'Colorida negativo'], ['Rodapés', 'Colorida negativo'], ['Splash dos apps', 'Colorida negativo · fundo ink'], ['Cartão da carteira', 'Mono negativo'], ['Certificado', 'Colorida positivo'], ['Ícone e favicon', 'Símbolo colorido'], ['Linguagens', 'Selos em filtros, capas da Home, selo da obra, posts']].map(([a, b]) => (
               <div key={a} className="dsg-apply__row"><span>{a}</span><span className="ha-muted">{b}</span></div>
             ))}
           </div>
-          <div className="dsg-h3"><h3 className="ha-h2">Versões</h3><span className="ha-caption">colorida · mono · negativo</span></div>
+          <div className="dsg-h3"><h3 className="ha-h2">Versões</h3><span className="ha-caption">colorida · mono · positivo · negativo</span></div>
           <div className="ha-stack dsg-mb-12">
-            {BRANDS.map(([v, name, use]) => (
-              <div key={v} className="dsg-brand-row">
+            {BRANDS.map(([tone, name, use, bg]) => (
+              <div key={tone} className="dsg-brand-row">
                 <div><div className="ha-sm ha-strong">{name}</div><div className="ha-caption">{use}</div></div>
-                <div className="dsg-swatch dsg-swatch--paper dsg-swatch--180"><HouseArtLogo version={v} tone="color" height={v.includes('vert') || v.includes('45') ? 120 : 44} /></div>
-                <div className="dsg-swatch dsg-swatch--paper dsg-swatch--180"><HouseArtLogo version={v} tone="mono" height={v.includes('vert') || v.includes('45') ? 120 : 44} /></div>
-                <div className="dsg-swatch dsg-swatch--ink dsg-swatch--180"><HouseArtLogo version={v} tone="negativo" height={v.includes('vert') || v.includes('45') ? 120 : 44} /></div>
+                <div className={`dsg-swatch dsg-swatch--${bg} dsg-swatch--180`}><HouseArtLogo version="simples_horiz" tone={tone} height={30} /></div>
               </div>
             ))}
           </div>
           <div className="dsg-h3"><h3 className="ha-h2">Linguagens</h3><span className="ha-caption">submarcas por categoria</span></div>
-          <p className="ha-muted dsg-mb-6" style={{ margin: 0, maxWidth: 720 }}>Cada módulo do símbolo vira a marca de uma linguagem. Use em filtros, capas de categoria, curadoria e comunidade, nunca junto com o símbolo completo.</p>
+          <p className="ha-muted dsg-mb-6" style={{ margin: 0, maxWidth: 720 }}>Cada módulo do símbolo vira o selo de uma linguagem. Use em filtros, capas de categoria, curadoria e comunidade, nunca junto com o símbolo completo.</p>
           <div className="dsg-grid dsg-grid--260 dsg-mb-12">
             {LANGUAGES.map(([k, name, hex]) => (
               <div key={k} className="dsg-lang">

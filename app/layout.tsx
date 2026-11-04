@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   // installed as an app from the browser (app/manifest.ts; iPhone reads these and app/apple-icon.png)
   applicationName: 'HouseArt',
   appleWebApp: { capable: true, title: 'HouseArt', statusBarStyle: 'default' },
-  openGraph: { siteName: 'HouseArt', locale: 'pt_BR', type: 'website', images: [{ url: '/brand/marca_houseart_full_horiz_color.png', alt: 'HouseArt' }] },
+  openGraph: { siteName: 'HouseArt', locale: 'pt_BR', type: 'website', images: [{ url: '/brand/marca_houseart_color_positivo.png', alt: 'HouseArt' }] },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

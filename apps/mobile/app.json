@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/brand/marca_houseart_full_45_vert_negativo.png",
+      "image": "./assets/brand/marca_houseart_color_negativo.png",
       "resizeMode": "contain",
       "backgroundColor": "#111111"
     },
@@ -54,8 +54,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/brand/marca_houseart_full_45_vert_negativo.png",
-          "imageWidth": 180,
+          "image": "./assets/brand/marca_houseart_color_negativo.png",
+          "imageWidth": 240,
           "resizeMode": "contain",
           "backgroundColor": "#111111"
         }

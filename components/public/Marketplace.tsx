@@ -23,7 +23,7 @@ const LANGUAGE_TILES: { language: Language; category: string; label: string }[] 
   { language: 'pintura', category: 'PAINTING', label: 'Pintura' },
   { language: 'escultura', category: 'SCULPTURE', label: 'Escultura' },
   { language: 'fotografia', category: 'PHOTOGRAPHY', label: 'Fotografia' },
-  { language: 'literatura', category: 'LITERATURE', label: 'Literatura' },
+  { language: 'design', category: 'DESIGN', label: 'Design' },
 ]
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [

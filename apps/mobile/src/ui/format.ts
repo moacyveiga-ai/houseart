@@ -17,7 +17,7 @@ export function installmentLine(cents: string | null): string {
 }
 
 // the seven techniques of the handoff, plus the categories of before (frozen certificates)
-export const CATEGORY_LABEL: Record<string, string> = { PAINTING: 'Pintura', SCULPTURE: 'Escultura', PHOTOGRAPHY: 'Fotografia', LITERATURE: 'Literatura', PRINT: 'Gravura', DRAWING: 'Desenho', MIXED_MEDIA: 'Técnica mista', WORK_ON_PAPER: 'Obra sobre papel', DIGITAL: 'Digital', OTHER: 'Outro' }
+export const CATEGORY_LABEL: Record<string, string> = { PAINTING: 'Pintura', SCULPTURE: 'Escultura', PHOTOGRAPHY: 'Fotografia', DESIGN: 'Design', LITERATURE: 'Literatura', PRINT: 'Gravura', DRAWING: 'Desenho', MIXED_MEDIA: 'Técnica mista', WORK_ON_PAPER: 'Obra sobre papel', DIGITAL: 'Digital', OTHER: 'Outro' }
 
 /** The technical line: year · technique (or the category) · dimensions. */
 export function sheetLine(i: { year: number | null; technique: string | null; category?: string; dimensions: string }): string {

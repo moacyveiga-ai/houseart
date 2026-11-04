@@ -48,7 +48,7 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
   const [city, setCity] = useState(me.city)
   const [saving, setSaving] = useState(false)
   const [note, setNote] = useState('')
-  const verified = me.emailVerified && (me.phoneVerified || !me.phoneMask)
+  const verified = me.emailVerified
 
   async function logout() {
     setLeaving(true)
@@ -112,7 +112,7 @@ export function CollectorAccount({ initials, me, sections, view }: { initials: s
         </div>
         <label className="ha-cacct__field"><span className="ha-cacct__field-k">Nome completo<span className="ha-cacct__field-n">Como aparece nos certificados e nas conversas</span></span><input className="ha-input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
         <ContactChange kind="email" k="E-mail" value={me.email} needsPassword={!!me.hasPassword} note={me.emailVerified ? 'Verificado' : 'Não verificado'} />
-        <ContactChange kind="phone" k="Celular" value={me.phoneMask ?? '—'} note={me.phoneMask ? (me.phoneVerified ? 'Verificado' : 'Não verificado') : 'Nenhum celular cadastrado'} />
+        <ContactChange kind="phone" k="Celular" value={me.phoneMask ?? '—'} note={me.phoneMask ? (me.phoneVerified ? 'Verificado' : 'Informado') : 'Nenhum celular cadastrado'} />
         {fields.map((f) => (
           <label key={f.k} className="ha-cacct__field"><span className="ha-cacct__field-k">{f.k}<span className="ha-cacct__field-n">{f.note}</span></span><input className="ha-input ha-cacct__ro" value={f.v} readOnly /></label>
         ))}

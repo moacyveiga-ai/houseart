@@ -9,7 +9,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useApi } from '@/api/hooks'
-import { confirmOffer, identity as fetchIdentity, listCards, setIdentity, shippingQuote, startOffer, startPhone, verifyPhone, type ShippingQuote } from '@/api/market'
+import { confirmOffer, identity as fetchIdentity, listCards, savePhone, setIdentity, shippingQuote, startOffer, type ShippingQuote } from '@/api/market'
 import type { ArtworkPage, GuaranteeMethod, IdentityView, PaymentMethodView } from '@/api/types'
 import { useSession } from '@/auth/session'
 import { colors, theme } from '@/theme'
@@ -63,7 +63,7 @@ function Wizard({ artwork: a }: { artwork: ArtworkPage }) {
   }, [step, cards])
 
   const card = cards?.find((m) => m.id === cardId) ?? null
-  const identityState = { cpfOk: !!identity?.cpfMask, phoneOk: !!identity?.phoneVerified }
+  const identityState = { cpfOk: !!identity?.cpfMask, phoneOk: !!identity?.phoneMask }
   const blocked = !canAdvance(step, { offerCents, priceCents: price, identity: identityState, guarantee, hasCard: !!card, accepted })
   const commit = (cents: number) => { const v = Math.max(0, Math.min(price, cents)); setOfferCents(v); setAmountText(reaisText(v)) }
 
@@ -185,31 +185,24 @@ function Wizard({ artwork: a }: { artwork: ArtworkPage }) {
   )
 }
 
-/** Step 3: CPF e dados pessoais · Celular (SMS) · E-mail (the account). */
+/** Step 3: CPF e dados pessoais · Celular (collected, no SMS) · E-mail (the account). */
 function IdentityChecks({ identity, viewerName, viewerEmail, onIdentity, onToast }: { identity: IdentityView; viewerName: string; viewerEmail: string; onIdentity: (i: IdentityView) => void; onToast: (t: string) => void }) {
   const [cpf, setCpf] = useState('')
   const [city, setCity] = useState(identity.city)
   const [cpfOpen, setCpfOpen] = useState(false)
   const [phone, setPhone] = useState('')
   const [phoneOpen, setPhoneOpen] = useState(false)
-  const [sms, setSms] = useState<{ token: string; mask: string; echo?: string } | null>(null)
-  const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-  const cpfOk = !!identity.cpfMask, phoneOk = identity.phoneVerified, emailOk = identity.emailVerified
+  const cpfOk = !!identity.cpfMask, phoneOk = !!identity.phoneMask, emailOk = identity.emailVerified
 
   async function saveCpf() {
     setBusy(true); setErr(null)
     try { onIdentity(await setIdentity({ cpf: cpf.replace(/\D/g, ''), city: city || undefined })); setCpfOpen(false); onToast('CPF confirmado') } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
-  async function sendSms() {
+  async function keepPhone() {
     setBusy(true); setErr(null)
-    try { const r = await startPhone(phone); setSms({ token: r.token, mask: r.phoneMask, echo: r.echo }) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
-  }
-  async function confirmSms() {
-    if (!sms) return
-    setBusy(true); setErr(null)
-    try { await verifyPhone(sms.token, code); onIdentity(await fetchIdentity()); setPhoneOpen(false); setSms(null); onToast('Celular confirmado') } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+    try { await savePhone(phone); onIdentity(await fetchIdentity()); setPhoneOpen(false); onToast('Celular guardado') } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
   const Item = ({ ok, icon, name, sub, open, onOpen, children }: { ok: boolean; icon: 'badge' | 'smartphone' | 'mail'; name: string; sub: string; open?: boolean; onOpen?: () => void; children?: React.ReactNode }) => (
     <View style={[styles.item, ok && styles.itemOk]}>
@@ -228,16 +221,9 @@ function IdentityChecks({ identity, viewerName, viewerEmail, onIdentity, onToast
         <Label>Cidade/UF</Label><Input value={city} onChangeText={setCity} placeholder="Salvador/BA" />
         <Button title="Confirmar" loading={busy} disabled={cpf.replace(/\D/g, '').length !== 11} onPress={() => void saveCpf()} />
       </Item>
-      <Item ok={phoneOk} icon="smartphone" name={phoneOk ? 'Celular confirmado' : 'Celular'} sub={phoneOk ? `Confirmado por SMS em ${identity.phoneMask}` : sms ? `Código enviado por SMS para ${sms.mask}` : 'Enviamos um código por SMS para confirmar o número'} open={phoneOpen} onOpen={() => setPhoneOpen(true)}>
-        {sms ? (<>
-          <Label>Código do SMS</Label><Input value={code} onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" maxLength={6} />
-          {sms.echo ? <Text style={styles.note}>Ambiente de teste · código {sms.echo}</Text> : null}
-          <Button title="Confirmar" loading={busy} disabled={code.length < 6} onPress={() => void confirmSms()} />
-          <Button title="Trocar número" variant="ghost" onPress={() => { setSms(null); setCode('') }} />
-        </>) : (<>
-          <Label>Celular com DDD</Label><Input value={phone} onChangeText={(v) => setPhone(formatPhoneInput(v))} inputMode="tel" placeholder="(71) 99999-0000" />
-          <Button title="Enviar código" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={() => void sendSms()} />
-        </>)}
+      <Item ok={phoneOk} icon="smartphone" name="Celular" sub={phoneOk ? `${identity.phoneMask} · para avisos da proposta e da entrega` : 'Informe um celular com DDD para avisos da proposta e da entrega'} open={phoneOpen} onOpen={() => setPhoneOpen(true)}>
+        <Label>Celular com DDD</Label><Input value={phone} onChangeText={(v) => setPhone(formatPhoneInput(v))} inputMode="tel" placeholder="(71) 99999-0000" />
+        <Button title="Confirmar" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={() => void keepPhone()} />
       </Item>
       <Item ok={emailOk} icon="mail" name={emailOk ? 'E-mail confirmado' : 'E-mail'} sub={emailOk ? `${viewerEmail} · confirmado pela sua conta` : `Código de 6 dígitos enviado para ${viewerEmail} no envio da oferta`} />
       <ErrorText>{err}</ErrorText>

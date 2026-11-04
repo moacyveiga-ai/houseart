@@ -1,6 +1,7 @@
 'use client'
-// Dados pessoais › trocar o e-mail ou o celular: o código vai ao contato NOVO
-// e só depois de provado ele substitui o antigo (rotas /api/auth/{email,phone}).
+// Dados pessoais › trocar o e-mail ou o celular. O e-mail exige o código, que
+// vai ao endereço NOVO e só depois de provado o substitui (rotas /api/auth/email);
+// o celular é só guardado, sem SMS (POST /api/auth/phone/save — 2026-11-04).
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ds/Button'
@@ -9,7 +10,7 @@ import { formatPhoneInput } from '@/lib/sms/core'
 type Kind = 'email' | 'phone'
 const COPY: Record<Kind, { label: string; placeholder: string; sent: string; done: string }> = {
   email: { label: 'Novo e-mail', placeholder: 'voce@exemplo.com', sent: 'Enviamos um código ao novo e-mail.', done: 'E-mail trocado. Use o novo para entrar.' },
-  phone: { label: 'Novo celular', placeholder: '(71) 99999-0000', sent: 'Enviamos um código por SMS ao novo celular.', done: 'Celular confirmado.' },
+  phone: { label: 'Novo celular', placeholder: '(71) 99999-0000', sent: '', done: 'Celular atualizado.' },
 }
 
 export function ContactChange({ kind, k, value, note, needsPassword = false }: { kind: Kind; k: string; value: string; note?: string; needsPassword?: boolean }) {
@@ -33,7 +34,17 @@ export function ContactChange({ kind, k, value, note, needsPassword = false }: {
   }
   async function start() {
     setBusy(true); setMsg('')
-    const j = await post('start', kind === 'email' ? { email: input, password } : { phone: input })
+    if (kind === 'phone') {
+      const j = await post('save', { phone: input })
+      setBusy(false)
+      if (!j.ok) { setError(true); setMsg(j.error ?? 'Não foi possível guardar o celular.'); return }
+      setError(false); setShown(j.phoneMask ?? input); setShownNote('Informado')
+      setStep('idle'); setInput(''); setMsg(c.done)
+      requestAnimationFrame(() => opener.current?.focus())
+      router.refresh()
+      return
+    }
+    const j = await post('start', { email: input, password })
     setBusy(false)
     if (!j.ok || !j.token) { setError(true); setMsg(j.error ?? 'Não foi possível enviar o código.'); return }
     setError(false); setPassword(''); setToken(j.token); setCode(j.echo ?? ''); setStep('code'); setMsg(c.sent)
@@ -72,7 +83,7 @@ export function ContactChange({ kind, k, value, note, needsPassword = false }: {
             type={kind === 'email' ? 'email' : 'tel'} inputMode={kind === 'email' ? 'email' : 'tel'} autoComplete={kind === 'email' ? 'email' : 'tel'}
             onChange={(e) => setInput(kind === 'phone' ? formatPhoneInput(e.target.value) : e.target.value)} />
           {kind === 'email' && needsPassword ? <input className="ha-input" type="password" aria-label="Senha atual" placeholder="Senha atual" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /> : null}
-          <Button type="submit" size="sm" loading={busy} disabled={!input.trim() || (kind === 'email' && needsPassword && !password)}>Enviar código</Button>
+          <Button type="submit" size="sm" loading={busy} disabled={!input.trim() || (kind === 'email' && needsPassword && !password)}>{kind === 'phone' ? 'Salvar' : 'Enviar código'}</Button>
           <button type="button" className="ha-btn ha-btn--ghost ha-btn--sm" onClick={cancel}>Cancelar</button>
         </form>
       ) : null}

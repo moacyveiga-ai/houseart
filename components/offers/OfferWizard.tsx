@@ -114,7 +114,7 @@ function Wizard({ artwork, viewer, identity: initialIdentity, draft }: Props & {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- the restored draft, once
   const quote = shipping ? { cep: shipping.cep, shippingCents: shipping.shippingCents, insuranceCents: insuranceCents(offerCents) } : null
 
-  const identityState = { cpfOk: !!identity?.cpfMask, phoneOk: !!identity?.phoneVerified, emailOk: !!identity?.emailVerified }
+  const identityState = { cpfOk: !!identity?.cpfMask, phoneOk: !!identity?.phoneMask, emailOk: !!identity?.emailVerified }
   const hasCard = !!cardId
   const blocked = !canAdvance(step, { identity: identityState, accepted, guarantee, hasCard, loggedIn: !!viewer })
   const card = cards?.find((m) => m.id === cardId) ?? null
@@ -323,13 +323,12 @@ function IdentityChecks({ identity, viewer, onIdentity, onCpf }: { identity: Ide
   const [cpfOpen, setCpfOpen] = useState(false)
   const [phone, setPhone] = useState('')
   const [phoneOpen, setPhoneOpen] = useState(false)
-  const [sms, setSms] = useState<{ token: string; mask: string; echo?: string } | null>(null)
-  const [code, setCode] = useState('')
   const [phoneBusy, setPhoneBusy] = useState(false)
   const [phoneError, setPhoneError] = useState<string | null>(null)
 
   const cpfOk = !!identity?.cpfMask
-  const phoneOk = !!identity?.phoneVerified
+  // The phone is collected, not confirmed by SMS (decision of 2026-11-04): a number on file is enough.
+  const phoneOk = !!identity?.phoneMask
   const emailOk = !!identity?.emailVerified
 
   async function saveCpf() {
@@ -339,22 +338,14 @@ function IdentityChecks({ identity, viewer, onIdentity, onCpf }: { identity: Ide
     if (!ok) { setCpfError(data.error ?? 'Não foi possível confirmar o CPF.'); return }
     onIdentity(data.identity); onCpf(cpf.replace(/\D/g, '')); setCpfOpen(false)
   }
-  async function startPhone() {
+  async function savePhone() {
     setPhoneBusy(true); setPhoneError(null)
-    const { ok, data } = await call<{ token: string; phoneMask: string; echo?: string }>('/api/auth/phone/start', { method: 'POST', body: JSON.stringify({ phone }) })
+    const { ok, data } = await call<{ ok: boolean; phoneMask: string }>('/api/auth/phone/save', { method: 'POST', body: JSON.stringify({ phone }) })
     setPhoneBusy(false)
-    if (!ok) { setPhoneError(data.error ?? 'Não foi possível enviar o código.'); return }
-    setSms({ token: data.token, mask: data.phoneMask, echo: data.echo })
-  }
-  async function verifyPhone() {
-    if (!sms) return
-    setPhoneBusy(true); setPhoneError(null)
-    const { ok, data } = await call<{ ok: boolean }>('/api/auth/phone/verify', { method: 'POST', body: JSON.stringify({ token: sms.token, code }) })
-    setPhoneBusy(false)
-    if (!ok) { setPhoneError(data.error ?? 'Código inválido.'); return }
+    if (!ok) { setPhoneError(data.error ?? 'Não foi possível guardar o celular.'); return }
     const id = await call<{ identity: IdentityView }>('/api/auth/identity')
     if (id.ok) onIdentity(id.data.identity)
-    setPhoneOpen(false); setSms(null)
+    setPhoneOpen(false)
   }
 
   return (
@@ -366,19 +357,11 @@ function IdentityChecks({ identity, viewer, onIdentity, onCpf }: { identity: Ide
           <Button variant="ink" size="sm" type="submit" loading={cpfBusy} disabled={cpf.replace(/\D/g, '').length !== 11}>Confirmar</Button>
         </form>
       </CheckItem>
-      <CheckItem ok={phoneOk} icon="smartphone" name={phoneOk ? 'Celular confirmado' : 'Celular'} sub={phoneOk ? `Confirmado por SMS em ${identity?.phoneMask}` : sms ? `Código enviado por SMS para ${sms.mask}` : 'Enviamos um código por SMS para confirmar o número'} action="Confirmar" open={phoneOpen} onOpen={() => setPhoneOpen(true)}>
-        {sms ? (
-          <form className="hp-offer__item-form" onSubmit={(e) => { e.preventDefault(); void verifyPhone() }}>
-            <Field label="Código do SMS" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} error={phoneError ?? undefined} hint={sms.echo ? <span className="hp-offer__echo">Ambiente de teste · código {sms.echo}</span> : undefined} id />
-            <Button variant="ink" size="sm" type="submit" loading={phoneBusy} disabled={code.length < 6}>Confirmar</Button>
-            <Button variant="ghost" size="sm" onClick={() => { setSms(null); setCode('') }}>Trocar número</Button>
-          </form>
-        ) : (
-          <form className="hp-offer__item-form" onSubmit={(e) => { e.preventDefault(); void startPhone() }}>
-            <Field label="Celular com DDD" inputMode="tel" autoComplete="tel" placeholder="(71) 99999-0000" value={phone} onChange={(e) => setPhone(e.target.value)} error={phoneError ?? undefined} />
-            <Button variant="ink" size="sm" type="submit" loading={phoneBusy} disabled={phone.replace(/\D/g, '').length < 10}>Enviar código</Button>
-          </form>
-        )}
+      <CheckItem ok={phoneOk} icon="smartphone" name="Celular" sub={phoneOk ? `${identity?.phoneMask} · para avisos da proposta e da entrega` : 'Informe um celular com DDD para avisos da proposta e da entrega'} action="Informar" open={phoneOpen} onOpen={() => setPhoneOpen(true)}>
+        <form className="hp-offer__item-form" onSubmit={(e) => { e.preventDefault(); void savePhone() }}>
+          <Field label="Celular com DDD" inputMode="tel" autoComplete="tel" placeholder="(71) 99999-0000" value={phone} onChange={(e) => setPhone(e.target.value)} error={phoneError ?? undefined} />
+          <Button variant="ink" size="sm" type="submit" loading={phoneBusy} disabled={phone.replace(/\D/g, '').length < 10}>Confirmar</Button>
+        </form>
       </CheckItem>
       <CheckItem ok={emailOk} icon="mail" name={emailOk ? 'E-mail confirmado' : 'E-mail'} sub={emailOk ? `${viewer.email} · confirmado pela sua conta` : `Código de 6 dígitos enviado para ${viewer.email} no envio da oferta`} />
     </div>

@@ -131,7 +131,9 @@ export async function savePhoneUnverified(userId: number, rawPhone: string): Pro
   return { ok: true, phoneMask: maskPhone(phone) }
 }
 
-/** Start the SMS code for the LOGGED user's phone (purpose PHONE). Blind on a phone already taken by another account. */
+/** Start the SMS code for the LOGGED user's phone (purpose PHONE). Blind on a phone already taken by another account.
+ * Since 2026-11-04 no screen confirms the phone by SMS (signup, offer flow and the account only collect it); the
+ * code functions stay, with their tests, for when a provider makes it worth it again — the routes were removed. */
 export async function startPhoneCode(userId: number, rawPhone: string): Promise<{ ok: true; token: string; phoneMask: string; echo?: string } | { ok: false; error: string }> {
   const phone = normalizeBrMobile(rawPhone)
   if (!phone) return { ok: false, error: 'Informe um celular válido com DDD.' }

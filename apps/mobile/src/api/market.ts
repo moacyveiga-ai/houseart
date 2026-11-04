@@ -25,8 +25,8 @@ export const identity = async (): Promise<IdentityView> => (await api<{ ok: bool
 export async function setIdentity(input: { cpf?: string; city?: string }): Promise<IdentityView> {
   return (await api<{ ok: boolean; identity: IdentityView }>('/api/auth/identity', { method: 'PATCH', body: input })).identity
 }
-export const startPhone = (phone: string) => api<{ ok: boolean; token: string; phoneMask: string; echo?: string }>('/api/auth/phone/start', { body: { phone } })
-export const verifyPhone = (token: string, code: string) => api<{ ok: boolean }>('/api/auth/phone/verify', { body: { token, code } })
+/** The phone is collected, not confirmed by SMS (2026-11-04). */
+export const savePhone = (phone: string) => api<{ ok: boolean; phoneMask: string }>('/api/auth/phone/save', { body: { phone } })
 
 export interface OfferInput { publicId: string; buyerName: string; buyerEmail: string; buyerDocument?: string; buyerCity?: string; offeredCents: number; message?: string; validityHours: number; guaranteeMethod: GuaranteeMethod; paymentMethodId?: number; deliveryCep?: string }
 /** POST /api/public/offers — a logged buyer with a proven e-mail comes back `confirmed` (no code). */

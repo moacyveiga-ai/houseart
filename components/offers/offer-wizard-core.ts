@@ -63,7 +63,7 @@ export function chanceOf(offerCents: number, priceCents: number, kind: SellerKin
 }
 
 export interface IdentityState { cpfOk: boolean; phoneOk: boolean; emailOk: boolean }
-/** Step 2 continues when CPF and phone are confirmed; the e-mail is proven by the account or by the code at the send. */
+/** Step 2 continues with the CPF confirmed and a phone on file (collected, not confirmed by SMS — 2026-11-04); the e-mail is proven by the account or by the code at the send. */
 export const identityComplete = (i: IdentityState) => i.cpfOk && i.phoneOk
 
 export interface WizardChoice { offerCents: number; validityHours: number; message: string; guarantee: GuaranteeMethod; cardLabel: string | null }

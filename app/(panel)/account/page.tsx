@@ -37,7 +37,7 @@ export default async function CollectorAccountPage({ searchParams }: { searchPar
   const cadastro: CollectorAccountSection = { name: 'Cadastro', items: [
     { kind: 'link', icon: 'person', name: 'Dados pessoais', sub: [user.email, identity.phoneMask].filter(Boolean).join(' · '), href: '/account?view=data' },
     ...(shape.addresses ? [{ kind: 'link' as const, icon: 'local_shipping', name: 'Endereços de entrega', sub: addresses.length ? `${addresses.find((a) => a.isDefault)?.label ?? addresses[0]!.label} · ${addresses.length === 1 ? '1 endereço' : `${addresses.length} endereços`}` : 'Nenhum endereço salvo', href: '/account/addresses' }] : []),
-    { kind: 'link', icon: 'verified_user', name: 'E-mail e celular', sub: `${identity.emailVerified ? 'E-mail verificado' : 'E-mail não verificado'}${identity.phoneMask ? ` · celular ${identity.phoneVerified ? 'verificado' : 'não verificado'}` : ''}`, href: '/account?view=data' },
+    { kind: 'link', icon: 'verified_user', name: 'E-mail e celular', sub: `${identity.emailVerified ? 'E-mail verificado' : 'E-mail não verificado'}${identity.phoneMask ? ` · celular ${identity.phoneMask}` : ' · sem celular'}`, href: '/account?view=data' },
   ] }
   const payments: CollectorAccountSection = { name: 'Pagamentos', items: [
     ...(shape.payments ? [

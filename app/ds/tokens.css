@@ -15,7 +15,7 @@
   --ha-verified-500:#2E7D5B;--ha-pending-500:#C77A1E;--ha-alert-500:#B23A2F;--ha-info-500:#3A5F8A;
   --ha-verified-100:#E3F0E9;--ha-pending-100:#F7EAD9;--ha-alert-100:#F5E1DE;
   /* sub-brands of language (handoff 2026-10-21): ONLY on the language marks, never on UI */
-  --ha-brand-pintura:#F5A653;--ha-brand-escultura:#F47963;--ha-brand-fotografia:#DA4A72;--ha-brand-design:#B0499B;--ha-brand-grafite:#4A484A;
+  --ha-brand-pintura:#F4A553;--ha-brand-escultura:#F47963;--ha-brand-fotografia:#DA4B72;--ha-brand-design:#B04A9C;--ha-brand-grafite:#4A4849;
   /* third-party mark (handoff Web Galeria › Instagram): ONLY on the Instagram button and mark */
   --ha-ig-gradient:linear-gradient(45deg,#F58529,#DD2A7B 50%,#8134AF);
 

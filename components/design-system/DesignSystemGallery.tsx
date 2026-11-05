@@ -26,7 +26,7 @@ const BRANDS: [BrandTone, string, string, 'paper' | 'ink'][] = [
   ['color', 'Colorida · positivo', 'Principal · top bar, site, documentos', 'paper'], ['negativo', 'Colorida · negativo', 'Sobre ink-900 e fotos escuras', 'ink'],
   ['mono', 'Mono · positivo', 'Uma cor só, sobre claro', 'paper'], ['mono-negativo', 'Mono · negativo', 'Uma cor só, sobre escuro', 'ink'],
 ]
-const LANGUAGES: [Language, string, string][] = [['pintura', 'Pintura', '#F5A653'], ['escultura', 'Escultura', '#F47963'], ['fotografia', 'Fotografia', '#DA4A72'], ['design', 'Design', '#B0499B']]
+const LANGUAGES: [Language, string, string][] = [['pintura', 'Pintura', '#F4A553'], ['escultura', 'Escultura', '#F47963'], ['fotografia', 'Fotografia', '#DA4B72'], ['design', 'Design', '#B04A9C']]
 const COLORS: [string, string, string][] = [
   ['--ha-paper-50', '#FBFAF7', 'Fundo principal claro'], ['--ha-paper-100', '#F6F3EE', 'Seções e cards'], ['--ha-paper-200', '#ECE7DF', 'Divisores, bordas'],
   ['--ha-ink-900', '#111111', 'Fundo escuro, títulos'], ['--ha-ink-700', '#2B2B2B', 'Texto corrido'], ['--ha-ink-500', '#6B6760', 'Secundário, legendas'], ['--ha-ink-300', '#B5B0A6', 'Placeholder, desabilitado'],

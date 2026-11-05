@@ -42,3 +42,16 @@ describe('access codes', () => {
     expect(await verifyAccessCode(unknown.token, '000000', {})).toMatchObject({ ok: false })
   }, 60_000)
 })
+
+describe('signup with an e-mail that already has an account', () => {
+  it('stays blind (SILENT) and the "você já tem conta" notice is capped per day', async () => {
+    const { sendAccountExistsNotice } = await import('@/lib/auth/access-code-server')
+    await prisma.user.create({ data: { email: 'dono@y.test', name: 'Dono', passwordHash: await hashPassword('senha-forte-1'), profile: 'member', active: true } })
+    const r = await startSignupCode('dono@y.test', { name: 'Outro', password: 'senha-forte-1', profileKind: 'COLLECTOR' })
+    expect(r.ok).toBe(true)
+    expect((await prisma.accessCode.findMany()).map((x) => x.purpose)).toEqual(['SILENT'])
+    expect(await sendAccountExistsNotice('dono@y.test')).toBe(true)
+    for (let i = 0; i < 3; i++) await startSignupCode('dono@y.test', { name: 'Outro', password: 'senha-forte-1', profileKind: 'COLLECTOR' })
+    expect(await sendAccountExistsNotice('dono@y.test')).toBe(false)
+  }, 60_000)
+})

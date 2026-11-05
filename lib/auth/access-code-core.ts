@@ -55,3 +55,22 @@ export function verdictMessage(v: Exclude<CodeVerdict, { ok: true }>): string {
   if (v.reason === 'wrong' && v.attemptsLeft > 0) return `Código inválido. Restam ${v.attemptsLeft} tentativas.`
   return 'Código inválido ou expirado. Peça um novo código.'
 }
+
+/** Signup with an e-mail that already has an ACTIVE account: the screen stays blind ("we sent a code"), but the
+ * owner of the inbox is told they already have an account — at most this many times a day per e-mail. */
+export const ACCOUNT_NOTICE_MAX_PER_DAY = 3
+
+export function accountExistsNotice(baseUrl: string): { subject: string; text: string } {
+  const base = baseUrl.replace(/\/+$/, '')
+  return {
+    subject: 'Você já tem conta na HouseArt',
+    text: [
+      'Alguém (talvez você) tentou criar uma conta na HouseArt com este e-mail, mas ele já tem uma conta.',
+      '',
+      `Para entrar: ${base}/login`,
+      `Esqueceu a senha? ${base}/recover-password`,
+      '',
+      'Se não foi você, ignore esta mensagem: nada mudou na sua conta.',
+    ].join('\n'),
+  }
+}

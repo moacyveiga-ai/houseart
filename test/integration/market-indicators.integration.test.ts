@@ -6,7 +6,9 @@ import { refreshMarketIndicators, tickerItems } from '@/lib/market-indicators/se
 import { truncateTables } from './db'
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
-const awesome = { USDBRL: { bid: '5.42', pctChange: '0.10', timestamp: '1793000000' }, EURBRL: { bid: '6.11', pctChange: '-0.20', timestamp: '1793000000' } }
+// the quote is stamped NOW: a fixed date goes stale after STALE_CURRENCY_DAYS and the ticker drops it
+const nowTs = () => String(Math.floor(Date.now() / 1000))
+const awesome = { USDBRL: { bid: '5.42', pctChange: '0.10', timestamp: nowTs() }, EURBRL: { bid: '6.11', pctChange: '-0.20', timestamp: nowTs() } }
 
 beforeEach(async () => {
   // completed deals left by other files would turn the index into a number

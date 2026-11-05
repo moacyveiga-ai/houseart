@@ -7,7 +7,7 @@ import { decryptText, encryptText } from '@/lib/crypto/cipher'
 import { sendEmail } from '@/lib/email/send'
 import { afterResponse } from '@/lib/after'
 import { hashPassword, normalizeEmail, openSession, type LoginResult } from './index'
-import { CODE_BLOCK_MS, CODE_MAX_ATTEMPTS, CODE_MAX_RESENDS, CODE_TTL_MS, newCode, newToken, sha256, verdictMessage, verifyCode, type CodePurpose } from './access-code-core'
+import { ACCOUNT_NOTICE_MAX_PER_DAY, accountExistsNotice, CODE_BLOCK_MS, CODE_MAX_ATTEMPTS, CODE_MAX_RESENDS, CODE_TTL_MS, newCode, newToken, sha256, verdictMessage, verifyCode, type CodePurpose } from './access-code-core'
 import { PROFILE_KINDS, type ProfileKindKey } from '@/lib/profiles/core'
 import { createMemberAccount } from '@/lib/accounts/signup-server'
 
@@ -57,6 +57,16 @@ export async function startLoginCode(rawEmail: string): Promise<{ ok: true; toke
   return { ok: true, token }
 }
 
+/** "Você já tem conta": counted AFTER the response (no extra query on the blind path), capped per day. */
+export async function sendAccountExistsNotice(email: string): Promise<boolean> {
+  const since = new Date(Date.now() - 24 * 60 * 60_000)
+  const tries = await prisma.accessCode.count({ where: { email, purpose: 'SILENT', userId: null, createdAt: { gte: since } } })
+  if (tries > ACCOUNT_NOTICE_MAX_PER_DAY) return false
+  const mail = accountExistsNotice(publicBaseUrl())
+  await sendEmail({ to: email, ...mail, redactedPreview: 'aviso de conta existente' })
+  return true
+}
+
 /** Start a SIGNUP: the account is only created after the code proves the e-mail. */
 export async function startSignupCode(rawEmail: string, payload: SignupPayload): Promise<{ ok: true; token: string; echo?: string } | { ok: false; error: string }> {
   const email = normalizeEmail(rawEmail)
@@ -64,9 +74,11 @@ export async function startSignupCode(rawEmail: string, payload: SignupPayload):
   if (!(PROFILE_KINDS as readonly string[]).includes(payload.profileKind) || payload.profileKind === 'STAFF' || payload.profileKind === 'APPRAISER') {
     return { ok: false, error: 'Perfil inválido para cadastro.' }
   }
-  const exists = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+  const exists = await prisma.user.findUnique({ where: { email }, select: { id: true, active: true } })
   if (exists) {
     const { token } = await issue('SILENT', email, null)
+    // the screen stays blind; the inbox owner learns they already have an account (active accounts only)
+    if (exists.active) afterResponse('auth: account exists notice', () => sendAccountExistsNotice(email))
     return { ok: true, token }
   }
   const safe: SignupPayload = { ...payload, password: await hashPassword(payload.password) }

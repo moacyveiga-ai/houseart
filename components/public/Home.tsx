@@ -124,7 +124,7 @@ export function Home({ works, news, agenda, hero = null }: HomeData) {
             {LANGUAGES.map((l) => (
               <Link key={l.language} href={`/e/marketplace?category=${l.category}`} className="hp-home-language">
                 <div className="hp-home-language__tile"><LanguageMark language={l.language} tone="color" height={240} /></div>
-                <div className="hp-home-language__row"><span className="hp-home-language__name">{l.label}</span><span className="hp-home-language__go">Ver obras →</span></div>
+                <span className="hp-home-language__name">{l.label}</span>
               </Link>
             ))}
           </div>

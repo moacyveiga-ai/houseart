@@ -95,6 +95,9 @@ async function upload(actor, artworkId, kind, file) {
 
 /** Registers an artwork with the six required photos and submits it for certification. */
 async function registerArtwork(actor, a, imageIndex, artistId) {
+  // a rerun after a failure midway resumes: the artwork already sent for certification is reused
+  const sent = ((await actor.get('/api/artworks')).items ?? []).find((x) => x.title === a.title && x.status !== 'DRAFT')
+  if (sent) { STEP(`${actor.name}: obra "${a.title}" já cadastrada (#${sent.id})`); return sent.id }
   const draft = await actor.post('/api/artworks', { title: a.title, ...(artistId ? { artistId } : {}) })
   const id = draft.id
   await actor.patch(`/api/artworks/${id}`, { title: a.title, year: a.year, technique: a.technique, materials: a.materials ?? null, heightMm: a.h, widthMm: a.w, depthMm: a.d ?? null, category: a.category, conditionGrade: 'EXCELLENT', edition: a.edition ?? null, series: a.series ?? null, signatureLocation: a.signature ?? 'Frente, canto inferior direito' })
@@ -195,7 +198,8 @@ async function main() {
   const g3 = await registerArtwork(ana, { title: 'Maré baixa, Itapuã', year: 2024, technique: 'Pigmento mineral · ed. 3/5', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '3/5' }, 7, liaM.id)
   const h1 = await registerArtwork(helena, { title: 'Sem título (coleção Prado)', year: 2019, technique: 'Serigrafia sobre papel', h: 70, w: 50, category: 'PRINT', edition: '12/30' }, 8)
 
-  // ── certification ────────────────────────────────────────────────────
+  // ── certification (the marker kit is charged: with Stripe in test mode the sellers need a card) ──
+  for (const seller of [joana, marta, ana, helena]) await addCard(seller, '4242424242424242', seller.name.split(' (')[0].toUpperCase())
   const J = await certify(joana, [j1, j2, j3])
   const M = await certify(marta, [m1, m2])
   const G = await certify(ana, [g1, g2, g3])

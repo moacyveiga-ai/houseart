@@ -76,8 +76,9 @@ class Actor {
 }
 
 const admin = new Actor('Admin', ADMIN.email, ADMIN.password)
-const joana = new Actor('Joana (artista)', 'joana.demo@houseart.test')
-const marta = new Actor('Marta (artista)', 'marta.demo@houseart.test')
+// the two artist logins stand for real artists in the public domain (the e-mails stay, see accounts.sql)
+const joana = new Actor('Van Gogh (artista)', 'joana.demo@houseart.test')
+const marta = new Actor('Hokusai (artista)', 'marta.demo@houseart.test')
 const ana = new Actor('Ana (galeria)', 'ana.demo@houseart.test')
 const caio = new Actor('Caio (galeria · vendas)', 'caio.demo@houseart.test')
 const helena = new Actor('Helena (consultora)', 'helena.demo@houseart.test')
@@ -98,9 +99,9 @@ async function registerArtwork(actor, a, imageIndex, artistId) {
   // a rerun after a failure midway resumes: the artwork already sent for certification is reused
   const sent = ((await actor.get('/api/artworks')).items ?? []).find((x) => x.title === a.title && x.status !== 'DRAFT')
   if (sent) { STEP(`${actor.name}: obra "${a.title}" já cadastrada (#${sent.id})`); return sent.id }
-  const draft = await actor.post('/api/artworks', { title: a.title, ...(artistId ? { artistId } : {}) })
+  const draft = await actor.post('/api/artworks', { title: a.title, ...(artistId ? { artistId } : a.artistName ? { artistName: a.artistName } : {}) })
   const id = draft.id
-  await actor.patch(`/api/artworks/${id}`, { title: a.title, year: a.year, technique: a.technique, materials: a.materials ?? null, heightMm: a.h, widthMm: a.w, depthMm: a.d ?? null, category: a.category, conditionGrade: 'EXCELLENT', edition: a.edition ?? null, series: a.series ?? null, signatureLocation: a.signature ?? 'Frente, canto inferior direito' })
+  await actor.patch(`/api/artworks/${id}`, { title: a.title, year: a.year, technique: a.technique, materials: a.materials ?? null, heightMm: a.h, widthMm: a.w, depthMm: a.d ?? null, category: a.category, conditionGrade: 'EXCELLENT', edition: a.edition ?? null, series: a.series ?? null, description: a.description ?? null, signatureLocation: a.signature ?? 'Frente, canto inferior direito' })
   await upload(actor, id, 'FRONT_COLOR_CARD', img(`front-${imageIndex}.jpg`))
   await upload(actor, id, 'BACK', img('back.jpg'))
   for (const [i, k] of MACROS.entries()) await upload(actor, id, k, img(`macro-${imageIndex}-${['tl', 'tr', 'bl', 'br'][i]}.jpg`))
@@ -185,18 +186,21 @@ async function main() {
   for (const a of [admin, joana, marta, ana, caio, helena, marina, marcelo, lia, rui]) await a.login()
 
   // ── artworks ─────────────────────────────────────────────────────────
-  const j1 = await registerArtwork(joana, { title: 'Construção nº 7', year: 2025, technique: 'Óleo sobre linho', h: 100, w: 80, category: 'PAINTING', series: 'Construções' }, 0)
-  const j2 = await registerArtwork(joana, { title: 'Voo baixo', year: 2024, technique: 'Óleo sobre linho', h: 120, w: 100, category: 'PAINTING' }, 1)
-  const j3 = await registerArtwork(joana, { title: 'Estudo em vermelho', year: 2025, technique: 'Óleo sobre papel', h: 50, w: 50, category: 'PAINTING' }, 2)
-  const m1 = await registerArtwork(marta, { title: 'Maré cheia', year: 2024, technique: 'Pigmento mineral sobre papel de algodão', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '2/5' }, 5)
-  const m2 = await registerArtwork(marta, { title: 'Jangada ao amanhecer', year: 2023, technique: 'Pigmento mineral sobre papel de algodão', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '1/5' }, 6)
+  // real works in the public domain (authors dead for more than 70 years), with their real sheet; the sale is simulated
+  const j1 = await registerArtwork(joana, { title: 'A noite estrelada', year: 1889, technique: 'Óleo sobre tela', h: 73.7, w: 92.1, category: 'PAINTING', description: 'Pintada em junho de 1889 em Saint-Rémy-de-Provence, a partir da vista da janela do quarto do artista, antes do nascer do sol. Obra em domínio público; anúncio de demonstração.' }, 0)
+  const j2 = await registerArtwork(joana, { title: 'Girassóis', year: 1888, technique: 'Óleo sobre tela', h: 92.1, w: 73, category: 'PAINTING', series: 'Girassóis de Arles', description: 'Da série pintada em Arles em agosto de 1888 para decorar o quarto de Paul Gauguin. Obra em domínio público; anúncio de demonstração.' }, 1)
+  const j3 = await registerArtwork(joana, { title: 'O quarto em Arles', year: 1888, technique: 'Óleo sobre tela', h: 72, w: 90, category: 'PAINTING', description: 'O quarto do artista na Casa Amarela, em Arles, pintado em outubro de 1888. Obra em domínio público; anúncio de demonstração.' }, 2)
+  const m1 = await registerArtwork(marta, { title: 'A grande onda de Kanagawa', year: 1831, technique: 'Xilogravura policromada sobre papel', h: 25.7, w: 37.9, category: 'PRINT', series: 'Trinta e seis vistas do monte Fuji', description: 'A gravura mais conhecida da série Trinta e seis vistas do monte Fuji (c. 1831). Obra em domínio público; anúncio de demonstração.' }, 5)
+  const m2 = await registerArtwork(marta, { title: 'Fuji vermelho', year: 1831, technique: 'Xilogravura policromada sobre papel', h: 25.7, w: 38, category: 'PRINT', series: 'Trinta e seis vistas do monte Fuji', description: 'Vento sul, céu claro: o monte Fuji ao amanhecer, da mesma série (c. 1831). Obra em domínio público; anúncio de demonstração.' }, 6)
   const artists = (await ana.get('/api/gallery/artists')).artists
-  const tomas = artists.find((x) => x.name === 'Tomás Barreto') ?? (await ana.post('/api/gallery/artists', { name: 'Tomás Barreto', kind: 'REPRESENTED', galleryBps: 5000 })).artists.find((x) => x.name === 'Tomás Barreto')
-  const liaM = artists.find((x) => x.name === 'Lia Mendes') ?? (await ana.post('/api/gallery/artists', { name: 'Lia Mendes', kind: 'CONSIGNMENT', galleryBps: 4000 })).artists.find((x) => x.name === 'Lia Mendes')
-  const g1 = await registerArtwork(ana, { title: 'Retábulo do Rio Vermelho', year: 1983, technique: 'Acrílica e folha de ouro sobre madeira', h: 140, w: 105, d: 4, category: 'PAINTING' }, 3, tomas.id)
-  const g2 = await registerArtwork(ana, { title: 'Duas luas', year: 1977, technique: 'Acrílica sobre tela', h: 90, w: 90, category: 'PAINTING' }, 4, tomas.id)
-  const g3 = await registerArtwork(ana, { title: 'Maré baixa, Itapuã', year: 2024, technique: 'Pigmento mineral · ed. 3/5', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '3/5' }, 7, liaM.id)
-  const h1 = await registerArtwork(helena, { title: 'Sem título (coleção Prado)', year: 2019, technique: 'Serigrafia sobre papel', h: 70, w: 50, category: 'PRINT', edition: '12/30' }, 8)
+  const tomas = artists.find((x) => x.name === 'Claude Monet') ?? (await ana.post('/api/gallery/artists', { name: 'Claude Monet', kind: 'REPRESENTED', galleryBps: 5000 })).artists.find((x) => x.name === 'Claude Monet')
+  const liaM = artists.find((x) => x.name === 'Johannes Vermeer') ?? (await ana.post('/api/gallery/artists', { name: 'Johannes Vermeer', kind: 'CONSIGNMENT', galleryBps: 4000 })).artists.find((x) => x.name === 'Johannes Vermeer')
+  const g1 = await registerArtwork(ana, { title: 'Impressão, nascer do sol', year: 1872, technique: 'Óleo sobre tela', h: 48, w: 63, category: 'PAINTING', description: 'O porto do Havre ao amanhecer; a tela que deu nome ao impressionismo. Obra em domínio público; anúncio de demonstração.' }, 3, tomas.id)
+  const g2 = await registerArtwork(ana, { title: 'Ninfeias', year: 1906, technique: 'Óleo sobre tela', h: 89.9, w: 94.1, category: 'PAINTING', series: 'Ninfeias', description: 'O lago do jardim de Giverny, da série a que Monet dedicou as últimas décadas de vida. Obra em domínio público; anúncio de demonstração.' }, 4, tomas.id)
+  const g3 = await registerArtwork(ana, { title: 'Moça com brinco de pérola', year: 1665, technique: 'Óleo sobre tela', h: 44.5, w: 39, category: 'PAINTING', description: 'Um tronie (estudo de figura) pintado por volta de 1665. Obra em domínio público; anúncio de demonstração.' }, 7, liaM.id)
+  const helenaArtists = (await helena.get('/api/gallery/artists', { allow: [403, 404] })).artists ?? []
+  const almeida = helenaArtists.find((x) => x.name === 'Almeida Júnior')
+  const h1 = await registerArtwork(helena, { title: 'Caipira picando fumo (estudo)', year: 1893, technique: 'Óleo sobre tela', h: 70, w: 50, category: 'PAINTING', artistName: 'Almeida Júnior', description: 'Estudo para a tela de 1893, marco do regionalismo na pintura brasileira. Obra em domínio público; anúncio de demonstração.' }, 8, almeida?.id)
 
   // ── certification (the marker kit is charged: with Stripe in test mode the sellers need a card) ──
   for (const seller of [joana, marta, ana, helena]) await addCard(seller, '4242424242424242', seller.name.split(' (')[0].toUpperCase())
@@ -226,8 +230,8 @@ async function main() {
   const marceloCard = await addCard(marcelo, '5555555555554444', 'MARCELO BASTOS')
   const liaCard = await addCard(lia, '4242424242424242', 'LIA SOUZA')
   const o1 = await offer(marina, by(J, j2), 4_400_000, marinaCard, 'Adorei a obra. Posso ver ao vivo na quinta?')       // → accepted → completed
-  const o2 = await offer(marcelo, by(M, m1), 600_000, marceloCard, 'Fotografia para a sala de jantar.')               // → negotiator counters (below 95 %)
-  const o3 = await offer(lia, by(G, g3), 700_000, liaCard, 'Tenho interesse na edição 3/5.')                           // → gallery accepts → escrow (left mid-way)
+  const o2 = await offer(marcelo, by(M, m1), 600_000, marceloCard, 'Gravura para a sala de jantar.')               // → negotiator counters (below 95 %)
+  const o3 = await offer(lia, by(G, g3), 700_000, liaCard, 'Tenho interesse na obra. Aceita visita?')                           // → gallery accepts → escrow (left mid-way)
   const o4 = await offer(marcelo, by(G, g1), 20_000_000, marceloCard, 'É o que consigo agora.')                        // → below 70 %: refused by the gallery rule at once
   const o5 = await offer(lia, by(J, j1), 3_500_000, liaCard)                                                           // → Joana counters
   const o6 = await offer(marina, by(M, m2), 720_000, marinaCard, 'Fechado pelo preço pedido.')                        // → Marta accepts → completed
@@ -255,22 +259,22 @@ async function main() {
     await buyer.post(`/api/deals/${deal.id}/confirm-delivery`, sun(cert.uid, cert.ctr)); STEP(`${deal.code}: entrega confirmada com o toque na etiqueta → escritura em nome de ${buyer.name.split(' (')[0]}`)
     return deal
   }
-  await completeDeal(marina, joana, by(J, j2), { title: 'Voo baixo' })
-  await completeDeal(marina, marta, by(M, m2), { title: 'Jangada' })
-  await completeDeal(lia, ana, by(G, g3), { shipping: false, title: 'Maré baixa' })
+  await completeDeal(marina, joana, by(J, j2), { title: 'Girassóis' })
+  await completeDeal(marina, marta, by(M, m2), { title: 'Fuji vermelho' })
+  await completeDeal(lia, ana, by(G, g3), { shipping: false, title: 'Moça com brinco' })
 
   // ── the collector resells and registers an own artwork ───────────────
   const resold = by(J, j2)
   await marina.post(`/api/collector/artworks/${resold.artworkId}/sell`, { listPriceCents: 5_200_000, reservePriceCents: 4_700_000, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false })
   STEP(`Marina: ${resold.publicId} de volta ao marketplace no secundário por R$ 52.000`)
-  const own = await marina.post('/api/collector/artworks', { title: 'Paisagem de Itapuã (herança)', artistName: 'Tomás Barreto', acquisitionKind: 'INHERITED', acquisitionYear: 2015, acquisitionFrom: 'Família', acquisitionPriceCents: '0' })
+  const own = await marina.post('/api/collector/artworks', { title: 'Paisagem do interior paulista (herança)', artistName: 'Almeida Júnior', acquisitionKind: 'INHERITED', acquisitionYear: 2015, acquisitionFrom: 'Família', acquisitionPriceCents: '0' })
   STEP(`Marina: obra própria cadastrada como rascunho (#${own.id})`)
   await marina.post(`/api/collector/artworks/${resold.artworkId}/services`, { code: 'COLLECTION_INSURANCE' }); STEP('Marina: pedido de cotação de seguro para a obra')
 
   // ── appraisal: the holder asks, the appraiser issues ─────────────────
   const req = await marina.post('/api/appraisals', { artworkId: by(M, m2).artworkId, purpose: 'INSURANCE', requesterLabel: 'Colecionadora' })
   const reqId = req.id ?? req.request?.id ?? req.requestId
-  await rui.post(`/api/appraisals/${reqId}/issue`, { minCents: 680_000, suggestedCents: 760_000, maxCents: 840_000, methodology: 'Comparáveis de vendas recentes da artista em edição e formato equivalentes; estado de conservação excelente; demanda crescente no mercado secundário.' })
+  await rui.post(`/api/appraisals/${reqId}/issue`, { minCents: 680_000, suggestedCents: 760_000, maxCents: 840_000, methodology: 'Comparáveis de vendas recentes do artista em técnica e formato equivalentes; estado de conservação excelente; demanda crescente no mercado secundário.' })
   STEP(`Rui: laudo emitido para o pedido #${reqId}`)
 
   // ── messages ─────────────────────────────────────────────────────────
@@ -282,28 +286,37 @@ async function main() {
   const blocked = await marcelo.post(`/api/messages/${conv.id}`, { body: 'Me liga no 71 99999-1234' }, { allow: [422] })
   STEP(`Mensagens: conversa Marcelo ↔ Galeria (${blocked.code === 'CONTACT' ? 'guarda de contato barrou o telefone' : 'ok'})`)
   const conv2 = await lia.post('/api/messages', { artworkId: by(J, j1).artworkId })
-  await lia.post(`/api/messages/${conv2.id}`, { body: 'Joana, a nº 7 aceita visita ao ateliê?' })
-  await joana.post(`/api/messages/${conv2.id}`, { body: 'Aceita! Sábado de manhã é o melhor horário.' })
+  await lia.post(`/api/messages/${conv2.id}`, { body: 'A noite estrelada pode ser vista ao vivo antes da proposta?' })
+  await joana.post(`/api/messages/${conv2.id}`, { body: 'Pode, sim. Sábado de manhã é o melhor horário.' })
 
   // ── community ────────────────────────────────────────────────────────
-  const p1 = await joana.post('/api/community/posts', { kind: 'PHOTO', body: 'Ateliê hoje: fechando a série Construções. A nº 7 já está na Ladeira e aceita ofertas.', artworkId: by(J, j1).artworkId })
-  const p2 = await ana.post('/api/community/posts', { kind: 'EVENT', body: 'Convite aberto a quem segue a galeria.', event: { title: 'Abertura · Joana Teixeira, Construções', venue: 'Galeria Ladeira, Santo Antônio Além do Carmo', startsOn: new Date(Date.now() + 12 * 86_400_000).toISOString().slice(0, 10), startsAt: '19h' } })
+  const p1 = await joana.post('/api/community/posts', { kind: 'PHOTO', body: 'A noite estrelada (1889): pintada em Saint-Rémy, de memória, a partir da vista da janela antes do amanhecer. Óleo sobre tela, 73,7 × 92,1 cm. Aceita propostas.', artworkId: by(J, j1).artworkId })
+  const p2 = await ana.post('/api/community/posts', { kind: 'EVENT', body: 'Convite aberto a quem segue a galeria.', event: { title: 'Abertura · Claude Monet, Impressões', venue: 'Galeria Ladeira, Santo Antônio Além do Carmo', startsOn: new Date(Date.now() + 12 * 86_400_000).toISOString().slice(0, 10), startsAt: '19h' } })
   const p3 = await helena.post('/api/community/posts', { kind: 'POLL', body: 'Para a coleção de 2027: que técnica vocês estão olhando?', pollOptions: ['Pintura', 'Fotografia', 'Escultura', 'Gravura'] })
-  const p4 = await marta.post('/api/community/posts', { kind: 'PHOTO', body: 'Maré cheia chegou do ateliê em Recife. Visitas com hora marcada até sexta.', artworkId: by(M, m1).artworkId })
-  await ana.post('/api/community/posts', { kind: 'TEXT', body: 'Semana de montagem na Ladeira: a sala 2 recebe a série Construções a partir de quinta.' })
+  const p4 = await marta.post('/api/community/posts', { kind: 'PHOTO', body: 'A grande onda de Kanagawa (c. 1831), da série Trinta e seis vistas do monte Fuji. Xilogravura policromada, 25,7 × 37,9 cm.', artworkId: by(M, m1).artworkId })
+  await ana.post('/api/community/posts', { kind: 'TEXT', body: 'Semana de montagem na Ladeira: a sala 2 recebe Monet e Vermeer a partir de quinta.' })
+  // one post per work on show (a work mid-deal may refuse the link: the post is then skipped)
+  const more = [
+    [ana, g1, 'Impressão, nascer do sol (1872), de Claude Monet: o porto do Havre ao amanhecer, a tela que deu nome ao impressionismo. Na sala principal.'],
+    [ana, g2, 'Ninfeias (1906), de Claude Monet: o lago de Giverny, sem horizonte, só água e reflexo. Óleo sobre tela, 89,9 × 94,1 cm.'],
+    [ana, g3, 'Moça com brinco de pérola (c. 1665), de Johannes Vermeer. Um estudo de figura, não um retrato: ninguém sabe quem ela foi.'],
+    [joana, j3, 'O quarto em Arles (1888): a Casa Amarela, as duas cadeiras, a cama de madeira. As cores no lugar da sombra.'],
+    [helena, h1, 'Caipira picando fumo (estudo), de Almeida Júnior, 1893. O interior paulista como assunto de pintura, sem idealização.'],
+  ]
+  for (const [who, artworkId, body] of more) await who.post('/api/community/posts', { kind: 'PHOTO', body, artworkId }, { allow: [400, 403, 404, 409, 422] })
   for (const [who, post] of [[marina, p1], [marcelo, p1], [lia, p1], [marina, p4], [marcelo, p2]]) await who.post('/api/community/reactions', { target: 'POST', targetId: post.id, kind: 'LIKE' })
   await marina.post('/api/community/reactions', { target: 'POST', targetId: p2.id, kind: 'RSVP' })
   await lia.post('/api/community/reactions', { target: 'POST', targetId: p2.id, kind: 'RSVP' })
   await marina.post('/api/community/reactions', { target: 'POST', targetId: p4.id, kind: 'SAVE' })
   const joanaMember = (await joana.get('/api/auth/me')).memberId
   for (const who of [marina, marcelo, lia]) await who.post('/api/community/reactions', { target: 'MEMBER', targetId: joanaMember, kind: 'FOLLOW' })
-  await marina.post('/api/community/comments', { target: 'POST', targetId: p1.id, body: 'Que cor! A nº 7 é a minha favorita da série.' })
+  await marina.post('/api/community/comments', { target: 'POST', targetId: p1.id, body: 'Que céu! É a minha favorita.' })
   await marcelo.post('/api/community/comments', { target: 'POST', targetId: p1.id, body: 'Vou na abertura.' })
   await joana.post('/api/community/comments', { target: 'POST', targetId: p1.id, body: 'Obrigada! Te espero lá.' })
   await marina.post(`/api/community/polls/${p3.id}/vote`, { option: 0 }); await marcelo.post(`/api/community/polls/${p3.id}/vote`, { option: 1 }); await lia.post(`/api/community/polls/${p3.id}/vote`, { option: 0 })
   for (const who of [marina, marcelo]) await who.post('/api/community/reactions', { target: 'ARTWORK', targetId: by(G, g1).artworkId, kind: 'LIKE' })
   await lia.post('/api/community/reactions', { target: 'ARTWORK', targetId: by(J, j3).artworkId, kind: 'SAVE' })
-  STEP('Comunidade: 5 posts, curtidas, "Eu vou", salvos, 3 seguindo a Joana, comentários, enquete votada; favoritos de obras')
+  STEP('Comunidade: 10 posts, curtidas, "Eu vou", salvos, 3 seguindo Van Gogh, comentários, enquete votada; favoritos de obras')
 
   // ── the sales staff of the gallery sees the offers too ───────────────
   const caioOffers = await caio.get('/api/offers')

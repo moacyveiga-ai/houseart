@@ -23,7 +23,7 @@
 .hp-verify-input--id { padding: var(--ha-space-4); font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); font-weight: 500; letter-spacing: .06em; font-variant-numeric: tabular-nums; text-transform: uppercase; }
 .hp-verify-input::placeholder { color: var(--ha-ink-300); text-transform: none; }
 .hp-verify-input--id::placeholder { text-transform: uppercase; }
-.hp-verify-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--ha-space-4); }
+.hp-verify-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--ha-space-4); }
 .hp-verify-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--ha-space-3); }
 .hp-verify-hint { display: flex; align-items: center; gap: var(--ha-space-2); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .hp-verify-hint .ha-icon { font-size: 18px; }

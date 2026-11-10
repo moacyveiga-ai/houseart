@@ -24,7 +24,7 @@
 .hp-artist-names { display: flex; flex-direction: column; gap: var(--ha-space-2); }
 .hp-artist-name { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-display); line-height: var(--ha-lh-display); color: var(--ha-ink-900); text-wrap: balance; }
 .hp-artist-fullname { font-size: var(--ha-text-body-lg); color: var(--ha-ink-500); }
-.hp-artist-facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border-top: var(--ha-border-w) solid var(--ha-paper-200); }
+.hp-artist-facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); border-top: var(--ha-border-w) solid var(--ha-paper-200); }
 .hp-artist-fact { display: flex; flex-direction: column; gap: 2px; padding: var(--ha-space-4) var(--ha-space-4) var(--ha-space-4) 0; border-bottom: var(--ha-border-w) solid var(--ha-paper-200); }
 .hp-artist-fact dt { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .hp-artist-fact dd { margin: 0; font-size: var(--ha-text-body-sm); font-weight: 500; color: var(--ha-ink-900); }

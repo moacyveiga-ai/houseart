@@ -22,7 +22,7 @@
 .ha-tag-link__decl { margin: 0; max-width: 360px; font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-300); }
 .ha-tag-link__err { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-alert-500); }
 
-.ha-tag-link__cta { align-self: stretch; min-height: 52px; }
+.ha-tag-link__cta { align-self: stretch; }
 .ha-tag-link__cta[disabled] { background: var(--ha-ink-700); color: var(--ha-ink-300); }
 
 .ha-tag-link__alt { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-3); }

@@ -150,7 +150,7 @@ export function AppraisalDesk({ queue, dossier, selected: initialSelected, actor
           <div className="ha-eyebrow">Comparáveis sugeridos</div>
           <ul className="ha-list">
             {dossier.comparables.length === 0 ? <li className="ha-muted">Sem vendas comparáveis registradas para este artista.</li> : null}
-            {dossier.comparables.map((c, i) => <li key={i} className="ha-list__row" style={{ gridTemplateColumns: '2fr 1fr 1fr auto' }}><span>{c.label}</span><span className="ha-muted">{c.dimensions ?? '—'}</span><span className="ha-num">{formatBRL(BigInt(c.priceCents))}</span><span className="ha-muted ha-sm">{c.soldOn} · {c.sourceLabel}</span></li>)}
+            {dossier.comparables.map((c, i) => <li key={i} className="ha-list__row ha-list__row--plain" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto' }}><span>{c.label}</span><span className="ha-muted">{c.dimensions ?? '—'}</span><span className="ha-num">{formatBRL(BigInt(c.priceCents))}</span><span className="ha-muted ha-sm">{c.soldOn} · {c.sourceLabel}</span></li>)}
           </ul>
           {err ? <p className="ha-adesk__err" role="alert">{err}</p> : null}
           {issued ? (

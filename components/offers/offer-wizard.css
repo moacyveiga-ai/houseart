@@ -61,7 +61,7 @@
 .hp-offer__validity:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
 .hp-offer__validity b { font-weight: 600; color: var(--ha-ink-900); }
 .hp-offer__validity span { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
-@media (max-width: 480px) { .hp-offer__validities { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .hp-offer__validities { grid-template-columns: minmax(0, 1fr); } }
 .hp-offer__message { display: flex; flex-direction: column; gap: var(--ha-space-2); }
 .hp-offer__message textarea { font: inherit; padding: var(--ha-space-3); border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-paper-200); background: var(--ha-bg); color: var(--ha-ink-900); resize: vertical; outline: none; }
 .hp-offer__message textarea:focus { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }

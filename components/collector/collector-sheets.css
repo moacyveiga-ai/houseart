@@ -21,7 +21,7 @@
 .ha-cs__body { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--ha-space-3); padding: var(--ha-space-1) var(--ha-space-4) var(--ha-space-6); }
 .ha-cs__foot { flex: none; padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-8); border-top: var(--ha-border-w) solid var(--ha-border); display: flex; flex-direction: column; gap: var(--ha-space-2); }
 @media (min-width: 720px) { .ha-cs__foot { padding-bottom: var(--ha-space-4); } }
-.ha-cs__cta { width: 100%; height: 50px; }
+.ha-cs__cta { width: 100%; }
 .ha-cs__cta-row { display: flex; gap: var(--ha-space-2); }
 .ha-cs__cta-row > * { flex: 1; }
 .ha-cs__lead { font-size: var(--ha-text-body-sm); line-height: 19px; color: var(--ha-fg-muted); }

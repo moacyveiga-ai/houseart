@@ -12,4 +12,4 @@
 .ha-theme-pick__s { color: var(--ha-fg-muted); font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); }
 .ha-theme-pick__ok { flex: none; color: var(--ha-fg); }
 .ha-theme-pick__note { display: block; margin-top: var(--ha-space-2); color: var(--ha-fg-muted); font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); }
-@media (max-width: 480px) { .ha-theme-pick { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .ha-theme-pick { grid-template-columns: minmax(0, 1fr); } }

@@ -16,6 +16,6 @@
 .ha-aops__summary { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ha-fg-muted); }
 .ha-aops__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ha-space-2); }
 .ha-aops__result { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.ha-aops__config { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--ha-space-2); }
+.ha-aops__config { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--ha-space-2); }
 .ha-aops__config li { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: var(--ha-space-2); align-items: center; font-size: var(--ha-text-body-sm); }
-@media (max-width: 900px) { .ha-aops__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-aops__runs li { grid-template-columns: auto minmax(0, 1fr); } }
+@media (max-width: 900px) { .ha-aops__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-aops__head > * { grid-column: 1; } .ha-aops__head > :last-child { grid-column: 2; grid-row: 1; } .ha-aops__runs li { grid-template-columns: auto minmax(0, 1fr); } }

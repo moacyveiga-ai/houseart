@@ -58,7 +58,7 @@
 .ha-login-form__eye:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 0; }
 .ha-login-form__check { display: flex; gap: var(--ha-space-2); align-items: center; font-size: var(--ha-text-body-sm); font-weight: 400; color: var(--ha-fg-body); cursor: pointer; }
 .ha-login-form__check input { accent-color: var(--ha-ink-900); width: 16px; height: 16px; margin: 0; }
-.ha-login-form__submit { height: 52px; width: 100%; }
+.ha-login-form__submit { width: 100%; }
 .ha-login-form__submit .ha-spinner { width: 18px; height: 18px; }
 .ha-login-note { display: flex; gap: var(--ha-space-2); align-items: flex-start; padding: var(--ha-space-3); border-radius: var(--ha-radius-sm); font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); }
 .ha-login-note .ha-icon { font-size: 18px; flex: none; }

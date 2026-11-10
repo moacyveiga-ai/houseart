@@ -20,4 +20,4 @@
 .ha-split.ha-lp { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
 .ha-lp__work { gap: 16px; }
 /* on the phone the listing (what the page is for) comes first, the work below it */
-@media (max-width: 900px) { .ha-split.ha-lp { grid-template-columns: 1fr; } .ha-lp__work { order: 2; } }
+@media (max-width: 900px) { .ha-split.ha-lp { grid-template-columns: minmax(0, 1fr); } .ha-lp__work { order: 2; } }

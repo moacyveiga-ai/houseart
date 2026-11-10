@@ -45,6 +45,10 @@
 .ha-btn--sm { min-height: 40px; padding: 0 var(--ha-space-4); }
 .ha-btn--md { min-height: 48px; padding: 0 var(--ha-space-6); font-size: var(--ha-text-body); line-height: var(--ha-lh-body); }
 .ha-btn--lg { min-height: 48px; padding: 0 var(--ha-space-6); font-size: var(--ha-text-body); line-height: var(--ha-lh-body); }
+/* The height of a button is its size (xs 32 · sm 40 · md/lg 48) and nothing else: screens used to add their own
+   vertical padding (login, signup, checkout, the artwork page) and got 50–52 px buttons next to 48 px ones. */
+.ha-btn { padding-top: 0 !important; padding-bottom: 0 !important; }
+.ha-btn > .ha-icon, .ha-btn > .material-symbols-rounded { line-height: 1; }
 .ha-btn:active:not([disabled]) { transform: translateY(1px); }
 .ha-btn--outline:active:not([disabled]) { background: var(--ha-paper-200); }
 .ha-btn--ghost:active:not([disabled]) { color: var(--ha-ink-500); }
@@ -67,6 +71,8 @@
 .ha-label { display: flex; flex-direction: column; gap: var(--ha-space-1); font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-fg); }
 .ha-input, .ha-select, .ha-textarea { font-weight: 400; font-size: var(--ha-text-body); padding: var(--ha-space-3); border-radius: var(--ha-radius-sm); border: var(--ha-border-w) solid var(--ha-ink-300); background: var(--ha-paper-50); color: var(--ha-fg); outline: none; width: 100%; }
 .ha-input, .ha-select, .ha-textarea { transition: border-color var(--ha-dur-fast); }
+/* 12 px padding + 22 px line + borders = 48 px: the same height as a md button, so a field and its button line up */
+.ha-input, .ha-select { line-height: 22px; box-sizing: border-box; }
 .ha-input:hover, .ha-select:hover, .ha-textarea:hover { border-color: var(--ha-ink-500); }
 .ha-input:focus, .ha-select:focus, .ha-textarea:focus { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
 .ha-input--error, .ha-input--error:hover, .ha-input[aria-invalid="true"] { border-color: var(--ha-alert-500); }
@@ -107,7 +113,7 @@
 .ha-kpi__label { font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); }
 .ha-kpi__value { font-family: var(--ha-font-display); font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); color: var(--ha-fg); font-variant-numeric: tabular-nums; }
 .ha-kpi__note { font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
-.ha-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--ha-space-4); }
+.ha-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--ha-space-4); }
 .ha-wall { background: var(--ha-wall); display: flex; align-items: center; justify-content: center; }
 .ha-wall img { max-width: 100%; max-height: 100%; box-shadow: var(--ha-shadow-wall); display: block; }
 .ha-wall--sq { aspect-ratio: 1 / 1; padding: var(--ha-space-8); }
@@ -117,7 +123,7 @@
 .ha-wall--72 img { box-shadow: none; }
 .ha-wall--40 { width: 40px; height: 40px; flex: none; padding: var(--ha-space-1); }
 .ha-wall--40 img { box-shadow: none; }
-.ha-grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--ha-space-8); }
+.ha-grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: var(--ha-space-8); }
 .ha-stack { display: flex; flex-direction: column; }
 /* Espaçamento padrão por :where (especificidade zero): qualquer regra de componente
    ou estilo inline vence. Sem ele, ~100 pilhas e linhas encostavam os blocos. */
@@ -144,9 +150,24 @@
 .ha-table__row:last-child { border-bottom: 0; }
 /* Linha de estado vazio da tabela: o texto ocupa a linha toda, não a primeira coluna. */
 .ha-table__row > .ha-muted:only-child { grid-column: 1 / -1; padding: var(--ha-space-4) 0; }
+/* On the phone a table stops scrolling sideways (its right side was cut off with no hint): the header goes and each
+   row stacks its cells. Same for the review queue. */
+@media (max-width: 720px) {
+  .ha-table__inner { min-width: 0; }
+  .ha-table__head { display: none; }
+  .ha-table__row { grid-template-columns: minmax(0, 1fr); gap: var(--ha-space-2); }
+  .ha-table__row > * { justify-self: start; }
+}
 .ha-list { border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); }
 .ha-list__row { display: grid; gap: var(--ha-space-4); align-items: center; padding: var(--ha-space-3) var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
 .ha-list__row:last-child { border-bottom: 0; }
+/* Rows with a column template set inline (thumbnail + text + value + actions) stack on the phone: the thumbnail
+   stays on the left and everything else goes under the text, instead of squeezing four columns into 358 px. */
+@media (max-width: 720px) {
+  .ha-list__row.ha-list__row--stack { grid-template-columns: 40px minmax(0, 1fr) !important; row-gap: var(--ha-space-2); }
+  .ha-list__row--stack > :nth-child(n+3) { grid-column: 2; justify-self: start; }
+  .ha-list__row.ha-list__row--plain { grid-template-columns: minmax(0, 1fr) !important; row-gap: var(--ha-space-1); }
+}
 /* Estado vazio de uma lista ou tabela: a mesma moldura da lista, para a tela não ficar com um texto solto. */
 .ha-empty { margin: 0; padding: var(--ha-space-6) var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); color: var(--ha-fg-muted); font-size: var(--ha-text-body-sm); }
 /* Linha solta dentro da lista (estado vazio, aviso de corte): o mesmo respiro da linha. */
@@ -162,8 +183,9 @@
 /* ── progress / stepper / timeline / tabs ───────────────────────────────── */
 .ha-progress { height: 6px; background: var(--ha-paper-200); border-radius: var(--ha-radius-full); overflow: hidden; }
 .ha-progress > span { display: block; height: 100%; background: var(--ha-ink-900); }
-.ha-tabs { display: flex; gap: var(--ha-space-6); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); font-weight: 600; }
-.ha-tab { display: inline-flex; align-items: center; gap: 4px; padding: var(--ha-space-3) 0; border: 0; background: transparent; cursor: pointer; color: var(--ha-fg-muted); text-decoration: none; transition: color var(--ha-dur-fast) var(--ha-ease); }
+.ha-tabs { display: flex; gap: var(--ha-space-6); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); font-weight: 600; overflow-x: auto; scrollbar-width: none; }
+.ha-tabs::-webkit-scrollbar { display: none; }
+.ha-tab { display: inline-flex; flex: none; align-items: center; gap: 4px; white-space: nowrap; padding: var(--ha-space-3) 0; border: 0; background: transparent; cursor: pointer; color: var(--ha-fg-muted); text-decoration: none; transition: color var(--ha-dur-fast) var(--ha-ease); }
 .ha-tab:hover { color: var(--ha-fg); }
 .ha-tab--on { color: var(--ha-fg); box-shadow: inset 0 -2px 0 var(--ha-ink-900); }
 .ha-stepper { display: flex; flex-direction: column; flex: 0 0 220px; }
@@ -257,6 +279,8 @@
 .ha-drawer .ha-nav-item { min-height: 44px; }
 .ha-topbar__search:focus-within { border-color: var(--ha-ink-900); box-shadow: 0 0 0 var(--ha-focus-w) var(--ha-sand-500); }
 @media (max-width: 720px) { .ha-topbar { padding: 0 var(--ha-space-4); gap: var(--ha-space-3); } .ha-topbar__right { gap: var(--ha-space-2); } .ha-profilebtn__name, .ha-topbar__system { display: none; } .ha-profilebtn { padding-right: var(--ha-space-2); } }
+/* 360 px phones: menu + wordmark + bell + account did not fit (8 px past the edge) — tighter gaps, the wordmark may shrink and the account chevron goes */
+@media (max-width: 480px) { .ha-topbar { padding: 0 var(--ha-space-3); gap: var(--ha-space-2); } .ha-topbar__brand { flex: 0 1 auto; min-width: 0; overflow: hidden; } .ha-topbar__brand img { max-width: 100%; height: auto; } .ha-profilebtn > .ha-icon:last-child { display: none; } }
 
 /* ── overlays ───────────────────────────────────────────────────────────── */
 .ha-scrim { position: fixed; inset: 0; z-index: 80; background: var(--ha-scrim); display: flex; align-items: center; justify-content: center; padding: var(--ha-space-6); }
@@ -322,7 +346,7 @@
 /* Two-column page split (dashboard, carteira de escrituras, fila de laudos); the split BAR is .ha-split-summary__bar. */
 .ha-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ha-space-6); align-items: start; }
 .ha-split--one { grid-template-columns: minmax(0, 1fr); }
-@media (max-width: 900px) { .ha-split { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .ha-split { grid-template-columns: minmax(0, 1fr); } }
 .ha-media-slot { aspect-ratio: 1 / 1; background: var(--ha-bg); border: var(--ha-border-w) dashed var(--ha-ink-300); display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--ha-fg-muted); cursor: pointer; }
 .ha-media-slot--has { background: var(--ha-wall); border-style: solid; }
 .ha-media-slot img { width: 100%; height: 100%; object-fit: cover; }
@@ -330,7 +354,6 @@
 .ha-ring__pulse { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--ha-sand-500); animation: ha-pulse 1200ms ease-out infinite; }
 .ha-ring__core { position: absolute; inset: 20px; border-radius: 50%; background: var(--ha-sand-500); display: flex; align-items: center; justify-content: center; color: var(--ha-ink-900); }
 .ha-ring__core .ha-icon { font-size: 28px; }
-.ha-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* ── additions for the React primitives (Fase 0) ─────────────────────────── */
 .ha-logo { display: inline-flex; align-items: center; line-height: 0; }
@@ -409,7 +432,7 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-artwork-id__copy .ha-icon { font-size: 16px; }
 
 /* artwork-card: grid · lista */
-.ha-artwork-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--ha-space-8); }
+.ha-artwork-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: var(--ha-space-8); }
 .ha-artwork-card { display: flex; flex-direction: column; gap: var(--ha-space-3); text-decoration: none; color: inherit; border-radius: var(--ha-radius-md); transition: box-shadow var(--ha-dur-fast); }
 .ha-artwork-card:hover .ha-artwork-card__title { color: var(--ha-fg); }
 .ha-artwork-card:hover .ha-artwork-card__wall img { box-shadow: var(--ha-shadow-lg); }
@@ -548,7 +571,9 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-status-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: var(--ha-space-4); padding: var(--ha-space-12) var(--ha-space-4); background: var(--ha-bg); }
 
 /* visually hidden, still read by screen readers */
-.ha-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* screen-reader only. Pinned to the top-left of its containing block: a stray left position (a table header 860 px
+   wide inside a scroll box) used to stretch the whole page sideways on the phone. */
+.ha-sr { position: absolute; top: 0; left: 0; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 /* Admin · Obras e certificados › Fila de revisão (HouseArt Web App.dc.html) */
 .ha-review { overflow-x: auto; border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }
@@ -571,6 +596,12 @@ a.ha-review__title:hover { text-decoration: underline; }
 .ha-review__actions { justify-self: end; display: flex; gap: var(--ha-space-2); }
 .ha-review__done { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .ha-review__empty { padding: var(--ha-space-8) var(--ha-space-4); color: var(--ha-ink-500); font-size: var(--ha-text-body-sm); }
+@media (max-width: 720px) {
+  .ha-review__inner { min-width: 0; }
+  .ha-review__head { display: none; }
+  .ha-review__row { grid-template-columns: minmax(0, 1fr); gap: var(--ha-space-2); }
+  .ha-review__row > * { justify-self: start; }
+}
 
 /* Admin · Etiquetas (HouseArt Web App.dc.html) */
 .ha-markers__search { display: flex; align-items: center; gap: var(--ha-space-2); padding: var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-ink-300); border-radius: var(--ha-radius-sm); color: var(--ha-ink-500); min-width: min(260px, 100%); }
@@ -587,7 +618,7 @@ a.ha-review__title:hover { text-decoration: underline; }
 .ha-markers__track > span { display: block; height: 100%; background: var(--ha-ink-900); border-radius: inherit; }
 .ha-markers__empty { padding: var(--ha-space-8) var(--ha-space-4); color: var(--ha-ink-500); font-size: var(--ha-text-body-sm); }
 .ha-markers__order { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
-.ha-markers__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--ha-space-4); align-items: start; }
+.ha-markers__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--ha-space-4); align-items: start; }
 .ha-markers__uids { grid-column: 1 / -1; }
 .ha-select--sm { width: auto; padding: var(--ha-space-1) var(--ha-space-3); font-size: var(--ha-text-body-sm); }
 .ha-house__row { grid-template-columns: 100px minmax(140px, 1.2fr) 100px minmax(200px, 2fr) 120px 120px; }

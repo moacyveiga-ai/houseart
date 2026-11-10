@@ -133,8 +133,20 @@ async function listForSale(actor, c, price, floor, opts = {}) {
   STEP(`${actor.name}: ${c.publicId} à venda por R$ ${(price / 100).toLocaleString('pt-BR')}`)
 }
 
+/** Stripe test cards by number (the test payment methods Stripe accepts by name, no raw number leaves here). */
+const TEST_PM = { '4242424242424242': 'pm_card_visa', '5555555555554444': 'pm_card_mastercard' }
 async function addCard(actor, number, holder) {
-  const r = await actor.post('/api/collector/payment-methods', { number, exp: '12/29', cvc: '123', holder, cep: '40140-180', makeDefault: true })
+  let r = await actor.post('/api/collector/payment-methods', { number, exp: '12/29', cvc: '123', holder, cep: '40140-180', makeDefault: true }, { allow: [409] })
+  if (r.code === 'USE_SECURE_FORM') {
+    // Stripe in test mode: the card goes through a SetupIntent, confirmed with the publishable key, as Stripe Elements does
+    const setup = await actor.post('/api/collector/payment-methods/setup')
+    const seti = setup.clientSecret.split('_secret_')[0]
+    const form = new URLSearchParams({ payment_method: TEST_PM[number] ?? 'pm_card_visa', client_secret: setup.clientSecret, key: setup.publishableKey })
+    const c = await fetch(`https://api.stripe.com/v1/setup_intents/${seti}/confirm`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: form })
+    const cj = await c.json()
+    if (!c.ok || cj.status !== 'succeeded') fail(`cartão ${actor.name}: SetupIntent ${c.status} ${cj.status ?? cj.error?.message}`)
+    r = await actor.post('/api/collector/payment-methods', { setupIntentId: seti, makeDefault: true })
+  }
   if (!r.ok) fail(`cartão ${actor.name}: ${JSON.stringify(r)}`)
   STEP(`${actor.name}: cartão •••• ${number.slice(-4)} salvo`)
   return r.method.id

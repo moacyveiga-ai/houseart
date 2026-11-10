@@ -2,9 +2,10 @@
 // Media of the public artwork page: stage (Obra · Ver em parede), thumbnails
 // (Frente · Verso e etiqueta · Detalhe · Assinatura · Na parede — the real photos;
 // `artwork-media-core.ts` decides the strip) and the lightbox (Esc closes).
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Icon } from '@/components/ds/Icon'
 import type { MediaItem } from './artwork-media-core'
+import { wallLayout, type Box } from './wall-scene-core'
 
 export type { MediaItem } from './artwork-media-core'
 
@@ -26,8 +27,6 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
   if (!current) return <div className="hp-artwork__stage" aria-label="Sem imagem" />
   const alt = `${caption.title}, ${caption.artist}${caption.year ? `, ${caption.year}` : ''} · ${current.label}`
   const detailStyle = current.view === 'detail' ? { transform: 'scale(2.4)', transformOrigin: current.origin } : undefined
-  // Wall scale: the 1,70 m reference line is 42.5 % of the stage.
-  const wallHeightPct = wall ? (wall.heightMm / 1700) * 42.5 : 0
   return (
     <>
       <div className="hp-artwork__stage">
@@ -37,20 +36,7 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
             <img src={current.src} alt={alt} style={detailStyle} />
           </button>
         ) : wall && front ? (
-          <div className="hp-artwork__wall" role="img" aria-label={`Escala aproximada: obra ${wall.dimensions} sobre sofá de 2,20 m`}>
-            <div className="hp-artwork__wall-floor" />
-            <div className="hp-artwork__wall-work" style={{ height: `${wallHeightPct}%`, aspectRatio: `${wall.widthMm} / ${wall.heightMm}` }}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
-              <img src={front.src} alt="" />
-            </div>
-            <div className="hp-artwork__wall-sofa" />
-            <div className="hp-artwork__wall-leg hp-artwork__wall-leg--l" />
-            <div className="hp-artwork__wall-leg hp-artwork__wall-leg--r" />
-            <div className="hp-artwork__wall-ruler" />
-            <div className="hp-artwork__wall-tick" />
-            <div className="hp-artwork__wall-ref">1,70 m</div>
-            <div className="hp-artwork__wall-note">Escala aproximada · obra {wall.dimensions} sobre sofá de 2,20 m</div>
-          </div>
+          <WallScene wall={wall} src={front.src} />
         ) : null}
         {wall && front ? (
           <div className="hp-artwork__seg" role="group" aria-label="Modo de visualização">
@@ -79,5 +65,47 @@ export function ArtworkMedia({ items, caption, wall }: { items: MediaItem[]; cap
         </button>
       ) : null}
     </>
+  )
+}
+
+const boxStyle = (b: Box): CSSProperties => ({ left: b.left, bottom: b.bottom, width: b.width, height: b.height })
+
+/** The work, a 2,20 m sofa and the 1,70 m ruler in ONE real scale (wall-scene-core): measured stage, redrawn on resize. */
+function WallScene({ wall, src }: { wall: WallScale; src: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setSize({ width: el.clientWidth, height: el.clientHeight })
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  // at phone width the Obra · Ver em parede control sits on the floor band, never on the sofa
+  const l = size ? wallLayout({ ...size, floorMin: size.width <= 720 ? 72 : 0 }, { widthMm: wall.widthMm, heightMm: wall.heightMm }) : null
+  return (
+    <div ref={ref} className="hp-artwork__wall" role="img" aria-label={`Escala real: obra ${wall.dimensions} sobre um sofá de 2,20 m`}>
+      {l ? (
+        <>
+          <div className="hp-artwork__wall-floor" style={{ height: l.floor }} />
+          <div className="hp-artwork__wall-work" style={boxStyle(l.work)}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- derivada pública */}
+            <img src={src} alt="" />
+          </div>
+          <div className="hp-artwork__sofa-part hp-artwork__sofa-part--back" style={boxStyle(l.sofa.back)} />
+          <div className="hp-artwork__sofa-part" style={boxStyle(l.sofa.body)} />
+          <div className="hp-artwork__sofa-part hp-artwork__sofa-part--arm" style={boxStyle(l.sofa.armL)} />
+          <div className="hp-artwork__sofa-part hp-artwork__sofa-part--arm" style={boxStyle(l.sofa.armR)} />
+          <div className="hp-artwork__sofa-leg" style={boxStyle(l.sofa.legL)} />
+          <div className="hp-artwork__sofa-leg" style={boxStyle(l.sofa.legR)} />
+          <div className="hp-artwork__wall-ruler" style={{ left: l.ruler.left, bottom: l.ruler.bottom, height: l.ruler.height }}>
+            <span>1,70 m</span>
+          </div>
+        </>
+      ) : null}
+      <div className="hp-artwork__wall-note">Escala real · obra {wall.dimensions} sobre um sofá de 2,20 m</div>
+    </div>
   )
 }

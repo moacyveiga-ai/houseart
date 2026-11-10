@@ -170,18 +170,18 @@ async function main() {
   for (const a of [admin, joana, marta, ana, caio, helena, marina, marcelo, lia, rui]) await a.login()
 
   // ── artworks ─────────────────────────────────────────────────────────
-  const j1 = await registerArtwork(joana, { title: 'Construção nº 7', year: 2025, technique: 'Óleo sobre linho', h: 1000, w: 800, category: 'PAINTING', series: 'Construções' }, 0)
-  const j2 = await registerArtwork(joana, { title: 'Voo baixo', year: 2024, technique: 'Óleo sobre linho', h: 1200, w: 1000, category: 'PAINTING' }, 1)
-  const j3 = await registerArtwork(joana, { title: 'Estudo em vermelho', year: 2025, technique: 'Óleo sobre papel', h: 500, w: 500, category: 'PAINTING' }, 2)
-  const m1 = await registerArtwork(marta, { title: 'Maré cheia', year: 2024, technique: 'Pigmento mineral sobre papel de algodão', h: 600, w: 900, category: 'PHOTOGRAPHY', edition: '2/5' }, 5)
-  const m2 = await registerArtwork(marta, { title: 'Jangada ao amanhecer', year: 2023, technique: 'Pigmento mineral sobre papel de algodão', h: 600, w: 900, category: 'PHOTOGRAPHY', edition: '1/5' }, 6)
+  const j1 = await registerArtwork(joana, { title: 'Construção nº 7', year: 2025, technique: 'Óleo sobre linho', h: 100, w: 80, category: 'PAINTING', series: 'Construções' }, 0)
+  const j2 = await registerArtwork(joana, { title: 'Voo baixo', year: 2024, technique: 'Óleo sobre linho', h: 120, w: 100, category: 'PAINTING' }, 1)
+  const j3 = await registerArtwork(joana, { title: 'Estudo em vermelho', year: 2025, technique: 'Óleo sobre papel', h: 50, w: 50, category: 'PAINTING' }, 2)
+  const m1 = await registerArtwork(marta, { title: 'Maré cheia', year: 2024, technique: 'Pigmento mineral sobre papel de algodão', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '2/5' }, 5)
+  const m2 = await registerArtwork(marta, { title: 'Jangada ao amanhecer', year: 2023, technique: 'Pigmento mineral sobre papel de algodão', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '1/5' }, 6)
   const artists = (await ana.get('/api/gallery/artists')).artists
   const tomas = artists.find((x) => x.name === 'Tomás Barreto') ?? (await ana.post('/api/gallery/artists', { name: 'Tomás Barreto', kind: 'REPRESENTED', galleryBps: 5000 })).artists.find((x) => x.name === 'Tomás Barreto')
   const liaM = artists.find((x) => x.name === 'Lia Mendes') ?? (await ana.post('/api/gallery/artists', { name: 'Lia Mendes', kind: 'CONSIGNMENT', galleryBps: 4000 })).artists.find((x) => x.name === 'Lia Mendes')
-  const g1 = await registerArtwork(ana, { title: 'Retábulo do Rio Vermelho', year: 1983, technique: 'Acrílica e folha de ouro sobre madeira', h: 1400, w: 1050, d: 40, category: 'PAINTING' }, 3, tomas.id)
-  const g2 = await registerArtwork(ana, { title: 'Duas luas', year: 1977, technique: 'Acrílica sobre tela', h: 900, w: 900, category: 'PAINTING' }, 4, tomas.id)
-  const g3 = await registerArtwork(ana, { title: 'Maré baixa, Itapuã', year: 2024, technique: 'Pigmento mineral · ed. 3/5', h: 600, w: 900, category: 'PHOTOGRAPHY', edition: '3/5' }, 7, liaM.id)
-  const h1 = await registerArtwork(helena, { title: 'Sem título (coleção Prado)', year: 2019, technique: 'Serigrafia sobre papel', h: 700, w: 500, category: 'PRINT', edition: '12/30' }, 8)
+  const g1 = await registerArtwork(ana, { title: 'Retábulo do Rio Vermelho', year: 1983, technique: 'Acrílica e folha de ouro sobre madeira', h: 140, w: 105, d: 4, category: 'PAINTING' }, 3, tomas.id)
+  const g2 = await registerArtwork(ana, { title: 'Duas luas', year: 1977, technique: 'Acrílica sobre tela', h: 90, w: 90, category: 'PAINTING' }, 4, tomas.id)
+  const g3 = await registerArtwork(ana, { title: 'Maré baixa, Itapuã', year: 2024, technique: 'Pigmento mineral · ed. 3/5', h: 60, w: 90, category: 'PHOTOGRAPHY', edition: '3/5' }, 7, liaM.id)
+  const h1 = await registerArtwork(helena, { title: 'Sem título (coleção Prado)', year: 2019, technique: 'Serigrafia sobre papel', h: 70, w: 50, category: 'PRINT', edition: '12/30' }, 8)
 
   // ── certification ────────────────────────────────────────────────────
   const J = await certify(joana, [j1, j2, j3])

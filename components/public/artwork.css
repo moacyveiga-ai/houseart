@@ -20,18 +20,21 @@
 .hp-artwork__view--detail img { max-width: 100%; max-height: 100%; }
 @media (max-width: 720px) { .hp-artwork__stage { height: 68vw; min-height: 320px; } .hp-artwork__view { padding: var(--ha-space-6); } }
 
-.hp-artwork__wall { position: absolute; inset: 0; background: var(--ha-paper-100); }
-.hp-artwork__wall-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 16%; background: var(--ha-paper-200); border-top: var(--ha-border-w) solid var(--ha-ink-300); }
-.hp-artwork__wall-work { position: absolute; left: 50%; bottom: 36%; transform: translateX(-50%); box-shadow: var(--ha-shadow-wall); }
+.hp-artwork__wall { position: absolute; inset: 0; background: var(--ha-paper-100); overflow: hidden; }
+/* every piece is placed in px by wall-scene-core (one scale in mm), measured from the stage's bottom-left */
+.hp-artwork__wall-floor { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ha-paper-200); border-top: var(--ha-border-w) solid var(--ha-ink-300); }
+.hp-artwork__wall-work { position: absolute; box-shadow: var(--ha-shadow-wall); }
 .hp-artwork__wall-work img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hp-artwork__wall-sofa { position: absolute; left: 50%; bottom: 16%; transform: translateX(-50%); width: 38%; height: 8%; background: var(--ha-ink-700); border-radius: var(--ha-radius-sm) var(--ha-radius-sm) 0 0; }
-.hp-artwork__wall-leg { position: absolute; bottom: 13%; width: 2%; height: 3%; background: var(--ha-ink-700); }
-.hp-artwork__wall-leg--l { left: calc(50% - 19% + 2%); }
-.hp-artwork__wall-leg--r { right: calc(50% - 19% + 2%); }
-.hp-artwork__wall-ruler { position: absolute; right: 8%; bottom: 16%; height: 42.5%; width: 1px; background: var(--ha-ink-500); }
-.hp-artwork__wall-tick { position: absolute; right: 8%; bottom: calc(16% + 42.5%); width: 12px; height: 1px; margin-right: -6px; background: var(--ha-ink-500); }
-.hp-artwork__wall-ref { position: absolute; right: calc(8% + 12px); bottom: calc(16% + 40%); font-size: var(--ha-text-caption); color: var(--ha-ink-500); font-variant-numeric: tabular-nums; }
-.hp-artwork__wall-note { position: absolute; left: var(--ha-space-5); top: var(--ha-space-5); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
+.hp-artwork__sofa-part { position: absolute; background: var(--ha-ink-700); border-radius: 6px 6px 2px 2px; }
+.hp-artwork__sofa-part--back { background: var(--ha-ink-500); border-radius: 10px 10px 0 0; }
+.hp-artwork__sofa-part--arm { border-radius: 8px 8px 2px 2px; background: var(--ha-ink-900); }
+.hp-artwork__sofa-leg { position: absolute; background: var(--ha-ink-900); border-radius: 1px; }
+.hp-artwork__wall-ruler { position: absolute; width: 1px; background: var(--ha-ink-500); }
+.hp-artwork__wall-ruler::before, .hp-artwork__wall-ruler::after { content: ''; position: absolute; left: -5px; width: 11px; height: 1px; background: var(--ha-ink-500); }
+.hp-artwork__wall-ruler::before { top: 0; }
+.hp-artwork__wall-ruler::after { bottom: 0; }
+.hp-artwork__wall-ruler span { position: absolute; top: -4px; left: 10px; white-space: nowrap; font-size: var(--ha-text-caption); color: var(--ha-ink-500); font-variant-numeric: tabular-nums; }
+.hp-artwork__wall-note { position: absolute; left: var(--ha-space-5); top: var(--ha-space-5); right: var(--ha-space-5); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 
 .hp-artwork__seg { position: absolute; right: var(--ha-space-4); bottom: var(--ha-space-4); display: flex; gap: var(--ha-space-1); background: var(--ha-paper-50); border-radius: var(--ha-radius-md); padding: var(--ha-space-1); box-shadow: var(--ha-shadow-sm); }
 .hp-artwork__seg button { font: inherit; font-size: var(--ha-text-caption); font-weight: 600; border: 0; border-radius: var(--ha-radius-sm); padding: var(--ha-space-2) var(--ha-space-3); cursor: pointer; display: flex; align-items: center; gap: var(--ha-space-1); background: transparent; color: var(--ha-ink-900); min-height: 32px; }

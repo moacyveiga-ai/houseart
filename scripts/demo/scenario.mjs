@@ -4,6 +4,8 @@
 // list; collectors save a card, make offers; sellers accept, counter, refuse;
 // deals go through escrow, signatures, shipping and the tap; a collector resells
 // on the secondary market and registers an own artwork; everyone talks and posts.
+// Prices are market estimates; only works under the Stripe per-payment ceiling
+// (~R$ 1 million) are bought here — the rest gets offers guaranteed by transfer.
 //
 //   DEMO_BASE_URL=http://localhost:3019 node scripts/demo/scenario.mjs
 //   DEMO_BASE_URL=https://www.houseart.com.br node scripts/demo/scenario.mjs
@@ -156,8 +158,11 @@ async function addCard(actor, number, holder) {
   return r.method.id
 }
 
+// paymentMethodId null = guarantee by bank transfer on accept (nothing charged): the masterpieces are far
+// above the ~R$ 1 million Stripe charges per payment.
 async function offer(actor, c, cents, paymentMethodId, message) {
-  const r = await actor.post('/api/public/offers', { publicId: c.publicId, buyerName: actor.name.split(' (')[0], buyerEmail: actor.email, buyerCity: 'Salvador/BA', offeredCents: cents, message, validityHours: 48, guaranteeMethod: 'CARD_HOLD', paymentMethodId, deliveryCep: '40140-180' })
+  const guarantee = paymentMethodId ? { guaranteeMethod: 'CARD_HOLD', paymentMethodId } : { guaranteeMethod: 'TRANSFER_ON_ACCEPT' }
+  const r = await actor.post('/api/public/offers', { publicId: c.publicId, buyerName: actor.name.split(' (')[0], buyerEmail: actor.email, buyerCity: 'Salvador/BA', offeredCents: cents, message, validityHours: 48, ...guarantee, deliveryCep: '40140-180' })
   if (!r.ok || !r.confirmed) fail(`proposta ${actor.name} em ${c.publicId}: ${JSON.stringify(r)}`)
   STEP(`${actor.name}: proposta ${r.code} de R$ ${(cents / 100).toLocaleString('pt-BR')} em ${c.publicId}`)
   return r.code
@@ -211,15 +216,19 @@ async function main() {
   const by = (list, artworkId) => list.find((c) => c.artworkId === artworkId)
 
   // ── mandates (the floor never leaves the backend) ────────────────────
-  await listForSale(joana, by(J, j1), 3_800_000, 3_200_000, { negotiator: true, autoAccept: 9500 })
-  await listForSale(joana, by(J, j2), 4_400_000, 3_900_000)
-  await listForSale(joana, by(J, j3), 980_000, 800_000, { fixed: true })
-  await listForSale(marta, by(M, m1), 650_000, 520_000, { negotiator: true })
-  await listForSale(marta, by(M, m2), 720_000, 600_000)
-  await listForSale(ana, by(G, g1), 32_000_000, 28_000_000)
-  await listForSale(ana, by(G, g2), 18_500_000, 16_000_000, { fixed: true })
-  await listForSale(ana, by(G, g3), 780_000, 620_000, { negotiator: true })
-  await listForSale(helena, by(H, h1), 420_000, 350_000)
+  // Prices are market estimates (auction records and insurance values, US$ 1 = R$ 5,50), in cents; the
+  // floor is 85 %. Stripe charges at most ~R$ 1 million per payment, so only the works that are BOUGHT in
+  // this scenario (the two Hokusai prints, late impressions, and the Almeida Júnior study) sit below it;
+  // the offers on the masterpieces use the bank-transfer guarantee, which charges nothing.
+  await listForSale(joana, by(J, j1), 220_000_000_000, 187_000_000_000, { negotiator: true, autoAccept: 9500 })
+  await listForSale(joana, by(J, j2), 165_000_000_000, 140_250_000_000)
+  await listForSale(joana, by(J, j3), 110_000_000_000, 93_500_000_000, { fixed: true })
+  await listForSale(marta, by(M, m1), 95_000_000, 80_750_000, { negotiator: true })
+  await listForSale(marta, by(M, m2), 90_000_000, 76_500_000)
+  await listForSale(ana, by(G, g1), 165_000_000_000, 140_250_000_000)
+  await listForSale(ana, by(G, g2), 38_500_000_000, 32_725_000_000, { fixed: true })
+  await listForSale(ana, by(G, g3), 330_000_000_000, 280_500_000_000, { negotiator: true })
+  await listForSale(helena, by(H, h1), 95_000_000, 80_750_000)
 
   // ── gallery rules and the sales team ─────────────────────────────────
   await ana.req('PUT', '/api/gallery/rules', { refuseLow: true, refuseBelowBps: 7000, responseHours: 48, notifyTeam: true })
@@ -228,17 +237,17 @@ async function main() {
   // ── collectors: cards and offers ─────────────────────────────────────
   const marinaCard = await addCard(marina, '4242424242424242', 'MARINA LOPES')
   const marceloCard = await addCard(marcelo, '5555555555554444', 'MARCELO BASTOS')
-  const liaCard = await addCard(lia, '4242424242424242', 'LIA SOUZA')
-  const o1 = await offer(marina, by(J, j2), 4_400_000, marinaCard, 'Adorei a obra. Posso ver ao vivo na quinta?')       // → accepted → completed
-  const o2 = await offer(marcelo, by(M, m1), 600_000, marceloCard, 'Gravura para a sala de jantar.')               // → negotiator counters (below 95 %)
-  const o3 = await offer(lia, by(G, g3), 700_000, liaCard, 'Tenho interesse na obra. Aceita visita?')                           // → gallery accepts → escrow (left mid-way)
-  const o4 = await offer(marcelo, by(G, g1), 20_000_000, marceloCard, 'É o que consigo agora.')                        // → below 70 %: refused by the gallery rule at once
-  const o5 = await offer(lia, by(J, j1), 3_500_000, liaCard)                                                           // → Joana counters
-  const o6 = await offer(marina, by(M, m2), 720_000, marinaCard, 'Fechado pelo preço pedido.')                        // → Marta accepts → completed
+  await addCard(lia, '4242424242424242', 'LIA SOUZA')
+  const o1 = await offer(marina, by(H, h1), 95_000_000, marinaCard, 'Adorei o estudo. Posso ver ao vivo na quinta?')   // → Helena accepts → completed
+  const o2 = await offer(marcelo, by(M, m1), 85_000_000, marceloCard, 'Gravura para a sala de jantar.')            // → negotiator counters (below 95 %)
+  const o3 = await offer(lia, by(G, g3), 296_000_000_000, null, 'Tenho interesse na obra. Aceita visita?')          // → gallery accepts → waits for the transfer
+  const o4 = await offer(marcelo, by(G, g1), 100_000_000_000, null, 'É o que consigo agora.')                       // → below 70 %: refused by the gallery rule at once
+  const o5 = await offer(lia, by(J, j1), 202_400_000_000, null)                                                    // → Joana counters
+  const o6 = await offer(marina, by(M, m2), 90_000_000, marinaCard, 'Fechado pelo preço pedido.')                  // → Marta accepts → completed
 
   // ── sellers answer ───────────────────────────────────────────────────
-  const r1 = await sellerOffer(joana, o1); await joana.post(`/api/offers/${r1.id}/accept`); STEP(`Joana aceita ${o1}`)
-  const r5 = await sellerOffer(joana, o5); await joana.post(`/api/offers/${r5.id}/counter`, { amountCents: 3_650_000, message: 'Consigo chegar a 3.650.' }); STEP(`Joana contrapropõe em ${o5}`)
+  const r1 = await sellerOffer(helena, o1); await helena.post(`/api/offers/${r1.id}/accept`); STEP(`Helena aceita ${o1}`)
+  const r5 = await sellerOffer(joana, o5); await joana.post(`/api/offers/${r5.id}/counter`, { amountCents: 210_000_000_000, message: 'Consigo chegar a R$ 2,1 bilhões.' }); STEP(`Joana contrapropõe em ${o5}`)
   const r3 = await sellerOffer(ana, o3); await ana.post(`/api/offers/${r3.id}/accept`); STEP(`Galeria aceita ${o3}`)
   const r6 = await sellerOffer(marta, o6); await marta.post(`/api/offers/${r6.id}/accept`); STEP(`Marta aceita ${o6}`)
   const r4 = await sellerOffer(ana, o4); STEP(`Galeria: ${o4} ficou ${r4.statusLabel} (regra da galeria)`)
@@ -253,20 +262,20 @@ async function main() {
     STEP(`${buyer.name}: ${deal.code} em garantia${esc.code === 'WRONG_PHASE' ? ' (capturado do cartão no aceite)' : ''}`)
     await buyer.post(`/api/deals/${deal.id}/sign`); await seller.post(`/api/deals/${deal.id}/sign`); STEP(`${deal.code}: cessão assinada pelos dois lados`)
     if (!shipping) return deal
-    await seller.post(`/api/deals/${deal.id}/shipping`, { carrier: 'ArtTrans', tracking: `AT-${deal.code.slice(-4)}`, insurer: 'Seguradora Demo', policyRef: `SD-${deal.code.slice(-4)}`, shippingCents: 85_000, insuranceCents: 32_000 }); STEP(`${deal.code}: transporte registrado`)
+    await seller.post(`/api/deals/${deal.id}/shipping`, { carrier: 'ArtTrans', tracking: `AT-${deal.code.slice(-4)}`, insurer: 'Seguradora Demo', policyRef: `SD-${deal.code.slice(-4)}`, shippingCents: 85_000, insuranceCents: 450_000 }); STEP(`${deal.code}: transporte registrado`)
     if (!deliver) return deal
     cert.ctr += 1
     await buyer.post(`/api/deals/${deal.id}/confirm-delivery`, sun(cert.uid, cert.ctr)); STEP(`${deal.code}: entrega confirmada com o toque na etiqueta → escritura em nome de ${buyer.name.split(' (')[0]}`)
     return deal
   }
-  await completeDeal(marina, joana, by(J, j2), { title: 'Girassóis' })
+  await completeDeal(marina, helena, by(H, h1), { title: 'Caipira picando fumo' })
   await completeDeal(marina, marta, by(M, m2), { title: 'Fuji vermelho' })
-  await completeDeal(lia, ana, by(G, g3), { shipping: false, title: 'Moça com brinco' })
+  // Moça com brinco de pérola stays reserved, waiting for Lia's bank transfer (no Stripe charge fits it)
 
   // ── the collector resells and registers an own artwork ───────────────
-  const resold = by(J, j2)
-  await marina.post(`/api/collector/artworks/${resold.artworkId}/sell`, { listPriceCents: 5_200_000, reservePriceCents: 4_700_000, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false })
-  STEP(`Marina: ${resold.publicId} de volta ao marketplace no secundário por R$ 52.000`)
+  const resold = by(H, h1)
+  await marina.post(`/api/collector/artworks/${resold.artworkId}/sell`, { listPriceCents: 120_000_000, reservePriceCents: 105_000_000, autoNegotiatorOn: false, autoAcceptMinBps: 10000, fixedPrice: false })
+  STEP(`Marina: ${resold.publicId} de volta ao marketplace no secundário por R$ 1.200.000`)
   const own = await marina.post('/api/collector/artworks', { title: 'Paisagem do interior paulista (herança)', artistName: 'Almeida Júnior', acquisitionKind: 'INHERITED', acquisitionYear: 2015, acquisitionFrom: 'Família', acquisitionPriceCents: '0' })
   STEP(`Marina: obra própria cadastrada como rascunho (#${own.id})`)
   await marina.post(`/api/collector/artworks/${resold.artworkId}/services`, { code: 'COLLECTION_INSURANCE' }); STEP('Marina: pedido de cotação de seguro para a obra')
@@ -274,7 +283,7 @@ async function main() {
   // ── appraisal: the holder asks, the appraiser issues ─────────────────
   const req = await marina.post('/api/appraisals', { artworkId: by(M, m2).artworkId, purpose: 'INSURANCE', requesterLabel: 'Colecionadora' })
   const reqId = req.id ?? req.request?.id ?? req.requestId
-  await rui.post(`/api/appraisals/${reqId}/issue`, { minCents: 680_000, suggestedCents: 760_000, maxCents: 840_000, methodology: 'Comparáveis de vendas recentes do artista em técnica e formato equivalentes; estado de conservação excelente; demanda crescente no mercado secundário.' })
+  await rui.post(`/api/appraisals/${reqId}/issue`, { minCents: 82_000_000, suggestedCents: 90_000_000, maxCents: 100_000_000, methodology: 'Comparáveis de vendas recentes do artista em técnica e formato equivalentes; estado de conservação excelente; demanda crescente no mercado secundário.' })
   STEP(`Rui: laudo emitido para o pedido #${reqId}`)
 
   // ── messages ─────────────────────────────────────────────────────────

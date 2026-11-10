@@ -1,4 +1,9 @@
-# Cenário fictício (demo)
+# Cenário de demonstração
+
+Desde 2026-11-10 as obras e os artistas são REAIS e em domínio público (Van Gogh, Hokusai, Monet, Vermeer,
+Almeida Júnior), com ficha e biografia verdadeiras; só a venda é simulada. Os logins `joana.demo@` e `marta.demo@`
+representam Van Gogh e Hokusai. As fotos reais entram por `real-works.manual.mjs` (precisa de rede até a produção e a
+Wikimedia e de `sharp`); sem ele, o roteiro usa as imagens sintéticas de `images/`.
 
 Percorre TODOS os perfis pelas rotas reais da API e deixa dados de demonstração: obras com fotos,
 certificação com etiqueta, mandatos, propostas, negócios até a escritura, revenda no secundário,

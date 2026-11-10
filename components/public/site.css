@@ -27,7 +27,7 @@
 .hp-site-hero__verified .ha-icon { color: var(--ha-verified-500); }
 
 /* pillars */
-.hp-site-pillars { max-width: var(--ha-max); margin: 0 auto; padding: var(--ha-space-20) var(--ha-space-6); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ha-space-12); }
+.hp-site-pillars { max-width: var(--ha-max); margin: 0 auto; padding: var(--ha-space-20) var(--ha-space-6); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--ha-space-12); }
 .hp-site-pillar { display: flex; flex-direction: column; gap: var(--ha-space-3); border-top: var(--ha-border-w) solid var(--ha-ink-900); padding-top: var(--ha-space-6); }
 .hp-site-pillar .ha-icon { color: var(--ha-ink-900); }
 .hp-site-pillar__title { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h1); line-height: var(--ha-lh-h1); color: var(--ha-ink-900); }
@@ -35,7 +35,7 @@
 
 /* figures */
 .hp-site-figures { background: var(--ha-paper-100); }
-.hp-site-figures__grid { max-width: var(--ha-max); margin: 0 auto; padding: var(--ha-space-16) var(--ha-space-6); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--ha-space-10); }
+.hp-site-figures__grid { max-width: var(--ha-max); margin: 0 auto; padding: var(--ha-space-16) var(--ha-space-6); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--ha-space-10); }
 .hp-site-figure__n { font-family: var(--ha-font-display); font-size: 72px; line-height: 1; color: var(--ha-ink-900); }
 .hp-site-figure p { margin: var(--ha-space-3) 0 0; color: var(--ha-ink-700); }
 .hp-site-figures__sources { max-width: var(--ha-max); margin: 0 auto; padding: 0 var(--ha-space-6) var(--ha-space-10); font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
@@ -48,7 +48,7 @@
 /* how it works */
 .hp-site-how { max-width: var(--ha-max); margin: 0 auto; padding: var(--ha-space-24) var(--ha-space-6); }
 .hp-site-how .hp-site-head { margin-bottom: var(--ha-space-12); }
-.hp-site-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--ha-space-6); }
+.hp-site-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--ha-space-6); }
 .hp-site-step { display: flex; flex-direction: column; gap: var(--ha-space-4); }
 .hp-site-step__visual { aspect-ratio: 4 / 5; position: relative; overflow: hidden; background: var(--ha-wall); display: flex; align-items: center; justify-content: center; }
 .hp-site-step__visual img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -112,7 +112,7 @@
 .hp-site-fees__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--ha-space-3); }
 .hp-site-fees__title { margin: 0; font-family: var(--ha-font-display); font-weight: 400; font-size: var(--ha-text-h2); color: var(--ha-ink-900); }
 .hp-site-fees__note { font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); }
-.hp-site-fees__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ha-space-4); }
+.hp-site-fees__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--ha-space-4); }
 .hp-site-fee { display: flex; flex-direction: column; gap: var(--ha-space-4); padding: var(--ha-space-6); border-radius: var(--ha-radius-md); background: var(--ha-paper-100); }
 .hp-site-fee__head { display: flex; align-items: center; gap: var(--ha-space-2); }
 .hp-site-fee__head .ha-icon { color: var(--ha-ink-900); }
@@ -139,7 +139,7 @@
 
 /* who uses it */
 .hp-site-who { max-width: var(--ha-max); margin: 0 auto; padding: var(--ha-space-24) var(--ha-space-6); display: flex; flex-direction: column; gap: var(--ha-space-8); }
-.hp-site-who__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ha-space-4); }
+.hp-site-who__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--ha-space-4); }
 .hp-site-who__card { display: flex; flex-direction: column; gap: var(--ha-space-3); padding: var(--ha-space-6); border: var(--ha-border-w) dashed var(--ha-ink-300); border-radius: var(--ha-radius-md); color: var(--ha-ink-500); text-decoration: none; }
 .hp-site-who__card:hover { border-color: var(--ha-ink-900); color: var(--ha-ink-500); }
 .hp-site-who__name { font-weight: 600; color: var(--ha-ink-900); }

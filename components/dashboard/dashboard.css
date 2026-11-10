@@ -10,7 +10,7 @@
 .ha-dash__bar--now .ha-dash__bar-fill { background: var(--ha-sand-500); }
 .ha-dash__bar-m { font-size: var(--ha-text-caption); color: var(--ha-ink-500); }
 .ha-dash__empty { margin: auto; font-size: var(--ha-text-body-sm); color: var(--ha-ink-500); text-align: center; }
-.ha-dash__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--ha-space-6); }
+.ha-dash__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: var(--ha-space-6); }
 .ha-dash__work { display: flex; flex-direction: column; gap: var(--ha-space-2); text-decoration: none; color: inherit; min-width: 0; }
 .ha-dash__work-name { font-family: var(--ha-font-display); font-style: italic; color: var(--ha-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ha-dash__work:hover .ha-dash__work-name { text-decoration: underline; }

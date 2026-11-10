@@ -123,7 +123,7 @@
 .ha-cards-foot__by strong { font-weight: 700; color: var(--ha-fg-body); }
 
 /* Saldos (Em garantia · A receber) and Movimentações. */
-.ha-cards-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--ha-space-3); }
+.ha-cards-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: var(--ha-space-3); }
 .ha-cards-balance { display: flex; flex-direction: column; gap: var(--ha-space-1); padding: var(--ha-space-4); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-md); background: var(--ha-surface); }
 .ha-cards-balance__k { display: inline-flex; align-items: center; gap: var(--ha-space-1); font-size: var(--ha-text-caption); color: var(--ha-fg-muted); }
 .ha-cards-balance__v { font-family: var(--ha-font-display); font-size: var(--ha-text-h3); line-height: var(--ha-lh-h3); color: var(--ha-fg); font-variant-numeric: tabular-nums; }

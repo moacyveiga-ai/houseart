@@ -62,7 +62,7 @@
 .ha-msg-conv__state { margin: auto; font-size: var(--ha-text-body-sm); color: var(--ha-fg-muted); text-align: center; }
 .ha-msg-sys { align-self: center; max-width: 90%; padding: 4px 10px; border-radius: var(--ha-radius-full); background: var(--ha-paper-200); font-size: 11px; line-height: 15px; font-weight: 600; color: var(--ha-ink-700); text-align: center; }
 .ha-msg-bubble { max-width: 80%; padding: var(--ha-space-2) var(--ha-space-3); display: flex; flex-direction: column; gap: 2px; }
-.ha-msg-bubble__text { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ha-msg-bubble__text { font-size: var(--ha-text-body-sm); line-height: var(--ha-lh-body-sm); white-space: pre-wrap; overflow-wrap: break-word; }
 .ha-msg-bubble__time { font-size: 10px; }
 .ha-msg-bubble--theirs { align-self: flex-start; border-radius: 14px 14px 14px 4px; background: var(--ha-bg); border: var(--ha-border-w) solid var(--ha-border); }
 .ha-msg-bubble--theirs .ha-msg-bubble__text { color: var(--ha-fg); }

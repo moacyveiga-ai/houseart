@@ -29,7 +29,7 @@ export function WalletScreen({ items, totalCents, holderName, inCollection = fal
         {/* Compras chegando (handoff "HouseArt Web Colecionador": "Chegando · em trânsito"): the deed is not theirs yet — the row opens the purchase */}
         {arriving.map((p) => (
           <li key={`deal-${p.dealId}`}>
-            <Link href="/purchases" className="ha-list__row ha-list__btn" style={{ gridTemplateColumns: '40px 1fr auto auto', width: '100%', color: 'inherit', textDecoration: 'none' }}>
+            <Link href="/purchases" className="ha-list__row ha-list__btn ha-list__row--stack" style={{ gridTemplateColumns: '40px minmax(0, 1fr) auto auto', width: '100%', color: 'inherit', textDecoration: 'none' }}>
               {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
               <span className="ha-wall ha-wall--40">{p.cover ? <img src={p.cover} alt="" /> : null}</span>
               <span style={{ textAlign: 'left' }}><b>{p.title}</b><br /><span className="ha-muted ha-sm">{p.artist} · compra em andamento</span></span>
@@ -44,7 +44,7 @@ export function WalletScreen({ items, totalCents, holderName, inCollection = fal
           const on = openId === it.artworkId
           return (
             <li key={it.artworkId}>
-              <Link href={`/wallet?own=${it.artworkId}`} scroll={false} aria-current={on ? 'true' : undefined} className="ha-list__row ha-list__btn" style={{ gridTemplateColumns: '40px 1fr auto auto', width: '100%', borderColor: on ? 'var(--ha-ink-900)' : undefined, color: 'inherit', textDecoration: 'none' }}>
+              <Link href={`/wallet?own=${it.artworkId}`} scroll={false} aria-current={on ? 'true' : undefined} className="ha-list__row ha-list__btn ha-list__row--stack" style={{ gridTemplateColumns: '40px minmax(0, 1fr) auto auto', width: '100%', borderColor: on ? 'var(--ha-ink-900)' : undefined, color: 'inherit', textDecoration: 'none' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
                 <span className="ha-wall ha-wall--40">{it.cover ? <img src={it.cover} alt="" /> : null}</span>
                 <span style={{ textAlign: 'left' }}><b>{it.title}</b><br /><span className="ha-muted ha-sm">{it.artist} · adquirida em {it.acquiredAt}</span></span>

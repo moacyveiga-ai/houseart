@@ -28,7 +28,7 @@
 .ha-adeals__err { font-size: var(--ha-text-caption); color: var(--ha-alert-500); margin: 0; }
 .ha-adeals__field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-fg); }
 @media (max-width: 900px) {
-  .ha-adeals__head { grid-template-columns: minmax(0, 1fr) 24px; }
+  .ha-adeals__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-adeals__head > * { grid-column: 1; } .ha-adeals__head > :last-child { grid-column: 2; grid-row: 1; }
   .ha-adeals__code, .ha-adeals__total { grid-column: 1; }
   .ha-adeals__splits thead { display: none; }
   .ha-adeals__splits td { display: block; border: 0; padding: 2px 0; }

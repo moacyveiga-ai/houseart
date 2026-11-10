@@ -83,8 +83,8 @@ export function TransferWizard({ artwork, existing }: { artwork: { id: number; t
       {step === 2 && t ? (
         <div className="ha-stack">
           <div className="ha-list">
-            <div className="ha-list__row" style={{ gridTemplateColumns: '1fr auto' }}><span>Você · vendedor</span>{t.sellerSignedAt ? <span className="ha-muted ha-sm">Assinado {new Date(t.sellerSignedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span> : <button type="button" className="ha-btn ha-btn--ink ha-btn--sm" onClick={sign}>Assinar</button>}</div>
-            <div className="ha-list__row" style={{ gridTemplateColumns: '1fr auto' }}><span>{t.toName} · comprador(a)</span><span className="ha-muted ha-sm">{t.buyerSignedAt ? 'Assinado' : 'Aguardando assinatura'}</span></div>
+            <div className="ha-list__row" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}><span>Você · vendedor</span>{t.sellerSignedAt ? <span className="ha-muted ha-sm">Assinado {new Date(t.sellerSignedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span> : <button type="button" className="ha-btn ha-btn--ink ha-btn--sm" onClick={sign}>Assinar</button>}</div>
+            <div className="ha-list__row" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}><span>{t.toName} · comprador(a)</span><span className="ha-muted ha-sm">{t.buyerSignedAt ? 'Assinado' : 'Aguardando assinatura'}</span></div>
           </div>
           <p className="ha-muted ha-sm">Termo de transferência assinado digitalmente, com carimbo do tempo ICP-Brasil.</p>
           <div className="ha-row"><span>Taxa de transferência</span><b className="ha-num">{formatBRL(BigInt(t.feeCents))}</b></div>

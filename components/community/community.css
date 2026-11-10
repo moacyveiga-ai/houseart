@@ -27,7 +27,7 @@
 .ha-cm-post__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-500); }
 .ha-cm-follow { height: 32px; padding: 0 var(--ha-space-3); border-radius: var(--ha-radius-full); border: var(--ha-border-w) solid var(--ha-ink-900); background: transparent; color: var(--ha-ink-900); font-size: var(--ha-text-caption); font-weight: 600; cursor: pointer; flex: none; font-family: inherit; }
 .ha-cm-follow--on { border-color: var(--ha-paper-200); color: var(--ha-ink-500); }
-.ha-cm-post__text { margin: 0; font-size: var(--ha-text-body-sm); line-height: 21px; color: var(--ha-ink-700); text-wrap: pretty; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ha-cm-post__text { margin: 0; font-size: var(--ha-text-body-sm); line-height: 21px; color: var(--ha-ink-700); text-wrap: pretty; white-space: pre-wrap; overflow-wrap: break-word; }
 
 /* Photo with the artwork line below */
 .ha-cm-photo { display: flex; flex-direction: column; }
@@ -93,7 +93,7 @@
 .ha-cm-comment__name { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ha-ink-900); flex-wrap: wrap; }
 .ha-cm-comment__author { padding: 0 6px; border-radius: var(--ha-radius-sm); background: var(--ha-sand-100); font-size: 10px; line-height: 16px; }
 .ha-cm-comment__when { font-weight: 400; font-size: 11px; color: var(--ha-ink-500); }
-.ha-cm-comment__text { font-size: var(--ha-text-body-sm); line-height: 20px; color: var(--ha-ink-700); overflow-wrap: anywhere; white-space: pre-wrap; }
+.ha-cm-comment__text { font-size: var(--ha-text-body-sm); line-height: 20px; color: var(--ha-ink-700); overflow-wrap: break-word; white-space: pre-wrap; }
 .ha-cm-comment__links { display: flex; gap: var(--ha-space-3); }
 .ha-cm-comment__link { border: 0; background: none; padding: 0; font-size: var(--ha-text-caption); font-weight: 600; color: var(--ha-ink-500); cursor: pointer; font-family: inherit; }
 .ha-cm-comment__like { width: 32px; height: 32px; border: 0; background: none; color: var(--ha-ink-500); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; align-self: start; }
@@ -125,7 +125,7 @@
 .ha-cm-new__publish--ready { background: var(--ha-sand-500); }
 .ha-cm-new__publish--ready:hover { background: var(--ha-sand-600); }
 .ha-cm-new__publish:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }
-@media (max-width: 480px) { .ha-cm-new__row { grid-template-columns: 1fr; } .ha-cm-photo__wall { padding: var(--ha-space-5); } }
+@media (max-width: 480px) { .ha-cm-new__row { grid-template-columns: minmax(0, 1fr); } .ha-cm-photo__wall { padding: var(--ha-space-5); } }
 
 /* "Publicar também no Instagram" (handoff Web Galeria › Novo post) */
 .ha-cm-ig { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--ha-paper-200); border-radius: var(--ha-radius-md); }

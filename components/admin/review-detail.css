@@ -16,5 +16,5 @@
 .ha-rvd__list li { display: flex; flex-direction: column; gap: 2px; padding: var(--ha-space-3) var(--ha-space-4); border-bottom: var(--ha-border-w) solid var(--ha-border); font-size: var(--ha-text-body-sm); }
 .ha-rvd__list li:last-child { border-bottom: 0; }
 .ha-rvd__sys { color: var(--ha-fg-muted); }
-.ha-rvd__body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ha-rvd__body { white-space: pre-wrap; overflow-wrap: break-word; }
 @media (max-width: 720px) { .ha-rvd__work { grid-template-columns: minmax(0, 1fr); } .ha-rvd__wall { width: 100%; height: 200px; } }

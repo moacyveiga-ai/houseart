@@ -12,7 +12,7 @@
 
 /* linguagens (as 4 submarcas) */
 .hp-market-langs { max-width: var(--ha-max); margin: 0 auto; padding: 0 var(--ha-space-6) var(--ha-space-8); }
-.hp-market-langs__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--ha-space-4); }
+.hp-market-langs__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: var(--ha-space-4); }
 .hp-market-lang { cursor: pointer; height: 120px; padding: var(--ha-space-4); background: var(--ha-paper-50); border: var(--ha-border-w) solid var(--ha-paper-200); border-radius: var(--ha-radius-md); display: flex; align-items: center; justify-content: center; transition: border-color var(--ha-dur-fast); text-decoration: none; }
 .hp-market-lang:hover { border-color: var(--ha-ink-500); }
 .hp-market-lang:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; }

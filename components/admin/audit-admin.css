@@ -16,7 +16,7 @@
 .ha-audit__body { padding: var(--ha-space-3) var(--ha-space-4) var(--ha-space-4); border-top: var(--ha-border-w) solid var(--ha-border); }
 .ha-audit__facts { display: flex; flex-direction: column; gap: var(--ha-space-2); margin: 0; font-size: var(--ha-text-caption); }
 .ha-audit__facts dt { font-weight: 600; color: var(--ha-fg-muted); }
-.ha-audit__facts dd { margin: 0; color: var(--ha-fg); overflow-wrap: anywhere; }
+.ha-audit__facts dd { margin: 0; color: var(--ha-fg); overflow-wrap: break-word; }
 .ha-audit__json { display: block; padding: var(--ha-space-2); background: var(--ha-paper-200); border-radius: var(--ha-radius-sm); font-size: 12px; white-space: pre-wrap; }
 .ha-audit__pager { display: flex; justify-content: space-between; align-items: center; gap: var(--ha-space-3); }
-@media (max-width: 900px) { .ha-audit__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-audit__input { width: 100%; } .ha-audit__field { flex: 1 1 140px; } .ha-audit__buttons { margin-left: 0; } }
+@media (max-width: 900px) { .ha-audit__head { grid-template-columns: minmax(0, 1fr) 24px; } .ha-audit__head > * { grid-column: 1; } .ha-audit__head > :last-child { grid-column: 2; grid-row: 1; } .ha-audit__input { width: 100%; } .ha-audit__field { flex: 1 1 140px; } .ha-audit__buttons { margin-left: 0; } }

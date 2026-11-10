@@ -27,7 +27,7 @@ export function OffersTable({ offers: initial, negotiatorLine, canAnswer = true,
       <ul className="ha-list">
         {offers.length === 0 ? <li className="ha-muted">Nenhuma proposta ainda.</li> : null}
         {offers.map((o) => (
-          <li key={o.id} className="ha-list__row" style={{ gridTemplateColumns: '40px 2fr 1fr auto' }}>
+          <li key={o.id} className="ha-list__row ha-list__row--stack" style={{ gridTemplateColumns: '40px minmax(0, 2fr) minmax(0, 1fr) auto' }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- derivative of the public store */}
             <span className="ha-wall ha-wall--40">{o.artworkCover ? <img alt="" src={o.artworkCover} /> : null}</span>
             <span><b>{o.artworkTitle}</b><br /><span className="ha-muted ha-sm">{o.buyer} · expira em {o.expiresIn} · {o.code}</span></span>

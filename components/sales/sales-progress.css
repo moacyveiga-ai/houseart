@@ -54,6 +54,6 @@
 .ha-sd__row span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ha-sd__row--strong span:last-child { font-weight: 600; }
 .ha-sd__ship { display: grid; gap: 8px; }
-.ha-sd__btn { height: 50px; border-radius: var(--ha-radius-md); border: 1px solid var(--ha-ink-900); background: transparent; color: var(--ha-ink-900); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 15px; }
+.ha-sd__btn { height: 48px; border-radius: var(--ha-radius-md); border: 1px solid var(--ha-ink-900); background: transparent; color: var(--ha-ink-900); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 15px; }
 .ha-sd__btn--primary { background: var(--ha-sand-500); border: 0; }
 .ha-sd__btn:disabled { opacity: .55; cursor: default; }

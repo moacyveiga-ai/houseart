@@ -171,3 +171,13 @@ export function formatBRL(cents: bigint | number | null | undefined): string {
   const n = Number(cents) / 100
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 }
+
+/** The signature line of the public sheet: "Assinada frente, canto inferior direito", or
+ *  "Sem assinatura" when the location says the work is unsigned (never "Assinada Sem assinatura"). */
+export function signatureLine(location: string | null | undefined): string | null {
+  const t = (location ?? '').trim()
+  if (!t) return null
+  const plain = t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  if (/^(sem assinatura|nao assinad|unsigned)/.test(plain)) return 'Sem assinatura'
+  return `Assinada · ${t.charAt(0).toLowerCase()}${t.slice(1)}`
+}

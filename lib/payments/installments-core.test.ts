@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampInstallments, installmentOptions, installmentValue, validInstallments } from './installments-core'
+import { clampInstallments, installmentNote, installmentOptions, installmentValue, validInstallments, CARD_CHARGE_MAX_CENTS } from './installments-core'
 
 describe('parcelamento', () => {
   it('oferece 1, 3, 6 e 10× quando cada parcela passa de R$ 100', () => {
@@ -22,5 +22,21 @@ describe('parcelamento', () => {
   it('mantém a escolha possível quando o total muda', () => {
     expect(clampInstallments(50_000, 10)).toBe(3)
     expect(clampInstallments(3_878_400, 6)).toBe(6)
+  })
+})
+
+describe('installmentNote', () => {
+  it('stays silent while instalments are off', () => {
+    expect(installmentNote(380_000, false)).toBeNull()
+  })
+  it('names the largest plan the checkout offers', () => {
+    expect(installmentNote(380_000, true)).toBe('ou até 10× de R$ 380 sem juros no cartão')
+    expect(installmentNote(50_000, true)).toBe('ou até 3× de R$ 167 sem juros no cartão')
+  })
+  it('never promises what one card payment cannot charge', () => {
+    expect(installmentNote(CARD_CHARGE_MAX_CENTS + 1, true)).toBeNull()
+    expect(installmentNote(1_500_000_000, true)).toBeNull()
+    expect(installmentNote(null, true)).toBeNull()
+    expect(installmentNote(15_000, true)).toBeNull()
   })
 })

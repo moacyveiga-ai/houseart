@@ -115,10 +115,25 @@ export function Artwork({ artwork: a, related, signedIn = false, counts = null, 
             <h1 className="hp-artwork__title">{a.title}{a.year ? <>, <em>{a.year}</em></> : null}</h1>
             {sheet.length ? <div className="hp-artwork__sheet">{sheet.map((line, i) => <span key={i}>{i ? <br /> : null}{line}</span>)}</div> : null}
           </div>
+          {badgeOf(a) === 'verified' ? (
+            <section className="hp-seal" aria-label="Obra autenticada">
+              <div className="hp-seal__head">
+                <span className="hp-seal__mark" aria-hidden="true"><Icon name="verified" filled size={28} /></span>
+                <span className="hp-seal__text">
+                  <span className="hp-seal__title">Obra autenticada</span>
+                  <span className="hp-seal__sub">Certificado digital registrado na HouseArt e marcador NFC na obra.</span>
+                </span>
+              </div>
+              <div className="hp-seal__id"><ArtworkId id={a.publicId} qr={false} /></div>
+              <Link href={`/verify/${a.publicId}`} className="hp-seal__verify">Verificar certificado <Icon name="arrow_forward" size={16} /></Link>
+            </section>
+          ) : null}
           <div className="hp-artwork__badges">
-            <StatusBadge status={badgeOf(a)} />
-            <ArtworkId id={a.publicId} qr={false} />
-            <Link href={`/verify/${a.publicId}`} className="hp-artwork__verify">Verificar certificado</Link>
+            {badgeOf(a) !== 'verified' ? <>
+              <StatusBadge status={badgeOf(a)} />
+              <ArtworkId id={a.publicId} qr={false} />
+              <Link href={`/verify/${a.publicId}`} className="hp-artwork__verify">Verificar certificado</Link>
+            </> : null}
             <ShareButton artwork={{ publicId: a.publicId, title: a.title, artist: a.artist, year: a.year, cover: a.cover, price: listed && price !== null ? formatBRL(price) : null }} className="hp-artwork__share" />
           </div>
 

@@ -410,17 +410,25 @@ a.ha-card { color: inherit; text-decoration: none; }
 .ha-frame-wall--dark { background: var(--ha-ink-900); }
 
 /* status-badge */
-.ha-status { display: inline-flex; align-items: center; gap: var(--ha-space-1); padding: var(--ha-space-1) var(--ha-space-3) var(--ha-space-1) var(--ha-space-2); border-radius: var(--ha-radius-sm); font-size: var(--ha-text-caption); font-weight: 600; white-space: nowrap; line-height: var(--ha-lh-caption); }
-.ha-status .ha-icon { font-size: 16px; }
+.ha-status { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px var(--ha-space-3) 3px 3px; border-radius: var(--ha-radius-full); font-size: var(--ha-text-caption); font-weight: 600; letter-spacing: .01em; white-space: nowrap; line-height: var(--ha-lh-caption); }
+.ha-status .ha-icon { font-size: 14px; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.ha-status--verified .ha-icon { background: var(--ha-verified-500); color: var(--ha-paper-50); }
+.ha-status--verified { box-shadow: inset 0 0 0 var(--ha-border-w) color-mix(in srgb, var(--ha-verified-500) 22%, transparent); }
+.ha-status--pending .ha-icon { background: color-mix(in srgb, var(--ha-pending-500) 18%, transparent); }
+.ha-status--contested .ha-icon { background: var(--ha-alert-500); color: var(--ha-paper-50); }
+.ha-status--stolen .ha-icon { background: color-mix(in srgb, var(--ha-paper-50) 22%, transparent); }
+.ha-status--transferred .ha-icon { background: var(--ha-paper-50); }
+.ha-status--for-sale, .ha-status--sold { padding-left: var(--ha-space-3); }
 .ha-status--verified { background: var(--ha-verified-100); color: var(--ha-verified-500); }
 .ha-status--pending { background: var(--ha-pending-100); color: var(--ha-ink-900); }
 .ha-status--pending .ha-icon { color: var(--ha-pending-500); }
 .ha-status--contested { background: var(--ha-alert-100); color: var(--ha-alert-500); }
 .ha-status--stolen { background: var(--ha-alert-500); color: var(--ha-paper-50); }
 .ha-status--transferred { background: var(--ha-paper-200); color: var(--ha-ink-700); }
-.ha-status--for-sale { border: var(--ha-border-w) solid var(--ha-ink-900); color: var(--ha-ink-900); padding: var(--ha-space-1) var(--ha-space-3); }
-.ha-status--sold { background: var(--ha-ink-900); color: var(--ha-paper-50); padding: var(--ha-space-1) var(--ha-space-3); }
-.ha-status--inline { background: transparent; padding: 0; gap: 2px; color: var(--ha-verified-500); }
+.ha-status--for-sale { border: var(--ha-border-w) solid var(--ha-ink-900); color: var(--ha-ink-900); }
+.ha-status--sold { background: var(--ha-ink-900); color: var(--ha-paper-50); }
+.ha-status--inline { background: transparent; padding: 0; gap: 4px; min-height: 0; box-shadow: none; color: var(--ha-verified-500); }
+.ha-status--inline .ha-icon { width: auto; height: auto; background: transparent; color: inherit; font-size: 16px; }
 
 /* artwork-id: QR + ID + copiar */
 .ha-artwork-id { display: inline-flex; align-items: center; gap: var(--ha-space-3); padding: var(--ha-space-2) var(--ha-space-2) var(--ha-space-2) var(--ha-space-3); border: var(--ha-border-w) solid var(--ha-border); border-radius: var(--ha-radius-sm); }

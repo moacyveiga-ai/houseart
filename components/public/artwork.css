@@ -158,3 +158,16 @@ a.hp-artwork__seller-name:hover { text-decoration: underline; color: var(--ha-in
 .hp-artwork__social span { display: inline-flex; align-items: center; gap: 6px; }
 /* "Sobre a obra" written by whoever registered the work: single line breaks are kept */
 .hp-artwork__written { white-space: pre-line; }
+
+/* the authenticity seal (verified works): mark, title, the ID and the way to check it */
+.hp-seal { display: flex; flex-direction: column; gap: var(--ha-space-4); padding: var(--ha-space-5); border: var(--ha-border-w) solid color-mix(in srgb, var(--ha-verified-500) 28%, transparent); border-radius: var(--ha-radius-lg); background: linear-gradient(160deg, var(--ha-verified-100), color-mix(in srgb, var(--ha-verified-100) 35%, var(--ha-paper-50))); }
+.hp-seal__head { display: flex; align-items: center; gap: var(--ha-space-3); }
+.hp-seal__mark { flex: none; width: 48px; height: 48px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--ha-verified-500); color: var(--ha-paper-50); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ha-verified-500) 16%, transparent); }
+.hp-seal__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hp-seal__title { font-family: var(--ha-font-display); font-size: 20px; line-height: 1.2; font-weight: 500; color: var(--ha-verified-500); }
+.hp-seal__sub { font-size: var(--ha-text-caption); line-height: var(--ha-lh-caption); color: var(--ha-ink-700); }
+.hp-seal__id .ha-artwork-id { display: flex; justify-content: space-between; width: 100%; background: var(--ha-paper-50); border-color: color-mix(in srgb, var(--ha-verified-500) 22%, transparent); }
+.hp-seal__id .ha-id { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hp-seal__verify { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: var(--ha-text-body-sm); font-weight: 600; color: var(--ha-verified-500); text-decoration: none; }
+.hp-seal__verify:hover { text-decoration: underline; }
+.hp-seal__verify:focus-visible { outline: var(--ha-focus-w) solid var(--ha-sand-500); outline-offset: 2px; border-radius: var(--ha-radius-sm); }

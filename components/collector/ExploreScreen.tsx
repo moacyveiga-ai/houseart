@@ -11,18 +11,18 @@ import { Icon } from '@/components/ds/Icon'
 import { Toast } from '@/components/ds/Toast'
 import { ShareSheet } from '@/components/public/ShareSheet'
 import { categoryLabel, formatBRL } from '@/lib/artworks/domain'
-import { installmentCents } from '@/lib/shipping/quote-core'
+import { installmentNote } from '@/lib/payments/installments-core'
 import { CommentsSheet, type CommentSubject } from '@/components/community/CommentsSheet'
 import { acceptsOffers, exploreHref, exploreWorkHref, marketLabel, sellerSubOf, sheetLineOf, EXPLORE_CHIPS, type ExploreChip, type ExploreItem, type ExploreView } from './explore-core'
 import './explore.css'
 
 const initialsOf = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('') || '?'
 const priceOf = (cents: string | null) => (cents === null ? 'Sob consulta' : formatBRL(BigInt(cents)))
-const installmentOf = (cents: string | null) => (cents === null ? 'O preço não aparece: interessados pedem contato.' : `ou 10× de ${formatBRL(installmentCents(Number(cents)))} sem juros`)
+const installmentOf = (cents: string | null, on: boolean) => (cents === null ? 'O preço não aparece: interessados pedem contato.' : installmentNote(Number(cents), on))
 
 type Kind = 'LIKE' | 'SAVE'
 
-export function ExploreScreen({ items: initial, view, chip, me }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip; me: { initials: string; avatarUrl?: string | null } }) {
+export function ExploreScreen({ items: initial, view, chip, me, installmentsOn = false }: { items: ExploreItem[]; view: ExploreView; chip: ExploreChip; me: { initials: string; avatarUrl?: string | null }; /** FLAG_CARD_INSTALLMENTS */ installmentsOn?: boolean }) {
   const [items, setItems] = useState(initial)
   const workHref = (publicId: string) => exploreWorkHref(view, chip, publicId)
   const [toast, setToast] = useState('')
@@ -100,7 +100,7 @@ export function ExploreScreen({ items: initial, view, chip, me }: { items: Explo
                   <span className="ha-xp-post__sheet">{sheetLineOf(o, categoryLabel(o.category))}</span>
                 </Link>
                 <div className="ha-xp-post__buy">
-                  <span className="ha-stack ha-xp-post__price"><span className="ha-xp-post__v">{priceOf(o.priceCents)}</span><span className="ha-xp-post__inst">{installmentOf(o.priceCents)}</span></span>
+                  <span className="ha-stack ha-xp-post__price"><span className="ha-xp-post__v">{priceOf(o.priceCents)}</span>{installmentOf(o.priceCents, installmentsOn) ? <span className="ha-xp-post__inst">{installmentOf(o.priceCents, installmentsOn)}</span> : null}</span>
                   {offers ? <Link href={`/e/artwork/${o.publicId}/offer`} className="ha-btn ha-btn--outline ha-btn--sm">Ofertar</Link> : null}
                   {o.priceCents !== null ? <Link href={`/e/artwork/${o.publicId}/buy`} className="ha-btn ha-btn--primary ha-btn--sm">Comprar</Link> : null}
                 </div>

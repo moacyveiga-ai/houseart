@@ -9,12 +9,12 @@ import { Icon } from '@/components/ds/Icon'
  */
 export function StatusScreen({ icon, title, text, children, code }: { icon: string; title: string; text: string; children?: ReactNode; code?: string }) {
   return (
-    <div className="ha-status">
-      <span className="ha-status__icon" aria-hidden="true"><Icon name={icon} size={28} /></span>
-      <h1 className="ha-h2 ha-status__title">{title}</h1>
-      <p className="ha-muted ha-status__text">{text}</p>
-      {children ? <div className="ha-status__actions">{children}</div> : null}
-      {code ? <p className="ha-caption ha-status__code">Código para o suporte: <span className="ha-id">{code}</span></p> : null}
+    <div className="ha-status-screen">
+      <span className="ha-status-screen__icon" aria-hidden="true"><Icon name={icon} size={28} /></span>
+      <h1 className="ha-h2 ha-status-screen__title">{title}</h1>
+      <p className="ha-muted ha-status-screen__text">{text}</p>
+      {children ? <div className="ha-status-screen__actions">{children}</div> : null}
+      {code ? <p className="ha-caption ha-status-screen__code">Código para o suporte: <span className="ha-id">{code}</span></p> : null}
     </div>
   )
 }

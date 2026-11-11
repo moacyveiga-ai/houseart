@@ -18,10 +18,10 @@ import { ArtworkOffer } from './ArtworkOffer'
 import { ShippingQuote } from './ShippingQuote'
 import { TalkToSellerButton } from './TalkToSellerButton'
 import { ShareButton } from './ShareSheet'
-import { CATEGORY_LANGUAGE, categoryLabel, CONDITION_GRADE_LABELS, formatBRL } from '@/lib/artworks/domain'
+import { CATEGORY_LANGUAGE, categoryLabel, CONDITION_GRADE_LABELS, formatBRL, signatureLine } from '@/lib/artworks/domain'
 import type { MarketItem } from '@/lib/marketplace/filter-core'
 import type { PublicArtworkPage } from '@/lib/marketplace/public-server'
-import { installmentCents } from '@/lib/shipping/quote-core'
+import { installmentNote } from '@/lib/payments/installments-core'
 import { diaNoFuso } from '@/lib/timezone'
 
 const LANGUAGE_OF: Partial<Record<string, Language>> = CATEGORY_LANGUAGE
@@ -69,13 +69,13 @@ function cardOf(i: MarketItem): ArtworkCardData {
   return { href: `/e/artwork/${i.publicId}`, src: i.cover, artist: i.artist, title: i.title, year: i.year, technique: i.technique, dimensions: i.dimensions, price: i.priceCents === null ? 'Sob consulta' : formatBRL(i.priceCents), verified: true, seller: { name: i.seller, kind: i.sellerKind } }
 }
 
-export function Artwork({ artwork: a, related, signedIn = false, counts = null }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean; counts?: { likes: number; comments: number } | null }) {
+export function Artwork({ artwork: a, related, signedIn = false, counts = null, installmentsOn = false }: { artwork: PublicArtworkPage; related: MarketItem[]; signedIn?: boolean; counts?: { likes: number; comments: number } | null; /** FLAG_CARD_INSTALLMENTS */ installmentsOn?: boolean }) {
   const language = LANGUAGE_OF[a.category]
   const media = mediaItemsOf(a.media)
   const wall = a.size.heightMm && a.size.widthMm ? { heightMm: a.size.heightMm, widthMm: a.size.widthMm, dimensions: a.dimensions } : null
   const price = a.priceCents === null ? null : Number(a.priceCents)
   const listed = a.status === 'LISTED'
-  const sheet = [a.technique, [a.dimensions !== '—' ? a.dimensions : null, a.edition ?? 'obra única'].filter(Boolean).join(' · '), a.signatureLocation ? `Assinada ${a.signatureLocation}` : null].filter(Boolean)
+  const sheet = [a.technique, [a.dimensions !== '—' ? a.dimensions : null, a.edition ?? 'obra única'].filter(Boolean).join(' · '), signatureLine(a.signatureLocation)].filter(Boolean)
   const spec: [string, string | null][] = [
     ['Técnica', a.technique], ['Materiais', a.materials], ['Dimensões', a.dimensions !== '—' ? a.dimensions : null], ['Edição', a.edition ?? 'Obra única'],
     ['Assinatura', a.signatureLocation], ['Série', a.series],
@@ -134,7 +134,7 @@ export function Artwork({ artwork: a, related, signedIn = false, counts = null }
             <div className="hp-artwork__notice"><b>Autenticada, não está à venda.</b> O titular ainda não publicou a obra no marketplace.</div>
           ) : (
             <div className="hp-artwork__price">
-              <PriceBox value={price === null ? 'Sob consulta' : formatBRL(price)} note={price === null ? 'O preço não aparece: interessados pedem contato.' : `ou 10× de ${formatBRL(installmentCents(price))} sem juros no cartão`}>
+              <PriceBox value={price === null ? 'Sob consulta' : formatBRL(price)} note={price === null ? 'O preço não aparece: interessados pedem contato.' : installmentNote(price, installmentsOn) ?? undefined}>
                 <ShippingQuote fromUf={seller.uf} size={a.size} priceCents={price} />
                 {price !== null && a.acceptsOffers ? (
                   <ArtworkOffer publicId={a.publicId} priceCents={String(price)} fixedOnly={a.fixedPrice || a.saleMode === 'FIXED'} />

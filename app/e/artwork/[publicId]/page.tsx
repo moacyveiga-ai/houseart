@@ -5,6 +5,7 @@ import { isPublicId } from '@/lib/physical-markers/domain'
 import { publicArtwork, relatedArtworks } from '@/lib/marketplace/public-server'
 import { getSession } from '@/lib/auth'
 import { artworkCounts } from '@/lib/community/server'
+import { flagOn } from '@/lib/flags'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,5 +30,5 @@ export default async function PublicArtworkPage({ params }: Params) {
   const a = await publicArtwork(publicId)
   if (!a) notFound()
   const [related, session, counts] = await Promise.all([relatedArtworks(publicId, 4), getSession(), artworkCounts([a.id])])
-  return <Artwork artwork={a} related={related} signedIn={!!session} counts={counts.get(a.id) ?? null} />
+  return <Artwork artwork={a} related={related} signedIn={!!session} counts={counts.get(a.id) ?? null} installmentsOn={flagOn('FLAG_CARD_INSTALLMENTS')} />
 }

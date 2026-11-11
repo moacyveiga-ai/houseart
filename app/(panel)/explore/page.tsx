@@ -1,5 +1,6 @@
 import { requirePanelPage } from '../_session'
 import { initialsOf } from '@/lib/profiles/core'
+import { flagOn } from '@/lib/flags'
 import { listPublicArtworks, marketItems } from '@/lib/marketplace/public-server'
 import { artworkCounts, artworkFlags } from '@/lib/community/server'
 import { ExploreScreen } from '@/components/collector/ExploreScreen'
@@ -39,7 +40,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const panel = p.work ? await collectorPanel(user, { work: p.work }) : null
   return (
     <div className="ha-page">
-      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} me={{ initials: initialsOf(user.name), avatarUrl: user.avatarUrl ?? null }} />
+      <ExploreScreen key={`${view}:${chip}`} items={items} view={view} chip={chip} me={{ initials: initialsOf(user.name), avatarUrl: user.avatarUrl ?? null }} installmentsOn={flagOn('FLAG_CARD_INSTALLMENTS')} />
       {panel ? <CollectorArtworkPanel key={panel.id} a={panel} meInitials={initialsOf(user.name)} meAvatarUrl={user.avatarUrl ?? null} closeHref={exploreHref(view, chip)} /> : null}
     </div>
   )

@@ -1,5 +1,5 @@
 /* HouseArt Obra (handoff 2026-10-21): the public page of one artwork. Prefix hp-artwork-. */
-.hp-artwork { padding: var(--ha-space-5) 0 var(--ha-space-24); }
+.hp-artwork { padding-top: var(--ha-space-5); padding-bottom: var(--ha-space-24); } /* only vertical: the gutter is .hp-container's */
 .hp-artwork__crumbs { font-size: var(--ha-text-caption); color: var(--ha-ink-500); display: flex; gap: var(--ha-space-2); flex-wrap: wrap; margin-bottom: var(--ha-space-5); }
 .hp-artwork__crumbs a { color: var(--ha-ink-500); }
 .hp-artwork__crumbs a:hover { color: var(--ha-ink-900); }
